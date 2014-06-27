@@ -177,8 +177,8 @@ class SparkOverlay extends SparkWidget {
     _SparkOverlayManager.trackOverlays(this);
 
     if (opened) {
-        SparkWidget.addEventHandlers(
-            _eventSubs, [window.onResize], resizeHandler);
+      _eventSubs.addAll(
+          SparkWidget.addEventHandlers([window.onResize], resizeHandler));
 
       /**
        * For modal and auto-closing overlays, intercept and block some events
@@ -200,13 +200,14 @@ class SparkOverlay extends SparkWidget {
         }
         if (autoClose) {
           eventStreams.addAll([
-             document.body.onMouseDown,
-             document.body.onMouseWheel,
-             document.body.onContextMenu,
+              document.body.onMouseDown,
+              document.body.onMouseWheel,
+              document.body.onContextMenu,
           ]);
         }
-        SparkWidget.addEventHandlers(
-            _eventSubs, eventStreams, _captureHandler, capture: true);
+        _eventSubs.addAll(
+            SparkWidget.addEventHandlers(
+                eventStreams, _captureHandler, capture: true));
       }
     } else {
       SparkWidget.removeEventHandlers(_eventSubs);

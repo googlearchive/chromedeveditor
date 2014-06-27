@@ -130,15 +130,19 @@ class _ValidatedField {
     // (red border) when it's not focused. Don't show red border while editing
     // to avoid distraction.
     _removeVisited();
-    SparkWidget.addEventHandlers(
-        _eventSubs, [_element.onFocus, _element.onClick], _addVisited);
+    _eventSubs.addAll(
+        SparkWidget.addEventHandlers(
+            [_element.onFocus, _element.onClick], _addVisited));
 
     // Listen to editing-related events to update the validity. Just listening
     // to the parent form's [onChange] isn't enough to react to real-time edits.
-    SparkWidget.addEventHandlers(
-        _eventSubs,
-        [_element.onChange, _element.onInput, _element.onPaste, _element.onReset],
-        _updateValidity);
+    _eventSubs.addAll(
+        SparkWidget.addEventHandlers(
+            [_element.onChange,
+             _element.onInput,
+             _element.onPaste,
+             _element.onReset],
+            _updateValidity));
 
     // Detect programmatic changes to some attributes. Sadly, that doesn't
     // include [value], because [value] is special (not a pure attribute).

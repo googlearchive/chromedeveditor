@@ -169,11 +169,11 @@ class SparkWidget extends PolymerElement {
         shadowRoot.contains(e.target);
   }
 
-  static void addEventHandlers(
-      List<StreamSubscription> eventSubs,
+  static List<StreamSubscription> addEventHandlers(
       Iterable<Stream<Event>> eventStreams,
       Function handler,
       {bool capture: false}) {
+    final List<StreamSubscription> eventSubs = [];
     eventStreams.forEach((stream) {
       if (capture) {
         eventSubs.add(stream.capture(handler));
@@ -181,6 +181,7 @@ class SparkWidget extends PolymerElement {
         eventSubs.add(stream.listen(handler));
       }
     });
+    return eventSubs;
   }
 
   static void removeEventHandlers(List<StreamSubscription> eventSubs) {
