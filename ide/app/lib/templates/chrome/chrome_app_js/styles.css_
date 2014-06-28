@@ -6,5 +6,5 @@ body {
 }
 
 h1, p {
- color: #777;
+  color: #777;
 }
