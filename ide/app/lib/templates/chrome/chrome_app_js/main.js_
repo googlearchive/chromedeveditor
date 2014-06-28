@@ -1,2 +1,4 @@
-var greeting = document.querySelector('#greeting');
-greeting.innerText = "Hello, World!";
+window.onload = function() {
+  document.querySelector('#greeting').innerText =
+    'Hello, World! It is ' + new Date();
+};
