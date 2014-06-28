@@ -19,7 +19,7 @@ You can [learn more](doc/GettingStarted.md) about CDE workflows including Chrome
 
 ### Google I/O 2014
 
-Check out our upcoming [I/O talk](https://www.google.com/events/io/schedule/session/3888155e-32b6-e311-8491-00155d5066d7) about building apps on the Chrome platform and how we built CDE. You can also try out the [I/O codelabs](http://io2014codelabs.appspot.com/static/index.html) that use the Chrome Dev Editor.
+Check out our [I/O talk](https://www.youtube.com/watch?v=NNLnTz6yIc4) about building apps on the Chrome platform and how we built CDE. You can also try out the [I/O codelabs](http://io2014codelabs.appspot.com/static/index.html) that use the Chrome Dev Editor.
 
 ### FAQ
 
