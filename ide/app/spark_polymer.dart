@@ -11,6 +11,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
+import 'package:spark_widgets/spark_splitter/spark_splitter.dart';
 
 import 'spark.dart';
 import 'spark_bootstrap.dart';
@@ -200,15 +201,26 @@ class SparkPolymer extends Spark {
   void initEditorManager() => super.initEditorManager();
 
   @override
-  void initEditorArea() => super.initEditorArea();
+  void initEditorArea() {
+    super.initEditorArea();
+
+    // TODO(ussuri): Redo once the TODO before #aceContainer in *.html is done.
+    final SparkSplitter outlineResizer = querySelector('#outlineResizer');
+    syncPrefs.getValue('outlineSize', '200').then((String position) {
+      int value = int.parse(position, onError: (_) => null);
+      if (value != null) {
+        outlineResizer..targetSize = value..deliverChanges();
+      }
+    });
+    outlineResizer.on['update'].listen(onOutlineSizeUpdate);
+  }
 
   @override
   void initSplitView() {
     syncPrefs.getValue('splitViewPosition', '300').then((String position) {
       int value = int.parse(position, onError: (_) => null);
       if (value != null) {
-        _ui.splitViewPosition = value;
-        _ui.deliverChanges();
+        _ui..splitViewPosition = value..deliverChanges();
       }
     });
   }
@@ -266,11 +278,6 @@ class SparkPolymer extends Spark {
   @override
   Future restoreLocationManager() => super.restoreLocationManager();
 
-  @override
-  void menuActivateEventHandler(CustomEvent event) {
-    _ui.onMenuSelected(event, event.detail);
-  }
-
   //
   // - End parts of the parent's init().
   //
@@ -278,6 +285,13 @@ class SparkPolymer extends Spark {
   @override
   void onSplitViewUpdate(int position) {
     syncPrefs.setValue('splitViewPosition', position.toString());
+  }
+
+  // TODO(ussuri): Redo once the TODO before #aceContainer in *.html is done.
+  void onOutlineSizeUpdate(CustomEvent e) {
+    syncPrefs.setValue('outlineSize', e.detail['targetSize'].toString());
+    // The top-level [spark-split-view] in [_ui] also listens to the same event.
+    e.stopImmediatePropagation();
   }
 
   void _bindButtonToAction(String buttonId, String actionId) {
