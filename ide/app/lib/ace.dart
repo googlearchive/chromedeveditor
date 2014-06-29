@@ -15,7 +15,6 @@ import 'dart:math' as math;
 import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
-import 'package:path/path.dart' as path;
 
 import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
@@ -68,6 +67,12 @@ class TextEditor extends Editor {
     if (HtmlEditor.isHtmlFile(file)) {
       return new HtmlEditor._create(aceManager, file, prefs);
     }
+    if (YamlEditor.isYamlFile(file)) {
+      return new YamlEditor._create(aceManager, file, prefs);
+    }
+    if (GoEditor.isGoFile(file)) {
+      return new GoEditor._create(aceManager, file, prefs);
+    }
     return new TextEditor._create(aceManager, file, prefs);
   }
 
@@ -77,6 +82,9 @@ class TextEditor extends Editor {
 
   void setSession(ace.EditSession value) {
     _session = value;
+
+    customizeSession(_session);
+
     if (_aceSubscription != null) _aceSubscription.cancel();
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
     if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
@@ -187,6 +195,12 @@ class TextEditor extends Editor {
   int getCursorOffset() => _session.document.positionToIndex(
       aceManager._aceEditor.cursorPosition);
 
+  void customizeSession(ace.EditSession session) {
+    // By default, all file types use 2-space soft tabs for indentation.
+    session.tabSize = 2;
+    session.useSoftTabs = true;
+  }
+
   /**
    * Replace the editor's contents with the given text. Make sure that we don't
    * fire a change event.
@@ -227,6 +241,12 @@ class DartEditor extends TextEditor {
 
   DartEditor._create(AceManager aceManager, workspace.File file,
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
+
+  void customizeSession(ace.EditSession session) {
+    // Dart files use 2-space soft tabs for indentation.
+    session.tabSize = 2;
+    session.useSoftTabs = true;
+  }
 
   bool get supportsOutline => true;
 
@@ -384,6 +404,39 @@ class HtmlEditor extends TextEditor {
     } else {
       return new Future.value();
     }
+  }
+}
+
+/**
+ * An editor for `.go` files. Go's convention is to use hard tabs for
+ * indentation.
+ */
+class GoEditor extends TextEditor {
+  static bool isGoFile(workspace.File file) => file.name.endsWith('.go');
+
+  GoEditor._create(AceManager aceManager, workspace.File file,
+      SparkPreferences prefs) : super._create(aceManager, file, prefs);
+
+  void customizeSession(ace.EditSession session) {
+    // Go files use hard tabs for indentation.
+    session.useSoftTabs = false;
+    session.tabSize = 4;
+  }
+}
+
+/**
+ * An editor for `.yaml` files. The yaml format does not accept tabs.
+ */
+class YamlEditor extends TextEditor {
+  static bool isYamlFile(workspace.File file) => file.name.endsWith('.yaml');
+
+  YamlEditor._create(AceManager aceManager, workspace.File file,
+      SparkPreferences prefs) : super._create(aceManager, file, prefs);
+
+  void customizeSession(ace.EditSession session) {
+    // Yaml files use 2-space soft tabs for indentation.
+    session.tabSize = 2;
+    session.useSoftTabs = true;
   }
 }
 
@@ -778,28 +831,11 @@ class AceManager {
   }
 
   ace.EditSession createEditSession(String text, String fileName) {
-    ace.EditSession session = ace.createEditSession(
-        text, new ace.Mode.forFile(fileName));
-    _applyCustomSession(session, fileName);
-    return session;
-  }
-
-  void _applyCustomSession(ace.EditSession session, String fileName) {
-    String extention = path.extension(fileName);
-    switch (extention) {
-      case '.dart':
-        session.tabSize = 2;
-        session.useSoftTabs = true;
-        break;
-      default:
-        // For now, 2-space for all file types by default. This can be changed
-        // in the future.
-        session.tabSize = 2;
-        session.useSoftTabs = true;
-        break;
-    }
+    ace.EditSession session = ace.createEditSession(text,
+        new ace.Mode.forFile(fileName));
     // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
+    return session;
   }
 
   ace.EditSession get currentSession => _currentSession;
