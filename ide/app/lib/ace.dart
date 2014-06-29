@@ -418,9 +418,10 @@ class GoEditor extends TextEditor {
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   void customizeSession(ace.EditSession session) {
+    super.customizeSession(session);
+
     // Go files use hard tabs for indentation.
     session.useSoftTabs = false;
-    session.tabSize = 4;
   }
 }
 
@@ -434,7 +435,8 @@ class YamlEditor extends TextEditor {
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   void customizeSession(ace.EditSession session) {
-    // Yaml files use 2-space soft tabs for indentation.
+    // Yaml files use 2-space soft tabs for indentation; hard tabs are not
+    // supported.
     session.tabSize = 2;
     session.useSoftTabs = true;
   }
@@ -1050,9 +1052,11 @@ class AceFontManager {
 
     prefs.getValue('fontSize').then((String pref) {
       try {
-        _value = num.parse(pref);
-        aceManager.setFontSize(_value);
-        _updateLabel(_value);
+        if (pref != null) {
+          _value = num.parse(pref);
+          aceManager.setFontSize(_value);
+          _updateLabel(_value);
+        }
       } catch (e) {
 
       }
