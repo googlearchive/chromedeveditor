@@ -502,8 +502,6 @@ class AceManager {
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
-    ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
-    ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
