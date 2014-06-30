@@ -127,8 +127,8 @@ Future<List<int>> getAppContentsBinary(String path) {
   String url = chrome.runtime.getURL(path);
 
   return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
-    typed_data.ByteBuffer buffer = request.response;
-    return new typed_data.Uint8List.view(buffer);
+    typed_data.Uint8List response = request.response;
+    return response;
   });
 }
 
