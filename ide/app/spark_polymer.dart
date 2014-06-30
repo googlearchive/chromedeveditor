@@ -209,10 +209,12 @@ class SparkPolymer extends Spark {
     syncPrefs.getValue('outlineSize', '200').then((String position) {
       int value = int.parse(position, onError: (_) => null);
       if (value != null) {
-        outlineResizer..targetSize = value..deliverChanges();
+        outlineResizer
+            ..targetSize = value
+            ..deliverChanges();
       }
     });
-    outlineResizer.on['update'].listen(onOutlineSizeUpdate);
+    outlineResizer.on['update'].listen(_onOutlineSizeUpdate);
   }
 
   @override
@@ -220,7 +222,9 @@ class SparkPolymer extends Spark {
     syncPrefs.getValue('splitViewPosition', '300').then((String position) {
       int value = int.parse(position, onError: (_) => null);
       if (value != null) {
-        _ui..splitViewPosition = value..deliverChanges();
+        _ui
+            ..splitViewPosition = value
+            ..deliverChanges();
       }
     });
   }
@@ -288,7 +292,7 @@ class SparkPolymer extends Spark {
   }
 
   // TODO(ussuri): Redo once the TODO before #aceContainer in *.html is done.
-  void onOutlineSizeUpdate(CustomEvent e) {
+  void _onOutlineSizeUpdate(CustomEvent e) {
     syncPrefs.setValue('outlineSize', e.detail['targetSize'].toString());
     // The top-level [spark-split-view] in [_ui] also listens to the same event.
     e.stopImmediatePropagation();
