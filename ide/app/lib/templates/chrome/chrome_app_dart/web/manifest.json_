@@ -7,7 +7,8 @@
   "version": "0.0.1.0",
 
   "icons": {
-    "128": "icon.png"
+    "16": "icon_16.png",
+    "128": "icon_128.png"
   },
 
   "app": {
