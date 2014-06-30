@@ -32,6 +32,11 @@ File findPubspec(Container container) {
 }
 
 class PubManager extends PackageManager {
+
+  /**
+   * Create a new [PubManager] instance. This is a heavy-weight object; it
+   * creates a new [Builder].
+   */
   PubManager(Workspace workspace) : super(workspace);
 
   //

@@ -23,7 +23,7 @@ class PubProperties extends PackageServiceProperties {
   // This will get both the "package:foo/bar.dart" variant when used directly
   // in Dart and the "baz/packages/foo/bar.dart" variant when served over HTTP.
   RegExp get packageRefPrefixRegexp =>
-     new RegExp(r'^(package:|.*/packages/)(.*)$');
+     new RegExp(r'^(package:|.*/packages/|packages/)(.*)$');
 
   void setSelfReference(Project project, String selfReference) =>
      project.setMetadata('${packageServiceName}SelfReference', selfReference);
