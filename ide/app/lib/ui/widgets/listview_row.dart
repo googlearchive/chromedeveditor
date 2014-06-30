@@ -17,4 +17,9 @@ import 'listview_cell.dart';
 class ListViewRow {
   ListViewCell cell;
   Element container;
+  int y;
+  int height;
+  Element separator;
+  int separatorY;
+  int separatorHeight;
 }
