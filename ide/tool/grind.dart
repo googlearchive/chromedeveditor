@@ -122,11 +122,6 @@ void deploy(GrinderContext context) {
   // Compile the services entry-point.
   _dart2jsCompile(context, deployWeb, 'services_entry.dart', true);
 
-  // TODO(devoncarew): Is this still necessary?
-  // Replace shadow DOM to include some fixes.
-  copyFile(getFile('tool/shadow_dom.debug.js'),
-      joinDir(deployWeb, ['packages', 'shadow_dom']));
-
   // Remove map files.
   List files = BUILD_DIR.listSync(recursive: true, followLinks: false);
   for (FileSystemEntity entity in files) {
