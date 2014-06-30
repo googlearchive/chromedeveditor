@@ -1,0 +1,17 @@
+{
+  "directories": {
+    "web": {
+      "files": [
+        { "source": "background.js_", "dest": "background.js" },
+        { "source": "icon.png_", "dest": "icon.png"},
+        { "source": "index.html_", "dest": "index.html" },
+        { "source": "main.dart_", "dest": "main.dart"},
+        { "source": "manifest.json_", "dest": "manifest.json" },
+        { "source": "styles.css_", "dest": "styles.css"}
+      ]
+    }
+  },
+  "files": [
+    { "source": "pubspec.yaml_", "dest": "pubspec.yaml" }
+  ]
+}

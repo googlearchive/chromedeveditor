@@ -101,8 +101,6 @@ Future _copyContainer(Container source, Folder target) {
 }
 
 Future _copyContents(File source, File dest) {
-  print('copying ${source.path} ==> ${dest.path}');
-
   return source.getBytes().then((chrome.ArrayBuffer data) {
     return dest.setBytesArrayBuffer(data);
   });
