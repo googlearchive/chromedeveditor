@@ -29,7 +29,7 @@ class SparkException implements Exception {
     this.isError = isError;
   }
 
-  static SparkException fromException(Exception e) {
+  static SparkException fromException(dynamic e) {
     if (e is SparkException) {
       return e;
     } else if (e is GitException) {

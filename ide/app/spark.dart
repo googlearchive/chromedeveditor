@@ -613,7 +613,7 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(String title, {String message, Exception exception}) {
+  void showErrorMessage(String title, {String message, var exception}) {
     const String UNKNOWN_ERROR_STRING = 'Unknown error.';
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
