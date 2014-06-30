@@ -230,7 +230,7 @@ class TextEditor extends Editor {
    *
    *     @import url("packages/bootjack/css/bootstrap.min.css");
    */
-  Future _simpleNavigateToDeclaration([Duration timeLimit]) {
+  Future<svc.Declaration> _simpleNavigateToDeclaration([Duration timeLimit]) {
     if (file.parent == null) {
       return new Future.value(svc.Declaration.EMPTY_DECLARATION);
     }
