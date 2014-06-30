@@ -67,8 +67,13 @@ class Tab {
   String get label => _labelCaption.innerHtml;
   set label(String label) {
     _labelCaption.innerHtml = label;
-    _labelCaption.title = _labelCaption.text;
   }
+
+  String get tooltip => _labelCaption.title;
+  set tooltip(String label) {
+    _labelCaption.title = label;
+  }
+
   CssStyleDeclaration get labelStyle => _labelCaption.style;
   ElementEvents get labelEvents => _labelCaption.on;
 
