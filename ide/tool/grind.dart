@@ -15,8 +15,6 @@ import 'webstore_client.dart';
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
-// TODO: Make the deploy-test and deploy tasks incremental.
-
 final Directory BUILD_DIR = new Directory('build');
 final Directory DIST_DIR = new Directory('dist');
 
@@ -39,7 +37,6 @@ void main([List<String> args]) {
   defineTask('lint', taskFunction: lint, depends: ['setup']);
 
   defineTask('deploy', taskFunction: deploy, depends: ['lint']);
-  //defineTask('dartium', taskFunction: deployForDartium, depends: ['lint']);
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
@@ -107,23 +104,6 @@ void lint(context) {
 }
 
 /**
- * Similar to [deploy] but creates a layout suitable for Dartium.
- * Does not run dart2js.
- */
-@deprecated
-// TODO(devoncarew): I believe we do not need this anymore. This was to work
-// around an issue with Dartium not being able to run multiple scripts. Polymer
-// relies on generating Javascript at runtime to work around this; that fails
-// for Chrome Apps because of CSP mode. We now work around this via the
-// `app/spark_bootstrap.dart` script.
-void deployForDartium(GrinderContext context) {
-  Directory sourceDir = joinDir(BUILD_DIR, ['dartium']);
-  Directory destDir = joinDir(BUILD_DIR, ['dartium-out']);
-
-  _polymerDeploy(context, sourceDir, destDir, extraArgs: ['--no-js']);
-}
-
-/**
  * Copy all source to `build/deploy`. Do a polymer deploy to `build/deploy-out`.
  * This builds the regular (non-test) version of the app.
  */
@@ -135,11 +115,6 @@ void deploy(GrinderContext context) {
 
   Directory deployWeb = joinDir(destDir, ['web']);
 
-  // TODO(devoncarew): Remove this once smoke no longer generates code
-  // referencing Dartium's dart:nativewrappers library.
-  _removeNativeWrappersReference(
-      context, deployWeb, 'spark_polymer.html_bootstrap.dart');
-
   // Compile the main Spark app.
   _dart2jsCompile(context, deployWeb,
       'spark_polymer.html_bootstrap.dart', true);
@@ -147,8 +122,10 @@ void deploy(GrinderContext context) {
   // Compile the services entry-point.
   _dart2jsCompile(context, deployWeb, 'services_entry.dart', true);
 
+  // TODO(devoncarew): Is this still necessary?
   // Replace shadow DOM to include some fixes.
-  copyFile(getFile('tool/shadow_dom.debug.js'), joinDir(deployWeb, ['packages', 'shadow_dom']));
+  copyFile(getFile('tool/shadow_dom.debug.js'),
+      joinDir(deployWeb, ['packages', 'shadow_dom']));
 
   // Remove map files.
   List files = BUILD_DIR.listSync(recursive: true, followLinks: false);
@@ -194,12 +171,12 @@ void release(GrinderContext context) {
 
   var sep = Platform.pathSeparator;
   _runCommandSync(
-    context,
-    'git checkout app${sep}manifest.json');
+      context,
+      'git checkout app${sep}manifest.json');
   _increaseBuildNumber(context);
   _runCommandSync(
-    context,
-    'git commit -m "Build version ${version}" app${sep}manifest.json');
+      context,
+      'git commit -m "Build version ${version}" app${sep}manifest.json');
 
   context.log('Created ${filename}');
   context.log('** A commit has been created, you need to push it. ***');
@@ -412,6 +389,13 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
       arguments: args,
       packageRoot: 'packages',
       workingDirectory: sourceDir.path);
+
+  // Create an empty `user.json` overrides file so we don't get an error in the
+  // console in the deployed application.
+  File userJsonFile = joinFile(destDir, ['web', 'user.json']);
+  if (!userJsonFile.existsSync()) {
+    userJsonFile.writeAsStringSync('{}\n');
+  }
 }
 
 void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
@@ -455,16 +439,16 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
 
 void _changeMode({bool useTestMode: true}) {
   File file = joinFile(Directory.current, ['app', 'app.json']);
-  file.writeAsStringSync('{"test-mode":${useTestMode}}');
+  file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
 
   file = joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']);
   if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}');
+    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
   }
 
   file = joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']);
   if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}');
+    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
   }
 }
 
@@ -583,62 +567,6 @@ void _removePackagesLinks(GrinderContext context, Directory target) {
       _removePackagesLinks(context, entity);
     }
   });
-}
-
-/**
- * Remove a Dartium only reference to the dart:nativewrappers library. dart2js
- * will not be able to compile code with these references.
- */
-void _removeNativeWrappersReference(
-    GrinderContext context, Directory dir, String fileName) {
-  File file = joinFile(dir, [fileName]);
-  String contents = file.readAsStringSync();
-  String modified = _replaceNativeWrappersReference(context, contents);
-  if (modified == contents) {
-    context.log('No reference to dart:nativewrappers found!');
-  } else {
-    context.log('Removing reference to dart:nativewrappers.');
-    file.writeAsStringSync(modified);
-  }
-}
-
-String _replaceNativeWrappersReference(GrinderContext context, String contents) {
-  // Look for `import 'dart:nativewrappers' as smoke_6;`.
-  String importPrefix;
-
-  List<String> lines = contents.split('\n');
-
-  for (String line in lines) {
-    if (line.contains("import 'dart:nativewrappers' as")) {
-      // Remove the trailing semi-colon.
-      line = line.substring(1, line.length - 1);
-
-      // Remove everything preceeding the import prefix - the ` as ` and
-      // everything before it.
-      importPrefix = line.substring(line.lastIndexOf(' ') + 1);
-
-      break;
-    }
-  }
-
-  // Couldn't find the import prefix...
-  if (importPrefix == null) return contents;
-
-  context.log('Found dart:nativewrappers prefix: ${importPrefix}.');
-
-  // Remove lines that contain `importPrefix;` or `importPrefix.` and return the
-  // modified content.
-  return lines.map((String line) {
-    if (line.contains('${importPrefix}.')) {
-      // Remove any line that uses the import prefix.
-      return '// ${line}';
-    } else if (line.contains('${importPrefix};')) {
-      // Remove the line declaring the import prefix.
-      return '// ${line}';
-    } else {
-      return line;
-    }
-  }).join('\n');
 }
 
 /**
