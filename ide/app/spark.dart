@@ -487,10 +487,6 @@ abstract class Spark
     // Overridden in spark_polymer.dart.
   }
 
-  void menuActivateEventHandler(CustomEvent event) {
-    // Overridden in spark_polymer.dart.
-  }
-
   Future restoreWorkspace() {
     return workspace.restore().then((value) {
       if (workspace.getFiles().length == 0) {
