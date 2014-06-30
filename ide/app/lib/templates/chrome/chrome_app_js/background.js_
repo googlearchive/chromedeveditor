@@ -6,13 +6,9 @@
  */
 chrome.app.runtime.onLaunched.addListener(function() {
   chrome.app.window.create(
-    "index.html",
+    "window.html",
     {
-      id: "mainWindow",
-      bounds: {
-        width: 500,
-        height: 300
-      }
+      id: "mainWindow"
     }
   );
 });
