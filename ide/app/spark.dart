@@ -1787,7 +1787,7 @@ abstract class PubAction extends PackageManagementAction {
   PubAction(Spark spark, String id, String name) : super(spark, id, name);
 
   bool _canRunAction() {
-   if (PlatformInfo.isWin) {
+    if (PlatformInfo.isWin) {
       spark.showErrorMessage('Pub',
           message: 'Running Pub Get/Upgrade is currently not supported on Windows : '
                    'use the command line Pub tool to get the packages.\n'
@@ -3412,9 +3412,8 @@ class PubGetJob extends PackageManagementJob {
   PubGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub get');
 
-  Future _run(ProgressMonitor monitor) {
-      return _spark.pubManager.installPackages(_container, monitor);
-  }
+  Future _run(ProgressMonitor monitor) =>
+      _spark.pubManager.installPackages(_container, monitor);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
