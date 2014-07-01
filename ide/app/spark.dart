@@ -1747,6 +1747,9 @@ abstract class PackageManagementAction
     super(spark, id, name);
 
   void _invoke([context]) {
+    if (!_canRunAction()) {
+      return;
+    }
     ws.Resource resource;
 
     if (context == null) {
@@ -1776,10 +1779,24 @@ abstract class PackageManagementAction
   bool _appliesTo(ws.Resource resource);
 
   Job _createJob(ws.Container container);
+
+  bool _canRunAction() => true;
 }
 
 abstract class PubAction extends PackageManagementAction {
   PubAction(Spark spark, String id, String name) : super(spark, id, name);
+
+  bool _canRunAction() {
+//    if (PlatformInfo.isWin) {
+      spark.showErrorMessage('Pub',
+          message: 'Running Pub Get/Upgrade is currently not supported on Windows : '
+                   'use the command line Pub tool to get the packages.\n'
+                   'Track issue at '
+                   'https://github.com/dart-lang/chromedeveditor/issues/2743');
+      return false;
+//    }
+//    return true;
+  }
 
   bool _appliesTo(ws.Resource resource) =>
       spark.pubManager.properties.isPackageResource(resource);
@@ -2150,7 +2167,7 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isFolderWithPackages(project)) {
+            if (spark.pubManager.properties.isFolderWithPackages(project) && !PlatformInfo.isWin) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
@@ -3186,7 +3203,7 @@ class _GitCloneTask {
             });
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isFolderWithPackages(project)) {
+            if (spark.pubManager.properties.isFolderWithPackages(project) && !PlatformInfo.isWin) {
               // There is issue with workspace sending duplicate events.
               // TODO(grv): revisit workspace events.
               Timer.run(() {
@@ -3341,7 +3358,7 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.properties.isFolderWithPackages(resource)) {
+      if (spark.pubManager.properties.isFolderWithPackages(resource) && !PlatformInfo.isWin) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
 
@@ -3395,8 +3412,9 @@ class PubGetJob extends PackageManagementJob {
   PubGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub get');
 
-  Future _run(ProgressMonitor monitor) =>
-      _spark.pubManager.installPackages(_container, monitor);
+  Future _run(ProgressMonitor monitor) {
+      return _spark.pubManager.installPackages(_container, monitor);
+  }
 }
 
 class PubUpgradeJob extends PackageManagementJob {
