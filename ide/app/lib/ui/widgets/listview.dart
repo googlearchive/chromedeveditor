@@ -164,6 +164,8 @@ class ListView {
           ..height = '${separatorHeight}px'
           ..top = '${y}px';
         y += separatorHeight;
+      } else {
+        separatorHeight = 0;
       }
 
       int cellHeight = _delegate.listViewHeightForRow(this, i);
@@ -230,16 +232,14 @@ class ListView {
     if (middle == left) {
       if (y >= _rows[right].separatorY) {
         return right;
-      }
-      else {
+      } else {
         return left;
       }
     }
 
     if (y >= _rows[middle].separatorY) {
       return _findRow(y, middle, right);
-    }
-    else {
+    } else {
       return _findRow(y, 0, middle - 1);
     }
   }
