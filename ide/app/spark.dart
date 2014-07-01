@@ -1789,10 +1789,7 @@ abstract class PubAction extends PackageManagementAction {
   bool _canRunAction() {
     if (PlatformInfo.isWin) {
       spark.showErrorMessage('Pub',
-          message: 'Running Pub Get/Upgrade is currently not supported on Windows : '
-                   'use the command line Pub tool to get the packages.\n'
-                   'Track issue at '
-                   'https://github.com/dart-lang/chromedeveditor/issues/2743');
+          message: SparkErrorMessages.PUB_ON_WINDOWS_MSG);
       return false;
     }
     return true;
@@ -2166,7 +2163,8 @@ class NewProjectAction extends SparkActionWithDialog {
           Timer.run(() {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
-            // Run Pub if the new project has a pubspec file.
+            // Run Pub if the new project has a pubspec file
+            // Except for on Windows: https://github.com/dart-lang/chromedeveditor/issues/2743
             if (spark.pubManager.properties.isFolderWithPackages(project) && !PlatformInfo.isWin) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }

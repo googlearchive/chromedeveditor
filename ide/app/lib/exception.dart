@@ -168,4 +168,10 @@ class SparkErrorMessages {
   static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
       "It looks like the application failed to get installed in Chrome. "
       "Has Chrome displayed any errors?";
+
+  static const String PUB_ON_WINDOWS_MSG =
+      'Running Pub get/upgrade is currently not supported on Windows; '
+      'use the command line Pub tool to get the packages.\n'
+      'You can track issue at '
+      'https://github.com/dart-lang/chromedeveditor/issues/2743';
 }
