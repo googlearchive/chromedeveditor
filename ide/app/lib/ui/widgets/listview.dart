@@ -200,10 +200,10 @@ class ListView {
       });
     }
     _placeholder.style
-      ..position = 'absolute';
-      ..top = '0';
-      ..left = '0';
-      ..right = '0';
+      ..position = 'absolute'
+      ..top = '0'
+      ..left = '0'
+      ..right = '0'
       ..height = '${y}px';
     // Fix selection if needed.
     if (_selectedRow >= count) {
