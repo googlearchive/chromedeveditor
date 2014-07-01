@@ -543,7 +543,9 @@
         </spark-toolbar>
       </div>
 
-      <template if="{{!chromeOS}}">
+      <!-- TODO(devoncarew): Always show this directory, even on chrome OS. -->
+      <!-- Re-examine when syncfs is re-enabled. -->
+      <!-- template if="{{!chromeOS}}" -->
         <div class="form-group" id="rootDirectory">
           <spark-toolbar class="settings-block"
               horizontal justify="spaced" spacing="small">
@@ -551,7 +553,7 @@
             <span id="directoryLabel" class="settings-value"></span>
           </spark-toolbar>
         </div>
-      </template>
+      <!-- /template -->
 
       <div class="form-group" id="gitCredentials">
         <spark-toolbar class="settings-block"
