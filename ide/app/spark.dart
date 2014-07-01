@@ -3494,6 +3494,10 @@ class AboutSparkAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    /*%TRACE3*/ print("(4> 6/30/14): _invoke!"); // TRACE%
+    new Future.delayed(const Duration(milliseconds: 2000)).then((_){
+      _commit();
+    });
     _checkbox.checked = _isTrackingPermitted;
     _show();
   }
