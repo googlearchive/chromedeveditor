@@ -1787,15 +1787,15 @@ abstract class PubAction extends PackageManagementAction {
   PubAction(Spark spark, String id, String name) : super(spark, id, name);
 
   bool _canRunAction() {
-//    if (PlatformInfo.isWin) {
+   if (PlatformInfo.isWin) {
       spark.showErrorMessage('Pub',
           message: 'Running Pub Get/Upgrade is currently not supported on Windows : '
                    'use the command line Pub tool to get the packages.\n'
                    'Track issue at '
                    'https://github.com/dart-lang/chromedeveditor/issues/2743');
       return false;
-//    }
-//    return true;
+    }
+    return true;
   }
 
   bool _appliesTo(ws.Resource resource) =>
