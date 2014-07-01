@@ -101,8 +101,6 @@ Future _copyContainer(Container source, Folder target) {
 }
 
 Future _copyContents(File source, File dest) {
-  print('copying ${source.path} ==> ${dest.path}');
-
   return source.getBytes().then((chrome.ArrayBuffer data) {
     return dest.setBytesArrayBuffer(data);
   });
@@ -142,6 +140,16 @@ bool isUpToDate(File targetFile, Resource sourceFiles, [Function filter]) {
  * `null`.
  */
 Resource resolvePath(File file, String path) {
+  if (file.parent == null) return null;
+
+  // TODO(devoncarew): Check for a `package` reference.
+//  if (pubProperties.isPackageRef(path)) {
+//    PubManager manager = new PubManager(file.workspace);
+//    PackageResolver resolver = manager.getResolverFor(file.project);
+//    File resolvedFile = resolver.resolveRefToFile(path);
+//    if (resolvedFile != null) return resolvedFile;
+//  }
+
   return _resolvePaths(file.parent, path.split('/'));
 }
 

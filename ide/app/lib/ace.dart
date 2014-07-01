@@ -73,6 +73,9 @@ class TextEditor extends Editor {
     if (GoEditor.isGoFile(file)) {
       return new GoEditor._create(aceManager, file, prefs);
     }
+    if (JsonEditor.isJsonFile(file)) {
+      return new JsonEditor._create(aceManager, file, prefs);
+    }
     return new TextEditor._create(aceManager, file, prefs);
   }
 
@@ -152,7 +155,10 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  Future navigateToDeclaration([Duration timeLimit]) =>
+  /**
+   * Jump to the declaration of the symbol currently under the cursor.
+   */
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
       new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
   void fileContentsChanged() {
@@ -232,6 +238,29 @@ class TextEditor extends Editor {
   }
 
   Outline get _outline => aceManager.outline;
+
+  /**
+   * Handle navigating to file references in strings. So, things like:
+   *
+   *     @import url("packages/bootjack/css/bootstrap.min.css");
+   */
+  Future<svc.Declaration> _simpleNavigateToDeclaration([Duration timeLimit]) {
+    if (file.parent == null) {
+      return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+    }
+
+    String path = _getQuotedString(_session.value, getCursorOffset());
+    if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+
+    workspace.File targetFile = resolvePath(file, path);
+
+    if (targetFile != null) {
+      aceManager.delegate.openEditor(targetFile);
+      return new Future.value(new svc.FileDeclaration(targetFile));
+    } else {
+      return new Future.value();
+    }
+  }
 }
 
 class DartEditor extends TextEditor {
@@ -239,8 +268,8 @@ class DartEditor extends TextEditor {
 
   OffsetRange outlineScrollPosition = new OffsetRange();
 
-  DartEditor._create(AceManager aceManager, workspace.File file,
-      SparkPreferences prefs) : super._create(aceManager, file, prefs);
+  DartEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
+      super._create(aceManager, file, prefs);
 
   void customizeSession(ace.EditSession session) {
     // Dart files use 2-space soft tabs for indentation.
@@ -309,8 +338,8 @@ class DartEditor extends TextEditor {
 class CssEditor extends TextEditor {
   static bool isCssFile(workspace.File file) => file.name.endsWith('.css');
 
-  CssEditor._create(AceManager aceManager, workspace.File file,
-    SparkPreferences prefs) : super._create(aceManager, file, prefs);
+  CssEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
+      super._create(aceManager, file, prefs);
 
   bool get supportsFormat => true;
 
@@ -323,28 +352,8 @@ class CssEditor extends TextEditor {
     }
   }
 
-  /**
-   * Handle navigating to file references in strings. So, things like:
-   *
-   *     @import url("packages/bootjack/css/bootstrap.min.css");
-   */
-  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
-    if (file.parent == null) {
-      return new Future.value(svc.Declaration.EMPTY_DECLARATION);
-    }
-
-    String path = _getQuotedString(_session.value, getCursorOffset());
-    if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
-
-    workspace.File targetFile = resolvePath(file, path);
-
-    if (targetFile != null) {
-      aceManager.delegate.openEditor(targetFile);
-      return new Future.value(new svc.FileDeclaration(targetFile));
-    } else {
-      return new Future.value();
-    }
-  }
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
+      _simpleNavigateToDeclaration(timeLimit);
 }
 
 class MarkdownEditor extends TextEditor {
@@ -353,9 +362,9 @@ class MarkdownEditor extends TextEditor {
 
   Markdown _markdown;
 
-  MarkdownEditor._create(AceManager aceManager, workspace.File file,
-    SparkPreferences prefs) : super._create(aceManager, file, prefs) {
-       _markdown = new Markdown(element, file);
+  MarkdownEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
+      super._create(aceManager, file, prefs) {
+    _markdown = new Markdown(element, file);
   }
 
   @override
@@ -379,32 +388,21 @@ class MarkdownEditor extends TextEditor {
 class HtmlEditor extends TextEditor {
   static bool isHtmlFile(workspace.File file) => isHtmlFilename(file.name);
 
-  HtmlEditor._create(AceManager aceManager, workspace.File file,
-    SparkPreferences prefs) : super._create(aceManager, file, prefs);
+  HtmlEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
+      super._create(aceManager, file, prefs);
 
-  /**
-   * Handle navigating to file references in strings. So, things like the href
-   * in:
-   *
-   *     <link rel="import" href="spark_polymer_ui.html">
-   */
-  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
-    if (file.parent == null) {
-      return new Future.value(svc.Declaration.EMPTY_DECLARATION);
-    }
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
+      _simpleNavigateToDeclaration(timeLimit);
+}
 
-    String path = _getQuotedString(_session.value, getCursorOffset());
-    if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+class JsonEditor extends TextEditor {
+  static bool isJsonFile(workspace.File file) => file.name.endsWith('.json');
 
-    workspace.File targetFile = resolvePath(file, path);
+  JsonEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
+      super._create(aceManager, file, prefs);
 
-    if (targetFile != null) {
-      aceManager.delegate.openEditor(targetFile);
-      return new Future.value(new svc.FileDeclaration(targetFile));
-    } else {
-      return new Future.value();
-    }
-  }
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
+      _simpleNavigateToDeclaration(timeLimit);
 }
 
 /**
@@ -422,6 +420,9 @@ class GoEditor extends TextEditor {
 
     // Go files use hard tabs for indentation.
     session.useSoftTabs = false;
+
+    // The number of spaces to use it not specified by Go.
+    session.tabSize = 4;
   }
 }
 
@@ -435,9 +436,10 @@ class YamlEditor extends TextEditor {
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   void customizeSession(ace.EditSession session) {
-    // Yaml files use 2-space soft tabs for indentation; hard tabs are not
-    // supported.
+    // Yaml files use 2-space soft tabs for indentation.
     session.tabSize = 2;
+
+    // Hard tabs are not supported.
     session.useSoftTabs = true;
   }
 }
@@ -557,8 +559,7 @@ class AceManager {
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
-    ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
-    ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
+    ace.Mode.extensionMap['idl'] = ace.Mode.C_CPP;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
@@ -1105,6 +1106,9 @@ String _calcMD5(String text) {
  * parts of the offset surrounded by quotes.
  */
 String _getQuotedString(String text, int offset) {
+  if (text.isEmpty) return null;
+
+  offset = offset.clamp(0, math.max(0, text.length - 1));
   int leftSide = offset;
 
   while (leftSide >= 0) {

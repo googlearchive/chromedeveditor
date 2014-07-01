@@ -487,10 +487,6 @@ abstract class Spark
     // Overridden in spark_polymer.dart.
   }
 
-  void menuActivateEventHandler(CustomEvent event) {
-    // Overridden in spark_polymer.dart.
-  }
-
   Future restoreWorkspace() {
     return workspace.restore().then((value) {
       if (workspace.getFiles().length == 0) {
@@ -613,7 +609,7 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(String title, {String message, Exception exception}) {
+  void showErrorMessage(String title, {String message, var exception}) {
     const String UNKNOWN_ERROR_STRING = 'Unknown error.';
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
@@ -793,7 +789,7 @@ abstract class Spark
 
   Future _selectFile(ws.Resource resource) {
     if (resource.isFile) {
-      return editorArea.selectFile(resource, forceFocus: true);
+      return editorArea.selectFile(resource);
     } else {
       _filesController.selectFile(resource);
       _filesController.setFolderExpanded(resource);

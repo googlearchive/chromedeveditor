@@ -7,7 +7,6 @@
 /**
  * Bower services.
  */
-
 library spark.package_mgmt.bower;
 
 import 'dart:async';
@@ -24,6 +23,11 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.bower');
 
 class BowerManager extends PackageManager {
+
+  /**
+   * Create a new [BowerManager] instance. This is a heavy-weight object; it
+   * creates a new [Builder].
+   */
   BowerManager(Workspace workspace) : super(workspace);
 
   //

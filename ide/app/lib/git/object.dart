@@ -94,7 +94,7 @@ class TreeObject extends GitObject {
   List<TreeEntry> entries;
   LooseObject rawObj;
 
-  TreeObject( [String sha, Uint8List data, LooseObject rawObj])
+  TreeObject( [String sha, List data, LooseObject rawObj])
       : super(sha, data) {
     this.type = ObjectTypes.TREE_STR;
     this.rawObj  = rawObj;
@@ -107,7 +107,7 @@ class TreeObject extends GitObject {
 
   // Parses the byte stream and constructs the tree object.
   void _parse() {
-    Uint8List buffer = data;
+    List buffer = data;
     List<TreeEntry> treeEntries = [];
     int idx = 0;
     while (idx < buffer.length) {
