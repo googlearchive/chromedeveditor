@@ -26,7 +26,7 @@
 }
 
 spark-dialog {
-  top: 72px;
+  top: 15%;
   left: 50%;
   width: 512px;
   margin-left: -256px;
@@ -134,7 +134,7 @@ spark-dialog {
   height: 30px;
 }
 
-.settings-value + .plus-minus-button {
+#settingsDialog .settings-value + .plus-minus-button {
   margin-left: 5px;
 }
 
@@ -150,6 +150,18 @@ spark-dialog {
   box-shadow: 0px 0px 0px;
   padding: 0px;
   border: 0px solid;
+}
+
+#aboutDialog #logo {
+  margin-right: 40px;
+}
+
+#aboutDialog #analyticsOptIn {
+  margin-top: 40px;
+}
+
+#aboutDialog #analyticsCheck {
+  margin: 0 20px;
 }
 
 #gitResetSettingsDone,
@@ -234,8 +246,23 @@ label {
   font-weight: 500;
 }
 
+.help-block {
+  -webkit-user-select: text;
+}
+
 /* These two are special (secondary) */
 label[for="analyticsCheck"],
 label[for="stripWhitespace"] {
   font-weight: 400;
+}
+
+#aboutDialog-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#aboutDialog-text {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: middle;
 }

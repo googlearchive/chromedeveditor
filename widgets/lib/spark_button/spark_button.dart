@@ -20,12 +20,13 @@ class SparkButton extends SparkWidget {
   @published String padding;
   @published bool disabled;
   @published bool active;
+  @published String tooltip;
 
   SparkButton.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     // Make sure at most one of [raised] or [flat] is defined by the client.
     // TODO(ussuri): This is really clumsy. Find a better way to provide

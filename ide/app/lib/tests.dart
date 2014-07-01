@@ -12,8 +12,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import 'jobs.dart';
 import 'tcp.dart' as tcp;
+import 'utils.dart';
 
 const int _DEFAULT_TESTPORT = 5120;
 
@@ -23,8 +23,11 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
-  final JobManager _jobManager;
+  final Notifier _notifier;
+
   StreamSubscription _logListener;
+  StreamController<unittest.TestCase> _onTestFinished =
+      new StreamController.broadcast();
 
   Function _defineTestsFn;
   Element _testDiv;
@@ -32,7 +35,8 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this._jobManager, {bool connectToTestListener: false}) {
+  TestDriver(this._defineTestsFn, this._notifier,
+      {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 
     if (connectToTestListener) {
@@ -59,10 +63,16 @@ class TestDriver {
       _defineTestsFn = null;
     }
 
-    _TestJob job = new _TestJob(this, _testCompleter);
-    _jobManager.schedule(job);
+    _notifier.showSuccessMessage('Running tests...');
+    unittest.runTests();
 
     return _testCompleter.future;
+  }
+
+  Stream<unittest.TestCase> get onTestFinished => _onTestFinished.stream;
+
+  void testFinished(unittest.TestCase test) {
+    _onTestFinished.add(test);
   }
 
   void _connectToListener() {
@@ -120,21 +130,6 @@ class TestDriver {
 
   void _testsFinished(bool sucess) {
     _testCompleter.complete(sucess);
-  }
-}
-
-class _TestJob extends Job {
-  final TestDriver testDriver;
-
-  _TestJob(this.testDriver, Completer completer)
-      : super("Running tests…", completer);
-
-  Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name);
-
-    unittest.runTests();
-
-    return completer.future.then((_) => this);
   }
 }
 
@@ -203,6 +198,8 @@ class _SparkTestConfiguration extends unittest.Configuration {
     } else {
       _logger.info("${test.result} ${test.description}\n");
     }
+
+    testDriver.testFinished(test);
   }
 
   void onSummary(int passed, int failed, int errors,

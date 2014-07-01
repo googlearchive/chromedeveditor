@@ -4,6 +4,8 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
+<link rel="import" href="packages/polymer/polymer.html">
+
 <!-- NOTE: If you add any new Polymer imports here, don't forget to also add
      matching Dart imports in spark_bootstrap.dart. -->
 <link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
@@ -45,7 +47,7 @@
               on-input="{{fileFilterInputHandler}}"
               tabindex="0"/>
 
-          <spark-button id="runButton" flat round>
+          <spark-button id="runButton" flat round tooltip="Run">
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z"/>
             </svg>
@@ -90,7 +92,7 @@
 
             <spark-menu-item action-id="send-feedback" label="Send Feedback...">
             </spark-menu-item>
-            <spark-menu-item action-id="help-about" label="About Spark">
+            <spark-menu-item action-id="help-about" label="About Chrome Dev Editor">
             </spark-menu-item>
 
           </spark-menu-button>
@@ -109,7 +111,7 @@
             horizontal
             justify="right"
             spacing="small">
-          <spark-button id="settingsButton" flat round>
+          <spark-button id="settingsButton" flat round tooltip="Settings...">
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <path d="M19.4 13c0-.3.1-.6.1-1s0-.7-.1-1l2.1-1.7c.2-.2.2-.4.1-.6l-2-3.5c-.1-.1-.3-.2-.6-.1l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c.1-.3-.2-.5-.4-.5h-4c-.2 0-.5.2-.5.4l-.4 2.7c-.6.2-1.1.6-1.7 1l-2.4-1c-.3-.1-.5 0-.7.2l-2 3.5c-.1.1 0 .4.2.6l2.1 1.6c0 .3-.1.6-.1 1s0 .7.1 1l-2.1 1.7c-.2.2-.2.4-.1.6l2 3.5c.1.1.3.2.6.1l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.2 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6l-2.3-1.6zm-7.4 2.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
             </svg>
@@ -124,12 +126,12 @@
             horizontal
             justify="right"
             spacing="small">
-          <spark-button id="leftNav" flat round>
+          <spark-button id="leftNav" flat round tooltip="Back">
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <path d="M20 11h-12.2l5.6-5.6-1.4-1.4-8 8 8 8 1.4-1.4-5.6-5.6h12.2v-2z"/>
             </svg>
           </spark-button>
-          <spark-button id="rightNav" flat round>
+          <spark-button id="rightNav" flat round tooltip="Forward">
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <path d="M12 4l-1.4 1.4 5.6 5.6h-12.2v2h12.2l-5.6 5.6 1.4 1.4 8-8z"/>
             </svg>
@@ -233,6 +235,9 @@
               </option>
             </optgroup>
             <optgroup label="Chrome apps">
+              <option value="chrome/chrome_app_dart">
+                Dart Chrome app
+              </option>
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome app
               </option>
@@ -257,7 +262,7 @@
               </option>
               <!-- This one is internal for now. -->
               <option value="polymer/spark_widget">
-                Spark widget
+                Chrome Dev Editor widget
               </option>
             </optgroup>
           </select>
@@ -285,6 +290,9 @@
               </option>
             </optgroup>
             <optgroup label="Chrome apps">
+              <option value="chrome/chrome_app_dart">
+                Dart Chrome app
+              </option>
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome app
               </option>
@@ -431,18 +439,25 @@
     </spark-dialog>
 
     <!-- About dialog -->
-    <spark-dialog id="aboutDialog" headerTitle="About Spark">
+    <spark-dialog id="aboutDialog" headerTitle="About Chrome Dev Editor">
       <div class="form-group">
-        <img src="images/icon_48.png">
-        <label>A Chrome Apps based development environment (v{{appVersion}})</label>
+        <div class="vert-align-box">
+          <div id="aboutDialog-icon">
+            <img src="images/icon_48.png">
+          </div>
+          <div id="aboutDialog-text">
+            <div><label>Develop apps on the Chrome platform</label></div>
+            <div><label>Version {{appVersion}}</label></div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
+      <div id="analyticsOptIn" class="form-group">
         <div class="top-align-box">
           <span>
             <input id="analyticsCheck" type="checkbox">
           </span>
           <label for="analyticsCheck">
-            Help make Spark better by automatically sending usage statistics and
+            Help make Chrome Dev Editor better by automatically sending usage statistics and
             crash reports to Google
           </label>
         </div>
@@ -472,15 +487,15 @@
             <label class="settings-label">Editor theme:</label>
             <span class="settings-value"></span>
             <spark-button id="themeMinus" class="plus-minus-button"
-                flat round padding="small" on-click="{{onThemeMinus}}">
+                flat round padding="none" on-click="{{onThemeMinus}}">
               <!--TODO(ussuri): Use SVG <use> directives instead here and below.-->
-              <svg viewBox="0 0 24 24">
+              <svg viewBox="0 0 24 24" width="24" height="24">
                 <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
               </svg>
             </spark-button>
             <spark-button id="themePlus" class="plus-minus-button"
-                flat round padding="small" on-click="{{onThemePlus}}">
-              <svg viewBox="0 0 24 24">
+                flat round padding="none" on-click="{{onThemePlus}}">
+              <svg viewBox="0 0 24 24" width="24" height="24">
                 <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
               </svg>
             </spark-button>
@@ -494,14 +509,14 @@
           <label class="settings-label">Editor font:</label>
           <span class="settings-value"></span>
           <spark-button id="fontMinus" class="plus-minus-button"
-              flat round padding="small" on-click="{{onFontSmaller}}">
-            <svg viewBox="0 0 24 24">
+              flat round padding="none" on-click="{{onFontSmaller}}">
+            <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M19,13H5v-2h14V13z"></path>
             </svg>
           </spark-button>
           <spark-button id="fontPlus" class="plus-minus-button"
-              flat round padding="small" on-click="{{onFontLarger}}">
-            <svg viewBox="0 0 24 24">
+              flat round padding="none" on-click="{{onFontLarger}}">
+            <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>
             </svg>
           </spark-button>
@@ -514,21 +529,23 @@
           <label class="settings-label">Key bindings:</label>
           <span class="settings-value"></span>
           <spark-button id="keysMinus" class="plus-minus-button"
-              flat round padding="small" on-click="{{onKeysMinus}}">
-            <svg viewBox="0 0 24 24">
+              flat round padding="none" on-click="{{onKeysMinus}}">
+            <svg viewBox="0 0 24 24" width="24" height="24">
               <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
             </svg>
           </spark-button>
           <spark-button id="keysPlus" class="plus-minus-button"
-              flat round padding="small" on-click="{{onKeysPlus}}">
-            <svg viewBox="0 0 24 24">
+              flat round padding="none" on-click="{{onKeysPlus}}">
+            <svg viewBox="0 0 24 24" width="24" height="24">
               <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
             </svg>
           </spark-button>
         </spark-toolbar>
       </div>
 
-      <template if="{{!chromeOS}}">
+      <!-- TODO(devoncarew): Always show this directory, even on chrome OS. -->
+      <!-- Re-examine when syncfs is re-enabled. -->
+      <!-- template if="{{!chromeOS}}" -->
         <div class="form-group" id="rootDirectory">
           <spark-toolbar class="settings-block"
               horizontal justify="spaced" spacing="small">
@@ -536,7 +553,7 @@
             <span id="directoryLabel" class="settings-value"></span>
           </spark-toolbar>
         </div>
-      </template>
+      <!-- /template -->
 
       <div class="form-group" id="gitCredentials">
         <spark-toolbar class="settings-block"
@@ -663,7 +680,7 @@
         "DELETE" will permanently delete
         &quot;<span id="projectRemoveProjectName"></span>&quot; from disk.<br>
         "REMOVE REFERENCE" will remove the reference to it from
-        the list of projects in Spark, but keep its files on disk.
+        the list of projects in Chrome Dev Editor, but keep its files on disk.
       </div>
 
       <spark-dialog-button cancel>
@@ -684,7 +701,7 @@
          &quot;<span id="fileRemoveFileName"></span>&quot;
         from disk.<br>
         "REMOVE REFERENCE" will remove the reference to it from
-        Spark, but keep it on disk.
+        Chrome Dev Editor, but keep it on disk.
       </div>
 
       <spark-dialog-button cancel>
@@ -699,5 +716,5 @@
     </spark-dialog>
   </template>
 
-  <script type="application/dart;component=1" src="spark_polymer_ui.dart"></script>
+  <script type="application/dart" src="spark_polymer_ui.dart"></script>
 </polymer-element>

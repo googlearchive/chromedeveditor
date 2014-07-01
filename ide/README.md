@@ -1,4 +1,4 @@
-# Spark
+# Chrome Dev Editor
 
 A Chrome App-based development environment.
 
@@ -12,13 +12,10 @@ and point it to `your/path/to/dart-sdk`.
 We're currently developing against the weekly development release of the Dart
 SDK.
 
-You **need** to enable experimental Web Platform features in Chrome. From 
-`chrome://flags`, enable `#enable-experimental-web-platform-features`.
-
 ### Entry Point
 The main entry point to the Chrome App is `app/manifest.json`. It defines
 the background script for the application (`app/background.js`). This script
-gets invoked when the application starts. It opens a new window with the 
+gets invoked when the application starts. It opens a new window with the
 contents set to the `app/spark_polymer.html` file. This file in turn runs
 `app/spark_polymer.dart`.
 

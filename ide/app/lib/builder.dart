@@ -13,9 +13,10 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
-import 'workspace.dart';
+import '../spark_flags.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_utils.dart';
+import 'workspace.dart';
 
 final Logger _logger = new Logger('spark.builder');
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -81,7 +82,9 @@ class BuilderManager {
 
     if (event.isEmpty) return;
 
-    _logger.info('starting build for ${event.changes}');
+    _logger.info('starting build' +
+        (SparkFlags.developerMode ? ' for ${event.changes}' : ''));
+
     Stopwatch timer = new Stopwatch()..start();
 
     _buildRunning = true;

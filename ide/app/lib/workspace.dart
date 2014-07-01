@@ -59,6 +59,8 @@ class Workspace extends Container {
     _builderManager = new BuilderManager(this, _jobManager);
   }
 
+  JobManager get jobManager => _jobManager;
+
   Future<Workspace> whenAvailable() => _whenAvailable.future;
   Future<Workspace> whenAvailableSyncFs() => _whenAvailableSyncFs.future;
 
@@ -1009,6 +1011,8 @@ class File extends Resource {
     });
   }
 
+  int get timestamp => _timestamp;
+
   Future<String> getContents() => _fileEntry.readText();
 
   Future<chrome.ArrayBuffer> getBytes() => _fileEntry.readBytes();
@@ -1027,8 +1031,14 @@ class File extends Resource {
   }
 
   Future setBytes(List<int> data) {
-    chrome.ArrayBuffer bytes = new chrome.ArrayBuffer.fromBytes(data);
+    return setBytesArrayBuffer(new chrome.ArrayBuffer.fromBytes(data));
+  }
+
+  Future setBytesArrayBuffer(chrome.ArrayBuffer bytes) {
     return _fileEntry.writeBytes(bytes).then((_) {
+      return entry.getMetadata();
+    }).then((/*Metadata*/ metaData) {
+      _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
       workspace._fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
     });
   }

@@ -44,6 +44,7 @@ import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
+import 'lib/ui/widgets/tabview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
@@ -352,6 +353,12 @@ abstract class Spark
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
+        editorArea.onSelected.listen((Tab tab) {
+          if (tab is AceEditorTab && tab.file != null) {
+            Future declarationFuture =
+                aceManager.prepareForLinking(tab.file.project);
+          }
+        });
         if (fileUuid == null) {
           editorArea.tabs[0].select();
           return;
@@ -424,8 +431,8 @@ abstract class Spark
     actionManager.registerAction(new PubUpgradeAction(this));
     actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new BowerUpgradeAction(this));
-    actionManager.registerAction(new ApplicationRunAction(this));
-    actionManager.registerAction(new DeployToMobileAction(this, getDialogElement('#mobileDeployDialog')));
+    actionManager.registerAction(new ApplicationRunAction.run(this));
+    actionManager.registerAction(new ApplicationRunAction.deploy(this));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     if (SparkFlags.showGitPull) {
@@ -468,6 +475,8 @@ abstract class Spark
     actionManager.registerAction(new SendFeedbackAction(this));
 
     actionManager.registerKeyListener();
+
+    DeployToMobileDialog._init(this);
   }
 
   void initToolbar() {
@@ -475,10 +484,6 @@ abstract class Spark
   }
 
   void buildMenu() {
-    // Overridden in spark_polymer.dart.
-  }
-
-  void menuActivateEventHandler(CustomEvent event) {
     // Overridden in spark_polymer.dart.
   }
 
@@ -608,7 +613,7 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(String title, {String message, Exception exception}) {
+  void showErrorMessage(String title, {String message, var exception}) {
     const String UNKNOWN_ERROR_STRING = 'Unknown error.';
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
@@ -963,7 +968,7 @@ class ProjectLocationManager {
   }
 
   Future<bool> _showRequestFileSystemDialog() {
-    return _spark.askUserOkCancel('Please choose a folder to store your Spark projects.',
+    return _spark.askUserOkCancel('Please choose a folder to store your Chrome Dev Editor projects.',
         okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
   }
 
@@ -1699,14 +1704,33 @@ class FileExitAction extends SparkAction {
 }
 
 class ApplicationRunAction extends SparkAction implements ContextAction {
-  ApplicationRunAction(Spark spark) : super(
-      spark, "application-run", "Run") {
+  LaunchTarget _launchTarget;
+  String _launchText;
+
+  ApplicationRunAction.run(Spark spark) : super(spark, "application-run", "Run") {
+    _launchTarget = LaunchTarget.LOCAL;
+    _launchText = 'Running';
     addBinding("ctrl-r");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
   }
 
+  ApplicationRunAction.deploy(Spark spark) :
+      super(spark, "application-push", "Deploy to Mobile…") {
+    _launchTarget = LaunchTarget.REMOTE;
+    _launchText = 'Deploying';
+    enabled = false;
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+  }
+
   void _invoke([context]) {
+    if (!enabled) {
+      spark.showErrorMessage('Unable to Deploy',
+          message: 'Unable to deploy the current selection; please select an '
+          'application to deploy.');
+      return;
+    }
+
     ws.Resource resource;
 
     if (context == null) {
@@ -1716,12 +1740,11 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
     }
 
     Completer<SparkJobStatus> completer = new Completer<SparkJobStatus>();
-    ProgressJob job = new ProgressJob("Running application…", completer);
-    spark.launchManager.performLaunch(resource, LaunchTarget.LOCAL).then((_) {
+    spark.launchManager.performLaunch(resource, _launchTarget).then((_) {
       completer.complete();
     }).catchError((e) {
       completer.complete();
-      spark.showErrorMessage('Error Running Application', exception: e);
+      spark.showErrorMessage('Error ${_launchText} Application', exception: e);
     });
   }
 
@@ -1729,9 +1752,8 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 
   bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
-  bool _appliesTo(ws.Resource resource) {
-    return spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
-  }
+  bool _appliesTo(ws.Resource resource) =>
+    spark.launchManager.canLaunch(resource, _launchTarget);
 
   void _updateEnablement(ws.Resource resource) {
     enabled = (resource != null && _appliesTo(resource));
@@ -2180,22 +2202,33 @@ class FolderOpenAction extends SparkActionWithStatusDialog {
   }
 }
 
-class DeployToMobileAction extends SparkActionWithProgressDialog implements ContextAction {
+class DeployToMobileDialog extends SparkActionWithProgressDialog {
+  static DeployToMobileDialog _instance;
+
+  static void _init(Spark spark) {
+    _instance = new DeployToMobileDialog(
+        spark, spark.getDialogElement('#mobileDeployDialog'));
+  }
+
+  /**
+   * Open a deploy to mobile dialog with the given resource.
+   */
+  static void deploy(ws.Resource resource) {
+    _instance._invoke([resource]);
+  }
+
   CheckboxInputElement _ipElement;
   CheckboxInputElement _adbElement;
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
 
-  DeployToMobileAction(Spark spark, Element dialog)
-      : super(spark, "application-push", "Deploy to Mobile", dialog) {
+  DeployToMobileDialog(Spark spark, Element dialog)
+      : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
     _ipElement = getElement("#ip");
     _adbElement = getElement("#adb");
     _pushUrlElement = _triggerOnReturn("#pushUrl");
-    enabled = false;
-    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
-    // When the IP address field is selected, check the `IP` checkbox.
     _ipElement.onChange.listen(_enableInputs);
     _adbElement.onChange.listen(_enableInputs);
     _enableInputs();
@@ -2227,18 +2260,6 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
       _restoreDialog();
       _show();
     }
-  }
-
-  String get category => 'application';
-
-  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
-
-  bool _appliesTo(ws.Resource resource) {
-    return getAppContainerFor(resource) != null;
-  }
-
-  void _updateEnablement(ws.Resource resource) {
-    enabled = resource != null && _appliesTo(resource);
   }
 
   void _enableInputs([_]) {
@@ -2304,8 +2325,10 @@ class ProgressMonitorImpl extends ProgressMonitor {
 
   ProgressMonitorImpl(this._dialog);
 
-  void start(String title, [num maxWork = 0]) {
-    super.start(title, maxWork);
+  void start(String title,
+             {num maxWork: 0,
+              ProgressFormat format: ProgressFormat.PERCENTAGE}) {
+    super.start(title, maxWork: maxWork, format: format);
     _dialog._setProgressMessage(title == null ? '' : title);
   }
 }
@@ -2484,8 +2507,8 @@ class GitCloneAction extends SparkActionWithProgressDialog {
       } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
         spark.showSuccessMessage('Clone cancelled');
-      } else if (e is SparkException && e.errorCode
-          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+      } else if (e is SparkException &&
+          e.errorCode == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
         spark.showErrorMessage('Error cloning Git project',
             message: 'Could not clone "${projectName}": ' + e.message);
       } else {
@@ -3219,7 +3242,7 @@ class _GitPullJob extends Job {
   _GitPullJob(this.gitOperations, this.spark) : super("Pulling…");
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     return spark.syncPrefs.getValue("git-auth-info").then((String value) {
       String username;
@@ -3250,7 +3273,7 @@ class _GitAddJob extends Job {
   _GitAddJob(this.gitOperations, this.files, this.spark) : super("Adding…");
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
     return gitOperations.addFiles(files).then((_) {
       return new SparkJobStatus(
           code: SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS);
@@ -3271,7 +3294,7 @@ class _GitBranchJob extends Job {
   }
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     return spark.syncPrefs.getValue("git-auth-info").then((String value) {
       String username;
@@ -3305,7 +3328,7 @@ class _GitCommitJob extends Job {
       this._commitMessage, this.spark) : super("Committing…");
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
     return gitOperations.commit(_userName, _userEmail, _commitMessage).then((_) {
       return new SparkJobStatus(
           code: SparkStatusCodes.SPARK_JOB_GIT_COMMIT_SUCCESS);
@@ -3324,7 +3347,7 @@ class _GitCheckoutJob extends Job {
   }
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
     return gitOperations.checkoutBranch(_branchName);
   }
 }
@@ -3339,7 +3362,7 @@ class _OpenFolderJob extends Job {
   }
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     return spark.workspace.link(
         new ws.FolderRoot(_entry)).then((ws.Resource resource) {
@@ -3387,44 +3410,48 @@ abstract class PackageManagementJob extends Job {
       super('Getting packages…');
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
-    return _run().then((_) {
+    return _run(monitor).then((_) {
       _spark.showSuccessMessage("Successfully ran $_commandName");
     }).catchError((e) {
       _spark.showErrorMessage("Error while running $_commandName", exception: e);
     });
   }
 
-  Future _run();
+  Future _run(ProgressMonitor monitor);
 }
 
 class PubGetJob extends PackageManagementJob {
   PubGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub get');
 
-  Future _run() => _spark.pubManager.installPackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.pubManager.installPackages(_container, monitor);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
   PubUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub upgrade');
 
-  Future _run() => _spark.pubManager.upgradePackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.pubManager.upgradePackages(_container, monitor);
 }
 
 class BowerGetJob extends PackageManagementJob {
   BowerGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'bower install');
 
-  Future _run() => _spark.bowerManager.installPackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.bowerManager.installPackages(_container, monitor);
 }
 
 class BowerUpgradeJob extends PackageManagementJob {
   BowerUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'bower upgrade');
 
-  Future _run() => _spark.bowerManager.upgradePackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.bowerManager.upgradePackages(_container, monitor);
 }
 
 class CompileDartJob extends Job {
@@ -3435,7 +3462,7 @@ class CompileDartJob extends Job {
       super('Compiling ${fileName}…');
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     CompilerService compiler = spark.services.getService("compiler");
 
@@ -3444,19 +3471,11 @@ class CompileDartJob extends Job {
         throw result;
       }
 
-      return getCreateFile(file.parent, '${file.name}.js').then((ws.File file) {
+      String newFileName = '${file.name}.precompiled.js';
+      return ws_utils.getCreateFile(file.parent, newFileName).then((ws.File file) {
         return file.setContents(result.output);
       });
     });
-  }
-
-  Future<ws.File> getCreateFile(ws.Folder parent, String name) {
-    ws.File file = parent.getChild(name);
-    if (file == null) {
-      return parent.createNewFile(name);
-    } else {
-      return new Future.value(file);
-    }
   }
 }
 
@@ -3468,7 +3487,7 @@ class ResourceRefreshJob extends Job {
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
     List<ws.Project> projects = resources.map((r) => r.project).toSet().toList();
 
-    monitor.start('', projects.length);
+    monitor.start('', maxWork: projects.length);
 
     Completer completer = new Completer();
 
@@ -3500,7 +3519,7 @@ class ResourceRefreshJob extends Job {
 
 class AboutSparkAction extends SparkActionWithDialog {
   AboutSparkAction(Spark spark, Element dialog)
-      : super(spark, "help-about", "About Spark", dialog) {
+      : super(spark, "help-about", "About Chrome Dev Editor", dialog) {
     _checkbox.checked = _isTrackingPermitted;
     _checkbox.onChange.listen((e) => _isTrackingPermitted = _checkbox.checked);
   }
@@ -3587,7 +3606,7 @@ class RunTestsAction extends SparkAction {
 
   void _initTestDriver() {
     if (testDriver == null) {
-      testDriver = new TestDriver(all_tests.defineTests, spark.jobManager,
+      testDriver = new TestDriver(all_tests.defineTests, spark,
           connectToTestListener: true);
     }
   }
@@ -3677,7 +3696,7 @@ class _WebStorePublishJob extends Job {
       : super("Publishing to Chrome Web Store…");
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    monitor.start(name, _appID == null ? 5 : 6);
+    monitor.start(name, maxWork: _appID == null ? 5 : 6);
 
     if (_container == null) {
       throw new SparkException('The manifest.json file of the application has not been found.');

@@ -29,7 +29,7 @@ class SparkException implements Exception {
     this.isError = isError;
   }
 
-  static SparkException fromException(Exception e) {
+  static SparkException fromException(dynamic e) {
     if (e is SparkException) {
       return e;
     } else if (e is GitException) {
@@ -103,7 +103,7 @@ class SparkException implements Exception {
             errorCode: SparkErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
 
       case GitErrorConstants.GIT_HTTP_CONN_RESET:
-        return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_REST_MSG,
+        return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_RESET_MSG,
             errorCode: SparkErrorConstants.GIT_HTTP_CONN_RESET);
 
     }
@@ -119,7 +119,6 @@ class SparkException implements Exception {
  * unique [SparkException].
  */
 class SparkErrorConstants {
-
   static const String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
   static const String GIT_CLONE_CANCEL = "git.clone_cancel";
 
@@ -127,21 +126,24 @@ class SparkErrorConstants {
   static const String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
   static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
 
-  static const String GIT_PUSH_NON_FAST_FORWARD
-      = "git.push_non_fast_forward";
+  static const String GIT_PUSH_NON_FAST_FORWARD =
+      "git.push_non_fast_forward";
   static const String GIT_PUSH_NO_REMOTE = "git.push_no_remote";
   static const String GIT_PUSH_NO_COMMITS = "git.push_no_commits";
 
   static const String GIT_BRANCH_EXISTS = 'git.branch_exists';
   static const String GIT_BRANCH_UP_TO_DATE = "git.branch_up_to_date";
   static const String GIT_BRANCH_NOT_FOUND = "git.branch_not_found";
-  static const String GIT_REMOTE_BRANCH_NOT_FOUND
-      = "git.remote_branch_not_found";
+  static const String GIT_REMOTE_BRANCH_NOT_FOUND =
+      "git.remote_branch_not_found";
   static const String GIT_INVALID_BRANCH_NAME = "git.invalid_branch_name";
 
   static const String GIT_WORKING_TREE_NOT_CLEAN = "git.working_tree_not_clean";
-  static const String GIT_SUBMODULES_NOT_YET_SUPPORTED
-      = "git.submodules_not_yet_supported";
+  static const String GIT_SUBMODULES_NOT_YET_SUPPORTED =
+      "git.submodules_not_yet_supported";
+
+  static const String RUN_APP_NOT_FOUND_IN_CHROME =
+      "run.app_not_found_in_chrome";
 }
 
 class SparkErrorMessages {
@@ -150,16 +152,20 @@ class SparkErrorMessages {
   static const String GIT_PUSH_NO_REMOTE_MSG = "No remote to push.";
   static const String GIT_PUSH_NO_COMMITS_MSG = "No commits to push.";
 
-  static const String GIT_BRANCH_EXISTS_MSG = 'Branch already exists.';
+  static const String GIT_BRANCH_EXISTS_MSG = "Branch already exists.";
   static const String GIT_BRANCH_UP_TO_DATE_MSG = "Branch up to date.";
   static const String GIT_BRANCH_NOT_FOUND_MSG = "Branch not found.";
-  static const String GIT_REMOTE_BRANCH_NOT_FOUND_MSG
-      = "remote branch not found.";
+  static const String GIT_REMOTE_BRANCH_NOT_FOUND_MSG =
+      "remote branch not found.";
   static const String GIT_INVALID_BRANCH_NAME_MSG = "Invalid branch name.";
 
   static const String GIT_WORKING_TREE_NOT_CLEAN_MSG = "Working tree is not clean.";
-  static const String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
-      = 'Repositories with sub modules are not yet supported.';
-  static const String GIT_HTTP_CONN_REST_MSG  = 'The connection was reset by '
-      'the server. This may happen when pushing commits with large changes.';
+  static const String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG =
+      "Repositories with sub modules are not yet supported.";
+  static const String GIT_HTTP_CONN_RESET_MSG  = "The connection was reset by "
+      "the server. This may happen when pushing commits with large changes.";
+
+  static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
+      "It looks like the application failed to get installed in Chrome. "
+      "Has Chrome displayed any errors?";
 }

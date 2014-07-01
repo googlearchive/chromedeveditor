@@ -56,8 +56,8 @@ var EditorWindow = function(app) {
         width: Math.floor(screen.availWidth * (7/8)),
         height: Math.floor(screen.availHeight * (7/8))
       },
-      minWidth: 900,
-      minHeight: 640,
+      minWidth: 600,
+      minHeight: 400,
     },
     this.onCreated_.bind(this)
   );

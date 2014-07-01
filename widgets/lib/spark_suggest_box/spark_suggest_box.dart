@@ -68,8 +68,8 @@ class SparkSuggestBox extends SparkWidget {
   SparkSuggestBox.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     _textBox = $['textBox'];
     _overlay = $['suggestionListOverlay'];

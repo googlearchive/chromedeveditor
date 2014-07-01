@@ -83,7 +83,7 @@ class MobileDeploy {
    * a problem.
    */
   Future pushToHost(String target, ProgressMonitor monitor) {
-    monitor.start('Deploying…', 10);
+    monitor.start('Deploying…', maxWork: 10);
 
     _logger.info('deploying application to ip host');
 
@@ -95,7 +95,7 @@ class MobileDeploy {
    * first. If that fails, then we try pushing via a USB connection.
    */
   Future pushAdb(ProgressMonitor monitor) {
-    monitor.start('Deploying…', 10);
+    monitor.start('Deploying…', maxWork: 10);
 
     // Try to find a local ADB server. If we fail, try to use USB.
     return AdbClientTcp.createClient().then((AdbClientTcp client) {
@@ -120,7 +120,7 @@ class MobileDeploy {
     // Build the HTTP request headers.
     String header =
         'POST /$path HTTP/1.1\r\n'
-        'User-Agent: Spark IDE\r\n'
+        'User-Agent: Chrome Dev Editor\r\n'
         'Host: ${target}:$DEPLOY_PORT\r\n';
     List<int> body = [];
 

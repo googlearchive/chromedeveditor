@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'exception.dart';
+import 'enum.dart';
 
 final Logger _logger = new Logger('spark.jobs');
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -34,7 +35,7 @@ class JobManager {
     _waitingJobs.add(job);
 
     if (!isJobRunning) {
-      _scheduleNextJob();
+      _runNextJob();
     }
     return completer.future;
   }
@@ -49,36 +50,33 @@ class JobManager {
    */
   Stream<JobManagerEvent> get onChange => _controller.stream;
 
-  void _scheduleNextJob() {
-    if (!_waitingJobs.isEmpty) {
-      Job job = _waitingJobs.removeAt(0);
-      Timer.run(() => _runNextJob(job));
-    }
-  }
+  void _runNextJob() {
+    if (_waitingJobs.isEmpty) return;
 
-  void _runNextJob(Job job) {
-    _runningJob = job;
+    _runningJob = _waitingJobs.removeAt(0);
 
-    _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
-    _jobStarted(_runningJob);
-    SparkJobStatus jobStatus;
+    Timer.run(() {
+      _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
+      _jobStarted(_runningJob);
+      SparkJobStatus jobStatus;
 
-    try {
-      _runningJob.run(monitor).then((status) {
-        jobStatus = status;
-      }).catchError((e, st) {
-        _runningJob.completer.completeError(e);
-      }).whenComplete(() {
-        _jobFinished(_runningJob);
-        if (_runningJob != null) _runningJob.done(jobStatus);
+      try {
+        _runningJob.run(monitor).then((status) {
+          jobStatus = status;
+        }).catchError((e, st) {
+          _runningJob.completer.completeError(e);
+        }).whenComplete(() {
+          _jobFinished(_runningJob);
+          if (_runningJob != null) _runningJob.done(jobStatus);
+          _runningJob = null;
+          _runNextJob();
+        });
+      } catch (e, st) {
+        _logger.severe('Error running job ${_runningJob}', e, st);
         _runningJob = null;
-        _scheduleNextJob();
-      });
-    } catch (e, st) {
-      _logger.severe('Error running job ${_runningJob}', e, st);
-      _runningJob = null;
-      _scheduleNextJob();
-    }
+        _runNextJob();
+      }
+    });
   }
 
   void _jobStarted(Job job) {
@@ -86,13 +84,11 @@ class JobManager {
   }
 
   void _monitorWorked(_ProgressMonitorImpl monitor, Job job) {
-    _controller.add(new JobManagerEvent(this, job,
-        indeterminate: monitor.indeterminate, progress: monitor.progress));
+    _controller.add(new JobManagerEvent(this, job, monitor: monitor));
   }
 
   void _monitorDone(_ProgressMonitorImpl monitor, Job job) {
-    _controller.add(new JobManagerEvent(this, job,
-        indeterminate: monitor.indeterminate, progress: monitor.progress));
+    _controller.add(new JobManagerEvent(this, job, monitor: monitor));
   }
 
   void _jobFinished(Job job) {
@@ -106,21 +102,34 @@ class JobManagerEvent {
 
   final bool started;
   final bool finished;
-  final bool indeterminate;
-  final double progress;
+
+  bool _indeterminate = false;
+  double _progress = 1.0;
+  String _progressAsString = '';
+
+  bool get indeterminate => _indeterminate;
+
+  double get progress => _progress;
 
   JobManagerEvent(this.manager, this.job,
-      {this.started: false, this.finished: false, this.indeterminate: false, this.progress: 1.0});
+      {this.started: false, this.finished: false, ProgressMonitor monitor}) {
+    // One and only one of [started], [finished], [monitor] should be truthy.
+    assert([started, finished, monitor != null].where((e) => e).length == 1);
 
-  String toString() {
-    if (started) {
-      return '${job.name} started';
+    // NOTE: We need a snapshot of the current [monitor]'s values here, as
+    // [monitor] itself will keep changing while the event waits to be handled.
+    if (monitor != null) {
+      _indeterminate = monitor.indeterminate;
+      _progress = monitor.progress;
+      _progressAsString = '${monitor.title} ${monitor.progressAsString}';
+    } else if (started) {
+      _progressAsString = '${job.name} started';
     } else if (finished) {
-      return '${job.name} finished';
-    } else {
-      return '${job.name} ${(progress * 100).toStringAsFixed(1)}%';
+      _progressAsString = '${job.name} finished';
     }
   }
+
+  String toString() => _progressAsString;
 }
 
 /**
@@ -172,6 +181,16 @@ class ProgressJob extends Job {
   }
 }
 
+class ProgressFormat extends Enum<String> {
+  const ProgressFormat._(String value) : super(value);
+  String get enumName => 'ProgressKind';
+
+  static const NONE = const ProgressFormat._('NONE');
+  static const DOUBLE = const ProgressFormat._('DOUBLE');
+  static const PERCENTAGE = const ProgressFormat._('PERCENTAGE');
+  static const N_OUT_OF_M = const ProgressFormat._('N_OUT_OF_M');
+}
+
 /**
  * Outlines a progress monitor with given [title] (the title of the progress
  * monitor), and [maxWork] (the [work] value determining when progress is
@@ -184,6 +203,7 @@ abstract class ProgressMonitor {
   bool _cancelled = false;
   Completer _cancelledCompleter;
   StreamController _cancelController = new StreamController.broadcast();
+  ProgressFormat _format;
 
   // The job itself can listen to the cancel event, and do the appropriate
   // action.
@@ -193,10 +213,16 @@ abstract class ProgressMonitor {
    * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
    * when work is completed)
    */
-  void start(String title, [num maxWork = 0]) {
-    this._title = title;
-    this._maxWork = maxWork;
+  void start(
+      String title,
+      {num maxWork: 0,
+       ProgressFormat format: ProgressFormat.PERCENTAGE}) {
+    _title = title;
+    _maxWork = maxWork;
+    _format = format;
   }
+
+  String get title => _title;
 
   /**
    * The current value of work complete.
@@ -216,7 +242,22 @@ abstract class ProgressMonitor {
   /**
    * The total progress of work complete (a double from 0 to 1).
    */
-  double get progress => _work / _maxWork;
+  double get progress =>
+      (_maxWork != null && _maxWork != 0) ? (_work / _maxWork) : 0.0;
+
+  String get progressAsString {
+    switch (_format) {
+      case ProgressFormat.NONE:
+        return '';
+      case ProgressFormat.DOUBLE:
+        return progress.toString();
+      case ProgressFormat.PERCENTAGE:
+        return '${(progress * 100).toStringAsFixed(0)}%';
+      case ProgressFormat.N_OUT_OF_M:
+        return '$_work of $_maxWork';
+    }
+    return '';
+  }
 
   /**
    * Adds [amount] to [work] completed (but no greater than maxWork).
@@ -283,8 +324,11 @@ class _ProgressMonitorImpl extends ProgressMonitor {
 
   _ProgressMonitorImpl(this.manager, this.job);
 
-  void start(String title, [num workAmount = 0]) {
-    super.start(title, workAmount);
+  void start(
+      String title,
+      {num maxWork: 0,
+       ProgressFormat format: ProgressFormat.PERCENTAGE}) {
+    super.start(title, maxWork: maxWork, format: format);
 
     manager._monitorWorked(this, job);
   }

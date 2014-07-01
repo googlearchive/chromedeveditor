@@ -65,6 +65,7 @@ class MockAceManager implements AceManager {
   Stream get onGotoDeclaration => null;
   NavigationLocation get navigationLocation => null;
   void setupOutline(Element parentElement) { }
+  Future prepareForLinking(workspace.Project project) => new Future.value();
 }
 
 class MockAceEditor implements TextEditor {
@@ -104,6 +105,8 @@ class MockAceEditor implements TextEditor {
   void format() { }
   Future navigateToDeclaration([Duration timeLimit]) => null;
   int getCursorOffset() => 0;
+
+  void customizeSession(EditSession session) { }
 }
 
 class MockEditSession implements EditSession {

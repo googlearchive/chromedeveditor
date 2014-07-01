@@ -15,8 +15,8 @@ class ``className`` extends PolymerElement {
   }
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
     greeting = "Hello, $who!"; 
   }
 }

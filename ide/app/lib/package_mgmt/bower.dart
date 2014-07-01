@@ -7,7 +7,6 @@
 /**
  * Bower services.
  */
-
 library spark.package_mgmt.bower;
 
 import 'dart:async';
@@ -24,6 +23,11 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.bower');
 
 class BowerManager extends PackageManager {
+
+  /**
+   * Create a new [BowerManager] instance. This is a heavy-weight object; it
+   * creates a new [Builder].
+   */
   BowerManager(Workspace workspace) : super(workspace);
 
   //
@@ -37,11 +41,11 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future installPackages(Folder container) =>
-      _installOrUpgradePackages(container.project, FetchMode.INSTALL);
+  Future installPackages(Folder container, ProgressMonitor monitor) =>
+      _installOrUpgradePackages(container.project, FetchMode.INSTALL, monitor);
 
-  Future upgradePackages(Folder container) =>
-      _installOrUpgradePackages(container.project, FetchMode.UPGRADE);
+  Future upgradePackages(Folder container, ProgressMonitor monitor) =>
+      _installOrUpgradePackages(container.project, FetchMode.UPGRADE, monitor);
 
   // TODO(keertip): implement for bower
   Future<dynamic> arePackagesInstalled(Folder container) => new Future.value(true);
@@ -50,7 +54,8 @@ class BowerManager extends PackageManager {
   // - end PackageManager abstract interface.
   //
 
-  Future _installOrUpgradePackages(Folder container, FetchMode mode) {
+  Future _installOrUpgradePackages(
+      Folder container, FetchMode mode, ProgressMonitor monitor) {
     final File specFile = container.getChild(properties.packageSpecFileName);
 
     // The client is expected to call us only when the project has bower.json.
@@ -62,7 +67,7 @@ class BowerManager extends PackageManager {
     return container.getOrCreateFolder(properties.packagesDirName, true)
         .then((Folder packagesDir) {
       final fetcher = new BowerFetcher(
-          packagesDir.entry, properties.packageSpecFileName);
+          packagesDir.entry, properties.packageSpecFileName, monitor);
 
       return fetcher.fetchDependencies(specFile.entry, mode).catchError((e) {
         _logger.severe('Error getting Bower packages', e);
