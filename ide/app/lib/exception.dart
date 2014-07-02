@@ -172,6 +172,6 @@ class SparkErrorMessages {
   static const String PUB_ON_WINDOWS_MSG =
       'Running Pub get/upgrade is currently not supported on Windows; '
       'use the command line Pub tool to get the packages.\n'
-      'You can track issue at '
+      'You can track the issue at '
       'https://github.com/dart-lang/chromedeveditor/issues/2743';
 }
