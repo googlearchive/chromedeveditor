@@ -1717,7 +1717,7 @@ abstract class PackageManagementAction
     if (!_canRunAction()) {
       return;
     }
-    
+
     ws.Resource resource;
 
     if (context == null) {
@@ -1756,8 +1756,7 @@ abstract class PubAction extends PackageManagementAction {
   
   bool _canRunAction() {
     if (PlatformInfo.isWin) {
-      spark.showErrorMessage('Pub',
-          message: SparkErrorMessages.PUB_ON_WINDOWS_MSG);
+      spark.showErrorMessage('Pub', SparkErrorMessages.PUB_ON_WINDOWS_MSG);
       return false;
     }
     return true;
@@ -3258,7 +3257,7 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.canRunPub(project)) {
+      if (spark.pubManager.canRunPub(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
 
