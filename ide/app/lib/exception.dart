@@ -14,20 +14,16 @@ class SparkException implements Exception {
   /// The error message.
   final String message;
   /// Represents the unique string for each error type.
-  String errorCode;
+  final String errorCode;
   /// Indicates if the error is not necessary to be handled and can be ignored.
-  bool canIgnore = false;
+  final bool canIgnore = false;
   /// Indicates whether the exception is an error or a status.
-  bool isError = true;
+  final bool isError = true;
   /// Original exception.
   dynamic exception;
 
-
-  SparkException(this.message,
-      {this.errorCode, this.exception, bool canIgnore, bool isError}) {
-    this.canIgnore = canIgnore;
-    this.isError = isError;
-  }
+  SparkException(this.message, {this.errorCode, this.exception,
+    bool canIgnore: false, bool isError: true});
 
   static SparkException fromException(dynamic e) {
     if (e is SparkException) {

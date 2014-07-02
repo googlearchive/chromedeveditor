@@ -81,7 +81,7 @@ void fillContextMenu(UListElement ul,
  * The ActionManager class is used to manage a set of actions.
  */
 class ActionManager {
-  Map<String, Action> _actionMap = {};
+  final Map<String, Action> _actionMap = {};
 
   /**
    * Register this [ActionManager] as a key event listener for the global
@@ -207,7 +207,7 @@ class KeyBinding {
     return __bindingMap;
   }
 
-  Set<int> modifiers = new Set();
+  final Set<int> modifiers = new Set();
   int keyCode;
 
   /**

@@ -19,11 +19,11 @@ final NumberFormat _nf = new NumberFormat.decimalPattern();
  * notification for job progress.
  */
 class JobManager {
-  StreamController<JobManagerEvent> _controller =
+  final StreamController<JobManagerEvent> _controller =
       new StreamController.broadcast();
 
   Job _runningJob;
-  List<Job> _waitingJobs = new List<Job>();
+  final List<Job> _waitingJobs = new List<Job>();
 
   /**
    * Will schedule a [job] after all other queued jobs. If no [Job] is currently

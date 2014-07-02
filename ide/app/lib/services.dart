@@ -16,7 +16,7 @@ import 'workspace.dart';
 
 export 'services/services_common.dart';
 
-Logger _logger = new Logger('spark.services');
+final Logger _logger = new Logger('spark.services');
 
 /**
  * Defines a class which contains services and manages their communication.
