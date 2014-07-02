@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'exception.dart';
 import 'enum.dart';
 
 final Logger _logger = new Logger('spark.jobs');
@@ -29,7 +30,7 @@ class JobManager {
    * Will schedule a [job] after all other queued jobs. If no [Job] is currently
    * waiting, [job] will run.
    */
-  Future schedule(Job job) {
+  Future<SparkJobStatus> schedule(Job job) {
     Completer completer = job.completer;
     _waitingJobs.add(job);
 
@@ -57,13 +58,16 @@ class JobManager {
     Timer.run(() {
       _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
       _jobStarted(_runningJob);
+      SparkJobStatus jobStatus;
 
       try {
-        _runningJob.run(monitor).catchError((e, st) {
+        _runningJob.run(monitor).then((status) {
+          jobStatus = status;
+        }).catchError((e, st) {
           _runningJob.completer.completeError(e);
         }).whenComplete(() {
           _jobFinished(_runningJob);
-          if (_runningJob != null) _runningJob.done();
+          if (_runningJob != null) _runningJob.done(jobStatus);
           _runningJob = null;
           _runNextJob();
         });
@@ -134,23 +138,23 @@ class JobManagerEvent {
 abstract class Job {
   final String name;
 
-  Completer _completer;
+  Completer<SparkJobStatus> _completer;
 
   Completer get completer => _completer;
 
-  Future get future => _completer.future;
+  Future<SparkJobStatus> get future => _completer.future;
 
   Job(this.name, [Completer completer]) {
     if (completer != null) {
       _completer = completer;
     } else {
-      _completer = new Completer();
+      _completer = new Completer<SparkJobStatus>();
     }
   }
 
-  void done() {
+  void done(SparkJobStatus status) {
     if (_completer != null && !_completer.isCompleted) {
-      _completer.complete();
+      _completer.complete(status);
     }
   }
 
@@ -159,7 +163,7 @@ abstract class Job {
    * progress monitor. When it finishes, it should complete the [Future] that
    * is returned.
    */
-  Future run(ProgressMonitor monitor);
+  Future<SparkJobStatus> run(ProgressMonitor monitor);
 
   String toString() => name;
 }
@@ -171,7 +175,7 @@ class ProgressJob extends Job {
 
   ProgressJob(String name, Completer completer) : super(name, completer);
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name);
     return _completer.future;
   }
@@ -364,4 +368,81 @@ class _ProgressMonitorImpl extends ProgressMonitor {
 
   void performCancel();
 }
+
+ /**
+  * Represent the status of spark job. If the job finishes successfully [success]
+  * is true. In case the job fails, the [success] is set false. Optionally, the
+  * underlining exception is saved in [exception].
+  *
+  * TODO(grv): Probably status should be returned by the job manager and contains
+  * the job state (waiting, running, done).
+  */
+ class SparkJobStatus {
+   String _message;
+   String code = SparkStatusCodes.SPARK_JOB_STATUS_UNKNOWN;
+
+   /// Indicates whether the job was successful or failed.
+   bool success = true;
+
+   /// The underlining exception object in case the job failed.
+   SparkException exception;
+
+   String get message => _message;
+
+   set message(String msg) => _message = msg;
+
+   SparkJobStatus({this.code, String message}) {
+     if (message == null) {
+       try {
+         _message = getStatusMessageFromCode(this.code);
+       } catch (e) {
+         // Do Nothing.
+       }
+     } else {
+       _message = message;
+     }
+   }
+
+   static String getStatusMessageFromCode(String code) {
+     switch (code) {
+       case SparkStatusCodes.SPARK_JOB_BUILD_SUCCESS:
+         return SparkStatusMessages.SPARK_JOB_BUILD_SUCCESS_MSG;
+
+       case SparkStatusCodes.SPARK_JOB_IMPORT_FOLDER_SUCCESS:
+         return SparkStatusMessages.SPARK_JOB_IMPORT_FOLDER_SUCCESS_MSG;
+
+       case SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS:
+         return SparkStatusMessages.SPARK_JOB_GIT_PULL_SUCCESS_MSG;
+       case SparkStatusCodes.SPARK_JOB_GIT_COMMIT_SUCCESS:
+         return SparkStatusMessages.SPARK_JOB_GIT_COMMIT_SUCCESS_MSG;
+       case SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS:
+         return SparkStatusMessages.SPARK_JOB_GIT_ADD_SUCCESS_MSG;
+     }
+     throw "Message for code : ${code} not found.";
+   }
+ }
+
+ class SparkStatusCodes {
+
+   static const String SPARK_JOB_STATUS_OK = "spark.job.status_ok";
+   static const String SPARK_JOB_STATUS_UNKNOWN = "spark.job.status_unknown";
+
+   static const String SPARK_JOB_IMPORT_FOLDER_SUCCESS = "spark.job.import.folder_success";
+
+   static const String SPARK_JOB_BUILD_SUCCESS = 'spark.job.build_success';
+
+   static const String SPARK_JOB_GIT_PULL_SUCCESS = "spark.job.git.pull_success";
+   static const String SPARK_JOB_GIT_COMMIT_SUCCESS = "spark.job.git.commit_success";
+   static const String SPARK_JOB_GIT_ADD_SUCCESS = "spark.job.git.add_success";
+ }
+
+ class SparkStatusMessages {
+   static const String SPARK_JOB_BUILD_SUCCESS_MSG = 'Build successful.';
+
+   static const String SPARK_JOB_IMPORT_FOLDER_SUCCESS_MSG = "Import successful.";
+
+   static const String SPARK_JOB_GIT_PULL_SUCCESS_MSG = "Pull successful.";
+   static const String SPARK_JOB_GIT_COMMIT_SUCCESS_MSG = "Changes committed.";
+   static const String SPARK_JOB_GIT_ADD_SUCCESS_MSG = "Added successfully.";
+ }
 

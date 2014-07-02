@@ -432,7 +432,7 @@ class Workspace extends Container {
     }, onError: (e) {
         _logger.warning('Exception in workspace restore sync file system', e);
     }).timeout(new Duration(seconds: 20)).whenComplete(() {
-      progressJob.done();
+      progressJob.done(new SparkJobStatus(code: SparkStatusCodes.SPARK_JOB_STATUS_OK));
       _whenAvailableSyncFs.complete(this);
     });
   }

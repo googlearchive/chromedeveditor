@@ -136,7 +136,7 @@ class _BuildJob extends Job {
   _BuildJob(this.event, this.builders, Completer completer)
       : super('Building…', completer);
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     return Future.forEach(builders, (Builder builder) {
       Future f = builder.build(event, monitor);
       assert(f != null);
@@ -145,7 +145,8 @@ class _BuildJob extends Job {
     }).catchError((e, st) {
       _logger.severe('Exception from build manager', e, st);
     }).whenComplete(() {
-      done();
+      done(new SparkJobStatus(
+          code: SparkStatusCodes.SPARK_JOB_BUILD_SUCCESS));
     });
   }
 }
