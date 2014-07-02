@@ -164,6 +164,11 @@ spark-dialog {
   margin: 0 20px;
 }
 
+#errorMessage {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 #gitResetSettingsDone,
 #preferenceResetResult {
   display: none;
