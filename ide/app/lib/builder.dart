@@ -31,9 +31,9 @@ class BuilderManager {
   final Workspace workspace;
   final JobManager jobManager;
 
-  List<Builder> builders = [];
+  final List<Builder> builders = [];
 
-  List<ResourceChangeEvent> _events = [];
+  final List<ResourceChangeEvent> _events = [];
 
   Timer _timer;
   bool _buildRunning = false;
@@ -44,7 +44,7 @@ class BuilderManager {
 
   bool get isRunning => _buildRunning;
 
-  List<Completer> _completers = [];
+  final List<Completer> _completers = [];
 
   /**
    * Returns a [Future] that will complete when all current builds are finished.

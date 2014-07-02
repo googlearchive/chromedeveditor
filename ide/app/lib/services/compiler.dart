@@ -23,8 +23,8 @@ import '../dart/sdk.dart';
  * on the order of a 2x speedup.
  */
 class Compiler {
-  DartSdk _sdk;
-  common.ContentsProvider _contentsProvider;
+  final DartSdk _sdk;
+  final common.ContentsProvider _contentsProvider;
 
   static Compiler createCompilerFrom(DartSdk sdk,
                                      common.ContentsProvider contentsProvider) {
@@ -73,7 +73,7 @@ class Compiler {
  */
 class CompilerResultHolder {
   final bool csp;
-  List<CompilerProblem> _problems = [];
+  final List<CompilerProblem> _problems = [];
   StringBuffer _output;
 
   CompilerResultHolder({this.csp: false});
@@ -177,14 +177,14 @@ class _NullSink implements EventSink<String> {
 
   void close() { }
 
-  toString() => name;
+  String toString() => name;
 }
 
 /**
  * Used to hold the output from dart2js.
  */
 class _StringSink implements EventSink<String> {
-  StringBuffer buffer;
+  final StringBuffer buffer;
 
   _StringSink(this.buffer);
 
@@ -199,14 +199,16 @@ class _StringSink implements EventSink<String> {
  * Instances of this class allow dart2js to resolve Uris to input sources.
  */
 class _CompilerProvider {
-  static final String _INPUT_URI_TEXT = 'resource:/foo.dart';
+  static const String _INPUT_URI_TEXT = 'resource:/foo.dart';
 
   final String textInput;
   final String uuidInput;
   final DartSdk sdk;
-  common.ContentsProvider provider;
+  final common.ContentsProvider provider;
 
-  _CompilerProvider.fromString(this.sdk, this.textInput) : uuidInput = null;
+  _CompilerProvider.fromString(this.sdk, this.textInput)
+      : uuidInput = null,
+        provider = null;
 
   _CompilerProvider.fromUuid(this.sdk, this.provider, this.uuidInput) :
       textInput = null;

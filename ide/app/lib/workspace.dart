@@ -32,26 +32,26 @@ final _ChromeHelper _chromeHelper = new _ChromeHelper();
  */
 class Workspace extends Container {
   int _resourcePauseCount = 0;
-  List<ChangeDelta> _resourceChangeList = [];
+  final List<ChangeDelta> _resourceChangeList = [];
 
   int _markersPauseCount = 0;
-  List<MarkerDelta> _makerChangeList = [];
+  final List<MarkerDelta> _makerChangeList = [];
 
   JobManager _jobManager;
   BuilderManager _builderManager;
 
-  List<WorkspaceRoot> _roots = [];
+  final List<WorkspaceRoot> _roots = [];
 
   chrome.FileSystem _syncFileSystem;
 
-  PreferenceStore _store;
-  Completer<Workspace> _whenAvailable = new Completer();
-  Completer<Workspace> _whenAvailableSyncFs = new Completer();
+  final PreferenceStore _store;
+  final Completer<Workspace> _whenAvailable = new Completer();
+  final Completer<Workspace> _whenAvailableSyncFs = new Completer();
 
-  StreamController<ResourceChangeEvent> _resourceController =
+  final StreamController<ResourceChangeEvent> _resourceController =
       new StreamController.broadcast();
 
-  StreamController<MarkerChangeEvent> _markerController =
+  final StreamController<MarkerChangeEvent> _markerController =
       new StreamController.broadcast();
 
   Workspace([this._store, this._jobManager]) : super(null, null) {
