@@ -1714,6 +1714,10 @@ abstract class PackageManagementAction
     super(spark, id, name);
 
   void _invoke([context]) {
+    if (!_canRunAction()) {
+      return;
+    }
+    
     ws.Resource resource;
 
     if (context == null) {
@@ -1743,10 +1747,21 @@ abstract class PackageManagementAction
   bool _appliesTo(ws.Resource resource);
 
   Job _createJob(ws.Container container);
+
+  bool _canRunAction() => true;
 }
 
 abstract class PubAction extends PackageManagementAction {
   PubAction(Spark spark, String id, String name) : super(spark, id, name);
+  
+  bool _canRunAction() {
+    if (PlatformInfo.isWin) {
+      spark.showErrorMessage('Pub',
+          message: SparkErrorMessages.PUB_ON_WINDOWS_MSG);
+      return false;
+    }
+    return true;
+  }
 
   bool _appliesTo(ws.Resource resource) =>
       spark.pubManager.properties.isPackageResource(resource);
@@ -2111,7 +2126,7 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isFolderWithPackages(project)) {
+            if (spark.pubManager.canRunPub(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
@@ -3097,7 +3112,7 @@ class _GitCloneTask {
           });
 
           // Run Pub if the new project has a pubspec file.
-          if (spark.pubManager.properties.isFolderWithPackages(project)) {
+          if (spark.pubManager.canRunPub(project)) {
             // There is issue with workspace sending duplicate events.
             // TODO(grv): revisit workspace events.
             Timer.run(() {
@@ -3243,7 +3258,7 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.properties.isFolderWithPackages(resource)) {
+      if (spark.pubManager.canRunPub(project)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
 

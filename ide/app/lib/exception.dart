@@ -90,4 +90,9 @@ class SparkErrorMessages {
       = 'Repositories with sub modules are not yet supported.';
   static final String GIT_HTTP_CONN_REST_MSG  = 'The connection was reset by '
       'the server. This may happen when pushing commits with large changes.';
+  static const String PUB_ON_WINDOWS_MSG =
+      'Running Pub get/upgrade is currently not supported on Windows; '
+      'use the command line Pub tool to get the packages.\n'
+      'You can track the issue at '
+      'https://github.com/dart-lang/chromedeveditor/issues/2743';
 }
