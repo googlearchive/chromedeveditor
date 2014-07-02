@@ -193,7 +193,7 @@ class Tracker extends _ProxyHolder {
    */
   void sendException([String description, bool fatal]) {
     if (description != null && description.length > MAX_EXCEPTION_LENGTH) {
-      description = '${description.substring(0, MAX_EXCEPTION_LENGTH - 1)}~';
+      description = '${description.substring(0, MAX_EXCEPTION_LENGTH - 1)}-';
     }
 
     _proxy.callMethod('sendException', [description, fatal]);
