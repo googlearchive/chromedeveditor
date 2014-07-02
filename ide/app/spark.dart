@@ -2164,8 +2164,7 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file
-            // Except for on Windows: https://github.com/dart-lang/chromedeveditor/issues/2743
-            if (spark.pubManager.properties.isFolderWithPackages(project) && !PlatformInfo.isWin) {
+            if (spark.pubManager.canRunPub(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
@@ -3201,7 +3200,7 @@ class _GitCloneTask {
             });
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isFolderWithPackages(project) && !PlatformInfo.isWin) {
+            if (spark.pubManager.canRunPub(project)) {
               // There is issue with workspace sending duplicate events.
               // TODO(grv): revisit workspace events.
               Timer.run(() {
@@ -3356,7 +3355,7 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.properties.isFolderWithPackages(resource) && !PlatformInfo.isWin) {
+      if (spark.pubManager.canRunPub(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
 

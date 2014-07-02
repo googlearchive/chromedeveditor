@@ -16,6 +16,7 @@ import 'package:yaml/yaml.dart' as yaml;
 import 'package_manager.dart';
 import 'pub_properties.dart';
 import '../jobs.dart';
+import '../platform_info.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
@@ -48,6 +49,9 @@ class PubManager extends PackageManager {
   PackageBuilder getBuilder() => new _PubBuilder();
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
+
+  // Don't run pub on Windows: https://github.com/dart-lang/chromedeveditor/issues/2743
+  bool canRunPub(Folder project) => pubProperties.isFolderWithPackages(project) && !PlatformInfo.isWin;
 
   Future installPackages(Folder container, ProgressMonitor monitor) =>
       _installUpgradePackages(container, 'get', false, monitor);
