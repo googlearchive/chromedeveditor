@@ -611,6 +611,7 @@ abstract class Spark
    */
   void showErrorMessage(String title, {String message, var exception}) {
     const String UNKNOWN_ERROR_STRING = 'Unknown error.';
+
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -618,21 +619,25 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
-    if (exception is SparkException) {
-        message = exception.message;
-    } else if (exception != null) {
-      if (message == null) message = '';
-      // TODO(grv): wrap all exceptions as spark exception,
-      // and show 'Unexpected error.' to the user for unknown exceptions.
-      message = message + ' : ' + exception.toString();
-      // Log the actual exception on console if running in developer mode.
-      if (SparkFlags.developerMode) {
-        window.console.log(exception);
-      }
-    } else if (message == null) {
-      message = UNKNOWN_ERROR_STRING;
+    if (exception != null && SparkFlags.developerMode) {
+      window.console.log(exception);
     }
-    _setErrorDialogText(title, message);
+
+    String text = message != null ? message + '\n' : '';
+
+    if (exception != null) {
+      if (exception is SparkException) {
+        text += exception.message;
+      } else {
+        text += '${exception}';
+      }
+    }
+
+    if (text.isEmpty) {
+      text = UNKNOWN_ERROR_STRING;
+    }
+
+    _setErrorDialogText(title, text.trim());
     _errorDialog.show();
   }
 
@@ -642,7 +647,7 @@ abstract class Spark
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     List<String> lines = message.split('\n');
-    for(String line in lines) {
+    for (String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
       container.children.add(lineElement);
