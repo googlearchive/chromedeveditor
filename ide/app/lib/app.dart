@@ -20,10 +20,10 @@ import 'workspace.dart';
  *     STARTING ==> STARTED ==> CLOSING ==> CLOSED
  */
 abstract class Application {
-  FocusManager focusManager = new FocusManager();
+  final FocusManager focusManager = new FocusManager();
 
   LifecycleState _state;
-  List<LifecycleParticipant> _participants = [];
+  final List<LifecycleParticipant> _participants = [];
 
   Future _closing;
 

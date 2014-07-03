@@ -42,9 +42,9 @@ class TextEditor extends Editor {
   final workspace.File file;
 
   StreamSubscription _aceSubscription;
-  StreamController _dirtyController = new StreamController.broadcast();
-  StreamController _modificationController = new StreamController.broadcast();
-  Completer<Editor> _whenReadyCompleter = new Completer();
+  final StreamController _dirtyController = new StreamController.broadcast();
+  final StreamController _modificationController = new StreamController.broadcast();
+  final Completer<Editor> _whenReadyCompleter = new Completer();
 
   final SparkPreferences _prefs;
   ace.EditSession _session;
@@ -459,7 +459,7 @@ class AceManager {
 
   Outline outline;
 
-  StreamController _onGotoDeclarationController = new StreamController();
+  final StreamController _onGotoDeclarationController = new StreamController();
   Stream get onGotoDeclaration => _onGotoDeclarationController.stream;
   GotoLineView gotoLineView;
 

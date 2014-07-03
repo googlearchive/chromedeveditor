@@ -85,7 +85,7 @@ class AnalysisResultUuid {
   /**
    * A Map from file uuids to list of associated errors.
    */
-  Map<String, List<common.AnalysisError>> _errorMap = {};
+  final Map<String, List<common.AnalysisError>> _errorMap = {};
 
   AnalysisResultUuid();
 
@@ -111,7 +111,7 @@ class AnalysisResultUuid {
 class ChromeDartSdk extends DartSdk {
   final AnalysisContext context;
 
-  sdk.DartSdk _sdk;
+  final sdk.DartSdk _sdk;
   LibraryMap _libraryMap;
 
   ChromeDartSdk._(this._sdk): context = new AnalysisContextImpl() {
@@ -169,7 +169,7 @@ class ChromeDartSdk extends DartSdk {
  * projects, on the DOM side, and analysis contexts.
  */
 class ProjectContext {
-  static final int MAX_CACHE_SIZE = 256;
+  static const int MAX_CACHE_SIZE = 256;
   static final int DEFAULT_CACHE_SIZE = AnalysisOptionsImpl.DEFAULT_CACHE_SIZE;
 
   // The id for the project this context is associated with.
@@ -179,7 +179,7 @@ class ProjectContext {
 
   AnalysisContext context;
 
-  Map<String, FileSource> _sources = {};
+  final Map<String, FileSource> _sources = {};
 
   ProjectContext(this.id, this.sdk, this.provider) {
     context = AnalysisEngine.instance.createAnalysisContext();
