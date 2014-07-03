@@ -400,7 +400,7 @@ class Workspace extends Container {
    * Read the sync file system and restore entries.
    */
   Future _restoreSyncFs() {
-    Stopwatch stopwatch = new Stopwatch()..start();
+   /* Stopwatch stopwatch = new Stopwatch()..start();
     Completer progressCompleter = new Completer();
 
     ProgressJob progressJob = new ProgressJob(
@@ -434,7 +434,7 @@ class Workspace extends Container {
     }).timeout(new Duration(seconds: 20)).whenComplete(() {
       progressJob.done();
       _whenAvailableSyncFs.complete(this);
-    });
+    });*/
   }
 
   /**

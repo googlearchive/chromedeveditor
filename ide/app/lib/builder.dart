@@ -90,7 +90,8 @@ class BuilderManager {
     _buildRunning = true;
 
     Completer completer = new Completer();
-    _BuildJob job = new _BuildJob(event, builders.toList(), completer);
+    // TODO(grv): figure out a projectId here.
+    _BuildJob job = new _BuildJob("NO_PROJECT", event, builders.toList(), completer);
     jobManager.schedule(job);
 
     completer.future.then((_) {
@@ -133,8 +134,8 @@ class _BuildJob extends Job {
   final ResourceChangeEvent event;
   final List<Builder> builders;
 
-  _BuildJob(this.event, this.builders, Completer completer)
-      : super('Building…', completer);
+  _BuildJob(String projectId, this.event, this.builders, Completer completer)
+      : super(projectId, 'Building…', completer);
 
   Future run(ProgressMonitor monitor) {
     return Future.forEach(builders, (Builder builder) {

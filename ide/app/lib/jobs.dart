@@ -15,6 +15,13 @@ final Logger _logger = new Logger('spark.jobs');
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
+ * A basic implementation of job scheudling.
+ */
+class JobScheduler {
+
+}
+
+/**
  * A Job manager. This class can be used to schedule jobs, and provides event
  * notification for job progress.
  */
@@ -134,13 +141,19 @@ class JobManagerEvent {
 abstract class Job {
   final String name;
 
+  final bool isBlocking = false;
+
+  final String projectId;
+
+  final int priority = 0;
+
   Completer _completer;
 
   Completer get completer => _completer;
 
   Future get future => _completer.future;
 
-  Job(this.name, [Completer completer]) {
+  Job(this.projectId, this.name, [Completer completer]) {
     if (completer != null) {
       _completer = completer;
     } else {
@@ -169,7 +182,8 @@ abstract class Job {
  */
 class ProgressJob extends Job {
 
-  ProgressJob(String name, Completer completer) : super(name, completer);
+  ProgressJob(String projectId, String name, Completer completer) :
+      super(projectId, name, completer);
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name);

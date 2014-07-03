@@ -747,7 +747,8 @@ class DartChromeAppParticipant extends LaunchParticipant {
       if (!_dartFileUpToDate(file, csp: true)) {
         // Show progress for the compile.
         Completer completer = new Completer();
-        ProgressJob job = new ProgressJob('Compiling ${file.name}…', completer);
+        String projectId = container.project == null ? 'NO_PROJECT' : container.project.uuid;
+        ProgressJob job = new ProgressJob(projectId, 'Compiling ${file.name}…', completer);
         container.workspace.jobManager.schedule(job);
 
         return compiler.compileFile(file, csp: true).then((CompileResult r) {
@@ -1015,8 +1016,9 @@ class Dart2JsServlet extends PicoServlet {
     Stopwatch stopwatch = new Stopwatch()..start();
     Completer completer = new Completer();
 
+    final String projectId = file.project == null ? 'NO_PROJECT' : file.project.uuid;
     file.workspace.jobManager.schedule(
-        new ProgressJob('Compiling ${file.name}…', completer));
+        new ProgressJob(projectId, 'Compiling ${file.name}…', completer));
 
     // TODO(devoncarew): Cache the compiled results. Re-use if this file is
     // requested again and the dependencies haven't changed.

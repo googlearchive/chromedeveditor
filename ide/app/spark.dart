@@ -526,7 +526,8 @@ abstract class Spark
   }
 
   Future openFolder(chrome.DirectoryEntry entry) {
-    _OpenFolderJob job = new _OpenFolderJob(entry, this);
+    // TODO(grv): figure a project id here.
+    _OpenFolderJob job = new _OpenFolderJob(getProjectId(null), entry, this);
     return jobManager.schedule(job);
   }
 
@@ -1778,6 +1779,10 @@ abstract class PackageManagementAction
   Job _createJob(ws.Container container);
 }
 
+String getProjectId(ws.Project project) {
+  return project != null ? project.uuid : 'NO_PROJECT';
+}
+
 abstract class PubAction extends PackageManagementAction {
   PubAction(Spark spark, String id, String name) : super(spark, id, name);
 
@@ -1788,13 +1793,15 @@ abstract class PubAction extends PackageManagementAction {
 class PubGetAction extends PubAction {
   PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
 
-  Job _createJob(ws.Folder container) => new PubGetJob(spark, container);
+  Job _createJob(ws.Folder container) =>
+      new PubGetJob(getProjectId(container.project), spark, container);
 }
 
 class PubUpgradeAction extends PubAction {
   PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
 
-  Job _createJob(ws.Folder container) => new PubUpgradeJob(spark, container);
+  Job _createJob(ws.Folder container) =>
+      new PubUpgradeJob(getProjectId(container.project), spark, container);
 }
 
 abstract class BowerAction extends PackageManagementAction {
@@ -1807,13 +1814,15 @@ abstract class BowerAction extends PackageManagementAction {
 class BowerGetAction extends BowerAction {
   BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
 
-  Job _createJob(ws.Folder container) => new BowerGetJob(spark, container);
+  Job _createJob(ws.Folder container) =>
+      new BowerGetJob(getProjectId(container.project), spark, container);
 }
 
 class BowerUpgradeAction extends BowerAction {
   BowerUpgradeAction(Spark spark) : super(spark, "bower-upgrade", "Bower Update");
 
-  Job _createJob(ws.Folder container) => new BowerUpgradeJob(spark, container);
+  Job _createJob(ws.Folder container) =>
+      new BowerUpgradeJob(getProjectId(container.project), spark, container);
 }
 
 /**
@@ -1832,8 +1841,8 @@ class CompileDartAction extends SparkAction implements ContextAction {
       resource = context.first;
     }
 
-    spark.jobManager.schedule(
-        new CompileDartJob(spark, resource, resource.name)).catchError((e) {
+    spark.jobManager.schedule(new CompileDartJob(getProjectId(resource.project),
+        spark, resource, resource.name)).catchError((e) {
       spark.showErrorMessage('Error Compiling ${resource.name}', exception: e);
     });
   }
@@ -1879,7 +1888,8 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
       resources = context;
     }
 
-    ResourceRefreshJob job = new ResourceRefreshJob(resources);
+    // TODO(grv): Figure better way to get a project id.
+    ResourceRefreshJob job = new ResourceRefreshJob(getProjectId(null), resources);
     spark.jobManager.schedule(job);
   }
 
@@ -2151,12 +2161,12 @@ class NewProjectAction extends SparkActionWithDialog {
 
             // Run Pub if the new project has a pubspec file.
             if (spark.pubManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new PubGetJob(spark, project));
+              spark.jobManager.schedule(new PubGetJob(project.uuid, spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
             if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
+              spark.jobManager.schedule(new BowerGetJob(project.uuid, spark, project));
             }
           });
         });
@@ -2528,7 +2538,8 @@ class GitPullAction extends SparkActionWithStatusDialog implements ContextAction
   void _invoke([context]) {
     ws.Project project = context.first.project;
     ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(project);
-    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
+    Future f = spark.jobManager.schedule(
+        new _GitPullJob(getProjectId(project), operations, spark));
     String branchName = operations.getBranchName();
     _waitForJob('Git Pull', 'Updating ${branchName}…', f);
   }
@@ -2544,14 +2555,16 @@ class GitAddAction extends SparkActionWithStatusDialog implements ContextAction 
   chrome.Entry entry;
 
   void _invoke([List<ws.Resource> resources]) {
+    ws.Project project = resources.first.project;
     ScmProjectOperations operations =
-        spark.scmManager.getScmOperationsFor(resources.first.project);
+        spark.scmManager.getScmOperationsFor(project);
     List<chrome.Entry> files = [];
     resources.forEach((resource) {
       files.add(resource.entry);
     });
 
-    Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
+    Future f = spark.jobManager.schedule(
+        new _GitAddJob(getProjectId(project), operations, files, spark));
     _waitForJob('Git Add', 'Adding files to Git repository…', f);
   }
 
@@ -2640,8 +2653,8 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     branchButton.disabled = true;
     branchButton.deliverChanges();
 
-    _GitBranchJob job = new _GitBranchJob(
-        gitOperations, _branchNameElement.value, branchName, spark);
+    _GitBranchJob job = new _GitBranchJob(getProjectId(project), gitOperations,
+        _branchNameElement.value, branchName, spark);
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
       _hide();
@@ -2820,8 +2833,8 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
 
   Future _startJob() {
     // TODO(grv): Add verify checks.
-    _GitCommitJob commitJob = new _GitCommitJob(gitOperations, _gitName, _gitEmail,
-        _commitMessageElement.value, spark);
+    _GitCommitJob commitJob = new _GitCommitJob(getProjectId(project), gitOperations,
+        _gitName, _gitEmail, _commitMessageElement.value, spark);
     return spark.jobManager.schedule(commitJob).whenComplete(() {
       _restoreDialog();
       _hide();
@@ -2882,7 +2895,8 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
     checkoutButton.disabled = true;
     checkoutButton.deliverChanges();
 
-    _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
+    _GitCheckoutJob job = new _GitCheckoutJob(
+        getProjectId(project), gitOperations, branchName, spark);
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
       _hide();
@@ -3190,13 +3204,13 @@ class _GitCloneTask {
               // There is issue with workspace sending duplicate events.
               // TODO(grv): revisit workspace events.
               Timer.run(() {
-                spark.jobManager.schedule(new PubGetJob(spark, project));
+                spark.jobManager.schedule(new PubGetJob(getProjectId(project), spark, project));
               });
             }
 
             // Run Bower if the new project has a bower.json file.
             if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
+              spark.jobManager.schedule(new BowerGetJob(getProjectId(project), spark, project));
             }
 
             spark.workspace.save();
@@ -3214,7 +3228,7 @@ class _GitPullJob extends Job {
   GitScmProjectOperations gitOperations;
   Spark spark;
 
-  _GitPullJob(this.gitOperations, this.spark) : super("Pulling…");
+  _GitPullJob(String projectId, this.gitOperations, this.spark) : super(projectId, "Pulling…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
@@ -3244,7 +3258,8 @@ class _GitAddJob extends Job {
   Spark spark;
   List<chrome.Entry> files;
 
-  _GitAddJob(this.gitOperations, this.files, this.spark) : super("Adding…");
+  _GitAddJob(String projectId, this.gitOperations, this.files, this.spark) :
+      super(projectId, "Adding…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
@@ -3260,8 +3275,9 @@ class _GitBranchJob extends Job {
   String url;
   Spark spark;
 
-  _GitBranchJob(this.gitOperations, String branchName, this._sourceBranchName,
-      this.spark) : super("Creating ${branchName}…") {
+  _GitBranchJob(String projectId, this.gitOperations, String branchName,
+      this._sourceBranchName, this.spark) :
+      super(projectId, "Creating ${branchName}…") {
     _branchName = branchName;
   }
 
@@ -3296,8 +3312,8 @@ class _GitCommitJob extends Job {
   String _userEmail;
   Spark spark;
 
-  _GitCommitJob(this.gitOperations, this._userName, this._userEmail,
-      this._commitMessage, this.spark) : super("Committing…");
+  _GitCommitJob(String projectId, this.gitOperations, this._userName, this._userEmail,
+      this._commitMessage, this.spark) : super(projectId, "Committing…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
@@ -3310,8 +3326,8 @@ class _GitCheckoutJob extends Job {
   String _branchName;
   Spark spark;
 
-  _GitCheckoutJob(this.gitOperations, String branchName, this.spark)
-      : super("Switching to ${branchName}…") {
+  _GitCheckoutJob(String projectId, this.gitOperations, String branchName, this.spark)
+      : super(projectId, "Switching to ${branchName}…") {
     _branchName = branchName;
   }
 
@@ -3325,8 +3341,8 @@ class _OpenFolderJob extends Job {
   Spark spark;
   chrome.DirectoryEntry _entry;
 
-  _OpenFolderJob(chrome.DirectoryEntry entry, this.spark)
-      : super("Opening ${entry.fullPath}…") {
+  _OpenFolderJob(String projectId, chrome.DirectoryEntry entry, this.spark)
+      : super(projectId, "Opening ${entry.fullPath}…") {
     _entry = entry;
   }
 
@@ -3342,12 +3358,14 @@ class _OpenFolderJob extends Job {
 
       // Run Pub if the folder has a pubspec file.
       if (spark.pubManager.properties.isFolderWithPackages(resource)) {
-        spark.jobManager.schedule(new PubGetJob(spark, resource));
+        spark.jobManager.schedule(
+            new PubGetJob(getProjectId(resource.project), spark, resource));
       }
 
       // Run Bower if the folder has a bower.json file.
       if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
-        spark.jobManager.schedule(new BowerGetJob(spark, resource));
+        spark.jobManager.schedule(
+            new BowerGetJob(getProjectId(resource.project), spark, resource));
       }
     }).then((_) {
       spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
@@ -3375,8 +3393,8 @@ abstract class PackageManagementJob extends Job {
   final ws.Container _container;
   final String _commandName;
 
-  PackageManagementJob(this._spark, this._container, this._commandName) :
-      super('Getting packages…');
+  PackageManagementJob(String projectId, this._spark, this._container,
+      this._commandName) : super(projectId, 'Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
@@ -3392,32 +3410,32 @@ abstract class PackageManagementJob extends Job {
 }
 
 class PubGetJob extends PackageManagementJob {
-  PubGetJob(Spark spark, ws.Folder container) :
-      super(spark, container, 'pub get');
+  PubGetJob(String projectId, Spark spark, ws.Folder container) :
+      super(projectId, spark, container, 'pub get');
 
   Future _run(ProgressMonitor monitor) =>
       _spark.pubManager.installPackages(_container, monitor);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
-  PubUpgradeJob(Spark spark, ws.Folder container) :
-      super(spark, container, 'pub upgrade');
+  PubUpgradeJob(String projectId, Spark spark, ws.Folder container) :
+      super(projectId, spark, container, 'pub upgrade');
 
   Future _run(ProgressMonitor monitor) =>
       _spark.pubManager.upgradePackages(_container, monitor);
 }
 
 class BowerGetJob extends PackageManagementJob {
-  BowerGetJob(Spark spark, ws.Folder container) :
-      super(spark, container, 'bower install');
+  BowerGetJob(String projectId, Spark spark, ws.Folder container) :
+      super(projectId, spark, container, 'bower install');
 
   Future _run(ProgressMonitor monitor) =>
       _spark.bowerManager.installPackages(_container, monitor);
 }
 
 class BowerUpgradeJob extends PackageManagementJob {
-  BowerUpgradeJob(Spark spark, ws.Folder container) :
-      super(spark, container, 'bower upgrade');
+  BowerUpgradeJob(String projectId, Spark spark, ws.Folder container) :
+      super(projectId, spark, container, 'bower upgrade');
 
   Future _run(ProgressMonitor monitor) =>
       _spark.bowerManager.upgradePackages(_container, monitor);
@@ -3427,8 +3445,8 @@ class CompileDartJob extends Job {
   final Spark spark;
   final ws.File file;
 
-  CompileDartJob(this.spark, this.file, String fileName) :
-      super('Compiling ${fileName}…');
+  CompileDartJob(String projectId, this.spark, this.file, String fileName) :
+      super(projectId, 'Compiling ${fileName}…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
@@ -3451,7 +3469,7 @@ class CompileDartJob extends Job {
 class ResourceRefreshJob extends Job {
   final List<ws.Project> resources;
 
-  ResourceRefreshJob(this.resources) : super('Refreshing…');
+  ResourceRefreshJob(String projectId, this.resources) : super(projectId, 'Refreshing…');
 
   Future run(ProgressMonitor monitor) {
     List<ws.Project> projects = resources.map((r) => r.project).toSet().toList();
@@ -3644,8 +3662,9 @@ class WebStorePublishAction extends SparkActionWithDialog {
     if (_existingInput.checked) {
       appID = _appIdInput.value;
     }
+    ws.Container container = getAppContainerFor(_resource);
     _WebStorePublishJob job =
-        new _WebStorePublishJob(spark, getAppContainerFor(_resource), appID);
+        new _WebStorePublishJob(getProjectId(container.project), spark, container, appID);
     spark.jobManager.schedule(job).catchError((e) {
       spark.showErrorMessage('Error while publishing the application', exception: e);
     });
@@ -3661,8 +3680,8 @@ class _WebStorePublishJob extends Job {
   String _appID;
   Spark spark;
 
-  _WebStorePublishJob(this.spark, this._container, this._appID)
-      : super("Publishing to Chrome Web Store…");
+  _WebStorePublishJob(String projectId, this.spark, this._container, this._appID)
+      : super(projectId, "Publishing to Chrome Web Store…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: _appID == null ? 5 : 6);
