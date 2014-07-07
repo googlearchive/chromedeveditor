@@ -427,7 +427,7 @@ final RegExp DART2JS_REGEX_2 = new RegExp(r'at (\S+) (\[.+\]) \((\S+)\)');
 String _minimizeLine(String line) {
   Function minimizePath = (String path) {
     // Replace a long deployed path with a shorter equivalent.
-    return line.replaceAll('spark_polymer.html_bootstrap.dart.js', 'spark.js');
+    return path.replaceAll('spark_polymer.html_bootstrap.dart.js', 'spark.js');
   };
 
   // Try and match a dartium stack trace first.
