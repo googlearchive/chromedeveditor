@@ -29,12 +29,15 @@ all: nacl_android_rsa.pexe
 nacl_android_rsa.bc: module.o instance.o android_rsa.o modp_b64.o endian.o
 	$(PNACL_CXX) -o $@ $^ $(LDFLAGS)
 
-nacl_android_rsa.pexe: nacl_android_rsa.bc
+nacl_android_rsa.pexe: deps/openssl.deps nacl_android_rsa.bc
 	$(PNACL_FINALIZE) -o $@ $<
+
+deps/openssl.deps: deps/openssl.zip
+	cd deps ; unzip openssl.zip && touch openssl.deps
 
 distclean: clean
 	rm -rf nacl_sdk
 	rm -f nacl_sdk.zip
 
 clean:
-	rm -f nacl_android_rsa.pexe nacl_android_rsa.bc *.o
+	rm -rf nacl_android_rsa.pexe nacl_android_rsa.bc *.o deps/openssl.deps deps/openssl
