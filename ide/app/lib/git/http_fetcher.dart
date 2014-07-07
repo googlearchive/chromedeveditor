@@ -343,8 +343,8 @@ class HttpFetcher {
 }
 
 class HttpGitException extends GitException {
-  int status;
-  String statusText;
+  final int status;
+  final String statusText;
 
   HttpGitException(this.status, this.statusText, [String errorCode,
       String message, bool canIgnore]) : super(errorCode, message, canIgnore);
@@ -365,7 +365,7 @@ class HttpGitException extends GitException {
     }
 
     return new HttpGitException(request.status, request.statusText, errorCode,
-        "", false);
+        '${request.status} ${request.statusText}');
   }
 
   /**
