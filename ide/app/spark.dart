@@ -3855,7 +3855,7 @@ void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
   final String errorDesc = error != null ? error.runtimeType.toString() : '';
   final String desc =
-      '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
+      '${errorDesc}|${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
 
