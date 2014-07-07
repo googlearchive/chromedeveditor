@@ -4,6 +4,7 @@
 
 library spark.markdown;
 
+import 'dart:async';
 import 'dart:html' as html;
 
 import 'package:markdown/markdown.dart' show markdownToHtml;
@@ -18,7 +19,8 @@ class Markdown {
   final workspace.File _file;
 
   // Preview button.
-  html.ButtonElement previewButton;
+  html.Element _previewButton;
+  StreamSubscription _previewButtonSubscription;
 
   // Preview overlay.
   html.DivElement _previewDiv;
@@ -35,17 +37,9 @@ class Markdown {
     _previewDiv = templateClone.querySelector('#markdownContent');
     _previewDiv.onMouseWheel.listen((html.MouseEvent event) =>
         event.stopPropagation());
-
-    // Get and clone template for markdown preview button.
-    template =
-            (html.querySelector('#markdown-preview-button-template') as
-            html.TemplateElement).content;
-    templateClone = template.clone(true);
-    previewButton = templateClone.querySelector('#togglePreviewButton');
-
     _container.children.add(_previewDiv);
 
-    previewButton.onClick.listen((_) => toggle());
+    _previewButton = html.querySelector('#toggleMarkdownPreviewButton');
 
     _applyVisibleValue();
   }
@@ -73,16 +67,18 @@ class Markdown {
 
   void _applyVisibleValue() {
     _previewDiv.classes.toggle('hidden', !_visible);
-    previewButton.text = _visible ? "Edit" : "Show Preview";
   }
 
   void activate() {
     _container.children.add(_previewDiv);
-    _container.children.add(previewButton);
+
+    _previewButton.classes.toggle('hidden', false);
+    _previewButtonSubscription = _previewButton.onClick.listen((_) => toggle());
   }
 
   void deactivate() {
     _container.children.remove(_previewDiv);
-    _container.children.remove(previewButton);
+    _previewButton.classes.toggle('hidden', true);
+    _previewButtonSubscription.cancel();
   }
 }
