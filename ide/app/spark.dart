@@ -14,6 +14,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
+import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_progress/spark_progress.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
 
@@ -118,6 +119,11 @@ abstract class Spark
    * [Polymer.onReady] event.
    */
   Future init() {
+    new Future.delayed(const Duration(milliseconds: 2000)).then((_){
+      Element e = getUIElement('#mainMenu');
+      e = e.querySelector("spark-button");
+      e.click();
+    });
     initPreferences();
     initEventBus();
 
@@ -3496,7 +3502,22 @@ class AboutSparkAction extends SparkActionWithDialog {
   void _invoke([Object context]) {
     /*%TRACE3*/ print("(4> 6/30/14): _invoke!"); // TRACE%
     new Future.delayed(const Duration(milliseconds: 2000)).then((_){
-      _commit();
+      List<Element> elements = _dialog.getElements("spark-dialog-button");
+      /*%TRACE3*/ print("""(4> 7/1/14): elements: ${elements.length}"""); // TRACE%
+      for (SparkDialogButton element in elements) {
+        /*%TRACE3*/ print("""(4> 7/1/14): element.id: ${element.text}"""); // TRACE%
+        SparkButton element2 = element.getShadowDomElement('spark-button');
+        element2.onClick.listen((Event e) {
+          print("click ${e.currentTarget}");
+          print("click ${e.target}");
+        });
+        Element element3 = element2.getShadowDomElement('#button');
+        element3.onClick.listen((_) {
+          print("click");
+        });
+        element3.click();
+      }
+      /*%TRACE3*/ print("(4> 7/1/14): print!"); // TRACE%
     });
     _checkbox.checked = _isTrackingPermitted;
     _show();
