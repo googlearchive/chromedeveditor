@@ -768,7 +768,8 @@ class FilesController implements TreeViewDelegate {
   /**
    * Returns whether the given resource should be filtered from the Files view.
    */
-  bool _showResource(Resource resource) => !resource.isScmPrivate();
+  bool _showResource(Resource resource) =>
+      !resource.isScmPrivate() && (resource.name != '.DS_Store');
 
   /**
    * Traverse all the created [FileItemCell]s, calling `updateFileStatus()`.
