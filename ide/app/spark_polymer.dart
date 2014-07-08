@@ -231,6 +231,14 @@ class SparkPolymer extends Spark {
     });
   }
 
+  int _mouseX = -1;
+  int _mouseY = -1;
+  bool mouseInStatusArea = false;
+
+  void updateStatusVisibility() {
+    statusComponent.classes.toggle('hovered', mouseInStatusArea);
+  }
+
   @override
   void initSaveStatusListener() {
     super.initSaveStatusListener();
@@ -257,6 +265,27 @@ class SparkPolymer extends Spark {
         statusComponent.progressMessage = event.toString();
       }
     });
+
+    Function updateMousePosition = ((e) {
+      if (e == null) {
+        _mouseX = -1;
+        _mouseY = -1;
+      } else {
+        _mouseX = e.page.x;
+        _mouseY = e.page.y;
+      }
+      if (_mouseX == -1) {
+        mouseInStatusArea = false;
+        updateStatusVisibility();
+        return;
+      }
+      mouseInStatusArea = (document.body.clientHeight - _mouseY <= 60);
+      updateStatusVisibility();
+    });
+    Element editorArea = querySelector('#editorArea');
+    editorArea.onMouseMove.listen(updateMousePosition);
+    editorArea.onMouseEnter.listen(updateMousePosition);
+    editorArea.onMouseLeave.listen((e) => updateMousePosition(null));
   }
 
   @override

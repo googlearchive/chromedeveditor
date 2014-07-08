@@ -108,6 +108,10 @@ spark-dialog {
   z-index: 101;
 }
 
+#sparkStatus.hovered {
+  opacity: 0.1;
+}
+
 #settingsDialog .settings-label {
   width: 150px;
 }
