@@ -234,6 +234,7 @@ class SparkPolymer extends Spark {
   int _mouseX = -1;
   int _mouseY = -1;
   bool mouseInStatusArea = false;
+  static const int statusComponentHeight = 60;
 
   void updateStatusVisibility() {
     statusComponent.classes.toggle('hovered', mouseInStatusArea);
@@ -279,7 +280,8 @@ class SparkPolymer extends Spark {
         updateStatusVisibility();
         return;
       }
-      mouseInStatusArea = (document.body.clientHeight - _mouseY <= 60);
+      mouseInStatusArea =
+          (document.body.clientHeight - _mouseY <= statusComponentHeight);
       updateStatusVisibility();
     });
     Element editorArea = querySelector('#editorArea');
