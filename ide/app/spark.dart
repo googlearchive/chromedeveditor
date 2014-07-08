@@ -2532,7 +2532,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
             message: 'Could not clone "${projectName}": ' + e.message);
       } else {
         spark.showErrorMessage('Error cloning Git project',
-            message: 'Error while cloning "${projectName}"', exception: e);
+            message: 'Error while cloning "${projectName}".', exception: e);
       }
     }).whenComplete(() {
       _cloning = false;
@@ -3178,10 +3178,11 @@ class CloneTaskCancel extends TaskCancel {
 }
 
 class _GitCloneTask {
-  String url;
-  String _projectName;
-  Spark spark;
-  ProgressMonitor _monitor;
+  final String url;
+  final String _projectName;
+  final Spark spark;
+  final ProgressMonitor _monitor;
+
   CloneTaskCancel _cancel;
 
   _GitCloneTask(this.url, this._projectName, this.spark, this._monitor) {
@@ -3193,7 +3194,6 @@ class _GitCloneTask {
   }
 
   Future run() {
-
     return spark.projectLocationManager.createNewFolder(_projectName).then(
         (LocationResult location) {
       if (location == null) {
