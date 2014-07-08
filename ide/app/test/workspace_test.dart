@@ -46,9 +46,6 @@ defineTests() {
     });
 
     test('persist workspace roots', () {
-      // Test failing in dart2js.
-      if (isDart2js()) return null;
-
       var prefs = new MapPreferencesStore();
       ws.Workspace workspace = new ws.Workspace(prefs);
       return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
