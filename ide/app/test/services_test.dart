@@ -12,7 +12,6 @@ import 'files_mock.dart';
 import '../lib/package_mgmt/pub.dart';
 import '../lib/preferences.dart';
 import '../lib/services.dart';
-import '../lib/utils.dart';
 
 defineTests() {
   Workspace workspace = _createWorkspace();
