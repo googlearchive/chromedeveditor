@@ -380,7 +380,11 @@ class ListView {
   }
 
   void scrollIntoRow(int rowIndex, [ScrollAlignment align]) {
-    _rows[rowIndex].cell.element.parent.scrollIntoView(align);
+    ListViewRow row = _rows[rowIndex];
+    if (row.container.parent == null) {
+      _container.children.add(row.container);
+    }
+    row.cell.element.parent.scrollIntoView(align);
   }
 
   /**
