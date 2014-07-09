@@ -49,6 +49,8 @@ class ListView {
   StreamSubscription<MouseEvent> _dragOverSubscription;
   // drop event listener.
   StreamSubscription<MouseEvent> _dropSubscription;
+  // window resize event listener.
+  StreamSubscription<Event> _resizeSubscription;
   // Counter for the dragenter/dragleave events to workaround the behavior of
   // drag and drop. See `dropEnabled` setter for more information.
   int _draggingCount;
@@ -89,10 +91,8 @@ class ListView {
       _selection.clear();
       _delegate.listViewSelectedChanged(this, _selection.toList());
     });
-    _container.onScroll.listen((event) {
-      // Make cells in the visible scrolling area visible.
-      _showVisible();
-    });
+    _container.onScroll.listen((event) => _showVisible());
+    _resizeSubscription = window.onResize.listen((event) => _showVisible());
     _draggingCount = 0;
     _draggingOver = false;
     _cellHighlightedOnDragover = false;
