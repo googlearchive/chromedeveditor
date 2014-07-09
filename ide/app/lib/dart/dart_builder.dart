@@ -13,8 +13,6 @@ import '../jobs.dart';
 import '../services.dart';
 import '../workspace.dart';
 
-final _disableDartAnalyzer = false;
-
 Logger _logger = new Logger('spark.dart_builder');
 
 /**
@@ -29,8 +27,6 @@ class DartBuilder extends Builder {
   }
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    if (_disableDartAnalyzer) return new Future.value();
-
     List<ChangeDelta> changes = event.changes.where(
         (c) => c.resource is File && _includeFile(c.resource)).toList();
     List<ChangeDelta> projectDeletes = event.changes.where(
@@ -67,11 +63,24 @@ class DartBuilder extends Builder {
         List<File> deletedFiles = changes.where(
             (c) => c.isDelete).map((c) => c.resource).toList();
 
-        _removeSecondaryPackages(addedFiles);
-        _removeSecondaryPackages(changedFiles);
-        _removeSecondaryPackages(deletedFiles);
+        bool hasNewPackageFiles = addedFiles.any(
+            (r) => analyzer.getPackageManager().properties.isInPackagesFolder(r));
 
-        return context.processChanges(addedFiles, changedFiles, deletedFiles);
+        if (hasNewPackageFiles) {
+          // We currently need to tear down the analysis context and build a
+          // new one.
+          _logger.info('packages/ changes detected; bouncing analysis context');
+
+          return analyzer.disposeProjectAnalyzer(context).then((_) {
+            return analyzer.createProjectAnalyzer(project);
+          });
+        } else {
+          _removeSecondaryPackages(addedFiles);
+          _removeSecondaryPackages(changedFiles);
+          _removeSecondaryPackages(deletedFiles);
+
+          return context.processChanges(addedFiles, changedFiles, deletedFiles);
+        }
       }
     }
   }
