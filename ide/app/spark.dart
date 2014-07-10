@@ -14,7 +14,6 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
-import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_progress/spark_progress.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
 
@@ -119,13 +118,6 @@ abstract class Spark
    * [Polymer.onReady] event.
    */
   Future init() {
-    new Future.delayed(const Duration(milliseconds: 2000)).then((_){
-      Element e = getUIElement('#mainMenu');
-      e = e.querySelector("spark-button");
-      e.click();
-    });
-
-
     initPreferences();
     initEventBus();
 
@@ -3502,14 +3494,6 @@ class AboutSparkAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-    new Future.delayed(const Duration(milliseconds: 2000)).then((_){
-      List<Element> buttonElements = _dialog.getElements("spark-dialog-button");
-      for (SparkDialogButton element in buttonElements) {
-        Rectangle<int> box = element.getBoundingClientRect();
-        element.dispatchEvent(new MouseEvent("click",
-            clientX: box.left.toInt() + 1, clientY:box.top.toInt() + 1));
-      }
-    });
     _checkbox.checked = _isTrackingPermitted;
     _show();
   }

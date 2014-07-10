@@ -3,12 +3,15 @@
 // license that can be found in the LICENSE file.
 
 /**
- * This library defines all tests for Spark.
+ * This library defines all UI tests for Spark.
  */
-library spark.all_tests;
+library spark.ui_tests.all_tests;
+
+import 'general_ui_test.dart' as general_ui_test;
 
 /**
  * Place all new tests here.
  */
 void defineTests() {
+  general_ui_test.defineTests();
 }
