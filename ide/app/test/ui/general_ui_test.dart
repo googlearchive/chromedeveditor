@@ -4,37 +4,60 @@
 
 library spark.workspace_test;
 
-import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
-import 'package:spark_widgets/spark_modal/spark_modal.dart';
-import '../../spark_polymer_ui.dart';
-import 'package:unittest/unittest.dart';
-import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'dart:html';
 
+import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
+import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
+import 'package:spark_widgets/spark_modal/spark_modal.dart';
+import 'package:unittest/unittest.dart';
+
+import '../../spark_polymer_ui.dart';
+
+class UITester {
+  SparkPolymerUI get ui => document.querySelector('#topUi');
+  Element getUIElement(String selectors) => ui.getShadowDomElement(selectors);
+}
+
+class ModalUITester extends UITester {
+  String id;
+
+  SparkDialog get dialog => getUIElement("#$id");
+  SparkModal get modalElement => dialog.getShadowDomElement("#modal");
+  bool get opened => modalElement.opened;
+  List<SparkDialogButton> get buttons =>
+      dialog.querySelectorAll("spark-dialog-button");
+
+  ModalUITester(this.id);
+
+  SparkDialogButton getButton(String title) {
+    for (SparkDialogButton button in buttons) {
+      if (button.title.toLowerCase() == title.toLowerCase()) {
+        return button;
+      }
+    }
+
+    throw "Could not find button with title $title";
+  }
+
+  void clickButton(String title) {
+    SparkDialogButton button = getButton(title);
+    Rectangle<int> bounds = button.getBoundingClientRect();
+    button.dispatchEvent(new MouseEvent("click",
+        clientX: bounds.left.toInt() + 1, clientY:bounds.top.toInt() + 1));
+  }
+}
 
 defineTests() {
-  SparkPolymerUI getUi() => document.querySelector('#topUi');
-  Element getUIElement(String selectors) => getUi().getShadowDomElement(selectors);
-
   group('first run', () {
     test('ensure about dialog open', () {
-      SparkDialog dialog = getUIElement('#aboutDialog');
-      SparkModal modalEl = dialog.getShadowDomElement("#modal");
-      expect(modalEl.opened, true);
+      ModalUITester modalTester = new ModalUITester("aboutDialog");
+      expect(modalTester.opened, true);
     });
 
     test('close dialog', () {
-      SparkDialog dialog = getUIElement('#aboutDialog');
-
-      List<Element> buttonElements = dialog.querySelectorAll("spark-dialog-button");
-      for (SparkDialogButton element in buttonElements) {
-        Rectangle<int> bounds = element.getBoundingClientRect();
-        element.dispatchEvent(new MouseEvent("click",
-            clientX: bounds.left.toInt() + 1, clientY:bounds.top.toInt() + 1));
-      }
-
-      SparkModal modalEl = dialog.getShadowDomElement("#modal");
-      expect(modalEl.opened, false);
+      ModalUITester modalTester = new ModalUITester("aboutDialog");
+      modalTester.clickButton("done");
+      expect(modalTester.opened, true);
     });
   });
 }
