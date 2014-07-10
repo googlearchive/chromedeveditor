@@ -234,17 +234,17 @@
                 Web Starter Kit
               </option>
             </optgroup>
-            <optgroup label="Chrome apps">
+            <optgroup label="Chrome Apps">
               <option value="chrome/chrome_app_dart">
-                Dart Chrome app
+                Dart Chrome App
               </option>
               <option value="chrome/chrome_app_js">
-                JavaScript Chrome app
+                JavaScript Chrome App
               </option>
               <!-- This one currently can't possibly work due to Polymer
                    JS breaking the CSP. BUG #1933. -->
               <option value="chrome/chrome_app_polymer_js;polymer,core-elements">
-                JavaScript Chrome app using Polymer
+                JavaScript Chrome App using Polymer
               </option>
               <!-- This one works when installed in Chrome manually, but
                    launching via the 'Run' button is broken. BUG #1935. -->
@@ -291,10 +291,10 @@
             </optgroup>
             <optgroup label="Chrome apps">
               <option value="chrome/chrome_app_dart">
-                Dart Chrome app
+                Dart Chrome App
               </option>
               <option value="chrome/chrome_app_js">
-                JavaScript Chrome app
+                JavaScript Chrome App
               </option>
             </optgroup>
             <optgroup label="Polymer elements">
@@ -354,8 +354,9 @@
     <spark-dialog id="gitCloneDialog" headerTitle="Clone Git Project">
       <div class="form-group">
         <label for="gitRepoUrl">Repository URL</label>
+        <!-- TODO(devoncarew): Swap this out for a sample application repo? -->
         <input id="gitRepoUrl" type="url" class="form-control"
-            placeholder="https://github.com/dart-lang/spark.git"
+            placeholder="https://github.com/dart-lang/chromedeveditor.git"
             spellcheck="false" autosave focused>
         <input id="gitRepoUrlCopyInBuffer"/>
       </div>
@@ -543,7 +544,9 @@
         </spark-toolbar>
       </div>
 
-      <template if="{{!chromeOS}}">
+      <!-- TODO(devoncarew): Always show this directory, even on chrome OS. -->
+      <!-- Re-examine when syncfs is re-enabled. -->
+      <!-- template if="{{!chromeOS}}" -->
         <div class="form-group" id="rootDirectory">
           <spark-toolbar class="settings-block"
               horizontal justify="spaced" spacing="small">
@@ -551,7 +554,7 @@
             <span id="directoryLabel" class="settings-value"></span>
           </spark-toolbar>
         </div>
-      </template>
+      <!-- /template -->
 
       <div class="form-group" id="gitCredentials">
         <spark-toolbar class="settings-block"

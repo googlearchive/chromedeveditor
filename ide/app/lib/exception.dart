@@ -14,20 +14,16 @@ class SparkException implements Exception {
   /// The error message.
   final String message;
   /// Represents the unique string for each error type.
-  String errorCode;
+  final String errorCode;
   /// Indicates if the error is not necessary to be handled and can be ignored.
-  bool canIgnore = false;
+  final bool canIgnore;
   /// Indicates whether the exception is an error or a status.
-  bool isError = true;
+  final bool isError;
   /// Original exception.
   dynamic exception;
 
-
-  SparkException(this.message,
-      {this.errorCode, this.exception, bool canIgnore, bool isError}) {
-    this.canIgnore = canIgnore;
-    this.isError = isError;
-  }
+  SparkException(this.message, {this.errorCode, this.exception,
+    this.canIgnore: false, this.isError: true});
 
   static SparkException fromException(dynamic e) {
     if (e is SparkException) {
@@ -37,7 +33,7 @@ class SparkException implements Exception {
     } else if (e != null) {
       return new SparkException(e.toString());
     } else {
-      return new SparkException("Unknown error.");
+      return new SparkException("Unknown error");
     }
   }
 
@@ -106,12 +102,16 @@ class SparkException implements Exception {
         return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_RESET_MSG,
             errorCode: SparkErrorConstants.GIT_HTTP_CONN_RESET);
 
+      case GitErrorConstants.GIT_INVALID_REPO_URL:
+        return new SparkException(SparkErrorMessages.GIT_INVALID_REPO_URL,
+            errorCode: SparkErrorConstants.GIT_INVALID_REPO_URL);
     }
+
     return new SparkException(e.toString());
   }
 
   String toString() => errorCode == null ?
-      "SparkException: $message" : "SparkException($errorCode): $message";
+      "SparkException: $message" : "SparkException: $message ($errorCode)";
 }
 
 /**
@@ -125,6 +125,7 @@ class SparkErrorConstants {
   static const String GIT_AUTH_REQUIRED = "git.auth_required";
   static const String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
   static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
+  static const String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
 
   static const String GIT_PUSH_NON_FAST_FORWARD =
       "git.push_non_fast_forward";
@@ -164,8 +165,16 @@ class SparkErrorMessages {
       "Repositories with sub modules are not yet supported.";
   static const String GIT_HTTP_CONN_RESET_MSG  = "The connection was reset by "
       "the server. This may happen when pushing commits with large changes.";
+  static const String GIT_INVALID_REPO_URL  = "Received an error from the server;"
+      " possibly an invalid repo URL?";
 
   static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
       "It looks like the application failed to get installed in Chrome. "
       "Has Chrome displayed any errors?";
+
+  static const String PUB_ON_WINDOWS_MSG =
+      "Running 'pub get' and 'pub upgrade' is currently not supported on "
+      "Windows, however you can use the pub command line tool to get the "
+      "packages.\nYou can track the issue at: "
+      "https://github.com/dart-lang/chromedeveditor/issues/2743.";
 }

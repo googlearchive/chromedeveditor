@@ -269,7 +269,7 @@ class GitScmProvider extends ScmProvider {
 
   String get id => 'git';
 
-  Clone activeClone;
+  Clone _activeClone;
 
   bool isUnderScm(Project project) {
     Folder gitFolder = project.getChild('.git');
@@ -296,21 +296,21 @@ class GitScmProvider extends ScmProvider {
         branchName: branchName, username: username, password: password);
 
     return options.store.init().then((_) {
-      activeClone = new Clone(options);
-      return activeClone.clone().then((_) {
+      _activeClone = new Clone(options);
+      return _activeClone.clone().then((_) {
         return options.store.index.flush().then((_) {
-          activeClone = null;
+          _activeClone = null;
         });
       });
     }).catchError((e) {
-      activeClone = null;
+      _activeClone = null;
       throw SparkException.fromException(e);
     });
   }
 
   void cancelClone() {
-    if (activeClone != null) {
-      activeClone.cancel();
+    if (_activeClone != null) {
+      _activeClone.cancel();
     }
   }
 }

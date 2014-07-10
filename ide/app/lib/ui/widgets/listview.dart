@@ -25,6 +25,8 @@ class ListView {
   DivElement _dragoverVisual;
   // A container for the items will be created by the `ListView` implementation.
   DivElement _container;
+  // This div will help set the size of the scrollable area in the container.
+  DivElement _placeholder;
   // Implements the callbacks required for the `ListView`.
   // The callbacks will provide the data and the behavior when interacting
   // on the list.
@@ -47,6 +49,8 @@ class ListView {
   StreamSubscription<MouseEvent> _dragOverSubscription;
   // drop event listener.
   StreamSubscription<MouseEvent> _dropSubscription;
+  // window resize event listener.
+  StreamSubscription<Event> _resizeSubscription;
   // Counter for the dragenter/dragleave events to workaround the behavior of
   // drag and drop. See `dropEnabled` setter for more information.
   int _draggingCount;
@@ -74,6 +78,7 @@ class ListView {
     _container.tabIndex = 1;
     _container.classes.add('listview-container');
     _container.onKeyDown.listen(_onKeyDown);
+    _placeholder = new DivElement();
     _dropEnabled = false;
     _element.children.add(_container);
     _element.children.add(_dragoverVisual);
@@ -86,6 +91,8 @@ class ListView {
       _selection.clear();
       _delegate.listViewSelectedChanged(this, _selection.toList());
     });
+    _container.onScroll.listen((event) => _showVisible());
+    _resizeSubscription = window.onResize.listen((event) => _showVisible());
     _draggingCount = 0;
     _draggingOver = false;
     _cellHighlightedOnDragover = false;
@@ -142,19 +149,23 @@ class ListView {
   void reloadData() {
     _rows.clear();
     _container.children.clear();
+    _container.children.add(_placeholder);
     int count = _delegate.listViewNumberOfRows(this);
     int y = 0;
     for(int i = 0 ; i < count ; i ++) {
       Element separator = _delegate.listViewSeparatorForRow(this, i);
       int separatorHeight = _delegate.listViewSeparatorHeightForRow(this, i);
+      int separatorY = y;
       if (separator != null) {
         separator.style
           ..position = 'absolute'
-          ..width = '100%'
+          ..left = '0'
+          ..right = '0'
           ..height = '${separatorHeight}px'
           ..top = '${y}px';
-        _container.children.add(separator);
         y += separatorHeight;
+      } else {
+        separatorHeight = 0;
       }
 
       int cellHeight = _delegate.listViewHeightForRow(this, i);
@@ -170,6 +181,13 @@ class ListView {
         ..position = 'absolute'
         ..top = '${y}px';
       // Set events callback.
+      row.y = y;
+      row.height = cellHeight;
+      row.separator = separator;
+      row.separatorY = separatorY;
+      row.separatorHeight = separatorHeight;
+      y += cellHeight;
+      _rows.add(row);
       row.container.onClick.listen((event) {
         _onClicked(i, event);
         event.stopPropagation();
@@ -182,11 +200,13 @@ class ListView {
         _onContextMenu(i, event);
         cancelEvent(event);
       });
-      y += cellHeight;
-      _rows.add(row);
-      _container.children.add(row.container);
     }
-    _container.clientHeight;
+    _placeholder.style
+      ..position = 'absolute'
+      ..top = '0'
+      ..left = '0'
+      ..right = '0'
+      ..height = '${y}px';
     // Fix selection if needed.
     if (_selectedRow >= count) {
       _selectedRow = -1;
@@ -203,6 +223,55 @@ class ListView {
       _selection.remove(rowIndex);
     });
     _addCurrentSelectionHighlight();
+    _showVisible();
+  }
+
+  // This method performs a dichotomy to find out in which row y is located.
+  int _findRow(int y, int left, int right) {
+    int middle = ((left + right) / 2).floor();
+    if (middle == left) {
+      if (y >= _rows[right].separatorY) {
+        return right;
+      } else {
+        return left;
+      }
+    }
+
+    if (y >= _rows[middle].separatorY) {
+      return _findRow(y, middle, right);
+    } else {
+      return _findRow(y, 0, middle - 1);
+    }
+  }
+
+  /**
+   * This method adds in the DOM the visible cells.
+   */
+  void _showVisible() {
+    int scopeTop = _container.scrollTop;
+    int scopeBottom = _container.scrollTop + _container.offsetHeight;
+    if (_rows.length == 0) {
+      return;
+    }
+    int left = _findRow(scopeTop, 0, _rows.length - 1);
+    for(int i = left ; i < _rows.length ; i ++) {
+      ListViewRow row = _rows[i];
+      if (row.separator != null) {
+        int y = row.separatorY;
+        if ((row.separator.parent == null) && (y >= scopeTop - row.separatorHeight) && (y < scopeBottom)) {
+          _container.children.add(row.separator);
+        }
+      }
+      if (row.container != null) {
+        int y = row.y;
+        if ((row.container.parent == null) && (y >= scopeTop - row.height) && (y < scopeBottom)) {
+          _container.children.add(row.container);
+        }
+      }
+      if (row.y > scopeBottom) {
+        break;
+      }
+    }
   }
 
   /**
@@ -311,7 +380,11 @@ class ListView {
   }
 
   void scrollIntoRow(int rowIndex, [ScrollAlignment align]) {
-    _rows[rowIndex].cell.element.parent.scrollIntoView(align);
+    ListViewRow row = _rows[rowIndex];
+    if (row.container.parent == null) {
+      _container.children.add(row.container);
+    }
+    row.cell.element.parent.scrollIntoView(align);
   }
 
   /**

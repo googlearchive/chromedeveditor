@@ -398,7 +398,7 @@ String minimizeStackTrace(StackTrace st) {
     lines = lines.sublist(index - 1);
   }
 
-  return lines.join('\n');
+  return lines.join('#');
 }
 
 // A sample stack trace from Dartium:
@@ -425,6 +425,11 @@ final RegExp DART2JS_REGEX_1 = new RegExp(r'at (\S+) \((\S+)\)');
 final RegExp DART2JS_REGEX_2 = new RegExp(r'at (\S+) (\[.+\]) \((\S+)\)');
 
 String _minimizeLine(String line) {
+  Function minimizePath = (String path) {
+    // Replace a long deployed path with a shorter equivalent.
+    return path.replaceAll('spark_polymer.html_bootstrap.dart.js', 'spark.js');
+  };
+
   // Try and match a dartium stack trace first.
   Match match = DARTIUM_REGEX.firstMatch(line);
 
@@ -432,7 +437,7 @@ String _minimizeLine(String line) {
     String method = match.group(1);
     method = method.replaceAll('<anonymous closure>', '<anon>');
     String location = _removeExtPrefix(match.group(2));
-    return '${method} ${location}';
+    return minimizePath('${method} ${location}');
   }
 
   // Try and match a dart2js stack trace.
@@ -441,7 +446,7 @@ String _minimizeLine(String line) {
   if (match != null) {
     String method = match.group(1);
     String location = _removeExtPrefix(match.group(2));
-    return '${method} ${location}';
+    return minimizePath('${method} ${location}');
   }
 
   // Try and match an alternative dart2js stack trace format.
@@ -450,7 +455,7 @@ String _minimizeLine(String line) {
   if (match != null) {
     String method = match.group(1);
     String location = _removeExtPrefix(match.group(3));
-    return '${method} ${location}';
+    return minimizePath('${method} ${location}');
   }
 
   return line;

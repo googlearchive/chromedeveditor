@@ -461,7 +461,7 @@ button.ace_searchbtn.prev:hover {
   color: #888;
 }
 
-.outlineItem.topLevel.function > a:after, 
+.outlineItem.topLevel.function > a:after,
 .outlineItem.method > a:after {
   content: '()';
 }
@@ -483,9 +483,9 @@ button.ace_searchbtn.prev:hover {
   color: #888;
 }
 
-.outlineItem.topLevel.variable, 
+.outlineItem.topLevel.variable,
 .outlineItem.property,
-.outlineItem.topLevel.variable > a, 
+.outlineItem.topLevel.variable > a,
 .outlineItem.property > a {
   color: #77c;
 }
@@ -499,11 +499,27 @@ button.ace_searchbtn.prev:hover {
   white-space: nowrap;
 }
 
+#toggleMarkdownPreviewButton {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  top: 55px;
+  right: 15px;
+  z-index: 90;
+  fill: #7d7d7d;
+  background-color: #fafafa;
+  opacity: 0.7;
+}
+
+#toggleMarkdownPreviewButton:hover {
+  opacity: 1;
+}
+
 #toggleOutlineButton {
   position: absolute;
   width: 36px;
   height: 36px;
-  bottom: 10px;
+  bottom: 8px;
   right: 15px;
   z-index: 150;
   fill: #7d7d7d;
@@ -520,11 +536,10 @@ button.ace_searchbtn.prev:hover {
   flex-flow: row;
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-right: none;
-  bottom: 15px;
+  bottom: 13px;
   position: absolute;
   right: 22px;
-  top: 55px;
+  top: 63px;
   transition: opacity 250ms;
   z-index: 100;
 }
@@ -552,32 +567,6 @@ button.ace_searchbtn.prev:hover {
 #outlineResizer {
 }
 
-#togglePreviewButton {
-  color: #666;
-  background-color: rgba(39, 40, 34, 1.0);
-  border: none;
-  border-bottom: 1px solid #444;
-  border-left: 1px solid #444;
-  border-radius: 0px;
-  position: absolute;
-  padding: 8px;
-  right: 0px;
-  width: 120px;
-  z-index: 100;
-}
-
-#togglePreviewButton:hover {
-  color: #888;
-}
-
-#togglePreviewButton:active {
-  color: #eee;
-}
-
-#togglePreviewButton:focus {
-  outline: none;
-}
-
 #markdownContent {
   -webkit-font-smoothing: antialiased;
   background-color: rgba(39, 40, 34, 1.0);
@@ -590,7 +579,7 @@ button.ace_searchbtn.prev:hover {
   position: absolute;
   top: 0px;
   transition: opacity 250ms;
-  z-index: 100;
+  z-index: 89;
 }
 
 /*

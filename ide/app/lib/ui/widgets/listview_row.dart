@@ -17,4 +17,13 @@ import 'listview_cell.dart';
 class ListViewRow {
   ListViewCell cell;
   Element container;
+  // y is the vertical position of the row.
+  int y;
+  // height is the height of the row.
+  int height;
+  // separator can be null, which means that there's no separator before this
+  // row. In this case, separatorY = y and separatorHeight is 0.
+  Element separator;
+  int separatorY;
+  int separatorHeight;
 }

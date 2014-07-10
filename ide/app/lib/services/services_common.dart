@@ -184,7 +184,7 @@ class CompileResult {
     } else if (problems.length == 1) {
       return problems.first.toString();
     } else {
-      return '${problems}';
+      return problems.join('\n');
     }
   }
 }

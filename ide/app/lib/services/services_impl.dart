@@ -217,7 +217,7 @@ class _ServiceContentsProvider implements ContentsProvider {
 class AnalyzerServiceImpl extends ServiceImpl {
   analyzer.ChromeDartSdk dartSdk;
 
-  Map<String, analyzer.ProjectContext> _contexts = {};
+  final Map<String, analyzer.ProjectContext> _contexts = {};
 
   AnalyzerServiceImpl(ServicesIsolate isolate, DartSdk sdk) :
       super(isolate, 'analyzer') {

@@ -18,7 +18,7 @@ class WebStoreClient {
     return chrome.identity.getAuthToken(new chrome.TokenDetails(interactive: true)).then((String token) {
       _token = token;
     }).catchError((e) {
-      return new Future.error("Could not authenticate.");
+      return new Future.error("Please verify that you are signed in to Chrome.");
     });
   }
 

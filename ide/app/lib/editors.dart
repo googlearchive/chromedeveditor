@@ -22,7 +22,7 @@ import 'ui/widgets/imageviewer.dart';
 import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
-final int _DELAY_MS = 1000;
+const int _DELAY_MS = 1000;
 
 /**
  * Classes implement this interface provides/refreshes editors for [Resource]s.

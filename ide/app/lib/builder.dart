@@ -31,9 +31,9 @@ class BuilderManager {
   final Workspace workspace;
   final JobManager jobManager;
 
-  List<Builder> builders = [];
+  final List<Builder> builders = [];
 
-  List<ResourceChangeEvent> _events = [];
+  final List<ResourceChangeEvent> _events = [];
 
   Timer _timer;
   bool _buildRunning = false;
@@ -44,7 +44,7 @@ class BuilderManager {
 
   bool get isRunning => _buildRunning;
 
-  List<Completer> _completers = [];
+  final List<Completer> _completers = [];
 
   /**
    * Returns a [Future] that will complete when all current builds are finished.
@@ -82,8 +82,15 @@ class BuilderManager {
 
     if (event.isEmpty) return;
 
-    _logger.info('starting build' +
-        (SparkFlags.developerMode ? ' for ${event.changes}' : ''));
+    if (SparkFlags.developerMode) {
+      String changeStr = '${event.changes}';
+      if (changeStr.length > 200) {
+        changeStr = changeStr.substring(0, 200) + "...";
+      }
+      _logger.info('starting build for ${changeStr}');
+    } else {
+      _logger.info('starting build');
+    }
 
     Stopwatch timer = new Stopwatch()..start();
 
@@ -136,7 +143,7 @@ class _BuildJob extends Job {
   _BuildJob(this.event, this.builders, Completer completer)
       : super('Building…', completer);
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     return Future.forEach(builders, (Builder builder) {
       Future f = builder.build(event, monitor);
       assert(f != null);
@@ -145,7 +152,8 @@ class _BuildJob extends Job {
     }).catchError((e, st) {
       _logger.severe('Exception from build manager', e, st);
     }).whenComplete(() {
-      done();
+      done(new SparkJobStatus(
+          code: SparkStatusCodes.SPARK_JOB_BUILD_SUCCESS));
     });
   }
 }

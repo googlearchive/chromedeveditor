@@ -24,14 +24,14 @@ import 'dart:js';
 
 final JsObject _analytics = context['analytics'];
 
-Map<String, GoogleAnalytics> _serviceMap = {};
+final Map<String, GoogleAnalytics> _serviceMap = {};
 
 /**
  * Returns whether the Google Analytics service is available.
  */
 bool get available => _analytics != null;
 
-final int MAX_EXCEPTION_LENGTH = 100;
+const int MAX_EXCEPTION_LENGTH = 100;
 
 /**
  * Returns a service instance for the named Chrome Platform App. Generally
@@ -65,7 +65,7 @@ class GoogleAnalytics extends _ProxyHolder {
   final String appName;
 
   Config _config;
-  Map<String, Tracker> _trackers = {};
+  final Map<String, Tracker> _trackers = {};
 
   GoogleAnalytics._(JsObject _proxy, this.appName): super(_proxy);
 
@@ -193,7 +193,7 @@ class Tracker extends _ProxyHolder {
    */
   void sendException([String description, bool fatal]) {
     if (description != null && description.length > MAX_EXCEPTION_LENGTH) {
-      description = '${description.substring(0, MAX_EXCEPTION_LENGTH - 1)}~';
+      description = '${description.substring(0, MAX_EXCEPTION_LENGTH - 1)}-';
     }
 
     _proxy.callMethod('sendException', [description, fatal]);

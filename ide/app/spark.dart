@@ -525,7 +525,7 @@ abstract class Spark
     });
   }
 
-  Future openFolder(chrome.DirectoryEntry entry) {
+  Future<SparkJobStatus> openFolder(chrome.DirectoryEntry entry) {
     _OpenFolderJob job = new _OpenFolderJob(entry, this);
     return jobManager.schedule(job);
   }
@@ -544,9 +544,13 @@ abstract class Spark
     });
   }
 
-  Future importFolder([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
+  Future<SparkJobStatus> importFolder(
+      [List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
     ws.Folder folder = resources.first;
-    return folder.importDirectoryEntry(entry).catchError((e) {
+    return folder.importDirectoryEntry(entry).then((_) {
+      return new SparkJobStatus(
+          code: SparkStatusCodes.SPARK_JOB_IMPORT_FOLDER_SUCCESS);
+    }).catchError((e) {
       showErrorMessage('Error while importing folder', exception: e);
     });
   }
@@ -611,6 +615,7 @@ abstract class Spark
    */
   void showErrorMessage(String title, {String message, var exception}) {
     const String UNKNOWN_ERROR_STRING = 'Unknown error.';
+
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -618,21 +623,25 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
-    if (exception is SparkException) {
-        message = exception.message;
-    } else if (exception != null) {
-      if (message == null) message = '';
-      // TODO(grv): wrap all exceptions as spark exception,
-      // and show 'Unexpected error.' to the user for unknown exceptions.
-      message = message + ' : ' + exception.toString();
-      // Log the actual exception on console if running in developer mode.
-      if (SparkFlags.developerMode) {
-        window.console.log(exception);
-      }
-    } else if (message == null) {
-      message = UNKNOWN_ERROR_STRING;
+    if (exception != null && SparkFlags.developerMode) {
+      window.console.log(exception);
     }
-    _setErrorDialogText(title, message);
+
+    String text = message != null ? message + '\n' : '';
+
+    if (exception != null) {
+      if (exception is SparkException) {
+        text += exception.message;
+      } else {
+        text += '${exception}';
+      }
+    }
+
+    if (text.isEmpty) {
+      text = UNKNOWN_ERROR_STRING;
+    }
+
+    _setErrorDialogText(title, text.trim());
     _errorDialog.show();
   }
 
@@ -642,7 +651,7 @@ abstract class Spark
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     List<String> lines = message.split('\n');
-    for(String line in lines) {
+    for (String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
       container.children.add(lineElement);
@@ -1270,6 +1279,11 @@ abstract class SparkActionWithDialog extends SparkAction {
     });
   }
   void _hide() => _dialog.hide();
+
+  void _showSuccessStatus(String message) {
+    _hide();
+    spark.showSuccessMessage(message);
+  }
 }
 
 abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
@@ -1314,20 +1328,30 @@ abstract class SparkActionWithStatusDialog extends SparkActionWithProgressDialog
    * Show the status dialog at least for 3 seconds. The dialog is closed when
    * the given future [f] is completed.
    */
-  void _waitForJob(String title, String progressMessage, Future f) {
+  void _waitForJob(
+      String title, String progressMessage, Future<SparkJobStatus> f) {
     _dialog.dialog.headerTitle = title;
     _setProgressMessage(progressMessage);
     _toggleProgressVisible(true);
     _show();
     // Show dialog for at least 3 seconds.
     Timer timer = new Timer(new Duration(milliseconds: 3000), () {
-      f.whenComplete(() {
+      f.then((status) {
+        if (status.success && status.message != null) {
+          _showSuccessStatus(status.message);
+        }
+      }).whenComplete(() {
         _setProgressMessage('');
         _toggleProgressVisible(true);
         _hide();
       });
     });
     _show();
+  }
+
+  void _showSuccessStatus(String message) {
+    _hide();
+    spark.showSuccessMessage(message);
   }
 }
 
@@ -1720,7 +1744,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
       resource = context.first;
     }
 
-    Completer completer = new Completer();
+    Completer<SparkJobStatus> completer = new Completer<SparkJobStatus>();
     spark.launchManager.performLaunch(resource, _launchTarget).then((_) {
       completer.complete();
     }).catchError((e) {
@@ -1747,6 +1771,9 @@ abstract class PackageManagementAction
     super(spark, id, name);
 
   void _invoke([context]) {
+    if (!_canRunAction()) {
+      return;
+    }
     ws.Resource resource;
 
     if (context == null) {
@@ -1766,7 +1793,9 @@ abstract class PackageManagementAction
       resource = resource.parent;
     }
 
-    spark.jobManager.schedule(_createJob(resource as ws.Folder));
+    spark.jobManager.schedule(_createJob(resource as ws.Folder)).then((status) {
+      // TODO(grv): Take action on the returned status.
+    });
   }
 
   String get category => 'application';
@@ -1776,10 +1805,21 @@ abstract class PackageManagementAction
   bool _appliesTo(ws.Resource resource);
 
   Job _createJob(ws.Container container);
+
+  bool _canRunAction() => true;
 }
 
 abstract class PubAction extends PackageManagementAction {
   PubAction(Spark spark, String id, String name) : super(spark, id, name);
+
+  bool _canRunAction() {
+    if (PlatformInfo.isWin) {
+      spark.showErrorMessage('Pub',
+          message: SparkErrorMessages.PUB_ON_WINDOWS_MSG);
+      return false;
+    }
+    return true;
+  }
 
   bool _appliesTo(ws.Resource resource) =>
       spark.pubManager.properties.isPackageResource(resource);
@@ -2149,8 +2189,8 @@ class NewProjectAction extends SparkActionWithDialog {
           Timer.run(() {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
-            // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isFolderWithPackages(project)) {
+            // Run Pub if the new project has a pubspec file
+            if (spark.pubManager.canRunPub(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
@@ -2478,7 +2518,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
 
     _cloning = true;
     _cloneTask.run().then((_) {
-      spark.showSuccessMessage('Cloned $projectName');
+      _showSuccessStatus('Cloned $projectName');
     }).catchError((e) {
       if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_AUTH_REQUIRED) {
@@ -2492,7 +2532,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
             message: 'Could not clone "${projectName}": ' + e.message);
       } else {
         spark.showErrorMessage('Error cloning Git project',
-            message: 'Error while cloning "${projectName}"', exception: e);
+            message: 'Error while cloning "${projectName}".', exception: e);
       }
     }).whenComplete(() {
       _cloning = false;
@@ -2551,7 +2591,8 @@ class GitAddAction extends SparkActionWithStatusDialog implements ContextAction 
       files.add(resource.entry);
     });
 
-    Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
+    Future<SparkJobStatus> f = spark.jobManager.schedule(
+        new _GitAddJob(operations, files, spark));
     _waitForJob('Git Add', 'Adding files to Git repository…', f);
   }
 
@@ -2822,10 +2863,13 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     // TODO(grv): Add verify checks.
     _GitCommitJob commitJob = new _GitCommitJob(gitOperations, _gitName, _gitEmail,
         _commitMessageElement.value, spark);
-    return spark.jobManager.schedule(commitJob).whenComplete(() {
+    return spark.jobManager.schedule(commitJob).then((status) {
+      if (status.success && status.message != null) {
+        _showSuccessStatus(status.message);
+      }
+    }).whenComplete(() {
       _restoreDialog();
       _hide();
-      spark.showSuccessMessage('Committed changes');
     }).catchError((e) {
       spark.showErrorMessage('Error committing changes', exception: e);
     });
@@ -3134,10 +3178,11 @@ class CloneTaskCancel extends TaskCancel {
 }
 
 class _GitCloneTask {
-  String url;
-  String _projectName;
-  Spark spark;
-  ProgressMonitor _monitor;
+  final String url;
+  final String _projectName;
+  final Spark spark;
+  final ProgressMonitor _monitor;
+
   CloneTaskCancel _cancel;
 
   _GitCloneTask(this.url, this._projectName, this.spark, this._monitor) {
@@ -3149,7 +3194,6 @@ class _GitCloneTask {
   }
 
   Future run() {
-
     return spark.projectLocationManager.createNewFolder(_projectName).then(
         (LocationResult location) {
       if (location == null) {
@@ -3186,7 +3230,7 @@ class _GitCloneTask {
             });
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isFolderWithPackages(project)) {
+            if (spark.pubManager.canRunPub(project)) {
               // There is issue with workspace sending duplicate events.
               // TODO(grv): revisit workspace events.
               Timer.run(() {
@@ -3216,7 +3260,7 @@ class _GitPullJob extends Job {
 
   _GitPullJob(this.gitOperations, this.spark) : super("Pulling…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
 
     return spark.syncPrefs.getValue("git-auth-info").then((String value) {
@@ -3230,7 +3274,8 @@ class _GitPullJob extends Job {
       // TODO(grv): We'll want a way to indicate to the user what files changed and if
       // there were any merge problems.
       return gitOperations.pull(username, password).then((_) {
-        spark.showSuccessMessage('Pull successful');
+        return new SparkJobStatus(
+            code: SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS);
       }).catchError((e) {
         e = SparkException.fromException(e);
         spark.showErrorMessage('Git Pull Status', exception: e);
@@ -3246,9 +3291,11 @@ class _GitAddJob extends Job {
 
   _GitAddJob(this.gitOperations, this.files, this.spark) : super("Adding…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
     return gitOperations.addFiles(files).then((_) {
+      return new SparkJobStatus(
+          code: SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS);
     });
   }
 }
@@ -3265,7 +3312,7 @@ class _GitBranchJob extends Job {
     _branchName = branchName;
   }
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
 
     return spark.syncPrefs.getValue("git-auth-info").then((String value) {
@@ -3299,9 +3346,12 @@ class _GitCommitJob extends Job {
   _GitCommitJob(this.gitOperations, this._userName, this._userEmail,
       this._commitMessage, this.spark) : super("Committing…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
-    return gitOperations.commit(_userName, _userEmail, _commitMessage);
+    return gitOperations.commit(_userName, _userEmail, _commitMessage).then((_) {
+      return new SparkJobStatus(
+          code: SparkStatusCodes.SPARK_JOB_GIT_COMMIT_SUCCESS);
+    });
   }
 }
 
@@ -3315,7 +3365,7 @@ class _GitCheckoutJob extends Job {
     _branchName = branchName;
   }
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
     return gitOperations.checkoutBranch(_branchName);
   }
@@ -3330,7 +3380,7 @@ class _OpenFolderJob extends Job {
     _entry = entry;
   }
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
 
     return spark.workspace.link(
@@ -3341,7 +3391,7 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.properties.isFolderWithPackages(resource)) {
+      if (spark.pubManager.canRunPub(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
 
@@ -3350,7 +3400,7 @@ class _OpenFolderJob extends Job {
         spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
     }).then((_) {
-      spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
+      return new SparkJobStatus(message: 'Opened folder ${_entry.fullPath}');
     }).catchError((e) {
       spark.showErrorMessage('Error opening folder ${_entry.fullPath}', exception: e);
     });
@@ -3367,7 +3417,7 @@ class _GitPushTask {
   _GitPushTask(this.gitOperations, this.username, this.password, this.spark,
       this.monitor);
 
-  Future run() => gitOperations.push(username, password);
+  Future<SparkJobStatus> run() => gitOperations.push(username, password);
 }
 
 abstract class PackageManagementJob extends Job {
@@ -3378,7 +3428,7 @@ abstract class PackageManagementJob extends Job {
   PackageManagementJob(this._spark, this._container, this._commandName) :
       super('Getting packages…');
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
 
     return _run(monitor).then((_) {
@@ -3430,7 +3480,7 @@ class CompileDartJob extends Job {
   CompileDartJob(this.spark, this.file, String fileName) :
       super('Compiling ${fileName}…');
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: 1);
 
     CompilerService compiler = spark.services.getService("compiler");
@@ -3453,7 +3503,7 @@ class ResourceRefreshJob extends Job {
 
   ResourceRefreshJob(this.resources) : super('Refreshing…');
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     List<ws.Project> projects = resources.map((r) => r.project).toSet().toList();
 
     monitor.start('', maxWork: projects.length);
@@ -3664,7 +3714,7 @@ class _WebStorePublishJob extends Job {
   _WebStorePublishJob(this.spark, this._container, this._appID)
       : super("Publishing to Chrome Web Store…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, maxWork: _appID == null ? 5 : 6);
 
     if (_container == null) {
@@ -3767,7 +3817,7 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
     chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
-        Future f = spark.importFolder(resources, entry);
+        Future<SparkJobStatus> f = spark.importFolder(resources, entry);
         _waitForJob(name, 'Importing folder…', f);
       }
     });
@@ -3805,7 +3855,7 @@ void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
   final String errorDesc = error != null ? error.runtimeType.toString() : '';
   final String desc =
-      '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
+      '${errorDesc}|${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
 
