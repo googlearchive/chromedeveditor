@@ -42,6 +42,7 @@ class SparkFlags {
   static void setFlags(Map<String, dynamic> newFlags) {
     // TODO(ussuri): Also recursively update maps on 2nd level and below.
     if (newFlags == null) return;
+
     newFlags.forEach((key, newValue) {
       var value;
       var oldValue = _flags[key];
@@ -85,14 +86,13 @@ class SparkFlags {
    * return null.
    */
   static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
-    return fileReader.then((String contents) {
-      return JSON.decode(contents);
-    }).catchError((e) {
-      if (e is FormatException) {
-        throw 'Config file has invalid format: $e';
-      } else {
-        return null;
-      }
-    });
+    return fileReader
+      .timeout(new Duration(milliseconds: 100))
+      .then((String contents) => JSON.decode(contents))
+      .catchError((e) {
+        if (e is FormatException) {
+          throw 'Config file has invalid format: $e';
+        }
+      });
   }
 }
