@@ -282,6 +282,12 @@ class SparkOverlay extends SparkWidget {
    * and modality, as set.
    */
   void _captureHandler(Event e) {
+    /*%TRACE3*/ print("""(4> 7/9/14): e.type: ${e.type}"""); // TRACE%
+    if (e.type == "click") {
+      /*%TRACE3*/ print("""(4> 7/9/14): e.type == "click": ${e.type == "click"}"""); // TRACE%
+      /*%TRACE3*/ print("(4> 7/9/14): click!"); // TRACE%
+
+    }
     final bool inOverlay = isEventInWidget(e);
 
     if (!inOverlay) {

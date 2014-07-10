@@ -3519,35 +3519,14 @@ class AboutSparkAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-    /*%TRACE3*/ print("(4> 6/30/14): _invoke!"); // TRACE%
-    /*
     new Future.delayed(const Duration(milliseconds: 2000)).then((_){
-      DivElement blarghEl = _dialog.getElement("#blargh");
-      blarghEl.onClick.listen((_) {
-        print("blarghEl click");
-      });
-      blarghEl.click();
-      List<Element> elements = _dialog.getElements("spark-dialog-button");
-      /*%TRACE3*/ print("""(4> 7/1/14): elements: ${elements.length}"""); // TRACE%
-      for (SparkDialogButton element in elements) {
-        /*%TRACE3*/ print("""(4> 7/1/14): element.id: ${element.text}"""); // TRACE%
-        SparkButton element2 = element.getShadowDomElement('spark-button');
-        /*%TRACE3*/ print("""(4> 7/8/14): element2: ${element2.runtimeType}"""); // TRACE%
-        element2.onClick.listen((Event e) {
-          print("click ${e.currentTarget}");
-          print("click ${e.target}");
-        });
-        Element element3 = element2.getShadowDomElement('#button');
-        /*%TRACE3*/ print("""(4> 7/8/14): element3: ${element3.runtimeType}"""); // TRACE%
-        element3.onClick.listen((_) {
-          print("click");
-        });
-        element2.click();
-        element3.click();
+      List<Element> buttonElements = _dialog.getElements("spark-dialog-button");
+      for (SparkDialogButton element in buttonElements) {
+        Rectangle<int> box = element.getBoundingClientRect();
+        element.dispatchEvent(new MouseEvent("click",
+            clientX: box.left.toInt() + 1, clientY:box.top.toInt() + 1));
       }
-      /*%TRACE3*/ print("(4> 7/1/14): print!"); // TRACE%
     });
-    */
     _checkbox.checked = _isTrackingPermitted;
     _show();
   }

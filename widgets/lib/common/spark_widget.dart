@@ -154,6 +154,9 @@ class SparkWidget extends PolymerElement {
    * Returns true if the point is within the widget's boundary.
    */
   bool isPointInWidget(Point xyGlobal) {
+    /*%TRACE3*/ print("""(4> 7/9/14): super.getBoundingClientRect().containsPoint(xyGlobal): ${super.getBoundingClientRect().containsPoint(xyGlobal)}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): super.getBoundingClientRect(): ${super.getBoundingClientRect()}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): xyGlobal: ${xyGlobal}"""); // TRACE%
     return super.getBoundingClientRect().containsPoint(xyGlobal);
   }
 
@@ -162,6 +165,17 @@ class SparkWidget extends PolymerElement {
    * widget or one of its light DOM or shadow DOM children.
    */
   bool isEventInWidget(Event e) {
+    /*%TRACE3*/ print("""(4> 7/9/14): e is MouseEvent: ${e is MouseEvent}"""); // TRACE%
+    if (e is MouseEvent) {
+      /*%TRACE3*/ print("""(4> 7/9/14): isPointInWidget(e.client): ${isPointInWidget(e.client)}"""); // TRACE%
+    }
+    /*%TRACE3*/ print("""(4> 7/9/14): this == e.target: ${this == e.target}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): this.contains(e.target): ${this.contains(e.target)}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): shadowRoot.contains(e.target): ${shadowRoot.contains(e.target)}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): e.target: ${e.target.runtimeType}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): e.target: ${e.target.id}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): this: ${this.runtimeType}"""); // TRACE%
+    /*%TRACE3*/ print("""(4> 7/9/14): this: ${this.id}"""); // TRACE%
     return
         (e is MouseEvent && isPointInWidget(e.client)) ||
         this == e.target ||
