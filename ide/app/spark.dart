@@ -123,23 +123,6 @@ abstract class Spark
       Element e = getUIElement('#mainMenu');
       e = e.querySelector("spark-button");
       e.click();
-
-      var dEl = getUIElement("#aboutDialog");
-      DivElement blarghEl = dEl.querySelector("#blargh");
-      blarghEl.onClick.listen((_) {
-        print("blarghEl click");
-      });
-
-
-      new Future.delayed(const Duration(milliseconds: 10000)).then((_){
-
-        var dEl = getUIElement("#aboutDialog");
-        DivElement blarghEl = dEl.querySelector("#blargh");
-        blarghEl.onClick.listen((_) {
-          print("blarghEl click");
-        });
-        blarghEl.click();
-      });
     });
 
 
