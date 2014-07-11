@@ -22,6 +22,8 @@ import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
+import 'lib/dependency.dart';
+import 'lib/decorators.dart';
 import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
@@ -78,6 +80,7 @@ abstract class Spark
 
   Services services;
   final JobManager jobManager = new JobManager();
+  final Dependencies dependency = Dependencies.dependency;
   SparkStatus statusComponent;
   preferences.SparkPreferences prefs;
 
@@ -118,6 +121,9 @@ abstract class Spark
    * [Polymer.onReady] event.
    */
   Future init() {
+    // Init the dependency manager.
+    dependency[DecoratorManager] = new DecoratorManager();
+
     initPreferences();
     initEventBus();
 
@@ -127,7 +133,6 @@ abstract class Spark
     initPackageManagers();
     initServices();
     initScmManager();
-
     initAceManager();
     initEditorManager();
     initEditorArea();
@@ -182,6 +187,7 @@ abstract class Spark
   LaunchManager get launchManager => _launchManager;
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
+  DecoratorManager get decoratorManager => dependency[DecoratorManager];
   ActionManager get actionManager => _actionManager;
   ProjectLocationManager get projectLocationManager => _projectLocationManager;
   NavigationManager get navigationManager => _navigationManager;
@@ -286,6 +292,7 @@ abstract class Spark
 
   void initScmManager() {
     scmManager = new ScmManager(_workspace);
+    decoratorManager.addDecorator(new ScmDecorator(scmManager));
   }
 
   void initLaunchManager() {
@@ -318,6 +325,8 @@ abstract class Spark
 
   void initPackageManagers() {
     _pubManager = new PubManager(workspace);
+    decoratorManager.addDecorator(new PubDecorator(pubManager));
+
     _bowerManager = new BowerManager(workspace);
   }
 
