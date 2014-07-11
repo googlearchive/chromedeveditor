@@ -31,7 +31,7 @@ class ModalUITester extends UITester {
 
   SparkDialogButton getButton(String title) {
     for (SparkDialogButton button in buttons) {
-      if (button.title.toLowerCase() == title.toLowerCase()) {
+      if (button.text.toLowerCase() == title.toLowerCase()) {
         return button;
       }
     }
@@ -57,7 +57,7 @@ defineTests() {
     test('close dialog', () {
       ModalUITester modalTester = new ModalUITester("aboutDialog");
       modalTester.clickButton("done");
-      expect(modalTester.opened, true);
+      expect(modalTester.opened, false);
     });
   });
 }
