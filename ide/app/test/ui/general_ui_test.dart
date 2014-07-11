@@ -4,6 +4,7 @@
 
 library spark.workspace_test;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
@@ -23,7 +24,17 @@ class ModalUITester extends UITester {
 
   SparkDialog get dialog => getUIElement("#$id");
   SparkModal get modalElement => dialog.getShadowDomElement("#modal");
-  bool get opened => modalElement.opened;
+  bool get functionallyOpened => modalElement.opened;
+
+  bool get visuallyOpened {
+    CssStyleDeclaration style = modalElement.getComputedStyle();
+    String opacity = style.opacity;
+    String display = style.display;
+    String visibility = style.visibility;
+
+    return int.parse(opacity) > 0 && display != "none" && visibility != "visible";
+  }
+
   List<SparkDialogButton> get buttons =>
       dialog.querySelectorAll("spark-dialog-button");
 
@@ -51,13 +62,17 @@ defineTests() {
   group('first run', () {
     test('ensure about dialog open', () {
       ModalUITester modalTester = new ModalUITester("aboutDialog");
-      expect(modalTester.opened, true);
+      expect(modalTester.functionallyOpened, true);
     });
 
-    test('close dialog', () {
+    test('close dialog', () { // 10 26107
       ModalUITester modalTester = new ModalUITester("aboutDialog");
       modalTester.clickButton("done");
-      expect(modalTester.opened, false);
+      expect(modalTester.functionallyOpened, false);
+
+      return new Future.delayed(const Duration(milliseconds: 2000)).then((_){
+        expect(modalTester.visuallyOpened, false);
+      });
     });
   });
 }
