@@ -13,6 +13,8 @@ import 'package:spark_widgets/spark_menu_button/spark_menu_button.dart';
 import 'package:spark_widgets/spark_menu_item/spark_menu_item.dart';
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
+import 'package:spark_widgets/common/spark_widget.dart';
+
 import 'package:unittest/unittest.dart';
 
 import '../../spark_polymer_ui.dart';
@@ -65,13 +67,13 @@ class ModalUITester extends UITester {
     return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
   }
 
-  List<SparkDialogButton> get buttons =>
+  List<SparkDialogButton> get dialogButtons =>
       dialog.querySelectorAll("spark-dialog-button");
 
   ModalUITester(this.id);
 
-  SparkDialogButton getButton(String title) {
-    for (SparkDialogButton button in buttons) {
+  SparkWidget getButtonByTitle(String title) {
+    for (SparkWidget button in dialogButtons) {
       if (button.text.toLowerCase() == title.toLowerCase()) {
         return button;
       }
@@ -80,7 +82,20 @@ class ModalUITester extends UITester {
     throw "Could not find button with title $title";
   }
 
-  void clickButton(String title) => clickElement(getButton(title));
+  SparkWidget getButtonById(String id) {
+    SparkWidget button = dialog.querySelector("#$id");
+
+    if (button == null) button = dialog.getShadowDomElement("#$id");
+
+    if (button == null) throw "Could not find button with id id";
+
+    return button;
+  }
+
+  void clickButtonWithTitle(String title) => clickElement(getButtonByTitle(title));
+  void clickButtonWithId(String id) => clickElement(getButtonById(id));
+
+  void clickClosingX() => clickButtonWithId("closingX");
 }
 
 defineTests() {
