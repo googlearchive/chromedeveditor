@@ -9,6 +9,8 @@ import 'dart:html';
 
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
+import 'package:spark_widgets/spark_menu_button/spark_menu_button.dart';
+import 'package:spark_widgets/spark_menu_item/spark_menu_item.dart';
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
 import 'package:unittest/unittest.dart';
@@ -18,13 +20,32 @@ import '../../spark_polymer_ui.dart';
 class UITester {
   SparkPolymerUI get ui => document.querySelector('#topUi');
   Element getUIElement(String selectors) => ui.getShadowDomElement(selectors);
+  void sendMouseEvent(Element element, String eventType) {
+    Rectangle<int> bounds = element.getBoundingClientRect();
+    element.dispatchEvent(new MouseEvent(eventType,
+        clientX: bounds.left.toInt() + bounds.width ~/ 2,
+        clientY:bounds.top.toInt() + bounds.height ~/ 2));
+  }
+
+  void clickElement(Element element) {
+    sendMouseEvent(element, "mouseover");
+    sendMouseEvent(element, "click");
+  }
 }
 
 class SparkUITester extends UITester {
-  SparkButton getButton(String id) => getUIElement("spark-button #$id");
-
-  void selectMenu() {
-    getButton("main-menu").click();
+  SparkMenuButton get menu => getUIElement("#mainMenu");
+  SparkButton get menuButton => getUIElement("#mainMenu > spark-button");
+  void selectMenu() => menuButton.click();
+  List<SparkMenuItem> get menuItems => menu.querySelectorAll("spark-menu-item");
+  SparkMenuItem getMenuItem(String id) {
+      return menuItems.firstWhere((SparkMenuItem item) =>
+          item.attributes["action-id"] == id);
+  }
+  SparkMenuItem get newProjectMenu => getMenuItem("project-new");
+  void selectNewProject() {
+    SparkMenuItem item = newProjectMenu;
+    clickElement(item);
   }
 }
 
@@ -59,12 +80,7 @@ class ModalUITester extends UITester {
     throw "Could not find button with title $title";
   }
 
-  void clickButton(String title) {
-    SparkDialogButton button = getButton(title);
-    Rectangle<int> bounds = button.getBoundingClientRect();
-    button.dispatchEvent(new MouseEvent("click",
-        clientX: bounds.left.toInt() + 1, clientY:bounds.top.toInt() + 1));
-  }
+  void clickButton(String title) => clickElement(getButton(title));
 }
 
 defineTests() {
@@ -91,6 +107,9 @@ defineTests() {
     test('ensure about dialog open', () {
       SparkUITester sparkTester = new SparkUITester();
       sparkTester.selectMenu();
+      return new Future.delayed(const Duration(milliseconds: 2000)).then((_){
+        sparkTester.selectNewProject();
+      });
     });
   });
 
