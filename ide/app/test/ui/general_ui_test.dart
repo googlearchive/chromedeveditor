@@ -22,10 +22,12 @@ import '../../spark_polymer_ui.dart';
 class SparkUIAccess {
   static SparkUIAccess _instance;
 
-  static SparkUIAccess get instance {
-    if (_instance == null) _instance = new SparkUIAccess();
+  factory SparkUIAccess() {
+    if (_instance == null) _instance = new SparkUIAccess._internal();
     return _instance;
   }
+
+  SparkUIAccess._internal();
 
   SparkPolymerUI get _ui => document.querySelector('#topUi');
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
@@ -60,7 +62,7 @@ class MenuItemAccess {
     }
   }
 
-  SparkUIAccess _sparkAccess = SparkUIAccess.instance;
+  SparkUIAccess get _sparkAccess => new SparkUIAccess();
 
   List<SparkMenuItem> get _menuItems => _sparkAccess.menu.querySelectorAll("spark-menu-item");
   SparkMenuItem _getMenuItem(String id) {
@@ -78,7 +80,7 @@ class MenuItemAccess {
 
 class DialogAccess {
   String _id;
-  SparkUIAccess _sparkAccess = SparkUIAccess.instance;
+  SparkUIAccess get _sparkAccess => new SparkUIAccess();
 
   DialogAccess(this._id);
 
@@ -141,9 +143,9 @@ class DialogTester {
 }
 
 class SparkUITester {
-  SparkUIAccess sparkAccess;
+  SparkUIAccess get sparkAccess => new SparkUIAccess();
 
-  SparkUITester(this.sparkAccess);
+  SparkUITester();
 
   Future openAndCloseWithX(MenuItemAccess menuItem) {
     DialogTester dialogTester = new DialogTester(menuItem.dialog);
@@ -183,8 +185,7 @@ defineTests() {
 //      });
 //    });
 //  });
-  SparkUIAccess scriptable = new SparkUIAccess();
-  SparkUITester sparkTester = new SparkUITester(scriptable);
+  SparkUITester sparkTester = new SparkUITester();
 
   group('new-project dialog', () {
     test('open and close the dialog via x button', () {
