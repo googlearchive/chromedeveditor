@@ -99,7 +99,6 @@ class ModalUITester extends UITester {
 }
 
 defineTests() {
-  /*
   group('first run', () {
     test('ensure about dialog open', () {
       ModalUITester modalTester = new ModalUITester("aboutDialog");
@@ -107,9 +106,9 @@ defineTests() {
       expect(modalTester.visuallyOpened, true);
     });
 
-    test('close dialog', () { // 10 26107
+    test('close dialog', () {
       ModalUITester modalTester = new ModalUITester("aboutDialog");
-      modalTester.clickButton("done");
+      modalTester.clickButtonWithTitle("done");
       expect(modalTester.functionallyOpened, false);
 
       return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
@@ -117,13 +116,26 @@ defineTests() {
       });
     });
   });
-  */
+
   group('dialogs', () {
-    test('ensure about dialog open', () {
+    test('open and close the new-project dialog via x button', () {
       SparkUITester sparkTester = new SparkUITester();
+      ModalUITester modalTester = new ModalUITester("newProjectDialog");
+
+      expect(modalTester.functionallyOpened, false);
+      expect(modalTester.visuallyOpened, false);
+
       sparkTester.selectMenu();
-      return new Future.delayed(const Duration(milliseconds: 2000)).then((_){
-        sparkTester.selectNewProject();
+      sparkTester.selectNewProject();
+
+      return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
+        expect(modalTester.functionallyOpened, true);
+        expect(modalTester.visuallyOpened, true);
+        modalTester.clickClosingX();
+      }).then((_) => new Future.delayed(const Duration(milliseconds: 1000))
+      ).then((_) {
+        expect(modalTester.functionallyOpened, false);
+        expect(modalTester.visuallyOpened, false);
       });
     });
   });
