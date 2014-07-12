@@ -9,6 +9,7 @@ import 'dart:html';
 
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
+import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
 import 'package:unittest/unittest.dart';
 
@@ -17,6 +18,14 @@ import '../../spark_polymer_ui.dart';
 class UITester {
   SparkPolymerUI get ui => document.querySelector('#topUi');
   Element getUIElement(String selectors) => ui.getShadowDomElement(selectors);
+}
+
+class SparkUITester extends UITester {
+  SparkButton getButton(String id) => getUIElement("spark-button #$id");
+
+  void selectMenu() {
+    getButton("main-menu").click();
+  }
 }
 
 class ModalUITester extends UITester {
@@ -59,6 +68,7 @@ class ModalUITester extends UITester {
 }
 
 defineTests() {
+  /*
   group('first run', () {
     test('ensure about dialog open', () {
       ModalUITester modalTester = new ModalUITester("aboutDialog");
@@ -76,4 +86,12 @@ defineTests() {
       });
     });
   });
+  */
+  group('dialogs', () {
+    test('ensure about dialog open', () {
+      SparkUITester sparkTester = new SparkUITester();
+      sparkTester.selectMenu();
+    });
+  });
+
 }
