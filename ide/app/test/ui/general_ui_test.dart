@@ -19,61 +19,79 @@ import 'package:unittest/unittest.dart';
 
 import '../../spark_polymer_ui.dart';
 
-class UITester {
-  SparkPolymerUI get ui => document.querySelector('#topUi');
-  Element getUIElement(String selectors) => ui.getShadowDomElement(selectors);
-  void sendMouseEvent(Element element, String eventType) {
+class SparkUIAccess {
+  static SparkUIAccess _instance;
+
+  static SparkUIAccess get instance {
+    if (_instance == null) _instance = new SparkUIAccess();
+    return _instance;
+  }
+
+  SparkPolymerUI get _ui => document.querySelector('#topUi');
+  Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
+  void _sendMouseEvent(Element element, String eventType) {
     Rectangle<int> bounds = element.getBoundingClientRect();
     element.dispatchEvent(new MouseEvent(eventType,
         clientX: bounds.left.toInt() + bounds.width ~/ 2,
         clientY:bounds.top.toInt() + bounds.height ~/ 2));
   }
 
+  SparkButton get _menuButton => getUIElement("#mainMenu > spark-button");
+
+  SparkMenuButton get menu => getUIElement("#mainMenu");
+  void selectMenu() => _menuButton.click();
+
+  MenuItemAccess newProjectMenu =
+      new MenuItemAccess("project-new", "newProjectDialog");
+
   void clickElement(Element element) {
-    sendMouseEvent(element, "mouseover");
-    sendMouseEvent(element, "click");
+    _sendMouseEvent(element, "mouseover");
+    _sendMouseEvent(element, "click");
   }
 }
 
-class SparkUITester extends UITester {
-  SparkMenuButton get menu => getUIElement("#mainMenu");
-  SparkButton get menuButton => getUIElement("#mainMenu > spark-button");
-  void selectMenu() => menuButton.click();
-  List<SparkMenuItem> get menuItems => menu.querySelectorAll("spark-menu-item");
-  SparkMenuItem getMenuItem(String id) {
-      return menuItems.firstWhere((SparkMenuItem item) =>
+class MenuItemAccess {
+  String _menuItemId;
+  DialogAccess _dialog = null;
+
+  MenuItemAccess(this._menuItemId, [String _dialogId]) {
+    if (_dialogId != null) {
+      _dialog = new DialogAccess(_dialogId);
+    }
+  }
+
+  SparkUIAccess _sparkAccess = SparkUIAccess.instance;
+
+  List<SparkMenuItem> get _menuItems => _sparkAccess.menu.querySelectorAll("spark-menu-item");
+  SparkMenuItem _getMenuItem(String id) {
+      return _menuItems.firstWhere((SparkMenuItem item) =>
           item.attributes["action-id"] == id);
   }
-  SparkMenuItem get newProjectMenu => getMenuItem("project-new");
-  void selectNewProject() {
-    SparkMenuItem item = newProjectMenu;
-    clickElement(item);
-  }
+
+  SparkMenuItem get _menuItem => _menuItems.firstWhere((SparkMenuItem item) =>
+      item.attributes["action-id"] == _menuItemId);
+
+  DialogAccess get dialog => _dialog;
+
+  void select() => _sparkAccess.clickElement(_menuItem);
 }
 
-class ModalUITester extends UITester {
-  String id;
+class DialogAccess {
+  String _id;
+  SparkUIAccess _sparkAccess = SparkUIAccess.instance;
 
-  SparkDialog get dialog => getUIElement("#$id");
-  SparkModal get modalElement => dialog.getShadowDomElement("#modal");
-  bool get functionallyOpened => modalElement.opened;
+  DialogAccess(this._id);
 
-  bool get visuallyOpened {
-    CssStyleDeclaration style = modalElement.getComputedStyle();
-    String opacity = style.opacity;
-    String display = style.display;
-    String visibility = style.visibility;
+  SparkDialog get _dialog => _sparkAccess.getUIElement("#$_id");
 
-    return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
-  }
+  SparkModal get _modalElement => _dialog.getShadowDomElement("#modal");
 
-  List<SparkDialogButton> get dialogButtons =>
-      dialog.querySelectorAll("spark-dialog-button");
+  List<SparkDialogButton> get _dialogButtons =>
+      _dialog.querySelectorAll("spark-dialog-button");
 
-  ModalUITester(this.id);
 
-  SparkWidget getButtonByTitle(String title) {
-    for (SparkWidget button in dialogButtons) {
+  SparkWidget _getButtonByTitle(String title) {
+    for (SparkWidget button in _dialogButtons) {
       if (button.text.toLowerCase() == title.toLowerCase()) {
         return button;
       }
@@ -82,62 +100,108 @@ class ModalUITester extends UITester {
     throw "Could not find button with title $title";
   }
 
-  SparkWidget getButtonById(String id) {
-    SparkWidget button = dialog.querySelector("#$id");
+  SparkWidget _getButtonById(String id) {
+    SparkWidget button = _dialog.querySelector("#$id");
 
-    if (button == null) button = dialog.getShadowDomElement("#$id");
+    if (button == null) button = _dialog.getShadowDomElement("#$id");
 
     if (button == null) throw "Could not find button with id id";
 
     return button;
   }
 
-  void clickButtonWithTitle(String title) => clickElement(getButtonByTitle(title));
-  void clickButtonWithId(String id) => clickElement(getButtonById(id));
+  String get id => _id;
 
-  void clickClosingX() => clickButtonWithId("closingX");
+  bool get opened => _modalElement.opened;
+
+  void clickButtonWithTitle(String title) =>
+      _sparkAccess.clickElement(_getButtonByTitle(title));
+
+  void clickButtonWithId(String id) =>
+      _sparkAccess.clickElement(_getButtonById(id));
+}
+
+class DialogTester {
+  DialogAccess dialogAccess;
+
+  DialogTester(this.dialogAccess);
+
+  bool get functionallyOpened => dialogAccess.opened;
+
+  bool get visuallyOpened {
+    CssStyleDeclaration style = dialogAccess._modalElement.getComputedStyle();
+    String opacity = style.opacity;
+    String display = style.display;
+    String visibility = style.visibility;
+
+    return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
+  }
+
+  void clickClosingX() => dialogAccess.clickButtonWithId("closingX");
+}
+
+class SparkUITester {
+  SparkUIAccess sparkAccess;
+
+  SparkUITester(this.sparkAccess);
+
+  Future openAndCloseWithX(MenuItemAccess menuItem) {
+    DialogTester dialogTester = new DialogTester(menuItem.dialog);
+
+    expect(dialogTester.functionallyOpened, false);
+    expect(dialogTester.visuallyOpened, false);
+
+    menuItem.select();
+
+    return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
+      expect(dialogTester.functionallyOpened, true);
+      expect(dialogTester.visuallyOpened, true);
+      dialogTester.clickClosingX();
+    }).then((_) => new Future.delayed(const Duration(milliseconds: 1000))
+    ).then((_) {
+      expect(dialogTester.functionallyOpened, false);
+      expect(dialogTester.visuallyOpened, false);
+    });
+  }
 }
 
 defineTests() {
-  group('first run', () {
-    test('ensure about dialog open', () {
-      ModalUITester modalTester = new ModalUITester("aboutDialog");
-      expect(modalTester.functionallyOpened, true);
-      expect(modalTester.visuallyOpened, true);
-    });
+//  group('first run', () {
+//    test('ensure about dialog open', () {
+//      ModalUITester modalTester = new ModalUITester("aboutDialog");
+//      expect(modalTester.functionallyOpened, true);
+//      expect(modalTester.visuallyOpened, true);
+//    });
+//
+//    test('close dialog', () {
+//      ModalUITester modalTester = new ModalUITester("aboutDialog");
+//      modalTester.clickButtonWithTitle("done");
+//      expect(modalTester.functionallyOpened, false);
+//
+//      return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
+//        expect(modalTester.visuallyOpened, false);
+//      });
+//    });
+//  });
+  SparkUIAccess scriptable = new SparkUIAccess();
+  SparkUITester sparkTester = new SparkUITester(scriptable);
 
-    test('close dialog', () {
-      ModalUITester modalTester = new ModalUITester("aboutDialog");
-      modalTester.clickButtonWithTitle("done");
-      expect(modalTester.functionallyOpened, false);
-
-      return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
-        expect(modalTester.visuallyOpened, false);
-      });
-    });
-  });
-
-  group('dialogs', () {
-    test('open and close the new-project dialog via x button', () {
-      SparkUITester sparkTester = new SparkUITester();
-      ModalUITester modalTester = new ModalUITester("newProjectDialog");
-
-      expect(modalTester.functionallyOpened, false);
-      expect(modalTester.visuallyOpened, false);
-
-      sparkTester.selectMenu();
-      sparkTester.selectNewProject();
-
-      return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
-        expect(modalTester.functionallyOpened, true);
-        expect(modalTester.visuallyOpened, true);
-        modalTester.clickClosingX();
-      }).then((_) => new Future.delayed(const Duration(milliseconds: 1000))
-      ).then((_) {
-        expect(modalTester.functionallyOpened, false);
-        expect(modalTester.visuallyOpened, false);
-      });
+  group('new-project dialog', () {
+    test('open and close the dialog via x button', () {
+      sparkTester.openAndCloseWithX(sparkTester.sparkAccess.newProjectMenu);
     });
   });
 
+//  group('git-clone dialog', () {
+//    test('open and close the dialog via x button', () {
+//      sparkTester.openAndCloseWithX("gitCloneDialog", sparkTester.newProjectMenu);
+//    });
+//  });
+//
+//  group('about dialog', () {
+//    test('open and close the dialog via x button', () {
+//      sparkTester.openAndCloseWithX("aboutDialog");
+//    });
+//  });
+//
 }
