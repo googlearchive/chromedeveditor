@@ -32,7 +32,7 @@ class ModalUITester extends UITester {
     String display = style.display;
     String visibility = style.visibility;
 
-    return int.parse(opacity) > 0 && display != "none" && visibility != "visible";
+    return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
   }
 
   List<SparkDialogButton> get buttons =>
@@ -63,6 +63,7 @@ defineTests() {
     test('ensure about dialog open', () {
       ModalUITester modalTester = new ModalUITester("aboutDialog");
       expect(modalTester.functionallyOpened, true);
+      expect(modalTester.visuallyOpened, true);
     });
 
     test('close dialog', () { // 10 26107
@@ -70,7 +71,7 @@ defineTests() {
       modalTester.clickButton("done");
       expect(modalTester.functionallyOpened, false);
 
-      return new Future.delayed(const Duration(milliseconds: 2000)).then((_){
+      return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
         expect(modalTester.visuallyOpened, false);
       });
     });
