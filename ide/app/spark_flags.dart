@@ -87,7 +87,7 @@ class SparkFlags {
    */
   static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
     return fileReader
-      .timeout(new Duration(milliseconds: 100))
+      .timeout(new Duration(milliseconds: 1000))
       .then((String contents) => JSON.decode(contents))
       .catchError((e) {
         if (e is FormatException) {
