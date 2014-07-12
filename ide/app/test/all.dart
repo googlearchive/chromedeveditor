@@ -39,33 +39,33 @@ import 'workspace_test.dart' as workspace_test;
  * Place all new tests here.
  */
 void defineTests() {
-  ace_test.defineTests();
-  actions_test.defineTests();
-  analytics_test.defineTests();
-  app_test.defineTests();
-  builder_test.defineTests();
-  cssbeautify_test.defineTests();
-  editors_test.defineTests();
-  event_bus_test.defineTests();
-  files_test.defineTests();
-  jobs_test.defineTests();
-  jshint_test.defineTests();
-  git_all_test.defineTests();
-  navigation_test.defineTests();
-  outline_test.defineTests();
-  preferences_test.defineTests();
-  pub_test.defineTests();
-  scm_test.defineTests();
-  sdk_test.defineTests();
-  search_test.defineTests();
-  server_test.defineTests();
-  services_test.defineTests();
-  services_common_test.defineTests();
-  tcp_test.defineTests();
+//  ace_test.defineTests();
+//  actions_test.defineTests();
+//  analytics_test.defineTests();
+//  app_test.defineTests();
+//  builder_test.defineTests();
+//  cssbeautify_test.defineTests();
+//  editors_test.defineTests();
+//  event_bus_test.defineTests();
+//  files_test.defineTests();
+//  jobs_test.defineTests();
+//  jshint_test.defineTests();
+//  git_all_test.defineTests();
+//  navigation_test.defineTests();
+//  outline_test.defineTests();
+//  preferences_test.defineTests();
+//  pub_test.defineTests();
+//  scm_test.defineTests();
+//  sdk_test.defineTests();
+//  search_test.defineTests();
+//  server_test.defineTests();
+//  services_test.defineTests();
+//  services_common_test.defineTests();
+//  tcp_test.defineTests();
   ui_all_test.defineTests();
-  utils_test.defineTests();
-  workspace_test.defineTests();
+//  utils_test.defineTests();
+//  workspace_test.defineTests();
 
   // Run our benchmarks as well.
-  benchmarks.defineTests();
+//  benchmarks.defineTests();
 }
