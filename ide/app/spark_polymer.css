@@ -569,10 +569,8 @@ button.ace_searchbtn.prev:hover {
 
 #markdownContent {
   -webkit-font-smoothing: antialiased;
-  background-color: rgba(255, 255, 255, 1.0);
   bottom: 0px;
   font-family: inherit;
-  font-size: 12px;
   overflow-y: auto;
   width: 100%;
   padding: 10px 15px;
@@ -580,7 +578,8 @@ button.ace_searchbtn.prev:hover {
   top: 0px;
   transition: opacity 250ms;
   z-index: 89;
-  border-top: 1px solid #e4e4e4;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /*
