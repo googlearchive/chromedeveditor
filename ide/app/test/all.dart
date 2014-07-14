@@ -31,6 +31,7 @@ import 'server_test.dart' as server_test;
 import 'services_test.dart' as services_test;
 import 'services_common_test.dart' as services_common_test;
 import 'tcp_test.dart' as tcp_test;
+import 'ui/all.dart' as ui_all_test;
 import 'utils_test.dart' as utils_test;
 import 'workspace_test.dart' as workspace_test;
 
@@ -61,6 +62,7 @@ void defineTests() {
   services_test.defineTests();
   services_common_test.defineTests();
   tcp_test.defineTests();
+  ui_all_test.defineTests();
   utils_test.defineTests();
   workspace_test.defineTests();
 
