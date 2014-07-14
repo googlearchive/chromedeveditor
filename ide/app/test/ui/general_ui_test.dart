@@ -22,6 +22,8 @@ class UITester {
 class ModalUITester extends UITester {
   String id;
 
+  ModalUITester(this.id);
+
   SparkDialog get dialog => getUIElement("#$id");
   SparkModal get modalElement => dialog.getShadowDomElement("#modal");
   bool get functionallyOpened => modalElement.opened;
@@ -37,8 +39,6 @@ class ModalUITester extends UITester {
 
   List<SparkDialogButton> get buttons =>
       dialog.querySelectorAll("spark-dialog-button");
-
-  ModalUITester(this.id);
 
   SparkDialogButton getButton(String title) {
     for (SparkDialogButton button in buttons) {
