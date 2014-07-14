@@ -569,17 +569,17 @@ button.ace_searchbtn.prev:hover {
 
 #markdownContent {
   -webkit-font-smoothing: antialiased;
-  background-color: rgba(39, 40, 34, 1.0);
   bottom: 0px;
   font-family: inherit;
-  font-size: 14px;
   overflow-y: auto;
   width: 100%;
-  padding: 10px;
+  padding: 10px 15px;
   position: absolute;
   top: 0px;
   transition: opacity 250ms;
   z-index: 89;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /*

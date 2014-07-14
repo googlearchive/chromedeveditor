@@ -364,7 +364,8 @@ class MarkdownEditor extends TextEditor {
 
   MarkdownEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
       super._create(aceManager, file, prefs) {
-    _markdown = new Markdown(element, file);
+    // Parent this at the tab container level.
+    _markdown = new Markdown(element.parent.parent, file);
   }
 
   @override
