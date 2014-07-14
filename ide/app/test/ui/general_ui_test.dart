@@ -91,7 +91,6 @@ class DialogAccess {
   List<SparkDialogButton> get _dialogButtons =>
       _dialog.querySelectorAll("spark-dialog-button");
 
-
   SparkWidget _getButtonByTitle(String title) {
     for (SparkWidget button in _dialogButtons) {
       if (button.text.toLowerCase() == title.toLowerCase()) {
