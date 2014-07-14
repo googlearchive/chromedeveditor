@@ -17,13 +17,13 @@ library spark.dependency;
  * the single [dependency] instance defined in this library to set up all
  * the singletons for your application.
  *
- *     Dependencies dependency = new Dependencies();
- *     dependency.setInstance(CatManager, catManager);
- *     dependency.setInstance(DogManager, dogs);
+ *     Dependencies dependencies = new Dependencies();
+ *     dependencies.setInstance(CatManager, catManager);
+ *     dependencies.setInstance(DogManager, dogs);
  *
  *     ...
  *
- *     CatManager cats = dependency[CatManager];
+ *     CatManager cats = dependencies[CatManager];
  *     cats.corale();
  */
 class Dependencies {

@@ -80,7 +80,7 @@ abstract class Spark
 
   Services services;
   final JobManager jobManager = new JobManager();
-  final Dependencies dependency = Dependencies.dependency;
+  final Dependencies dependencies = Dependencies.dependency;
   SparkStatus statusComponent;
   preferences.SparkPreferences prefs;
 
@@ -122,7 +122,7 @@ abstract class Spark
    */
   Future init() {
     // Init the dependency manager.
-    dependency[DecoratorManager] = new DecoratorManager();
+    dependencies[DecoratorManager] = new DecoratorManager();
 
     initPreferences();
     initEventBus();
@@ -187,7 +187,7 @@ abstract class Spark
   LaunchManager get launchManager => _launchManager;
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
-  DecoratorManager get decoratorManager => dependency[DecoratorManager];
+  DecoratorManager get decoratorManager => dependencies[DecoratorManager];
   ActionManager get actionManager => _actionManager;
   ProjectLocationManager get projectLocationManager => _projectLocationManager;
   NavigationManager get navigationManager => _navigationManager;
