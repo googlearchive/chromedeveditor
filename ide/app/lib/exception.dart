@@ -177,4 +177,8 @@ class SparkErrorMessages {
       "Windows, however you can use the pub command line tool to get the "
       "packages.\nYou can track the issue at: "
       "https://github.com/dart-lang/chromedeveditor/issues/2743.";
+
+  static const String PUB_SYMLINKS_ERROR_MSG =
+      "Operations on directories containing symlinks is not supported. Delete "
+      "directories containing symlinks using other tools and try again.";
 }
