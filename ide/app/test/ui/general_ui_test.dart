@@ -7,6 +7,7 @@ library spark.workspace_test;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:spark_widgets/spark_modal/spark_modal.dart';
 import 'package:unittest/unittest.dart';
 
 import "ui_access.dart";
@@ -19,12 +20,17 @@ class DialogTester {
   bool get functionallyOpened => dialogAccess.opened;
 
   bool get visuallyOpened {
-    CssStyleDeclaration style = dialogAccess.modalElement.getComputedStyle();
-    String opacity = style.opacity;
-    String display = style.display;
-    String visibility = style.visibility;
+    SparkModal modalElement = dialogAccess.modalElement;
+    CssStyleDeclaration style = modalElement.getComputedStyle();
+//    String opacity = style.opacity;
+//    String display = style.display;
+//    String visibility = style.visibility;
+    Rectangle<int> bounds = modalElement.getBoundingClientRect();
+    var elementFromPoint = document.elementFromPoint(bounds.left.toInt() + bounds.width ~/ 2,
+        bounds.top.toInt() + bounds.height ~/ 2);
+    return elementFromPoint == modalElement;
 
-    return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
+//    return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
   }
 
   void clickClosingX() => dialogAccess.clickButtonWithId("closingX");
