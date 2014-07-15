@@ -2161,6 +2161,7 @@ class NewProjectAction extends SparkActionWithDialog {
         final String templId = match.group(1);
         final String jsDepsStr = match.group(3);
 
+        _analyticsTracker.sendEvent('action', 'project-new', templId);
         templates.add(new ProjectTemplate(templId, globalVars));
 
         // Possibly also add a mix-in template for JS dependencies, if the
