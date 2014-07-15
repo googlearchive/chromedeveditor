@@ -20,6 +20,8 @@ import 'widgets/treeview.dart';
 import 'widgets/treeview_cell.dart';
 import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
+import '../dependency.dart';
+import '../decorators.dart';
 import '../event_bus.dart';
 import '../preferences.dart' as preferences;
 import '../scm.dart';
@@ -79,6 +81,8 @@ class FilesController implements TreeViewDelegate {
   // Expanded state when no search filter is applied.
   List<String> _currentExpandedState = [];
 
+  DecoratorManager _decoratorManager;
+
   FilesController(this._workspace,
                   this._actionManager,
                   this._scmManager,
@@ -89,6 +93,9 @@ class FilesController implements TreeViewDelegate {
     _treeView.dropEnabled = true;
     _treeView.draggingEnabled = true;
 
+    _decoratorManager = Dependencies.dependency[DecoratorManager];
+    _decoratorManager.onChanged.listen((_) => _processDecoratorsChange());
+
     _workspace.whenAvailable().then((_) => _addAllFiles());
 
     _workspace.onResourceChange.listen((event) {
@@ -98,7 +105,6 @@ class FilesController implements TreeViewDelegate {
     });
 
     _workspace.onMarkerChange.listen((_) => _processMarkerChange());
-    _scmManager.onStatusChange.listen((_) => _processScmChange());
   }
 
   bool isFileSelected(Resource file) {
@@ -202,7 +208,7 @@ class FilesController implements TreeViewDelegate {
     if (resource is Folder) {
       cell.acceptDrop = true;
     }
-    _updateScmInfo(cell);
+    _updateDecoratorInfo(cell);
     return cell;
   }
 
@@ -785,30 +791,20 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
-  void _processScmChange() {
+  void _processDecoratorsChange() {
     for (String uid in _filesMap.keys) {
       TreeViewCell treeViewCell = _treeView.getTreeViewCellForUid(uid);
       if (treeViewCell != null) {
-        _updateScmInfo(treeViewCell.embeddedCell);
+        _updateDecoratorInfo(treeViewCell.embeddedCell);
       }
     }
   }
 
-  void _updateScmInfo(FileItemCell fileItemCell) {
+  void _updateDecoratorInfo(FileItemCell fileItemCell) {
     Resource resource = fileItemCell.resource;
-    ScmProjectOperations scmOperations =
-        _scmManager.getScmOperationsFor(resource.project);
-
-    if (scmOperations != null) {
-      if (resource is Project) {
-        String branchName = scmOperations.getBranchName();
-        if (branchName == null) branchName = '';
-        fileItemCell.setFileInfo('[${branchName}]');
-      }
-
-      ScmFileStatus status = scmOperations.getFileStatus(resource);
-      fileItemCell.setGitStatus(dirty: (status != ScmFileStatus.COMMITTED),
-          added: (status == ScmFileStatus.ADDED));
+    String decoration = _decoratorManager.getTextDecoration(resource);
+    if (decoration != null) {
+      fileItemCell.setFileInfo(decoration);
     }
   }
 
