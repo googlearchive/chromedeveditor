@@ -2346,7 +2346,7 @@ class ProgressMonitorImpl extends ProgressMonitor {
 
   void start(String title,
              {num maxWork: 0,
-              ProgressFormat format: ProgressFormat.PERCENTAGE}) {
+              ProgressFormat format: ProgressFormat.NONE}) {
     super.start(title, maxWork: maxWork, format: format);
     _dialog._setProgressMessage(title == null ? '' : title);
   }
