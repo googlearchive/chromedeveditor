@@ -2923,8 +2923,8 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
 
   void _commit() {
     // TODO(grv): Add verify checks.
-    String branchName = _selectElement.options[
-        _selectElement.selectedIndex].value;
+    int index = _selectElement.selectedIndex == -1 ? 0 : _selectElement.selectedIndex;
+    String branchName = _selectElement.options[index].value;
     _setProgressMessage("Checking out ${branchName}…");
     _toggleProgressVisible(true);
 
