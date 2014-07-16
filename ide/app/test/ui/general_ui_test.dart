@@ -34,7 +34,7 @@ class ModalUITester extends UITester {
     String display = style.display;
     String visibility = style.visibility;
 
-    return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
+    return num.parse(opacity) > 0 && display != "none" && visibility == "visible";
   }
 
   List<SparkDialogButton> get buttons =>
