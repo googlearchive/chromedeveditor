@@ -10,6 +10,7 @@ library spark.workspace;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert' show JSON;
+import 'dart:html' as html;
 import 'dart:math' as math;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -17,6 +18,7 @@ import 'package:logging/logging.dart';
 
 import 'builder.dart';
 import 'enum.dart';
+import 'exception.dart';
 import 'jobs.dart';
 import 'package_mgmt/pub_properties.dart';
 import 'preferences.dart';
@@ -25,6 +27,11 @@ import 'utils.dart';
 final Logger _logger = new Logger('spark.workspace');
 
 final _ChromeHelper _chromeHelper = new _ChromeHelper();
+
+/**
+ * Check for error reported when dealing with symlinks
+ */
+bool isSymlinkError(dynamic e) => e is html.FileError && e.name == 'InvalidModificationError';
 
 /**
  * The Workspace is a top-level entity that can contain files and projects. The
@@ -162,6 +169,13 @@ class Workspace extends Container {
       resources.forEach((r) => list.addAll(ChangeDelta.containerDelete(r)));
       changes.forEach((List<ChangeDelta> deltas) => list.addAll(deltas));
       _fireResourceChanges(list);
+    }).catchError((e) {
+      if (isSymlinkError(e)) {
+        return new Future.error(new SparkException(
+             SparkErrorMessages.SYMLINKS_ERROR_MSG,
+             errorCode: SparkErrorConstants.SYMLINKS_OPERATION_NOT_SUPPORTED));
+      }
+      return new Future.error(e);
     });
   }
 
@@ -918,8 +932,16 @@ class Folder extends Container {
   }
 
   Future delete() {
-    return _dirEntry.removeRecursively().then((_)
-        => _parent._removeChild(this, fireEvent: true));
+    return _dirEntry.removeRecursively()
+      .then((_) => _parent._removeChild(this, fireEvent: true))
+      .catchError((e) {
+        if (isSymlinkError(e)) {
+          return new Future.error(new SparkException(
+              SparkErrorMessages.SYMLINKS_ERROR_MSG,
+              errorCode: SparkErrorConstants.SYMLINKS_OPERATION_NOT_SUPPORTED));
+        }
+        return new Future.error(e);
+      });
   }
 
   //TODO(keertip): remove check for 'cache'

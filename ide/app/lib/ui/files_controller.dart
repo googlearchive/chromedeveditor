@@ -387,7 +387,11 @@ class FilesController implements TreeViewDelegate {
       });
     } else {
       if (_isValidMove(nodesUids, targetNodeUid)) {
-        _workspace.moveTo(nodesUids.map((f) => _filesMap[f]).toList(), destination);
+        _workspace.moveTo(nodesUids.map((f) => _filesMap[f]).toList(), destination)
+          .catchError((e) {
+           // TODO(keertip): show error in dialog
+            throw e;
+          });
       }
     }
   }

@@ -632,8 +632,6 @@ abstract class Spark
     if (exception != null) {
       if (exception is SparkException) {
         text += exception.message;
-      } else if (exception is FileError && exception.name == 'InvalidModificationError') {
-        text += SparkErrorMessages.PUB_SYMLINKS_ERROR_MSG;
       } else {
         text += '${exception}';
       }
@@ -1816,9 +1814,9 @@ abstract class PubAction extends PackageManagementAction {
 
   bool _canRunAction() {
     if (PlatformInfo.isWin) {
-      spark.showErrorMessage('Pub',
-          message: SparkErrorMessages.PUB_ON_WINDOWS_MSG);
-      return false;
+      throw new SparkException(
+          SparkErrorMessages.PUB_ON_WINDOWS_MSG,
+          errorCode: SparkErrorConstants.PUB_ON_WINDOWS_NOT_SUPPORTED);
     }
     return true;
   }

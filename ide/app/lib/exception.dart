@@ -145,6 +145,11 @@ class SparkErrorConstants {
 
   static const String RUN_APP_NOT_FOUND_IN_CHROME =
       "run.app_not_found_in_chrome";
+  static const String PUB_ON_WINDOWS_NOT_SUPPORTED =
+      "pub.windows_not_supported";
+  static const String SYMLINKS_OPERATION_NOT_SUPPORTED =
+      "symlinks_not_supported";
+
 }
 
 class SparkErrorMessages {
@@ -178,7 +183,7 @@ class SparkErrorMessages {
       "packages.\nYou can track the issue at: "
       "https://github.com/dart-lang/chromedeveditor/issues/2743.";
 
-  static const String PUB_SYMLINKS_ERROR_MSG =
-      "Operations on directories containing symlinks is not supported. Delete "
+  static const String SYMLINKS_ERROR_MSG =
+      "Operations on directories containing symlinks are not supported. Delete "
       "directories containing symlinks using other tools and try again.";
 }

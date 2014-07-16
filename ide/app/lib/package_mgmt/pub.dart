@@ -8,6 +8,7 @@
 library spark.package_mgmt.pub;
 
 import 'dart:async';
+import 'dart:html' as html;
 
 import 'package:logging/logging.dart';
 import 'package:tavern/tavern.dart' as tavern;
@@ -15,6 +16,7 @@ import 'package:yaml/yaml.dart' as yaml;
 
 import 'package_manager.dart';
 import 'pub_properties.dart';
+import '../exception.dart';
 import '../jobs.dart';
 import '../platform_info.dart';
 import '../workspace.dart';
@@ -106,6 +108,11 @@ class PubManager extends PackageManager {
       return container.project.refresh();
     }).catchError((e, st) {
       _logger.severe('Error running Pub $commandName', e, st);
+      if (isSymlinkError(e)) {
+        return new Future.error(new SparkException(
+          SparkErrorMessages.SYMLINKS_ERROR_MSG,
+          errorCode: SparkErrorConstants.SYMLINKS_OPERATION_NOT_SUPPORTED), st);
+      }
       return new Future.error(e, st);
     });
   }
