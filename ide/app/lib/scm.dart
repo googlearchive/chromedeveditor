@@ -185,9 +185,9 @@ abstract class ScmProjectOperations {
 
   Future<List<String>> getLocalBranchNames();
 
-  Future<Iterable<String>> getRemoteBranchNames();
+  Future<List<String>> getRemoteBranchNames();
 
-  Future<Iterable<String>> getUpdatedRemoteBranchNames();
+  Future<List<String>> getUpdatedRemoteBranchNames();
 
   Future createBranch(String branchName, String sourceBranchName);
 
@@ -379,12 +379,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
-  Future<Iterable<String>> getLocalBranchNames() =>
+  Future<List<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
-  Future<Iterable<String>> getRemoteBranchNames()  {
+  Future<List<String>> getRemoteBranchNames()  {
     return objectStore.then((store) {
-      return store.getRemoteHeads().then((result) {
+      return store.getRemoteHeads().then((List<String> result) {
         GitOptions options = new GitOptions(root: entry, store: store);
         // Return immediately but requet async update.
         // TODO(grv): wait for it when, the UI support refreshing remote branches.
@@ -394,7 +394,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future<Iterable<String>> getUpdatedRemoteBranchNames()  {
+  Future<List<String>> getUpdatedRemoteBranchNames()  {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       return Fetch.updateAndGetRemoteRefs(options);
