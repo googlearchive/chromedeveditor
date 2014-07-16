@@ -16,11 +16,33 @@ import 'package:logging/logging.dart';
 
 import 'package_manager.dart';
 import 'bower_fetcher.dart';
-import 'bower_properties.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
+
+// TODO(ussuri): Make package-private once no longer used outside.
+final BowerProperties bowerProperties = new BowerProperties();
+
+class BowerProperties extends PackageServiceProperties {
+  //
+  // PackageServiceProperties virtual interface:
+  //
+
+  String get packageServiceName => 'bower';
+  String get packageSpecFileName => 'bower.json';
+  // TODO(ussuri): Package name can be overridden in .bowerrc: handle that.
+  String get packagesDirName => 'bower_components';
+
+  // Bower doesn't use any of the below nullified properties/methods.
+
+  String get libDirName => null;
+  String get packageRefPrefix => null;
+  RegExp get packageRefPrefixRegexp => null;
+
+  void setSelfReference(Project project, String selfReference) {}
+  String getSelfReference(Project project) => null;
+}
 
 class BowerManager extends PackageManager {
 
@@ -106,6 +128,8 @@ class _BowerResolver extends PackageResolver {
   // Not used by anybody, but could return something like
   // `/bower_components/foo/bar.js`.
   String getReferenceFor(File file) => null;
+
+  String toString() => 'Bower resolver for ${project}';
 }
 
 /**

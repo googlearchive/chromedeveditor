@@ -93,8 +93,6 @@ abstract class Spark
   EditorManager _editorManager;
   EditorArea _editorArea;
   LaunchManager _launchManager;
-  PubManager _pubManager;
-  BowerManager _bowerManager;
   ActionManager _actionManager;
   ProjectLocationManager _projectLocationManager;
   NavigationManager _navigationManager;
@@ -185,8 +183,8 @@ abstract class Spark
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
   LaunchManager get launchManager => _launchManager;
-  PubManager get pubManager => _pubManager;
-  BowerManager get bowerManager => _bowerManager;
+  PubManager get pubManager => dependencies[PubManager];
+  BowerManager get bowerManager => dependencies[BowerManager];
   DecoratorManager get decoratorManager => dependencies[DecoratorManager];
   ActionManager get actionManager => _actionManager;
   ProjectLocationManager get projectLocationManager => _projectLocationManager;
@@ -256,7 +254,7 @@ abstract class Spark
   }
 
   void initServices() {
-    services = new Services(this.workspace, _pubManager);
+    services = new Services(this.workspace, pubManager);
   }
 
   void initEventBus() {
@@ -324,10 +322,13 @@ abstract class Spark
   }
 
   void initPackageManagers() {
-    _pubManager = new PubManager(workspace);
+    // Init the Pub manager, and add it to the dependencies tracker.
+    PubManager pubManager = new PubManager(workspace);
+    dependencies[PubManager] = pubManager;
     decoratorManager.addDecorator(new PubDecorator(pubManager));
 
-    _bowerManager = new BowerManager(workspace);
+    // Init the Bower manager, and add it to the dependencies tracker.
+    dependencies[BowerManager] = new BowerManager(workspace);
   }
 
   void initAceManager() {

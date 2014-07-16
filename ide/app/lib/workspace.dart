@@ -18,7 +18,7 @@ import 'package:logging/logging.dart';
 import 'builder.dart';
 import 'enum.dart';
 import 'jobs.dart';
-import 'package_mgmt/pub_properties.dart';
+import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart';
 

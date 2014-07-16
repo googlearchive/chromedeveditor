@@ -14,13 +14,38 @@ import 'package:tavern/tavern.dart' as tavern;
 import 'package:yaml/yaml.dart' as yaml;
 
 import 'package_manager.dart';
-import 'pub_properties.dart';
 import '../decorators.dart';
 import '../jobs.dart';
 import '../platform_info.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
+
+// TODO(ussuri): Make package-private once no longer used outside.
+final PubProperties pubProperties = new PubProperties();
+
+class PubProperties extends PackageServiceProperties {
+  //
+  // PackageServiceProperties virtual interface:
+  //
+
+  String get packageServiceName => 'pub';
+  String get packageSpecFileName => 'pubspec.yaml';
+  String get packagesDirName => 'packages';
+  String get libDirName => 'lib';
+  String get packageRefPrefix => 'package:';
+  // This will get both the "package:foo/bar.dart" variant when used directly
+  // in Dart and the "baz/packages/foo/bar.dart" variant when served over HTTP.
+  RegExp get packageRefPrefixRegexp =>
+     new RegExp(r'^(package:|.*/packages/|packages/)(.*)$');
+
+  void setSelfReference(Project project, String selfReference) =>
+     project.setMetadata('${packageServiceName}SelfReference', selfReference);
+
+  String getSelfReference(Project project) =>
+     project.getMetadata('${packageServiceName}SelfReference');
+}
+
 
 File findPubspec(Container container) {
   while (container.parent != null && container is! Workspace) {
@@ -224,6 +249,8 @@ class _PubResolver extends PackageResolver {
       return null;
     }
   }
+
+  String toString() => 'Pub resolver for ${project}';
 }
 
 /**
