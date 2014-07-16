@@ -16,6 +16,7 @@ import 'package:logging/logging.dart';
 import 'package:observe/observe.dart';
 
 import 'builder.dart';
+import 'decorators.dart';
 import 'exception.dart';
 import 'jobs.dart';
 import 'workspace.dart';
@@ -600,6 +601,32 @@ class GitScmProjectOperations extends ScmProjectOperations {
     resource.setMetadata('scmStatus', new ScmFileStatus.fromIndexStatus(
         fileStatus).status);
   }
+}
+
+/**
+ * A decorator to add text decorations for the current branch of a project.
+ */
+class ScmDecorator extends Decorator {
+  final ScmManager _manager;
+  final StreamController _controller = new StreamController.broadcast();
+
+  ScmDecorator(this._manager) {
+    _manager.onStatusChange.listen((_) => _controller.add(null));
+  }
+
+  bool canDecorate(Object object) {
+    if (object is! Project) return false;
+    return _manager.getScmOperationsFor(object) != null;
+  }
+
+  String getTextDecoration(Object object) {
+    ScmProjectOperations scmOperations = _manager.getScmOperationsFor(object);
+    String branchName = scmOperations.getBranchName();
+    if (branchName == null) branchName = '';
+    return '[${branchName}]';
+  }
+
+  Stream get onChanged => _controller.stream;
 }
 
 /**

@@ -8,7 +8,6 @@
 library spark.package_mgmt.pub;
 
 import 'dart:async';
-import 'dart:html' as html;
 
 import 'package:logging/logging.dart';
 import 'package:tavern/tavern.dart' as tavern;
@@ -16,6 +15,7 @@ import 'package:yaml/yaml.dart' as yaml;
 
 import 'package_manager.dart';
 import 'pub_properties.dart';
+import '../decorators.dart';
 import '../exception.dart';
 import '../jobs.dart';
 import '../platform_info.dart';
@@ -35,6 +35,7 @@ File findPubspec(Container container) {
 }
 
 class PubManager extends PackageManager {
+  final StreamController<Project> _controller = new StreamController.broadcast();
 
   /**
    * Create a new [PubManager] instance. This is a heavy-weight object; it
@@ -48,7 +49,14 @@ class PubManager extends PackageManager {
 
   PackageServiceProperties get properties => pubProperties;
 
-  PackageBuilder getBuilder() => new _PubBuilder();
+  void setSelfReference(Project project, String selfReference) {
+    properties.setSelfReference(project, selfReference);
+    _controller.add(project);
+  }
+
+  Stream<Project> get onSelfReferenceChange => _controller.stream;
+
+  PackageBuilder getBuilder() => new _PubBuilder(this);
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
@@ -116,6 +124,35 @@ class PubManager extends PackageManager {
       return new Future.error(e, st);
     });
   }
+}
+
+/**
+ * A decorator to add text decorations to the `pubspec.yaml` file.
+ */
+class PubDecorator extends Decorator {
+  final PubManager _manager;
+  final StreamController _controller = new StreamController.broadcast();
+
+  PubDecorator(this._manager) {
+    _manager.onSelfReferenceChange.listen((_) => _controller.add(null));
+  }
+
+  bool canDecorate(Object object) {
+    if (object is! Resource) return false;
+
+    Resource r = object;
+    return r.isFile && r.name == _manager.properties.packageSpecFileName;
+  }
+
+  String getTextDecoration(Object object) {
+    Resource resource = object;
+    Project project = resource.project;
+    if (project == null) return null;
+    String name = _manager.properties.getSelfReference(project);
+    return name == null ? null : ' - ${name}';
+  }
+
+  Stream get onChanged => _controller.stream;
 }
 
 /**
@@ -202,7 +239,9 @@ class _PubResolver extends PackageResolver {
  * resolving `package:` references.
  */
 class _PubBuilder extends PackageBuilder {
-  _PubBuilder();
+  final PubManager _pubManager;
+
+  _PubBuilder(this._pubManager);
 
   //
   // PackageBuilder virtual interface:
@@ -220,7 +259,7 @@ class _PubBuilder extends PackageBuilder {
 
     if (pubspecFile is! File) {
       if (properties.getSelfReference(project) != null) {
-        properties.setSelfReference(project, null);
+        _pubManager.setSelfReference(project, null);
       }
     } else {
       bool analyzePubspec = false;
@@ -258,7 +297,7 @@ class _PubBuilder extends PackageBuilder {
     return file.getContents().then((String str) {
       try {
         _PubSpecInfo info = new _PubSpecInfo.parse(str);
-        properties.setSelfReference(file.project, info.name);
+        _pubManager.setSelfReference(file.project, info.name);
         for (String dep in info.getDependencies()) {
           Resource dependency =
               file.project.getChildPath('${_packagesDirName}/${dep}');
