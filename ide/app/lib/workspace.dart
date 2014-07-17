@@ -20,7 +20,7 @@ import 'builder.dart';
 import 'enum.dart';
 import 'exception.dart';
 import 'jobs.dart';
-import 'package_mgmt/pub_properties.dart';
+import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart';
 

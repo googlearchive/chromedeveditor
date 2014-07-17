@@ -10,6 +10,8 @@ import 'dart:convert';
 import 'package:archive/archive.dart' as archive;
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'dependency.dart';
+import 'package_mgmt/pub.dart';
 import 'workspace.dart';
 
 Future archiveContainer(Container container, [bool addZipManifest = false]) {
@@ -142,13 +144,16 @@ bool isUpToDate(File targetFile, Resource sourceFiles, [Function filter]) {
 Resource resolvePath(File file, String path) {
   if (file.parent == null) return null;
 
-  // TODO(devoncarew): Check for a `package` reference.
-//  if (pubProperties.isPackageRef(path)) {
-//    PubManager manager = new PubManager(file.workspace);
-//    PackageResolver resolver = manager.getResolverFor(file.project);
-//    File resolvedFile = resolver.resolveRefToFile(path);
-//    if (resolvedFile != null) return resolvedFile;
-//  }
+  // Check for a `package` reference.
+  if (pubProperties.isPackageRef(path)) {
+    PubManager pubManager = Dependencies.dependency[PubManager];
+
+    if (pubManager != null) {
+      var resolver = pubManager.getResolverFor(file.project);
+      File resolvedFile = resolver.resolveRefToFile(path);
+      if (resolvedFile != null) return resolvedFile;
+    }
+  }
 
   return _resolvePaths(file.parent, path.split('/'));
 }
