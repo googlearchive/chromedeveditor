@@ -34,10 +34,10 @@ class SparkUITester {
     expect(dialogTester.functionallyOpened, false);
     expect(dialogTester.visuallyOpened, false);
 
-    sparkAccess.selectMenu();
-    menuItem.select();
-
-    return menuItem.dialog.onTransitionComplete.first.then((_){
+    return sparkAccess.selectMenu().then((_){
+      menuItem.select();
+    }).then((_) => menuItem.dialog.onTransitionComplete.first
+    ).then((_){
       expect(dialogTester.visuallyOpened, true);
       expect(dialogTester.functionallyOpened, true);
       // Let any other transitions finish
@@ -94,7 +94,7 @@ defineTests() {
   group('new-project dialog', () {
     test('open and close the dialog via x button', () {
       return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu).then((_) {
-        return sparkTester.openAndClose(sparkAccess.newProjectMenu);
+        return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
       });
     });
   });

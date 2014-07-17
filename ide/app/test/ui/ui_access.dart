@@ -13,6 +13,7 @@ import 'package:spark_widgets/spark_menu_button/spark_menu_button.dart';
 import 'package:spark_widgets/spark_menu_item/spark_menu_item.dart';
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
+import 'package:spark_widgets/spark_overlay/spark_overlay.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 
 import '../../spark_polymer_ui.dart';
@@ -32,9 +33,11 @@ class SparkUIAccess {
   DialogAccess get newProjecteDialog => newProjectMenu.dialog;
 
   SparkMenuButton get menu => getUIElement("#mainMenu");
+  Stream get onMenuTransitioned => _menuOverlay.on['transition-complete'];
 
   SparkPolymerUI get _ui => document.querySelector('#topUi');
   SparkButton get _menuButton => getUIElement("#mainMenu > spark-button");
+  SparkOverlay get _menuOverlay => menu.getShadowDomElement("#overlay");
 
   factory SparkUIAccess() {
     if (_instance == null) _instance = new SparkUIAccess._internal();
@@ -49,7 +52,11 @@ class SparkUIAccess {
         clientY: bounds.top.toInt() + bounds.height ~/ 2));
   }
 
-  void selectMenu() => _menuButton.click();
+  Future selectMenu() {
+    Future transitionFuture = onMenuTransitioned.first;
+    _menuButton.click();
+    return transitionFuture;
+  }
 
   void clickElement(Element element) {
     _sendMouseEvent(element, "mouseover");
