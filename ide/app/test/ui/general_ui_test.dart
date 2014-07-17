@@ -17,16 +17,13 @@ class DialogTester {
 
   DialogTester(this.dialogAccess);
 
+  DialogTester.fromId(String id) {
+    dialogAccess = new DialogAccess(id);
+  }
+
   bool get functionallyOpened => dialogAccess.opened;
 
   bool get visuallyOpened {
-//    SparkModal modalElement = dialogAccess.modalElement;
-//    CssStyleDeclaration style = modalElement.getComputedStyle();
-//    String opacity = style.opacity;
-//    String display = style.display;
-//    String visibility = style.visibility;
-
-//    return int.parse(opacity) > 0 && display != "none" && visibility == "visible";
     return dialogAccess.fullyVisible;
   }
 
@@ -48,7 +45,8 @@ class SparkUITester {
       expect(dialogTester.visuallyOpened, true);
       expect(dialogTester.functionallyOpened, true);
       dialogTester.clickClosingX();
-    }).then((_) => new Future.delayed(const Duration(milliseconds: 1))
+      // Let any other transitions finish
+    }).then((_) => new Future.delayed(Duration.ZERO)
     ).then((_) => menuItem.dialog.onTransitionComplete.first
     ).then((_) {
       expect(dialogTester.functionallyOpened, false);
@@ -62,6 +60,7 @@ defineTests() {
   SparkMenuAccess menuAccess = new SparkMenuAccess();
 
   group('first run', () {
+    // TODO(ericarnold): Disabled for local testing
 //    test('ensure about dialog open', () {
 //      ModalUITester modalTester = new ModalUITester("aboutDialog");
 //      expect(modalTester.functionallyOpened, true);
@@ -69,13 +68,13 @@ defineTests() {
 //    });
 
     test('close dialog', () {
-      if (!modalTester.functionallyOpened) return;
-      ModalUITester modalTester = new ModalUITester("aboutDialog");
-      modalTester.clickButtonWithTitle("done");
-      expect(modalTester.functionallyOpened, false);
+      DialogTester dialogTester = new DialogTester.fromId("aboutDialog");
+      if (!dialogTester.functionallyOpened) return null;
+      dialogTester.dialogAccess.clickButtonWithTitle("done");
+      expect(dialogTester.functionallyOpened, false);
 
       return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
-        expect(modalTester.visuallyOpened, false);
+        expect(dialogTester.visuallyOpened, false);
       });
     });
   });
@@ -94,7 +93,7 @@ defineTests() {
 
   group('about dialog', () {
     test('open and close the dialog via x button', () {
-      return sparkTester.openAndCloseWithX(menuAccess.gitCloneMenu);
+      return sparkTester.openAndCloseWithX(menuAccess.aboutMenu);
     });
   });
 }
