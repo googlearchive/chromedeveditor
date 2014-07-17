@@ -18,60 +18,58 @@ import 'package:spark_widgets/common/spark_widget.dart';
 import '../../spark_polymer_ui.dart';
 
 class SparkUIAccess {
+  MenuItemAccess newProjectMenu =
+      new MenuItemAccess("project-new", "newProjectDialog");
+  MenuItemAccess gitCloneMenu =
+      new MenuItemAccess("git-clone", "gitCloneDialog");
+  MenuItemAccess aboutMenu =
+      new MenuItemAccess("help-about", "aboutDialog");
+
   static SparkUIAccess _instance;
+
+  DialogAccess get aboutDialog => aboutMenu.dialog;
+  DialogAccess get gitCloneDialog => gitCloneMenu.dialog;
+  DialogAccess get newProjecteDialog => newProjectMenu.dialog;
+
+  SparkMenuButton get menu => getUIElement("#mainMenu");
+
+  SparkPolymerUI get _ui => document.querySelector('#topUi');
+  SparkButton get _menuButton => getUIElement("#mainMenu > spark-button");
 
   factory SparkUIAccess() {
     if (_instance == null) _instance = new SparkUIAccess._internal();
     return _instance;
   }
 
-  SparkUIAccess._internal();
-
-  SparkPolymerUI get _ui => document.querySelector('#topUi');
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
   void _sendMouseEvent(Element element, String eventType) {
     Rectangle<int> bounds = element.getBoundingClientRect();
     element.dispatchEvent(new MouseEvent(eventType,
         clientX: bounds.left.toInt() + bounds.width ~/ 2,
-        clientY:bounds.top.toInt() + bounds.height ~/ 2));
+        clientY: bounds.top.toInt() + bounds.height ~/ 2));
   }
 
-
-
-  SparkButton get _menuButton => getUIElement("#mainMenu > spark-button");
-
-  SparkMenuButton get menu => getUIElement("#mainMenu");
   void selectMenu() => _menuButton.click();
 
   void clickElement(Element element) {
     _sendMouseEvent(element, "mouseover");
     _sendMouseEvent(element, "click");
   }
-}
 
-class SparkMenuAccess {
-  static SparkMenuAccess _instance;
-
-  factory SparkMenuAccess() {
-    if (_instance == null) _instance = new SparkMenuAccess._internal();
-    return _instance;
-  }
-
-  SparkMenuAccess._internal();
-
-  MenuItemAccess newProjectMenu =
-      new MenuItemAccess("project-new", "newProjectDialog");
-
-  MenuItemAccess gitCloneMenu =
-      new MenuItemAccess("git-clone", "gitCloneDialog");
-
-  MenuItemAccess aboutMenu =
-      new MenuItemAccess("help-about", "aboutDialog");
+  SparkUIAccess._internal();
 }
 
 class MenuItemAccess {
   String _menuItemId;
   DialogAccess _dialog = null;
+
+  DialogAccess get dialog => _dialog;
+
+  SparkUIAccess get _sparkAccess => new SparkUIAccess();
+
+  List<SparkMenuItem> get _menuItems => _sparkAccess.menu.querySelectorAll("spark-menu-item");
+  SparkMenuItem get _menuItem => _menuItems.firstWhere((SparkMenuItem item) =>
+      item.attributes["action-id"] == _menuItemId);
 
   MenuItemAccess(this._menuItemId, [String _dialogId]) {
     if (_dialogId != null) {
@@ -79,32 +77,44 @@ class MenuItemAccess {
     }
   }
 
-  SparkUIAccess get _sparkAccess => new SparkUIAccess();
+  void select() => _sparkAccess.clickElement(_menuItem);
 
-  List<SparkMenuItem> get _menuItems => _sparkAccess.menu.querySelectorAll("spark-menu-item");
   SparkMenuItem _getMenuItem(String id) {
       return _menuItems.firstWhere((SparkMenuItem item) =>
           item.attributes["action-id"] == id);
   }
-
-  SparkMenuItem get _menuItem => _menuItems.firstWhere((SparkMenuItem item) =>
-      item.attributes["action-id"] == _menuItemId);
-
-  DialogAccess get dialog => _dialog;
-
-  void select() => _sparkAccess.clickElement(_menuItem);
 }
 
 class DialogAccess {
   String _id;
+
+  String get id => _id;
+  SparkModal get modalElement => _dialog.getShadowDomElement("#modal");
+  bool get opened => modalElement.opened;
+
+  bool get fullyVisible {
+    Rectangle<int> bounds = modalElement.getBoundingClientRect();
+    var elementFromPoint = _sparkAccess._ui.shadowRoot.elementFromPoint(
+        bounds.left.toInt() + bounds.width ~/ 2,
+        bounds.top.toInt() + bounds.height ~/ 2);
+    SparkDialog dialog = _dialog;
+    return elementFromPoint == _dialog || _dialog.contains(elementFromPoint);
+  }
+
+  Stream get onTransitionComplete => modalElement.on['transition-complete'];
+
   SparkUIAccess get _sparkAccess => new SparkUIAccess();
+  SparkDialog get _dialog => _sparkAccess.getUIElement("#$_id");
+  List<SparkDialogButton> get _dialogButtons =>
+      _dialog.querySelectorAll("spark-dialog-button");
 
   DialogAccess(this._id);
 
-  SparkDialog get _dialog => _sparkAccess.getUIElement("#$_id");
+  void clickButtonWithTitle(String title) =>
+      _sparkAccess.clickElement(_getButtonByTitle(title));
 
-  List<SparkDialogButton> get _dialogButtons =>
-      _dialog.querySelectorAll("spark-dialog-button");
+  void clickButtonWithId(String id) =>
+      _sparkAccess.clickElement(_getButtonById(id));
 
   SparkWidget _getButtonByTitle(String title) {
     for (SparkWidget button in _dialogButtons) {
@@ -125,25 +135,4 @@ class DialogAccess {
 
     return button;
   }
-
-  String get id => _id;
-
-  SparkModal get modalElement => _dialog.getShadowDomElement("#modal");
-
-  Stream get onTransitionComplete => modalElement.on['transition-complete'];
-  bool get opened => modalElement.opened;
-  bool get fullyVisible {
-    Rectangle<int> bounds = modalElement.getBoundingClientRect();
-    var elementFromPoint = _sparkAccess._ui.shadowRoot.elementFromPoint(
-        bounds.left.toInt() + bounds.width ~/ 2,
-        bounds.top.toInt() + bounds.height ~/ 2);
-    SparkDialog dialog = _dialog;
-    return elementFromPoint == _dialog || _dialog.contains(elementFromPoint);
-  }
-
-  void clickButtonWithTitle(String title) =>
-      _sparkAccess.clickElement(_getButtonByTitle(title));
-
-  void clickButtonWithId(String id) =>
-      _sparkAccess.clickElement(_getButtonById(id));
 }

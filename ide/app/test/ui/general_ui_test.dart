@@ -5,9 +5,7 @@
 library spark.workspace_test;
 
 import 'dart:async';
-import 'dart:html';
 
-import 'package:spark_widgets/spark_modal/spark_modal.dart';
 import 'package:unittest/unittest.dart';
 
 import "ui_access.dart";
@@ -15,17 +13,13 @@ import "ui_access.dart";
 class DialogTester {
   DialogAccess dialogAccess;
 
-  DialogTester(this.dialogAccess);
-
-  DialogTester.fromId(String id) {
-    dialogAccess = new DialogAccess(id);
-  }
-
   bool get functionallyOpened => dialogAccess.opened;
 
   bool get visuallyOpened {
     return dialogAccess.fullyVisible;
   }
+
+  DialogTester(this.dialogAccess);
 
   void clickClosingX() => dialogAccess.clickButtonWithId("closingX");
 }
@@ -57,7 +51,7 @@ class SparkUITester {
 
 defineTests() {
   SparkUITester sparkTester = new SparkUITester();
-  SparkMenuAccess menuAccess = new SparkMenuAccess();
+  SparkUIAccess sparkAccess = new SparkUIAccess();
 
   group('first run', () {
     // TODO(ericarnold): Disabled for local testing
@@ -68,7 +62,7 @@ defineTests() {
 //    });
 
     test('close dialog', () {
-      DialogTester dialogTester = new DialogTester.fromId("aboutDialog");
+      DialogTester dialogTester = new DialogTester(sparkAccess.aboutDialog);
       if (!dialogTester.functionallyOpened) return null;
       dialogTester.dialogAccess.clickButtonWithTitle("done");
       expect(dialogTester.functionallyOpened, false);
@@ -81,19 +75,19 @@ defineTests() {
 
   group('new-project dialog', () {
     test('open and close the dialog via x button', () {
-      return sparkTester.openAndCloseWithX(menuAccess.newProjectMenu);
+      return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
     });
   });
 
   group('git-clone dialog', () {
     test('open and close the dialog via x button', () {
-      return sparkTester.openAndCloseWithX(menuAccess.gitCloneMenu);
+      return sparkTester.openAndCloseWithX(sparkAccess.gitCloneMenu);
     });
   });
 
   group('about dialog', () {
     test('open and close the dialog via x button', () {
-      return sparkTester.openAndCloseWithX(menuAccess.aboutMenu);
+      return sparkTester.openAndCloseWithX(sparkAccess.aboutMenu);
     });
   });
 }
