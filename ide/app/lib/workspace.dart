@@ -31,7 +31,8 @@ final _ChromeHelper _chromeHelper = new _ChromeHelper();
 /**
  * Check for error reported when dealing with symlinks
  */
-bool isSymlinkError(dynamic e) => e is html.FileError && e.name == 'InvalidModificationError';
+bool isSymlinkError(dynamic e) => e is html.FileError &&
+                                  e.name == 'InvalidModificationError';
 
 /**
  * The Workspace is a top-level entity that can contain files and projects. The
