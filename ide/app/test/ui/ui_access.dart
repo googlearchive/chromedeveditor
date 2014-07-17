@@ -19,18 +19,15 @@ import 'package:spark_widgets/common/spark_widget.dart';
 import '../../spark_polymer_ui.dart';
 
 class SparkUIAccess {
-  MenuItemAccess newProjectMenu =
-      new MenuItemAccess("project-new", "newProjectDialog");
-  MenuItemAccess gitCloneMenu =
-      new MenuItemAccess("git-clone", "gitCloneDialog");
-  MenuItemAccess aboutMenu =
-      new MenuItemAccess("help-about", "aboutDialog");
+  AboutDialogAccess aboutDialog = new AboutDialogAccess();
+  DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
+  DialogAccess newProjectDialog = new DialogAccess("newProjectDialog");
+
+  MenuItemAccess newProjectMenu;
+  MenuItemAccess gitCloneMenu;
+  MenuItemAccess aboutMenu;
 
   static SparkUIAccess _instance;
-
-  DialogAccess get aboutDialog => aboutMenu.dialog;
-  DialogAccess get gitCloneDialog => gitCloneMenu.dialog;
-  DialogAccess get newProjecteDialog => newProjectMenu.dialog;
 
   SparkMenuButton get menu => getUIElement("#mainMenu");
   Stream get onMenuTransitioned => _menuOverlay.on['transition-complete'];
@@ -63,25 +60,28 @@ class SparkUIAccess {
     _sendMouseEvent(element, "click");
   }
 
-  SparkUIAccess._internal();
+  SparkUIAccess._internal() {
+    newProjectMenu = new MenuItemAccess("project-new", newProjectDialog);
+    gitCloneMenu = new MenuItemAccess("git-clone", gitCloneDialog);
+    aboutMenu = new MenuItemAccess("help-about", aboutDialog);
+  }
 }
 
 class MenuItemAccess {
   String _menuItemId;
-  DialogAccess _dialog = null;
+  DialogAccess _dialogAccess = null;
 
-  DialogAccess get dialog => _dialog;
+  DialogAccess get dialogAccess => _dialogAccess;
 
   SparkUIAccess get _sparkAccess => new SparkUIAccess();
 
-  List<SparkMenuItem> get _menuItems => _sparkAccess.menu.querySelectorAll("spark-menu-item");
+  List<SparkMenuItem> get _menuItems =>
+      _sparkAccess.menu.querySelectorAll("spark-menu-item");
   SparkMenuItem get _menuItem => _menuItems.firstWhere((SparkMenuItem item) =>
       item.attributes["action-id"] == _menuItemId);
 
-  MenuItemAccess(this._menuItemId, [String _dialogId]) {
-    if (_dialogId != null) {
-      _dialog = new DialogAccess(_dialogId);
-    }
+  MenuItemAccess(this._menuItemId, [DialogAccess linkedDialogAccess]) {
+    _dialogAccess = (linkedDialogAccess == null) ? null : linkedDialogAccess;
   }
 
   void select() => _sparkAccess.clickElement(_menuItem);
@@ -142,4 +142,10 @@ class DialogAccess {
 
     return button;
   }
+}
+
+class AboutDialogAccess extends DialogAccess {
+  AboutDialogAccess() : super("aboutDialog");
+
+  void clickDoneButton() => clickButtonWithTitle("done");
 }
