@@ -1,4 +1,4 @@
-// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -14,7 +14,6 @@ import 'package:spark_widgets/spark_menu_item/spark_menu_item.dart';
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
-import 'package:unittest/unittest.dart';
 
 import '../../spark_polymer_ui.dart';
 
@@ -37,10 +36,28 @@ class SparkUIAccess {
         clientY:bounds.top.toInt() + bounds.height ~/ 2));
   }
 
+
+
   SparkButton get _menuButton => getUIElement("#mainMenu > spark-button");
 
   SparkMenuButton get menu => getUIElement("#mainMenu");
   void selectMenu() => _menuButton.click();
+
+  void clickElement(Element element) {
+    _sendMouseEvent(element, "mouseover");
+    _sendMouseEvent(element, "click");
+  }
+}
+
+class SparkMenuAccess {
+  static SparkMenuAccess _instance;
+
+  factory SparkMenuAccess() {
+    if (_instance == null) _instance = new SparkMenuAccess._internal();
+    return _instance;
+  }
+
+  SparkMenuAccess._internal();
 
   MenuItemAccess newProjectMenu =
       new MenuItemAccess("project-new", "newProjectDialog");
@@ -50,11 +67,6 @@ class SparkUIAccess {
 
   MenuItemAccess aboutMenu =
       new MenuItemAccess("help-about", "aboutDialog");
-
-  void clickElement(Element element) {
-    _sendMouseEvent(element, "mouseover");
-    _sendMouseEvent(element, "click");
-  }
 }
 
 class MenuItemAccess {
@@ -118,7 +130,16 @@ class DialogAccess {
 
   SparkModal get modalElement => _dialog.getShadowDomElement("#modal");
 
+  Stream get onTransitionComplete => modalElement.on['transition-complete'];
   bool get opened => modalElement.opened;
+  bool get fullyVisible {
+    Rectangle<int> bounds = modalElement.getBoundingClientRect();
+    var elementFromPoint = _sparkAccess._ui.shadowRoot.elementFromPoint(
+        bounds.left.toInt() + bounds.width ~/ 2,
+        bounds.top.toInt() + bounds.height ~/ 2);
+    SparkDialog dialog = _dialog;
+    return elementFromPoint == _dialog || _dialog.contains(elementFromPoint);
+  }
 
   void clickButtonWithTitle(String title) =>
       _sparkAccess.clickElement(_getButtonByTitle(title));
