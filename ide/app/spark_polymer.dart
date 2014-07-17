@@ -72,12 +72,7 @@ void main() {
 
     maybeRunGuarded(() {
       SparkPolymer spark = new SparkPolymer._();
-      spark.start().then((_) {
-        //spark.actionManager.getAction('help-about').invoke();
-        new Future.delayed(const Duration(milliseconds: 500)).then((_){
-          spark.actionManager.getAction('run-tests').invoke();
-        });
-      });
+      spark.start();
     });
   }).catchError((error) {
     _logger.logError(error);
