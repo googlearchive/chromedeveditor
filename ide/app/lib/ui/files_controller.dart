@@ -837,8 +837,8 @@ class FilesController implements TreeViewDelegate {
    */
   void _positionContextMenu(html.Point clickPoint, html.Element contextMenu) {
     var topUi = html.document.querySelector("#topUi");
-    final int separatorHeight = 19;
-    final int itemHeight = 26;
+    final int separatorHeight = 5;
+    final int itemHeight = 35;
     int estimatedHeight = 12; // Start with value padding and border.
     contextMenu.children.forEach((child) {
       estimatedHeight += child.className == "divider" ? separatorHeight : itemHeight;
