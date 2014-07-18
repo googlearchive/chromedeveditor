@@ -21,7 +21,7 @@ class DialogTester {
 
   DialogTester(this.dialogAccess);
 
-  void clickClosingX() => dialogAccess.clickButtonWithId("closingX");
+  void clickClosingX() => dialogAccess.clickButtonWithSelector("#closingX");
   void clickButtonWithTitle(String title) => dialogAccess.clickButtonWithTitle(title);
 }
 
@@ -89,7 +89,7 @@ defineTests() {
       dialogTester.clickButtonWithTitle("done");
       expect(dialogTester.functionallyOpened, false);
 
-      return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
+      return new Future.delayed(const Duration(milliseconds: 1000)).then((_) {
         expect(dialogTester.visuallyOpened, false);
       });
     });
