@@ -21,7 +21,7 @@ class DialogTester {
 
   DialogTester(this.dialogAccess);
 
-  void clickClosingX() => dialogAccess.clickButtonWithId("closingX");
+  void clickClosingX() => dialogAccess.clickButtonWithSelector("#closingX");
 }
 
 class SparkUITester {
@@ -36,7 +36,7 @@ class SparkUITester {
 
     menuItem.select();
 
-    return dialogTester.dialogAccess.onTransitionComplete.first.then((_){
+    return dialogTester.dialogAccess.onTransitionComplete.first.then((_) {
       expect(dialogTester.visuallyOpened, true);
       expect(dialogTester.functionallyOpened, true);
       dialogTester.clickClosingX();
@@ -68,7 +68,7 @@ defineTests() {
       dialogTester.dialogAccess.clickButtonWithTitle("done");
       expect(dialogTester.functionallyOpened, false);
 
-      return new Future.delayed(const Duration(milliseconds: 1000)).then((_){
+      return new Future.delayed(const Duration(milliseconds: 1000)).then((_) {
         expect(dialogTester.visuallyOpened, false);
       });
     });

@@ -44,6 +44,7 @@ class SparkUIAccess {
   }
 
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
+
   void _sendMouseEvent(Element element, String eventType) {
     Rectangle<int> bounds = element.getBoundingClientRect();
     element.dispatchEvent(new MouseEvent(eventType,
@@ -62,16 +63,14 @@ class SparkUIAccess {
 }
 
 class MenuItemAccess {
-  String _menuItemId;
+  final String _menuItemId;
   DialogAccess _dialog = null;
 
   DialogAccess get dialog => _dialog;
 
   SparkUIAccess get _sparkAccess => new SparkUIAccess();
 
-  List<SparkMenuItem> get _menuItems => _sparkAccess.menu.querySelectorAll("spark-menu-item");
-  SparkMenuItem get _menuItem => _menuItems.firstWhere((SparkMenuItem item) =>
-      item.attributes["action-id"] == _menuItemId);
+  SparkMenuItem get _menuItem => _getMenuItem(_menuItemId);
 
   MenuItemAccess(this._menuItemId, [String _dialogId]) {
     if (_dialogId != null) {
@@ -81,16 +80,13 @@ class MenuItemAccess {
 
   void select() => _sparkAccess.clickElement(_menuItem);
 
-  SparkMenuItem _getMenuItem(String id) {
-      return _menuItems.firstWhere((SparkMenuItem item) =>
-          item.attributes["action-id"] == id);
-  }
+  SparkMenuItem _getMenuItem(String id)  => _sparkAccess.menu.querySelector(
+      "spark-menu-item[action-id=$id]");
 }
 
 class DialogAccess {
-  String _id;
+  final String id;
 
-  String get id => _id;
   SparkModal get modalElement => _dialog.getShadowDomElement("#modal");
   bool get opened => modalElement.opened;
 
@@ -106,34 +102,27 @@ class DialogAccess {
   Stream get onTransitionComplete => modalElement.on['transition-complete'];
 
   SparkUIAccess get _sparkAccess => new SparkUIAccess();
-  SparkDialog get _dialog => _sparkAccess.getUIElement("#$_id");
+  SparkDialog get _dialog => _sparkAccess.getUIElement("#$id");
   List<SparkDialogButton> get _dialogButtons =>
       _dialog.querySelectorAll("spark-dialog-button");
 
-  DialogAccess(this._id);
+  DialogAccess(this.id);
 
   void clickButtonWithTitle(String title) =>
       _sparkAccess.clickElement(_getButtonByTitle(title));
 
-  void clickButtonWithId(String id) =>
-      _sparkAccess.clickElement(_getButtonById(id));
+  void clickButtonWithSelector(String query) =>
+      _sparkAccess.clickElement(_getButtonBySelector(query));
 
-  SparkWidget _getButtonByTitle(String title) {
-    for (SparkWidget button in _dialogButtons) {
-      if (button.text.toLowerCase() == title.toLowerCase()) {
-        return button;
-      }
-    }
+  SparkWidget _getButtonByTitle(String title) => _dialogButtons.firstWhere((b) =>
+      b.text.toLowerCase() == title.toLowerCase());
 
-    throw "Could not find button with title $title";
-  }
+  SparkWidget _getButtonBySelector(String query) {
+    SparkWidget button = _dialog.querySelector(query);
 
-  SparkWidget _getButtonById(String id) {
-    SparkWidget button = _dialog.querySelector("#$id");
+    if (button == null) button = _dialog.getShadowDomElement(query);
 
-    if (button == null) button = _dialog.getShadowDomElement("#$id");
-
-    if (button == null) throw "Could not find button with id id";
+    if (button == null) throw "Could not find button with selector $query";
 
     return button;
   }
