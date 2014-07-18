@@ -31,6 +31,8 @@ class SparkUIAccess {
   DialogAccess get gitCloneDialog => gitCloneMenu.dialog;
   DialogAccess get newProjecteDialog => newProjectMenu.dialog;
 
+  DialogAccess get okCancelDialog => new DialogAccess("okCancelDialog");
+
   SparkMenuButton get menu => getUIElement("#mainMenu");
 
   SparkPolymerUI get _ui => document.querySelector('#topUi');
