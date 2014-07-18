@@ -80,8 +80,8 @@ class MenuItemAccess {
 
   void select() => _sparkAccess.clickElement(_menuItem);
 
-  SparkMenuItem _getMenuItem(String id)  => _sparkAccess.menu.querySelector(
-      "spark-menu-item[action-id=$id]");
+  SparkMenuItem _getMenuItem(String id) =>
+      _sparkAccess.menu.querySelector("spark-menu-item[action-id=$id]");
 }
 
 class DialogAccess {
@@ -114,8 +114,8 @@ class DialogAccess {
   void clickButtonWithSelector(String query) =>
       _sparkAccess.clickElement(_getButtonBySelector(query));
 
-  SparkWidget _getButtonByTitle(String title) => _dialogButtons.firstWhere((b) =>
-      b.text.toLowerCase() == title.toLowerCase());
+  SparkWidget _getButtonByTitle(String title) =>
+      _dialogButtons.firstWhere((b) => b.text.toLowerCase() == title.toLowerCase());
 
   SparkWidget _getButtonBySelector(String query) {
     SparkWidget button = _dialog.querySelector(query);
