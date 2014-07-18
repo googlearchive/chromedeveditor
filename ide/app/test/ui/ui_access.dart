@@ -29,6 +29,8 @@ class SparkUIAccess {
 
   static SparkUIAccess _instance;
 
+  DialogAccess get okCancelDialog => new DialogAccess("okCancelDialog");
+
   SparkMenuButton get menu => getUIElement("#mainMenu");
   Stream get onMenuTransitioned => _menuOverlay.on['transition-complete'];
 

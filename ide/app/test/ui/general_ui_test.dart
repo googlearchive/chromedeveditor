@@ -36,30 +36,34 @@ class SparkUITester {
 
     return sparkAccess.selectMenu().then((_){
       menuItem.select();
-    }).then((_) => menuItem.dialogAccess.onTransitionComplete.first
+    }).then((_) => dialogTester.dialogAccess.onTransitionComplete.first
+    // Let any other transitions finish
+    ).then((_) => new Future.delayed(Duration.ZERO)
     ).then((_){
       expect(dialogTester.visuallyOpened, true);
       expect(dialogTester.functionallyOpened, true);
-      // Let any other transitions finish
-    }).then((_) => new Future.delayed(Duration.ZERO));
+    });
   }
 
-  Future openAndCloseWithX(MenuItemAccess menuItem) {
-    DialogTester dialogTester = new DialogTester(menuItem.dialogAccess);
+  Future openAndCloseWithX(MenuItemAccess menuItem, [DialogAccess dialog]) {
+    DialogTester dialogTester =
+        new DialogTester(dialog != null ? dialog : menuItem.dialogAccess);
     return _open(dialogTester, menuItem).then((_) {
       dialogTester.clickClosingX();
-      return menuItem.dialogAccess.onTransitionComplete.first;
+      return dialogTester.dialogAccess.onTransitionComplete.first;
     }).then((_) {
       expect(dialogTester.functionallyOpened, false);
       expect(dialogTester.visuallyOpened, false);
     }).then((_) => new Future.delayed(Duration.ZERO));
   }
 
-  Future openAndCloseWithButton(MenuItemAccess menuItem, String buttonTitle) {
-    DialogTester dialogTester = new DialogTester(menuItem.dialogAccess);
+  Future openAndCloseWithButton(MenuItemAccess menuItem, String buttonTitle,
+                                [DialogAccess dialog]) {
+    DialogTester dialogTester =
+        new DialogTester(dialog != null ? dialog : menuItem.dialogAccess);
     return _open(dialogTester, menuItem).then((_) {
       dialogTester.clickButtonWithTitle(buttonTitle);
-      return menuItem.dialogAccess.onTransitionComplete.first;
+      return dialogTester.dialogAccess.onTransitionComplete.first;
     }).then((_) {
       expect(dialogTester.functionallyOpened, false);
       expect(dialogTester.visuallyOpened, false);
@@ -91,19 +95,21 @@ defineTests() {
     });
   });
 
-  group('new-project dialog', () {
-    test('open and close the dialog via x button', () {
-      return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu).then((_) {
-        return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu, "cancel");
-      });
+  group('Menu items with no projects folder selected', () {
+    test('New project menu item', () {
+      return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu,
+          sparkAccess.okCancelDialog).then((_) {
+            return sparkTester.openAndCloseWithButton(sparkAccess.gitCloneMenu,
+                "cancel", sparkAccess.okCancelDialog);
+            });
     });
-  });
 
-  group('git-clone dialog', () {
-    test('open and close the dialog via x button', () {
-      return sparkTester.openAndCloseWithX(sparkAccess.gitCloneMenu).then((_) {
-        return sparkTester.openAndCloseWithButton(sparkAccess.gitCloneMenu, "cancel");
-      });
+    test('Git clone menu item', () {
+      return sparkTester.openAndCloseWithX(sparkAccess.gitCloneMenu,
+          sparkAccess.okCancelDialog).then((_) {
+            return sparkTester.openAndCloseWithButton(sparkAccess.gitCloneMenu,
+                "cancel", sparkAccess.okCancelDialog);
+          });
     });
   });
 
