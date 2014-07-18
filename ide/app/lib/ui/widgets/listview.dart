@@ -316,16 +316,17 @@ class ListView {
   }
 
   void _makeSureRowIsVisible(int selectionIndex) {
-    if (_rows[selectionIndex].container.offsetTop +
-        _rows[selectionIndex].container.offsetHeight > _container.scrollTop +
-        _container.offsetHeight) {
-      _container.scrollTop =
-          _rows[selectionIndex].container.offsetTop +
-          _rows[selectionIndex].container.offsetHeight -
-          _container.offsetHeight;
+    ListViewRow row = _rows[selectionIndex];
+    if (row.container.parent == null) {
+      _container.children.add(row.container);
     }
-    if (_rows[selectionIndex].container.offsetTop < _container.scrollTop) {
-      _container.scrollTop = _rows[selectionIndex].container.offsetTop;
+    if (row.container.offsetTop + row.container.offsetHeight >
+        _container.scrollTop + _container.offsetHeight) {
+      _container.scrollTop = row.container.offsetTop +
+          row.container.offsetHeight - _container.offsetHeight;
+    }
+    if (row.container.offsetTop < _container.scrollTop) {
+      _container.scrollTop = row.container.offsetTop;
     }
   }
 

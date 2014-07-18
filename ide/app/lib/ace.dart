@@ -21,8 +21,8 @@ import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';
 import 'navigation.dart';
-import 'package_mgmt/bower_properties.dart';
-import 'package_mgmt/pub_properties.dart';
+import 'package_mgmt/bower.dart';
+import 'package_mgmt/pub.dart';
 import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
@@ -364,7 +364,8 @@ class MarkdownEditor extends TextEditor {
 
   MarkdownEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
       super._create(aceManager, file, prefs) {
-    _markdown = new Markdown(element, file);
+    // Parent this at the tab container level.
+    _markdown = new Markdown(element.parent.parent, file);
   }
 
   @override

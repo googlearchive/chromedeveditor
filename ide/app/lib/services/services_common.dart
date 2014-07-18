@@ -9,7 +9,6 @@ import 'dart:async';
 import '../workspace.dart';
 import '../package_mgmt/package_manager.dart';
 import '../package_mgmt/pub.dart';
-import '../package_mgmt/pub_properties.dart';
 
 /**
  * Defines a received action event.

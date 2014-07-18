@@ -4,8 +4,8 @@
 
 library spark.package_utils;
 
-import 'bower_properties.dart';
-import 'pub_properties.dart';
+import 'bower.dart';
+import 'pub.dart';
 import '../workspace.dart';
 
 /**

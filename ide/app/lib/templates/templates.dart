@@ -58,23 +58,27 @@ class ProjectBuilder {
    * file we should show to the user after a project is created.
    */
   static Resource getMainResourceFor(Project project) {
-    Resource r;
+    // Look for `manifest.json` or `index.html`.
+    Function fileMatch = (Iterable<Resource> resources) {
+      return resources.firstWhere((r) => r.name == 'manifest.json',
+          orElse: () => resources.firstWhere((r) => r.name == 'index.html',
+          orElse: () => null));
+    };
 
-    r = project.getChild('manifest.json');
-    if (r != null) return r;
-
-    final Folder web = project.getChild('web');
+    Folder web = project.getChild('web');
     if (web != null) {
-      r = web.getChildren().firstWhere((c) {
-        return c.name.endsWith('.dart') ||
-               c.name.endsWith('.js') ||
-               c.name.endsWith('.html');
-      }, orElse: null);
-      if (r != null) return r;
+      Resource match = fileMatch(web.getChildren());
+      if (match != null) return match;
     }
 
-    r = project.getChild('index.html');
-    if (r != null) return r;
+    Folder app = project.getChild('app');
+    if (app != null) {
+      Resource match = fileMatch(app.getChildren());
+      if (match != null) return match;
+    }
+
+    Resource match = fileMatch(project.getChildren());
+    if (match != null) return match;
 
     return project;
   }

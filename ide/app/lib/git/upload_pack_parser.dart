@@ -33,7 +33,6 @@ class PackParseResult {
 }
 
 class UploadPackParser {
-
   int _offset = 0;
   List<PackedObject> objects = null;
   List<int> data;
@@ -44,8 +43,8 @@ class UploadPackParser {
   /**
    * Parses a git http smart protcol request result.
    */
-  Future parse(ByteBuffer buffer, ObjectStore store, progress) {
-    data = new Uint8List.view(buffer);
+  Future parse(Uint8List inData, ObjectStore store, progress) {
+    data = inData;
 
     DateTime startTime = new DateTime.now();
     PktLine pktLine = _nextPktLine();

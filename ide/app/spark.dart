@@ -22,6 +22,8 @@ import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
+import 'lib/dependency.dart';
+import 'lib/decorators.dart';
 import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
@@ -78,6 +80,7 @@ abstract class Spark
 
   Services services;
   final JobManager jobManager = new JobManager();
+  final Dependencies dependencies = Dependencies.dependency;
   SparkStatus statusComponent;
   preferences.SparkPreferences prefs;
 
@@ -90,8 +93,6 @@ abstract class Spark
   EditorManager _editorManager;
   EditorArea _editorArea;
   LaunchManager _launchManager;
-  PubManager _pubManager;
-  BowerManager _bowerManager;
   ActionManager _actionManager;
   ProjectLocationManager _projectLocationManager;
   NavigationManager _navigationManager;
@@ -118,6 +119,9 @@ abstract class Spark
    * [Polymer.onReady] event.
    */
   Future init() {
+    // Init the dependency manager.
+    dependencies[DecoratorManager] = new DecoratorManager();
+
     initPreferences();
     initEventBus();
 
@@ -127,7 +131,6 @@ abstract class Spark
     initPackageManagers();
     initServices();
     initScmManager();
-
     initAceManager();
     initEditorManager();
     initEditorArea();
@@ -180,8 +183,9 @@ abstract class Spark
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
   LaunchManager get launchManager => _launchManager;
-  PubManager get pubManager => _pubManager;
-  BowerManager get bowerManager => _bowerManager;
+  PubManager get pubManager => dependencies[PubManager];
+  BowerManager get bowerManager => dependencies[BowerManager];
+  DecoratorManager get decoratorManager => dependencies[DecoratorManager];
   ActionManager get actionManager => _actionManager;
   ProjectLocationManager get projectLocationManager => _projectLocationManager;
   NavigationManager get navigationManager => _navigationManager;
@@ -250,7 +254,7 @@ abstract class Spark
   }
 
   void initServices() {
-    services = new Services(this.workspace, _pubManager);
+    services = new Services(this.workspace, pubManager);
   }
 
   void initEventBus() {
@@ -286,6 +290,7 @@ abstract class Spark
 
   void initScmManager() {
     scmManager = new ScmManager(_workspace);
+    decoratorManager.addDecorator(new ScmDecorator(scmManager));
   }
 
   void initLaunchManager() {
@@ -317,8 +322,13 @@ abstract class Spark
   }
 
   void initPackageManagers() {
-    _pubManager = new PubManager(workspace);
-    _bowerManager = new BowerManager(workspace);
+    // Init the Pub manager, and add it to the dependencies tracker.
+    PubManager pubManager = new PubManager(workspace);
+    dependencies[PubManager] = pubManager;
+    decoratorManager.addDecorator(new PubDecorator(pubManager));
+
+    // Init the Bower manager, and add it to the dependencies tracker.
+    dependencies[BowerManager] = new BowerManager(workspace);
   }
 
   void initAceManager() {
@@ -1814,9 +1824,9 @@ abstract class PubAction extends PackageManagementAction {
 
   bool _canRunAction() {
     if (PlatformInfo.isWin) {
-      spark.showErrorMessage('Pub',
-          message: SparkErrorMessages.PUB_ON_WINDOWS_MSG);
-      return false;
+      throw new SparkException(
+          SparkErrorMessages.PUB_ON_WINDOWS_MSG,
+          errorCode: SparkErrorConstants.PUB_ON_WINDOWS_NOT_SUPPORTED);
     }
     return true;
   }
@@ -2161,6 +2171,7 @@ class NewProjectAction extends SparkActionWithDialog {
         final String templId = match.group(1);
         final String jsDepsStr = match.group(3);
 
+        _analyticsTracker.sendEvent('action', 'project-new', templId);
         templates.add(new ProjectTemplate(templId, globalVars));
 
         // Possibly also add a mix-in template for JS dependencies, if the
@@ -2346,7 +2357,7 @@ class ProgressMonitorImpl extends ProgressMonitor {
 
   void start(String title,
              {num maxWork: 0,
-              ProgressFormat format: ProgressFormat.PERCENTAGE}) {
+              ProgressFormat format: ProgressFormat.NONE}) {
     super.start(title, maxWork: maxWork, format: format);
     _dialog._setProgressMessage(title == null ? '' : title);
   }
@@ -2913,8 +2924,8 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
 
   void _commit() {
     // TODO(grv): Add verify checks.
-    String branchName = _selectElement.options[
-        _selectElement.selectedIndex].value;
+    int index = _selectElement.selectedIndex == -1 ? 0 : _selectElement.selectedIndex;
+    String branchName = _selectElement.options[index].value;
     _setProgressMessage("Checking out ${branchName}…");
     _toggleProgressVisible(true);
 

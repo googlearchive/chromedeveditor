@@ -72,3 +72,8 @@ You can check out our [source code](https://github.com/dart-lang/spark) to learn
     * Private repos
 * Tell us what you want!
     * File an issue here: https://github.com/dart-lang/spark/issues/new 
+
+### Why do I get `InvalidModificationError` when running pub get?
+Being built on the Chrome platform, there are some filesystem restrictions which are not in place for the standard Dart Editor. One of those restrictions is the use of symlinks. Historically, symlinks were created by pub to manage the packages folders.
+
+If you have run `pub get` from the command line, or are trying to open a project previously started in the Dart Editor, the filesystem may contain symlinks for the packages directories and will cause an error when loaded into the Chrome Dev Editor. To resolve this, remove any **package** folders or symlinks from all folders in your project. If you continue to receive the error, please open [a new issue](https://github.com/dart-lang/chromedeveditor/issues/new).
