@@ -5,7 +5,7 @@
 /**
  * This library defines all UI tests for Spark.
  */
-library spark.ui_tests.all_tests;
+library spark.ui.all_tests;
 
 import 'general_ui_test.dart' as general_ui_test;
 
