@@ -41,6 +41,7 @@ defineTests() {
       expect(match.group(3), 'chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13');
     });
 
+    /*
     test('minimizeStackTrace', () {
       try {
         throw new ArgumentError('happy message');
@@ -51,6 +52,7 @@ defineTests() {
         expect(description.startsWith('#'), false);
       }
     });
+    */
 
     test('StreamReader, read 1', () {
       StreamReader reader = new StreamReader(new Stream.fromIterable([[1, 2, 3, 4]]));
