@@ -911,8 +911,10 @@ abstract class Spark
     querySelector('#fileViewArea').classes.toggle('hidden', visible);
     getUIElement('#fileFilter').placeholder =
         visible ? 'Search in Files' : 'Filter';
-    getUIElement('#showSearchView').checkmark = visible;
-    getUIElement('#showFilesView').checkmark = !visible;
+    getUIElement('#showSearchView').attributes['checkmark'] =
+        visible ? 'true' : 'false';
+    getUIElement('#showFilesView').attributes['checkmark'] =
+        !visible ? 'true' : 'false';
     _searchViewVisible = visible;
     _reallyFilterFilesList(getUIElement('#fileFilter').value);
   }
