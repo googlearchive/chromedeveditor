@@ -7,17 +7,18 @@
  */
 library spark.ui.widgets.files_controller;
 
-import 'dart:html' as html;
 import 'dart:async';
+import 'dart:html' as html;
+
+import 'package:spark_widgets/spark_status/spark_status.dart';
 
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
+import '../navigation.dart';
 import '../workspace.dart';
 import '../workspace_search.dart';
-import 'package:spark_widgets/spark_status/spark_status.dart';
-import '../navigation.dart';
 
 class SearchResultLineCell implements ListViewCell {
   Element element = null;
