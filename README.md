@@ -27,4 +27,4 @@ Read our [FAQ](doc/FAQ.md) to find out about CDE features, what’s coming up an
 
 ### Send Feedback
 
-We'd love to hear from you! If you encounter a bug, or would like to see a new feature in CDE, file it as an issue with this format[Reporting a problem](https://github.com/dart-lang/chromedeveditor/wiki/Reporting-a-problem) on our [GitHub issue tracker](https://github.com/dart-lang/spark/issues/new).
+We'd love to hear from you! If you encounter a bug, or would like to see a new feature in CDE, file it as an issue with this [format](https://github.com/dart-lang/chromedeveditor/wiki/Reporting-a-problem) on our [GitHub issue tracker](https://github.com/dart-lang/spark/issues/new).

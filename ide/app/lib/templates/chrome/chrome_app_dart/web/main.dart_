@@ -17,7 +17,7 @@ void main() {
 }
 
 void resizeWindow(MouseEvent event) {
-  chrome.Bounds bounds = chrome.app.window.current().getBounds();
+  chrome.ContentBounds bounds = chrome.app.window.current().getBounds();
 
   bounds.width += boundsChange;
   bounds.left -= boundsChange ~/ 2;

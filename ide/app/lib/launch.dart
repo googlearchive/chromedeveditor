@@ -23,7 +23,6 @@ import 'exception.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
-import 'package_mgmt/pub_properties.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
