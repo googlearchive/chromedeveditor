@@ -27,7 +27,7 @@ class FileItemCell implements ListViewCell {
     if (resource is Project) {
       _element.classes.add('project');
     }
-    fileNameElement.innerHtml = resource.name;
+    fileNameElement.text = resource.name;
     acceptDrop = false;
     updateFileStatus();
 

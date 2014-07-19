@@ -82,7 +82,10 @@
 
   <!-- Top-level UI element. -->
   <spark-polymer-ui id="topUi">
-    <div id="fileViewArea" tabindex="0" beforeSplit></div>
+    <div id="leftPanel" tabindex="0" beforeSplit>
+      <div id="fileViewArea"></div>
+      <div id="searchViewArea" class="hidden"></div>
+    </div>
 
     <div id="editorArea" tabIndex="-1" afterSplit>
       <!-- TODO(ussuri): Find a way to move at least part of this to
