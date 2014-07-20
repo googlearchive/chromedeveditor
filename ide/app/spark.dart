@@ -918,6 +918,9 @@ abstract class Spark
         !visible ? 'true' : 'false';
     _searchViewVisible = visible;
     _reallyFilterFilesList(searchField.value);
+    if (!visible) {
+      querySelector('#searchViewPlaceholder').classes.add('hidden');
+    }
   }
 
   // Implementation of SearchViewController

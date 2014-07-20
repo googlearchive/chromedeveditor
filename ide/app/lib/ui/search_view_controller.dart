@@ -47,6 +47,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   // Workspace that references all the resources.
   final Workspace _workspace;
   WorkspaceSearch _search;
+  bool _searching;
   List<WorkspaceSearchResultItem> _items = [];
   Map<String, WorkspaceSearchResultItem> _filesMap = {};
   Map<String, WorkspaceSearchResultLine> _linesMap = {};
@@ -63,17 +64,26 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   bool performFilter(String filterString) {
+    html.querySelector('#searchViewNoResult').classes.add('hidden');
+
     if (_search != null) {
+      _statusComponent.spinning = false;
+      _statusComponent.progressMessage = null;
       _search.cancel();
       _search = null;
+      _searching = false;
     }
 
     if (filterString != null) {
+      _searching = true;
       _search = new WorkspaceSearch();
       _search.delegate = this;
       _search.performSearch(_workspace, filterString);
       _statusComponent.spinning = true;
       _statusComponent.progressMessage = 'Searching...';
+      html.querySelector('#searchViewPlaceholder').classes.add('hidden');
+    } else {
+      html.querySelector('#searchViewPlaceholder').classes.remove('hidden');
     }
 
     return true;
@@ -95,6 +105,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   void workspaceSearchFinished(WorkspaceSearch search) {
+    _searching = false;
     _statusComponent.progressMessage = null;
     _statusComponent.spinning = false;
     _statusComponent.temporaryMessage = 'Search finished';
@@ -127,6 +138,10 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
       });
     });
     _treeView.restoreExpandedState(uuids);
+
+    if (_items.length == 0) {
+      html.querySelector('#searchViewNoResult').classes.remove('hidden');
+    }
   }
 
   String treeViewChild(TreeView view, String nodeUid, int childIndex) {

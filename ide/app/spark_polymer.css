@@ -390,6 +390,23 @@ button.ace_searchbtn.prev:hover {
   top: 0;
 }
 
+#searchViewPlaceholder, #searchViewNoResult {
+  background-color: #eee;
+  bottom: 48px;
+  color: #ccc;
+  font-size: 18px;
+  left: 0;
+  padding-top: 60px;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 48px;
+}
+
+#searchViewPlaceholder.hidden, #searchViewNoResult.hidden {
+  display: none;
+}
+
 #fileViewArea {
   bottom: 48px;
   left: 0;
