@@ -42,7 +42,7 @@ class WorkspaceSearch {
   }
 
   void performSearch(Resource res, String token) {
-    _performSearchOnResource(res, token).then((_) {
+    _performSearchOnResource(res, token.toLowerCase()).then((_) {
       if (!_cancelled) {
         delegate.workspaceSearchFinished(this);
       }
@@ -85,7 +85,8 @@ class WorkspaceSearch {
         }
 
         String line = content.substring(currentIndex, nextIndex);
-        int tokenPosition = line.indexOf(token);
+        String lowerCaseString = line.toLowerCase();
+        int tokenPosition = lowerCaseString.indexOf(token);
         if (tokenPosition != -1) {
           linesNumbers.add(new WorkspaceSearchResultLine(file, line, lineNumber,
               currentIndex + tokenPosition, token.length));

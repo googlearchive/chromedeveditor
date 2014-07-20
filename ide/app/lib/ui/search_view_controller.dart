@@ -94,6 +94,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   void workspaceSearchFinished(WorkspaceSearch search) {
+    _statusComponent.progressMessage = null;
     _statusComponent.spinning = false;
     _statusComponent.temporaryMessage = 'Search finished';
     if (_updateTimer != null) {
