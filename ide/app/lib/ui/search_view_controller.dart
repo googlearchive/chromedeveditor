@@ -5,12 +5,13 @@
 /**
  * This class implements the controller for search results.
  */
-library spark.ui.widgets.files_controller;
+library spark.ui.search_view_controller;
 
 import 'dart:async';
 import 'dart:html' as html;
 
 import 'package:spark_widgets/spark_status/spark_status.dart';
+import 'package:spark_widgets/common/spark_widget.dart';
 
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
@@ -21,7 +22,7 @@ import '../workspace.dart';
 import '../workspace_search.dart';
 
 class SearchResultLineCell implements ListViewCell {
-  Element element = null;
+  html.Element element = null;
   bool acceptDrop = false;
   bool _highlighted;
 
@@ -196,21 +197,21 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     }
   }
 
-  bool treeViewRowClicked(Event event, String uid) => true;
+  bool treeViewRowClicked(html.Event event, String uid) => true;
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUids,
-                             Event event) {}
+                             html.Event event) {}
   void treeViewContextMenu(TreeView view,
                            List<String> nodeUids,
                            String nodeUid,
-                           Event event) {}
+                           html.Event event) {}
   String treeViewDropEffect(TreeView view,
-                            DataTransfer dataTransfer,
+                            html.DataTransfer dataTransfer,
                             String nodeUid) => null;
   String treeViewDropCellsEffect(TreeView view,
                                  List<String> nodesUIDs,
                                  String nodeUid) => null;
-  void treeViewDrop(TreeView view, String nodeUid, DataTransfer dataTransfer) {}
+  void treeViewDrop(TreeView view, String nodeUid, html.DataTransfer dataTransfer) {}
   void treeViewDropCells(TreeView view,
                          List<String> nodesUIDs,
                          String targetNodeUID) {}
@@ -218,13 +219,13 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
                                List<String> nodesUIDs,
                                String destinationNodeUID) => false;
   bool treeViewAllowsDrop(TreeView view,
-                          DataTransfer dataTransfer,
+                          html.DataTransfer dataTransfer,
                           String destinationNodeUID) => false;
   TreeViewDragImage treeViewDragImage(TreeView view,
                                       List<String> nodesUIDs,
-                                      MouseEvent event) => null;
+                                      html.MouseEvent event) => null;
   void treeViewSaveExpandedState(TreeView view) {}
-  Element treeViewSeparatorForNode(TreeView view, String nodeUID) => null;
+  html.Element treeViewSeparatorForNode(TreeView view, String nodeUID) => null;
   int treeViewSeparatorHeightForNode(TreeView view, String nodeUID) => 1;
   int treeViewDisclosurePositionForNode(TreeView view, String nodeUID) => 2;
 }

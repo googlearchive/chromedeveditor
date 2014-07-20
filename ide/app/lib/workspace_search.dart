@@ -77,7 +77,7 @@ class WorkspaceSearch {
     return file.getContents().then((String content) {
       int currentIndex = 0;
       int lineNumber = 1;
-      int linesNumbers = [];
+      List<WorkspaceSearchResultLine> linesNumbers = [];
       while (currentIndex < content.length) {
         int nextIndex = content.indexOf('\n', currentIndex);
         if (nextIndex == -1) {

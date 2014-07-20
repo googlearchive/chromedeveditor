@@ -907,16 +907,17 @@ abstract class Spark
   }
 
   void setSearchViewVisible(bool visible) {
+    InputElement searchField = getUIElement('#fileFilter');
     querySelector('#searchViewArea').classes.toggle('hidden', !visible);
     querySelector('#fileViewArea').classes.toggle('hidden', visible);
-    getUIElement('#fileFilter').placeholder =
+    searchField.placeholder =
         visible ? 'Search in Files' : 'Filter';
     getUIElement('#showSearchView').attributes['checkmark'] =
         visible ? 'true' : 'false';
     getUIElement('#showFilesView').attributes['checkmark'] =
         !visible ? 'true' : 'false';
     _searchViewVisible = visible;
-    _reallyFilterFilesList(getUIElement('#fileFilter').value);
+    _reallyFilterFilesList(searchField.value);
   }
 
   // Implementation of SearchViewController

@@ -5,7 +5,7 @@
 /**
  * This class implements the controller for the list of files.
  */
-library spark.ui.widgets.files_controller;
+library spark.ui.files_controller;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
