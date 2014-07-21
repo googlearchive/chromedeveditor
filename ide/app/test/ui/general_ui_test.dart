@@ -34,12 +34,12 @@ class SparkUITester {
     expect(dialogTester.functionallyOpened, false);
     expect(dialogTester.visuallyOpened, false);
 
-    return sparkAccess.selectMenu().then((_){
+    return sparkAccess.selectMenu().then((_) {
       menuItem.select();
     }).then((_) => dialogTester.dialogAccess.onTransitionComplete.first
     // Let any other transitions finish
     ).then((_) => new Future.delayed(Duration.ZERO)
-    ).then((_){
+    ).then((_) {
       expect(dialogTester.visuallyOpened, true);
       expect(dialogTester.functionallyOpened, true);
     });
@@ -99,9 +99,9 @@ defineTests() {
     test('New project menu item', () {
       return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu,
           sparkAccess.okCancelDialog).then((_) {
-            return sparkTester.openAndCloseWithButton(sparkAccess.gitCloneMenu,
+            return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu,
                 "cancel", sparkAccess.okCancelDialog);
-            });
+          });
     });
 
     test('Git clone menu item', () {
