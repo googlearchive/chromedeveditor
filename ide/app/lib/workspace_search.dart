@@ -9,19 +9,19 @@ import 'workspace.dart';
 import 'dart:async';
 
 class WorkspaceSearchResultLine {
-  File file;
-  String line;
-  int lineNumber;
-  int position;
-  int length;
+  final File file;
+  final String line;
+  final int lineNumber;
+  final int position;
+  final int length;
 
   WorkspaceSearchResultLine(this.file, this.line, this.lineNumber,
       this.position, this.length);
 }
 
 class WorkspaceSearchResultItem {
-  List<WorkspaceSearchResultLine> lines;
-  File file;
+  final File file;
+  final List<WorkspaceSearchResultLine> lines;
 
   WorkspaceSearchResultItem(this.file, this.lines);
 }
@@ -41,8 +41,8 @@ class WorkspaceSearch {
     results = [];
   }
 
-  void performSearch(Resource res, String token) {
-    _performSearchOnResource(res, token.toLowerCase()).then((_) {
+  Future performSearch(Resource res, String token) {
+    return _performSearchOnResource(res, token.toLowerCase()).then((_) {
       if (!_cancelled) {
         delegate.workspaceSearchFinished(this);
       }
@@ -77,7 +77,7 @@ class WorkspaceSearch {
     return file.getContents().then((String content) {
       int currentIndex = 0;
       int lineNumber = 1;
-      List<WorkspaceSearchResultLine> linesNumbers = [];
+      List<WorkspaceSearchResultLine> matches = [];
       while (currentIndex < content.length) {
         int nextIndex = content.indexOf('\n', currentIndex);
         if (nextIndex == -1) {
@@ -88,14 +88,14 @@ class WorkspaceSearch {
         String lowerCaseString = line.toLowerCase();
         int tokenPosition = lowerCaseString.indexOf(token);
         if (tokenPosition != -1) {
-          linesNumbers.add(new WorkspaceSearchResultLine(file, line, lineNumber,
+          matches.add(new WorkspaceSearchResultLine(file, line, lineNumber,
               currentIndex + tokenPosition, token.length));
         }
         currentIndex = nextIndex + 1;
         lineNumber ++;
       }
-      if (linesNumbers.length > 0) {
-        _addResult(file, linesNumbers);
+      if (matches.length > 0) {
+        _addResult(file, matches);
       }
     });
   }

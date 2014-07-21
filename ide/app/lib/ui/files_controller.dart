@@ -214,7 +214,7 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 40 : 25;
+    return resource is Project ? 40 : FileItemCell.height;
   }
 
   int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
