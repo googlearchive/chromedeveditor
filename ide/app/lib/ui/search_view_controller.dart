@@ -67,8 +67,6 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   bool performFilter(String filterString) {
-    _setShowNoResults(false);
-
     if (_search != null) {
       _statusComponent.spinning = false;
       _statusComponent.progressMessage = null;
@@ -81,13 +79,15 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
       _searching = true;
       _search = new WorkspaceSearch();
       _search.delegate = this;
-      _search.performSearch(_workspace, filterString);
+      _search.performSearch(_workspace, filterString).catchError((_) {});
       _statusComponent.spinning = true;
       _statusComponent.progressMessage = 'Searching...';
       _setShowSearchResultPlaceholder(false);
     } else {
       _setShowSearchResultPlaceholder(true);
     }
+
+    _updateResultsNow();
 
     return true;
   }
@@ -112,10 +112,6 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     _statusComponent.progressMessage = null;
     _statusComponent.spinning = false;
     _statusComponent.temporaryMessage = 'Search finished';
-    if (_updateTimer != null) {
-      _updateTimer.cancel();
-      _updateTimer = null;
-    }
     _updateResultsNow();
   }
 
@@ -129,7 +125,15 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   void _updateResultsNow() {
-    _items = new List.from(_search.results);
+    if (_updateTimer != null) {
+      _updateTimer.cancel();
+      _updateTimer = null;
+    }
+    if (_search != null) {
+      _items = new List.from(_search.results);
+    } else {
+      _items = [];
+    }
     _filesMap = {};
     _linesMap = {};
     List<String> uuids = [];
@@ -142,9 +146,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     });
     _treeView.restoreExpandedState(uuids);
 
-    if (_items.length == 0) {
-      _setShowNoResults(true);
-    }
+    _setShowNoResults(_items.length == 0);
   }
 
   void _setShowNoResults(bool visible) {
