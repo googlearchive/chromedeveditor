@@ -953,7 +953,7 @@ class ProjectLocationManager {
         }
       });
     }
-
+    
     // On Chrome OS, use the sync filesystem.
     // TODO(grv): Enable syncfs once the api is more stable.
     /*if (PlatformInfo.isCros && _spark.workspace.syncFsIsAvailable) {
@@ -981,6 +981,30 @@ class ProjectLocationManager {
       });
     });
   }
+  
+  /**
+   * Opens a pop up and asks the user to change the root directory. Internaly
+   * the stored value is changed here.
+   */
+  Future<LocationResult> chooseNewProjectLocation() {
+    // Show a dialog with explaination about what this folder is for.
+    return _showRequestFileSystemDialog().then((bool accepted) {
+      if (!accepted) {
+        return null;
+      }
+      // Display a dialog asking the user to choose a default project folder.
+      return _selectFolder(suggestedName: 'projects').then((entry) {
+        if (entry == null) {
+          return null;
+        }
+
+        _projectLocation = new LocationResult(entry, entry, false);
+        _spark.localPrefs.setValue('projectFolder',
+            chrome.fileSystem.retainEntry(entry));
+        return _projectLocation;
+      });
+    });
+  }  
 
   Future<bool> _showRequestFileSystemDialog() {
     return _spark.askUserOkCancel('Please choose a folder to store your Chrome Dev Editor projects.',

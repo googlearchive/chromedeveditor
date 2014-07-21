@@ -551,7 +551,10 @@
           <spark-toolbar class="settings-block"
               horizontal justify="spaced" spacing="small">
             <label class="settings-label">Root directory:</label>
-            <span id="directoryLabel" class="settings-value"></span>
+            <span id="directoryLabel" class="settings-value" ></span>
+            <spark-button id="chooseDirectory" on-click="{{onClickRootDirectory}}"
+            class="choose-directory-button">...
+            </spark-button>
           </spark-toolbar>
         </div>
       <!-- /template -->
