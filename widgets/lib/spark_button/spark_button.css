@@ -20,12 +20,12 @@
   border-radius: 50%;
 }
 
-:host(:hover) {
+:host(:not([highlight="false"]):hover) {
   background: #eee;
 }
 
-:host(:active,
-      [active]) {
+:host(:not([highlight="false"]):active,
+      [active]:not([highlight="false"])) {
   background: #e4e4e4;
 }
 

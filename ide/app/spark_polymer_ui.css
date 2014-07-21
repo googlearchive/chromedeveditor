@@ -280,3 +280,22 @@ label[for="stripWhitespace"] {
   overflow: hidden;
   white-space: nowrap;
 }
+
+#moreSearch {
+  fill: #7d7d7d;
+  height: 24px;
+  left: 8px;
+  position: absolute;
+  top: 5px;
+  width: 24px;
+}
+
+#moreSearchArrow {
+  left: 10px;
+  position: absolute;
+  top: 21px;
+}
+
+#moreSearch:hover {
+  fill: #444;
+}

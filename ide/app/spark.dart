@@ -44,8 +44,9 @@ import 'lib/scm.dart';
 import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
-import 'lib/ui/files_controller.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
+import 'lib/ui/files_controller.dart';
+import 'lib/ui/search_view_controller.dart';
 import 'lib/ui/widgets/tabview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
@@ -73,7 +74,7 @@ Zone createSparkZone() {
 
 abstract class Spark
     extends SparkModel
-    implements AceManagerDelegate, Notifier {
+    implements AceManagerDelegate, Notifier, SearchViewControllerDelegate {
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
@@ -100,6 +101,8 @@ abstract class Spark
   EventBus _eventBus;
 
   FilesController _filesController;
+  bool _searchViewVisible;
+  SearchViewController _searchViewController;
 
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
@@ -139,6 +142,7 @@ abstract class Spark
     createActions();
 
     initFilesController();
+    initSearchController();
 
     initToolbar();
     buildMenu();
@@ -417,6 +421,12 @@ abstract class Spark
     });
   }
 
+  void initSearchController() {
+    _searchViewController =
+        new SearchViewController(workspace, querySelector('#searchViewArea'));
+    _searchViewController.delegate = this;
+  }
+
   void initSplitView() {
     // Overridden in spark_polymer.dart.
   }
@@ -483,6 +493,8 @@ abstract class Spark
     actionManager.registerAction(new HistoryAction.forward(this));
     actionManager.registerAction(new ToggleOutlineVisibilityAction(this));
     actionManager.registerAction(new SendFeedbackAction(this));
+    actionManager.registerAction(new ShowSearchView(this));
+    actionManager.registerAction(new ShowFilesView(this));
 
     actionManager.registerKeyListener();
 
@@ -872,7 +884,17 @@ abstract class Spark
   }
 
   bool _reallyFilterFilesList(String searchString) {
-    return _filesController.performFilter(searchString);
+    if (searchString != null && searchString.length == 0) {
+      searchString = null;
+    }
+
+    if (_searchViewVisible) {
+      _filesController.performFilter(null);
+      return _searchViewController.performFilter(searchString);
+    } else {
+      _searchViewController.performFilter(null);
+      return _filesController.performFilter(searchString);
+    }
   }
 
   void _refreshOpenFiles() {
@@ -883,6 +905,29 @@ abstract class Spark
     Set<ws.Resource> resources = new Set.from(
         editorManager.files.map((r) => r.project != null ? r.project : r));
     resources.forEach((ws.Resource r) => r.refresh());
+  }
+
+  void setSearchViewVisible(bool visible) {
+    InputElement searchField = getUIElement('#fileFilter');
+    querySelector('#searchViewArea').classes.toggle('hidden', !visible);
+    querySelector('#fileViewArea').classes.toggle('hidden', visible);
+    searchField.placeholder =
+        visible ? 'Search in Files' : 'Filter';
+    getUIElement('#showSearchView').attributes['checkmark'] =
+        visible ? 'true' : 'false';
+    getUIElement('#showFilesView').attributes['checkmark'] =
+        !visible ? 'true' : 'false';
+    _searchViewVisible = visible;
+    _reallyFilterFilesList(searchField.value);
+    if (!visible) {
+      querySelector('#searchViewPlaceholder').classes.add('hidden');
+    }
+  }
+
+  // Implementation of SearchViewController
+
+  void searchViewControllerNavigate(SearchViewController controller, NavigationLocation location) {
+    navigationManager.gotoLocation(location);
   }
 }
 
@@ -3857,6 +3902,23 @@ class SendFeedbackAction extends SparkAction {
 
   void _invoke([context]) {
     window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
+  }
+}
+
+class ShowSearchView extends SparkAction {
+  ShowSearchView(Spark spark)
+      : super(spark, 'show-search-view', 'Search in Files');
+
+  void _invoke([context]) {
+    spark.setSearchViewVisible(true);
+  }
+}
+
+class ShowFilesView extends SparkAction {
+  ShowFilesView(Spark spark) : super(spark, 'show-files-view', 'Filter');
+
+  void _invoke([context]) {
+    spark.setSearchViewVisible(false);
   }
 }
 
