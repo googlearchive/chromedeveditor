@@ -5,8 +5,8 @@
 library spark_polymer.ui;
 
 import 'dart:html';
-import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
@@ -126,14 +126,13 @@ class SparkPolymerUI extends SparkWidget {
     _model.syncPrefs.removeValue(['git-auth-info', 'git-user-info']);
     _model.setGitSettingsResetDoneVisible(true);
   }
-  
+
   void onClickRootDirectory() {
     _model.projectLocationManager.chooseNewProjectLocation().then((LocationResult res){
-      if(res!=null) {
+      if (res != null) {
         chrome.fileSystem.getDisplayPath(res.entry).then((String path){
-          //directoryLabel
           Element resultElement = $['directoryLabel'];
-          resultElement.text=path;
+          resultElement.text = path;
         });
       }
     });
