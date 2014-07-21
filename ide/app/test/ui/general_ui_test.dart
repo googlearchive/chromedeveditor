@@ -6,6 +6,7 @@ library spark.general_ui_test;
 
 import 'dart:async';
 
+import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:unittest/unittest.dart';
 
 import "ui_access.dart";
@@ -14,15 +15,12 @@ class DialogTester {
   DialogAccess dialogAccess;
 
   bool get functionallyOpened => dialogAccess.opened;
-
-  bool get visuallyOpened {
-    return dialogAccess.fullyVisible;
-  }
+  bool get visuallyOpened => dialogAccess.fullyVisible;
 
   DialogTester(this.dialogAccess);
 
-  void clickClosingX() => dialogAccess.clickButtonWithSelector("#closingX");
-  void clickButtonWithTitle(String title) => dialogAccess.clickButtonWithTitle(title);
+  void clickClosingX() => dialogAccess.clickButton(dialogAccess.closingXButton);
+  void clickButton(SparkWidget button) => dialogAccess.clickButton(button);
 }
 
 class SparkUITester {
@@ -57,12 +55,12 @@ class SparkUITester {
     }).then((_) => new Future.delayed(Duration.ZERO));
   }
 
-  Future openAndCloseWithButton(MenuItemAccess menuItem, String buttonTitle,
+  Future openAndCloseWithButton(MenuItemAccess menuItem, SparkWidget button,
                                 [DialogAccess dialog]) {
     DialogTester dialogTester =
         new DialogTester(dialog != null ? dialog : menuItem.dialogAccess);
     return _open(dialogTester, menuItem).then((_) {
-      dialogTester.clickButtonWithTitle(buttonTitle);
+      dialogTester.clickButton(button);
       return dialogTester.dialogAccess.onTransitionComplete.first;
     }).then((_) {
       expect(dialogTester.functionallyOpened, false);
@@ -86,7 +84,8 @@ defineTests() {
     test('close dialog', () {
       DialogTester dialogTester = new DialogTester(sparkAccess.aboutDialog);
       if (!dialogTester.functionallyOpened) return null;
-      dialogTester.clickButtonWithTitle("done");
+      AboutDialogAccess aboutDialog = dialogTester.dialogAccess;
+      dialogTester.clickButton(aboutDialog.doneButton);
       expect(dialogTester.functionallyOpened, false);
 
       return new Future.delayed(const Duration(milliseconds: 1000)).then((_) {
@@ -97,26 +96,30 @@ defineTests() {
 
   group('Menu items with no projects folder selected', () {
     test('New project menu item', () {
+      OkCancelDialogAccess okCancelDialog = sparkAccess.okCancelDialog;
       return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu,
           sparkAccess.okCancelDialog).then((_) {
             return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu,
-                "cancel", sparkAccess.okCancelDialog);
+                okCancelDialog.cancelButton, sparkAccess.okCancelDialog);
           });
     });
 
     test('Git clone menu item', () {
+      OkCancelDialogAccess okCancelDialog = sparkAccess.okCancelDialog;
       return sparkTester.openAndCloseWithX(sparkAccess.gitCloneMenu,
           sparkAccess.okCancelDialog).then((_) {
             return sparkTester.openAndCloseWithButton(sparkAccess.gitCloneMenu,
-                "cancel", sparkAccess.okCancelDialog);
+                okCancelDialog.cancelButton, sparkAccess.okCancelDialog);
           });
     });
   });
 
   group('about dialog', () {
     test('open and close the dialog via x button', () {
+      AboutDialogAccess aboutDialog = sparkAccess.aboutMenu.dialogAccess;
       return sparkTester.openAndCloseWithX(sparkAccess.aboutMenu).then((_) {
-        return sparkTester.openAndCloseWithButton(sparkAccess.aboutMenu, "done");
+        return sparkTester.openAndCloseWithButton(sparkAccess.aboutMenu,
+            aboutDialog.doneButton);
       });
     });
   });

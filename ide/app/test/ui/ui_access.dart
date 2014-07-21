@@ -19,6 +19,7 @@ import 'package:spark_widgets/common/spark_widget.dart';
 import '../../spark_polymer_ui.dart';
 
 class SparkUIAccess {
+  OkCancelDialogAccess get okCancelDialog => new OkCancelDialogAccess();
   AboutDialogAccess aboutDialog = new AboutDialogAccess();
   DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
   DialogAccess newProjectDialog = new DialogAccess("newProjectDialog");
@@ -29,7 +30,6 @@ class SparkUIAccess {
 
   static SparkUIAccess _instance;
 
-  DialogAccess get okCancelDialog => new DialogAccess("okCancelDialog");
 
   SparkMenuButton get menu => getUIElement("#mainMenu");
   Stream get onMenuTransitioned => _menuOverlay.on['transition-complete'];
@@ -95,6 +95,7 @@ class DialogAccess {
 
   SparkModal get modalElement => _dialog.getShadowDomElement("#modal");
   bool get opened => modalElement.opened;
+  SparkWidget get closingXButton => _getButtonBySelector("#closingX");
 
   bool get fullyVisible {
     Rectangle<int> bounds = modalElement.getBoundingClientRect();
@@ -114,11 +115,11 @@ class DialogAccess {
 
   DialogAccess(this.id);
 
-  void clickButtonWithTitle(String title) =>
-      _sparkAccess.clickElement(_getButtonByTitle(title));
+  void clickButton(SparkWidget button) => _sparkAccess.clickElement(button);
+//  void clickButtonWithTitle(String title) => clickButton(_getButtonByTitle(title));
+//  void clickButtonWithSelector(String query) =>
+//      clickButton(_getButtonBySelector(query));
 
-  void clickButtonWithSelector(String query) =>
-      _sparkAccess.clickElement(_getButtonBySelector(query));
 
   SparkWidget _getButtonByTitle(String title) =>
       _dialogButtons.firstWhere((b) => b.text.toLowerCase() == title.toLowerCase());
@@ -134,8 +135,20 @@ class DialogAccess {
   }
 }
 
+class OkCancelDialogAccess extends DialogAccess {
+  SparkDialogButton get okButton => _getButtonByTitle("ok");
+  SparkDialogButton get cancelButton => _getButtonByTitle("cancel");
+
+  OkCancelDialogAccess() : super("okCancelDialog");
+
+  void clickOkButton() => _sparkAccess.clickElement(okButton);
+  void clickCancelButton() => _sparkAccess.clickElement(cancelButton);
+}
+
 class AboutDialogAccess extends DialogAccess {
+  SparkDialogButton get doneButton => _getButtonByTitle("done");
+
   AboutDialogAccess() : super("aboutDialog");
 
-  void clickDoneButton() => clickButtonWithTitle("done");
+  void clickDoneButton() => _sparkAccess.clickElement(doneButton);
 }
