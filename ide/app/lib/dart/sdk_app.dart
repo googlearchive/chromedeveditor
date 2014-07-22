@@ -3,7 +3,8 @@
 // license that can be found in the LICENSE file.
 
 /**
- * TODO:
+ * This library exposes the ability to create a Dart SDK from the binary in
+ * `sdk/dart-sdk.bz`.
  */
 library spark.sdk_app;
 
