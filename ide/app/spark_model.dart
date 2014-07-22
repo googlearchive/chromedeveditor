@@ -46,6 +46,7 @@ abstract class SparkModel extends Application {
 
   void onSplitViewUpdate(int position);
   void setGitSettingsResetDoneVisible(bool visible);
+  Future showRootDirectory();
 
   /**
    * Should filter files in the tree view and return the success of the
