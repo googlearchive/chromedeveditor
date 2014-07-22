@@ -175,6 +175,23 @@ abstract class Spark
     });
   }
 
+  /**
+   * This method shows the root directory path in the UI element.
+   */
+  Future showRootDirectory() {
+    return localPrefs.getValue('projectFolder').then((folderToken) {
+      if (folderToken == null) {
+        getUIElement('#directoryLabel').text = '';
+        return new Future.value();
+      }
+      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+          getUIElement('#directoryLabel').text = path;
+        });
+      });
+    });
+  }
+
   //
   // SparkModel interface:
   //
@@ -1009,15 +1026,22 @@ class ProjectLocationManager {
     }*/
 
     // Show a dialog with explaination about what this folder is for.
+    return chooseNewProjectLocation();
+  }
+
+  /**
+   * Opens a pop up and asks the user to change the root directory. Internally,
+   * the stored value is changed here.
+   */
+  Future<LocationResult> chooseNewProjectLocation() {
+    // Show a dialog with explaination about what this folder is for.
     return _showRequestFileSystemDialog().then((bool accepted) {
       if (!accepted) {
         return null;
       }
       // Display a dialog asking the user to choose a default project folder.
       return _selectFolder(suggestedName: 'projects').then((entry) {
-        if (entry == null) {
-          return null;
-        }
+        if (entry == null) return null;
 
         _projectLocation = new LocationResult(entry, entry, false);
         _spark.localPrefs.setValue('projectFolder',
@@ -3635,7 +3659,7 @@ class SettingsAction extends SparkActionWithDialog {
         if (PlatformInfo.isCros) {
           return null;
         } else {
-          return _showRootDirectory();
+          return spark.showRootDirectory();
         }
       })
     ]).then((_) {
@@ -3646,19 +3670,7 @@ class SettingsAction extends SparkActionWithDialog {
     });
   }
 
-  Future _showRootDirectory() {
-    return spark.localPrefs.getValue('projectFolder').then((folderToken) {
-      if (folderToken == null) {
-        getElement('#directoryLabel').text = '';
-        return new Future.value();
-      }
-      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return chrome.fileSystem.getDisplayPath(entry).then((path) {
-          getElement('#directoryLabel').text = path;
-        });
-      });
-    });
-  }
+
 }
 
 class RunTestsAction extends SparkAction {
