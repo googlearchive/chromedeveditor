@@ -380,7 +380,11 @@ String minimizeStackTrace(StackTrace st) {
   if (st == null) return '';
 
   List lines = st.toString().trim().split('\n');
-  lines = lines.map((l) => _minimizeLine(l.trim())).toList();
+  lines = lines
+      .map((l) => l.trim())
+      .where((String line) => line.startsWith('at ') || line.startsWith('#'))
+      .map((l) => _minimizeLine(l))
+      .toList();
 
   // Remove all but one 'dart:' frame.
   int index = 0;
