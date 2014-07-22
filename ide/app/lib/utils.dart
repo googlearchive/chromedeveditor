@@ -16,6 +16,8 @@ import 'package:logging/logging.dart';
 
 import 'exception.dart';
 
+final Logger _logger = new Logger('spark.builder');
+
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 final RegExp _imageFileTypes = new RegExp(r'\.(jpe?g|png|gif|ico)$',
@@ -457,6 +459,8 @@ String _minimizeLine(String line) {
     String location = _removeExtPrefix(match.group(3));
     return minimizePath('${method} ${location}');
   }
+
+  _logger.info("Couldn't match: ${line}");
 
   return line;
 }
