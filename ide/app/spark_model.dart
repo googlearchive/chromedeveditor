@@ -14,7 +14,7 @@ import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
-import 'spark.dart'; 
+import 'spark.dart';
 
 abstract class SparkModel extends Application {
   static bool _instanceCreated = false;

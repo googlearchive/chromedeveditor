@@ -130,14 +130,10 @@ class SparkPolymerUI extends SparkWidget {
   void onClickRootDirectory() {
     _model.projectLocationManager.chooseNewProjectLocation().then((LocationResult res){
       if (res != null) {
-        chrome.fileSystem.getDisplayPath(res.entry).then((String path){
-          Element resultElement = $['directoryLabel'];
-          resultElement.text = path;
-        });
+        _model.showRootDirectory();
       }
     });
   }
-
 
   // TODO(ussuri): Find a better way to achieve this.
   void onResetPreference() {
