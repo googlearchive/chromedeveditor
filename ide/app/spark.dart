@@ -101,7 +101,6 @@ abstract class Spark
   EventBus _eventBus;
 
   FilesController _filesController;
-  bool _searchViewVisible;
   SearchViewController _searchViewController;
 
   // Extensions of files that will be shown as text.
@@ -142,7 +141,6 @@ abstract class Spark
     createActions();
 
     initFilesController();
-    initSearchController();
 
     initToolbar();
     buildMenu();
@@ -171,6 +169,7 @@ abstract class Spark
         // Location manager might have overridden the Ace-related flags from
         // "<project location>/.spark.json".
         initAceManagers();
+        initSearchController();
       });
     });
   }
@@ -442,6 +441,9 @@ abstract class Spark
     _searchViewController =
         new SearchViewController(workspace, querySelector('#searchViewArea'));
     _searchViewController.delegate = this;
+    if (!SparkFlags.searchInFiles) {
+      getUIElement('#moreSearch').style.display = 'none';
+    }
   }
 
   void initSplitView() {
@@ -905,7 +907,7 @@ abstract class Spark
       searchString = null;
     }
 
-    if (_searchViewVisible) {
+    if (_searchViewController.visibility) {
       _filesController.performFilter(null);
       return _searchViewController.performFilter(searchString);
     } else {
@@ -934,7 +936,7 @@ abstract class Spark
         visible ? 'true' : 'false';
     getUIElement('#showFilesView').attributes['checkmark'] =
         !visible ? 'true' : 'false';
-    _searchViewVisible = visible;
+    _searchViewController.visibility = visible;
     _reallyFilterFilesList(searchField.value);
     if (!visible) {
       querySelector('#searchViewPlaceholder').classes.add('hidden');

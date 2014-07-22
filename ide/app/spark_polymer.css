@@ -366,6 +366,18 @@ button.ace_searchbtn.prev:hover {
   width: 100%;
 }
 
+.search-max-results {
+  color: #888;
+  font-size: 12px;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  text-align: center;
+  top: 10px;
+  white-space: nowrap;
+  width: 100%;
+}
+
 #searchViewArea.hidden, #fileViewArea.hidden {
   display: none;
 }

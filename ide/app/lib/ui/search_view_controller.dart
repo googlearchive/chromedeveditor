@@ -24,7 +24,7 @@ import '../workspace_search.dart';
 class SearchResultLineCell implements ListViewCell {
   html.Element element = null;
   bool acceptDrop = false;
-  bool _highlighted;
+  bool highlighted = false;
 
   SearchResultLineCell(WorkspaceSearchResultLine line) {
     element = new html.DivElement();
@@ -34,10 +34,18 @@ class SearchResultLineCell implements ListViewCell {
     // is further on the right.
     element.text = '${line.lineNumber}: ${line.line}';
   }
+}
 
-  bool get highlighted => _highlighted;
+class SearchMaxResultsCell implements ListViewCell {
+  html.Element element = null;
+  bool acceptDrop = false;
+  bool highlighted = false;
 
-  set highlighted(bool value) => _highlighted = value;
+  SearchMaxResultsCell() {
+    element = new html.DivElement();
+    element.classes.add('search-max-results');
+    element.text = 'Showing only the first 1,000 matches';
+  }
 }
 
 abstract class SearchViewControllerDelegate {
@@ -46,11 +54,13 @@ abstract class SearchViewControllerDelegate {
 }
 
 class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate {
+  static final String reachedMaxResultsCellUid = "reachedMaxResults";
   TreeView _treeView;
   // Workspace that references all the resources.
   final Workspace _workspace;
   WorkspaceSearch _search;
   bool _searching;
+  bool _reachedMaxResults;
   List<WorkspaceSearchResultItem> _items = [];
   Map<String, WorkspaceSearchResultItem> _filesMap = {};
   Map<String, WorkspaceSearchResultLine> _linesMap = {};
@@ -58,6 +68,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   SparkStatus _statusComponent;
   DateTime _lastUpdateTime;
   SearchViewControllerDelegate delegate;
+  bool visibility = false;
 
   SearchViewController(this._workspace,
                   html.Element searchViewArea) {
@@ -67,8 +78,6 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   bool performFilter(String filterString) {
-    _setShowNoResults(false);
-
     if (_search != null) {
       _statusComponent.spinning = false;
       _statusComponent.progressMessage = null;
@@ -81,13 +90,15 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
       _searching = true;
       _search = new WorkspaceSearch();
       _search.delegate = this;
-      _search.performSearch(_workspace, filterString);
+      _search.performSearch(_workspace, filterString).catchError((_) {});
       _statusComponent.spinning = true;
       _statusComponent.progressMessage = 'Searching...';
       _setShowSearchResultPlaceholder(false);
     } else {
       _setShowSearchResultPlaceholder(true);
     }
+
+    _updateResultsNow();
 
     return true;
   }
@@ -112,10 +123,6 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     _statusComponent.progressMessage = null;
     _statusComponent.spinning = false;
     _statusComponent.temporaryMessage = 'Search finished';
-    if (_updateTimer != null) {
-      _updateTimer.cancel();
-      _updateTimer = null;
-    }
     _updateResultsNow();
   }
 
@@ -129,7 +136,17 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   void _updateResultsNow() {
-    _items = new List.from(_search.results);
+    if (_updateTimer != null) {
+      _updateTimer.cancel();
+      _updateTimer = null;
+    }
+    if (_search != null) {
+      _reachedMaxResults = _search.reachedMaxResults;
+      _items = new List.from(_search.results);
+    } else {
+      _reachedMaxResults = false;
+      _items = [];
+    }
     _filesMap = {};
     _linesMap = {};
     List<String> uuids = [];
@@ -142,25 +159,29 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     });
     _treeView.restoreExpandedState(uuids);
 
-    if (_items.length == 0) {
-      _setShowNoResults(true);
-    }
+    _setShowNoResults(_items.length == 0 && _search != null);
   }
 
   void _setShowNoResults(bool visible) {
-    html.querySelector('#searchViewNoResult').classes.toggle('hidden', !visible);
+    html.querySelector('#searchViewNoResult').classes.toggle('hidden',
+        !visible || !visibility);
   }
 
   void _setShowSearchResultPlaceholder(bool visible) {
-    html.querySelector('#searchViewPlaceholder').classes.toggle('hidden', !visible);
+    html.querySelector('#searchViewPlaceholder').classes.toggle('hidden',
+        !visible || !visibility);
   }
 
   // Implementation of TreeViewDelegate interface.
 
   String treeViewChild(TreeView view, String nodeUid, int childIndex) {
     if (nodeUid == null) {
-      WorkspaceSearchResultItem item = _items[childIndex];
-      return item.file.uuid;
+      if (childIndex < _items.length) {
+        WorkspaceSearchResultItem item = _items[childIndex];
+        return item.file.uuid;
+      } else {
+        return reachedMaxResultsCellUid;
+      }
     } else if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
       WorkspaceSearchResultLine lineInfo = item.lines[childIndex];
@@ -182,7 +203,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
 
   int treeViewNumberOfChildren(TreeView view, String nodeUid) {
     if (nodeUid == null) {
-      return _items.length;
+      return _reachedMaxResults ? _items.length + 1 : _items.length;
     } else if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
       return item.lines.length;
@@ -198,12 +219,18 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     } else if (_linesMap[nodeUid] != null) {
       WorkspaceSearchResultLine lineInfo = _linesMap[nodeUid];
       return new SearchResultLineCell(lineInfo);
+    } else if (nodeUid == reachedMaxResultsCellUid) {
+      return new SearchMaxResultsCell();
+    } else {
+      return null;
     }
   }
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     if (_filesMap[nodeUid] != null) {
       return FileItemCell.height;
+    } else if (nodeUid == reachedMaxResultsCellUid) {
+      return 50;
     } else {
       return 18;
     }
@@ -225,7 +252,8 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     }
   }
 
-  bool treeViewRowClicked(html.Event event, String uid) => true;
+  bool treeViewRowClicked(html.Event event, String uid) => uid != reachedMaxResultsCellUid;
+
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUids,
                              html.Event event) {}
