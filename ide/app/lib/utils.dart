@@ -16,8 +16,6 @@ import 'package:logging/logging.dart';
 
 import 'exception.dart';
 
-final Logger _logger = new Logger('spark.builder');
-
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 final RegExp _imageFileTypes = new RegExp(r'\.(jpe?g|png|gif|ico)$',
@@ -382,9 +380,11 @@ String minimizeStackTrace(StackTrace st) {
   if (st == null) return '';
 
   List lines = st.toString().trim().split('\n');
-  lines = lines.map((l) => _minimizeLine(l.trim())).where((String line) {
-    return line.startsWith('at ') || line.startsWith('#');
-  }).toList();
+  lines = lines
+      .map((l) => l.trim())
+      .where((String line) => line.startsWith('at ') || line.startsWith('#'))
+      .map((l) => _minimizeLine(l))
+      .toList();
 
   // Remove all but one 'dart:' frame.
   int index = 0;
@@ -461,8 +461,6 @@ String _minimizeLine(String line) {
     String location = _removeExtPrefix(match.group(3));
     return minimizePath('${method} ${location}');
   }
-
-  _logger.info("Couldn't match: ${line}");
 
   return line;
 }
