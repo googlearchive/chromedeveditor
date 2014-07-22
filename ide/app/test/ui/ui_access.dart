@@ -19,6 +19,8 @@ import 'package:spark_widgets/common/spark_widget.dart';
 import '../../spark_polymer_ui.dart';
 
 class SparkUIAccess {
+  static SparkUIAccess _instance;
+
   OkCancelDialogAccess get okCancelDialog => new OkCancelDialogAccess();
   AboutDialogAccess aboutDialog = new AboutDialogAccess();
   DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
@@ -28,9 +30,6 @@ class SparkUIAccess {
   MenuItemAccess gitCloneMenu;
   MenuItemAccess aboutMenu;
 
-  static SparkUIAccess _instance;
-
-
   SparkMenuButton get menu => getUIElement("#mainMenu");
   Stream get onMenuTransitioned => _menuOverlay.on['transition-complete'];
 
@@ -38,9 +37,15 @@ class SparkUIAccess {
   SparkButton get _menuButton => getUIElement("#mainMenu > spark-button");
   SparkOverlay get _menuOverlay => menu.getShadowDomElement("#overlay");
 
-  factory SparkUIAccess() {
+  static SparkUIAccess get instance {
     if (_instance == null) _instance = new SparkUIAccess._internal();
     return _instance;
+  }
+
+  SparkUIAccess._internal() {
+    newProjectMenu = new MenuItemAccess("project-new", newProjectDialog);
+    gitCloneMenu = new MenuItemAccess("git-clone", gitCloneDialog);
+    aboutMenu = new MenuItemAccess("help-about", aboutDialog);
   }
 
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
@@ -63,11 +68,6 @@ class SparkUIAccess {
     _sendMouseEvent(element, "click");
   }
 
-  SparkUIAccess._internal() {
-    newProjectMenu = new MenuItemAccess("project-new", newProjectDialog);
-    gitCloneMenu = new MenuItemAccess("git-clone", gitCloneDialog);
-    aboutMenu = new MenuItemAccess("help-about", aboutDialog);
-  }
 }
 
 class MenuItemAccess {
@@ -76,7 +76,7 @@ class MenuItemAccess {
 
   DialogAccess get dialogAccess => _dialogAccess;
 
-  SparkUIAccess get _sparkAccess => new SparkUIAccess();
+  SparkUIAccess get _sparkAccess => SparkUIAccess.instance;
 
   SparkMenuItem get _menuItem => _getMenuItem(_menuItemId);
 
@@ -108,7 +108,7 @@ class DialogAccess {
 
   Stream get onTransitionComplete => modalElement.on['transition-complete'];
 
-  SparkUIAccess get _sparkAccess => new SparkUIAccess();
+  SparkUIAccess get _sparkAccess => SparkUIAccess.instance;
   SparkDialog get _dialog => _sparkAccess.getUIElement("#$id");
   List<SparkDialogButton> get _dialogButtons =>
       _dialog.querySelectorAll("spark-dialog-button");

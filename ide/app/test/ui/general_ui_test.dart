@@ -24,9 +24,16 @@ class DialogTester {
 }
 
 class SparkUITester {
-  SparkUIAccess get sparkAccess => new SparkUIAccess();
+  static SparkUITester _instance;
 
-  SparkUITester();
+  SparkUIAccess get sparkAccess => SparkUIAccess.instance;
+
+  static SparkUITester get instance {
+    if (_instance == null) _instance = new SparkUITester._internal();
+    return _instance;
+  }
+
+  SparkUITester._internal();
 
   Future _open(DialogTester dialogTester, MenuItemAccess menuItem) {
     expect(dialogTester.functionallyOpened, false);
@@ -71,8 +78,8 @@ class SparkUITester {
 }
 
 defineTests() {
-  SparkUITester sparkTester = new SparkUITester();
-  SparkUIAccess sparkAccess = new SparkUIAccess();
+  SparkUITester sparkTester = SparkUITester.instance;
+  SparkUIAccess sparkAccess = SparkUIAccess.instance;
 
   group('first run', () {
     // TODO(ericarnold): Disabled for local testing
