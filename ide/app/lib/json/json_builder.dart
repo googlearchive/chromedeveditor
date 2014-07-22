@@ -11,7 +11,7 @@ import 'package:json/json.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
-import '../package_mgmt/bower.dart';
+import '../package_mgmt/bower_properties.dart';
 
 /**
  * A [Builder] implementation to add validation warnings to JSON files.

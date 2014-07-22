@@ -45,21 +45,23 @@ defineTests() {
       });
     });
 
-    test('persist workspace roots', () {
-      var prefs = new MapPreferencesStore();
-      ws.Workspace workspace = new ws.Workspace(prefs);
-      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
-        return workspace.link(createWsRoot(dir)).then((ws.Resource resource) {
-          expect(resource, isNotNull);
-          return workspace.save().then((_) {
-            return prefs.getValue('workspaceRoots').then((String prefVal) {
-              expect(prefVal, isNotNull);
-              expect(prefVal.length, greaterThanOrEqualTo(4));
-            });
-          });
-        });
-      });
-    });
+    // TODO(devoncarew): Commented out - this links in the entire spark app
+    // directory; it can cause other tests to time out.
+//    test('persist workspace roots', () {
+//      var prefs = new MapPreferencesStore();
+//      ws.Workspace workspace = new ws.Workspace(prefs);
+//      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+//        return workspace.link(createWsRoot(dir)).then((ws.Resource resource) {
+//          expect(resource, isNotNull);
+//          return workspace.save().then((_) {
+//            return prefs.getValue('workspaceRoots').then((String prefVal) {
+//              expect(prefVal, isNotNull);
+//              expect(prefVal.length, greaterThanOrEqualTo(4));
+//            });
+//          });
+//        });
+//      });
+//    });
 
     test('resource is hashable', () {
       ws.Workspace workspace = _createWorkspace();
