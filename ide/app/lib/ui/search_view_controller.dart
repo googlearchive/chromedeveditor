@@ -24,7 +24,7 @@ import '../workspace_search.dart';
 class SearchResultLineCell implements ListViewCell {
   html.Element element = null;
   bool acceptDrop = false;
-  bool _highlighted;
+  bool highlighted = false;
 
   SearchResultLineCell(WorkspaceSearchResultLine line) {
     element = new html.DivElement();
@@ -34,26 +34,18 @@ class SearchResultLineCell implements ListViewCell {
     // is further on the right.
     element.text = '${line.lineNumber}: ${line.line}';
   }
-
-  bool get highlighted => _highlighted;
-
-  set highlighted(bool value) => _highlighted = value;
 }
 
 class SearchMaxResultsCell implements ListViewCell {
   html.Element element = null;
   bool acceptDrop = false;
-  bool _highlighted;
+  bool highlighted = false;
 
   SearchMaxResultsCell() {
     element = new html.DivElement();
     element.classes.add('search-max-results');
-    element.text = 'Only the 1000 first results are shown';
+    element.text = 'Showing only the first 1,000 matches';
   }
-
-  bool get highlighted => _highlighted;
-
-  set highlighted(bool value) => _highlighted = value;
 }
 
 abstract class SearchViewControllerDelegate {
@@ -62,6 +54,7 @@ abstract class SearchViewControllerDelegate {
 }
 
 class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate {
+  static final String reachedMaxResultsCellUid = "reachedMaxResults";
   TreeView _treeView;
   // Workspace that references all the resources.
   final Workspace _workspace;
@@ -187,7 +180,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
         WorkspaceSearchResultItem item = _items[childIndex];
         return item.file.uuid;
       } else {
-        return "reachedMaxResults";
+        return reachedMaxResultsCellUid;
       }
     } else if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
@@ -226,7 +219,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     } else if (_linesMap[nodeUid] != null) {
       WorkspaceSearchResultLine lineInfo = _linesMap[nodeUid];
       return new SearchResultLineCell(lineInfo);
-    } else if (nodeUid == "reachedMaxResults") {
+    } else if (nodeUid == reachedMaxResultsCellUid) {
       return new SearchMaxResultsCell();
     } else {
       return null;
@@ -236,7 +229,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     if (_filesMap[nodeUid] != null) {
       return FileItemCell.height;
-    } else if (nodeUid == "reachedMaxResults") {
+    } else if (nodeUid == reachedMaxResultsCellUid) {
       return 50;
     } else {
       return 18;
@@ -259,7 +252,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     }
   }
 
-  bool treeViewRowClicked(html.Event event, String uid) => uid != "reachedMaxResults";
+  bool treeViewRowClicked(html.Event event, String uid) => uid != reachedMaxResultsCellUid;
 
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUids,

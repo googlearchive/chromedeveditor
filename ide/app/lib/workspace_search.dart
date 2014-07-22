@@ -95,7 +95,7 @@ class WorkspaceSearch {
         if (tokenPosition != -1) {
           matches.add(new WorkspaceSearchResultLine(file, line, lineNumber,
               currentIndex + tokenPosition, token.length));
-          _matchesCount ++;
+          _matchesCount++;
           if (_matchesCount >= maxResultsCount) {
             _reachedMaxResults = true;
             delegate.workspaceSearchFinished(this);
@@ -103,7 +103,7 @@ class WorkspaceSearch {
           }
         }
         currentIndex = nextIndex + 1;
-        lineNumber ++;
+        lineNumber++;
       }
       if (matches.length > 0) {
         _addResult(file, matches);
