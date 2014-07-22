@@ -21,7 +21,7 @@ import '../../spark_polymer_ui.dart';
 class SparkUIAccess {
   static SparkUIAccess _instance;
 
-  OkCancelDialogAccess get okCancelDialog => new OkCancelDialogAccess();
+  OkCancelDialogAccess okCancelDialog = new OkCancelDialogAccess();
   AboutDialogAccess aboutDialog = new AboutDialogAccess();
   DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
   DialogAccess newProjectDialog = new DialogAccess("newProjectDialog");
@@ -34,7 +34,7 @@ class SparkUIAccess {
   Stream get onMenuTransitioned => _menuOverlay.on['transition-complete'];
 
   SparkPolymerUI get _ui => document.querySelector('#topUi');
-  SparkButton get _menuButton => getUIElement("#mainMenu > spark-button");
+  SparkButton get _sparkMenuButton => getUIElement("#mainMenu > spark-button");
   SparkOverlay get _menuOverlay => menu.getShadowDomElement("#overlay");
 
   static SparkUIAccess get instance {
@@ -57,9 +57,9 @@ class SparkUIAccess {
         clientY: bounds.top.toInt() + bounds.height ~/ 2));
   }
 
-  Future selectMenu() {
+  Future selectSparkMenu() {
     Future transitionFuture = onMenuTransitioned.first;
-    _menuButton.click();
+    _sparkMenuButton.click();
     return transitionFuture;
   }
 

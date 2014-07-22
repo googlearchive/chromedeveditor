@@ -39,10 +39,10 @@ class SparkUITester {
     expect(dialogTester.functionallyOpened, false);
     expect(dialogTester.visuallyOpened, false);
 
-    return sparkAccess.selectMenu().then((_) {
+    return sparkAccess.selectSparkMenu().then((_) {
       menuItem.select();
     }).then((_) => dialogTester.dialogAccess.onTransitionComplete.first
-    // Let any other transitions finish before continuing
+        // Let any other transitions finish before continuing
     ).then((_) => new Future.delayed(Duration.ZERO)
     ).then((_) {
       expect(dialogTester.visuallyOpened, true);
@@ -59,7 +59,7 @@ class SparkUITester {
     }).then((_) {
       expect(dialogTester.functionallyOpened, false);
       expect(dialogTester.visuallyOpened, false);
-    // Let any other transitions finish before continuing
+      // Let any other transitions finish before continuing
     }).then((_) => new Future.delayed(Duration.ZERO));
   }
 
