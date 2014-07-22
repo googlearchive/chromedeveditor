@@ -21,7 +21,7 @@ import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';
 import 'navigation.dart';
-import 'package_mgmt/bower.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'platform_info.dart';
 import 'preferences.dart';

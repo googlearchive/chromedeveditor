@@ -7,6 +7,7 @@ library spark.sdk_test;
 import 'package:unittest/unittest.dart';
 
 import '../lib/dart/sdk.dart';
+import '../lib/dart/sdk_app.dart';
 
 DartSdk sdk;
 
@@ -14,7 +15,7 @@ defineTests() {
   group('sdk', () {
     setUp(() {
       if (sdk == null) {
-        return DartSdk.createSdk().then((result) {
+        return createSdk().then((result) {
           sdk = result;
         });
       }

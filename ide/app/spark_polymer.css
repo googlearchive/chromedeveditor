@@ -356,11 +356,75 @@ button.ace_searchbtn.prev:hover {
   border-top: 1px solid #ddd;
 }
 
+.search-result-line {
+  color: #888;
+  font-size: 10px;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.search-max-results {
+  color: #888;
+  font-size: 12px;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  text-align: center;
+  top: 10px;
+  white-space: nowrap;
+  width: 100%;
+}
+
+#searchViewArea.hidden, #fileViewArea.hidden {
+  display: none;
+}
+
+#searchViewArea {
+  background-color: #eee;
+  bottom: 48px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 48px;
+}
+
+#searchViewArea .listview-container {
+  bottom: 0;
+  left: 0;
+  outline: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+#searchViewPlaceholder, #searchViewNoResult {
+  background-color: #eee;
+  bottom: 48px;
+  color: #ccc;
+  font-size: 18px;
+  left: 0;
+  padding-top: 60px;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 48px;
+}
+
+#searchViewPlaceholder.hidden, #searchViewNoResult.hidden {
+  display: none;
+}
+
 #fileViewArea {
   bottom: 48px;
+  left: 0;
   position: absolute;
+  right: 0;
   top: 48px;
-  width: 100%;
 }
 
 #fileViewArea .listview-container {

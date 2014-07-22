@@ -15,12 +15,9 @@
  */
 library spark.sdk;
 
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:archive/archive.dart' as archive;
-
-import '../utils.dart';
 
 /**
  * This class represents the Dart SDK as build into Spark. It allows you to
@@ -31,32 +28,19 @@ class DartSdk extends SdkDirectory {
   List<int> _contents;
   SdkDirectory _libDirectory;
 
-  /**
-   * Create a return a [DartSdk]. Generally, an application will only have one
-   * of these object's instantiated. They are however relatively lightweight
-   * objects.
-   */
-  static Future<DartSdk> createSdk() {
-    return getAppContentsBinary('sdk/dart-sdk.bz').then((List<int> contents) {
-      return new DartSdk._withContents(contents);
-    }).catchError((e) {
-      return new DartSdk._fromVersion('');
-    });
-  }
-
   static DartSdk createSdkFromContents(List<int> contents) {
-    return new DartSdk._withContents(contents);
+    return new DartSdk.withContents(contents);
   }
 
   String get version => _version;
 
   DartSdk get sdk => this;
 
-  DartSdk._withContents(this._contents): super._(null, 'sdk') {
+  DartSdk.withContents(this._contents): super._(null, 'sdk') {
     _parseArchive();
   }
 
-  DartSdk._fromVersion(this._version): super._(null, 'sdk') {
+  DartSdk.fromVersion(this._version): super._(null, 'sdk') {
     _libDirectory = _getCreateDir('lib');
   }
 

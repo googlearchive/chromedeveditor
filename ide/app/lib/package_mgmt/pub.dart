@@ -38,15 +38,14 @@ class PubProperties extends PackageServiceProperties {
   // This will get both the "package:foo/bar.dart" variant when used directly
   // in Dart and the "baz/packages/foo/bar.dart" variant when served over HTTP.
   RegExp get packageRefPrefixRegexp =>
-     new RegExp(r'^(package:|.*/packages/|packages/)(.*)$');
+    new RegExp(r'^(package:|.*/packages/|packages/)(.*)$');
 
   void setSelfReference(Project project, String selfReference) =>
-     project.setMetadata('${packageServiceName}SelfReference', selfReference);
+    project.setMetadata('${packageServiceName}SelfReference', selfReference);
 
   String getSelfReference(Project project) =>
-     project.getMetadata('${packageServiceName}SelfReference');
+    project.getMetadata('${packageServiceName}SelfReference');
 }
-
 
 File findPubspec(Container container) {
   while (container.parent != null && container is! Workspace) {

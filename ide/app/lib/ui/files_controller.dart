@@ -5,7 +5,7 @@
 /**
  * This class implements the controller for the list of files.
  */
-library spark.ui.widgets.files_controller;
+library spark.ui.files_controller;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
@@ -214,7 +214,7 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 40 : 25;
+    return resource is Project ? 40 : FileItemCell.height;
   }
 
   int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
