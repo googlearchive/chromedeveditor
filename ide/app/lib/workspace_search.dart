@@ -33,13 +33,18 @@ abstract class WorkspaceSearchDelegate {
 }
 
 class WorkspaceSearch {
+  static final int maxResultsCount = 1000;
   List<WorkspaceSearchResultItem> results;
   WorkspaceSearchDelegate delegate;
-  bool _cancelled;
+  bool _cancelled = false;
+  bool _reachedMaxResults = false;
+  int _matchesCount = 0;
 
   WorkspaceSearch() {
     results = [];
   }
+
+  bool get reachedMaxResults => _reachedMaxResults;
 
   Future performSearch(Resource res, String token) {
     return _performSearchOnResource(res, token.toLowerCase()).then((_) {
@@ -90,6 +95,12 @@ class WorkspaceSearch {
         if (tokenPosition != -1) {
           matches.add(new WorkspaceSearchResultLine(file, line, lineNumber,
               currentIndex + tokenPosition, token.length));
+          _matchesCount ++;
+          if (_matchesCount >= maxResultsCount) {
+            _reachedMaxResults = true;
+            delegate.workspaceSearchFinished(this);
+            return new Future.error('reachedMaxResults');
+          }
         }
         currentIndex = nextIndex + 1;
         lineNumber ++;

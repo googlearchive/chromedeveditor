@@ -101,7 +101,6 @@ abstract class Spark
   EventBus _eventBus;
 
   FilesController _filesController;
-  bool _searchViewVisible;
   SearchViewController _searchViewController;
 
   // Extensions of files that will be shown as text.
@@ -888,7 +887,7 @@ abstract class Spark
       searchString = null;
     }
 
-    if (_searchViewVisible) {
+    if (_searchViewController.visibility) {
       _filesController.performFilter(null);
       return _searchViewController.performFilter(searchString);
     } else {
@@ -917,7 +916,7 @@ abstract class Spark
         visible ? 'true' : 'false';
     getUIElement('#showFilesView').attributes['checkmark'] =
         !visible ? 'true' : 'false';
-    _searchViewVisible = visible;
+    _searchViewController.visibility = visible;
     _reallyFilterFilesList(searchField.value);
     if (!visible) {
       querySelector('#searchViewPlaceholder').classes.add('hidden');
