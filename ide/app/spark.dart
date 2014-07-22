@@ -141,7 +141,6 @@ abstract class Spark
     createActions();
 
     initFilesController();
-    initSearchController();
 
     initToolbar();
     buildMenu();
@@ -170,6 +169,7 @@ abstract class Spark
         // Location manager might have overridden the Ace-related flags from
         // "<project location>/.spark.json".
         initAceManagers();
+        initSearchController();
       });
     });
   }
@@ -424,6 +424,9 @@ abstract class Spark
     _searchViewController =
         new SearchViewController(workspace, querySelector('#searchViewArea'));
     _searchViewController.delegate = this;
+    if (!SparkFlags.searchInFiles) {
+      getUIElement('#moreSearch').style.display = 'none';
+    }
   }
 
   void initSplitView() {
