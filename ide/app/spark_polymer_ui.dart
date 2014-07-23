@@ -76,9 +76,11 @@ class SparkPolymerUI extends SparkWidget {
   void splitViewPositionChanged() {
     // TODO(ussuri): In deployed code, this was critical for correct
     // propagation of the client's changes in [splitViewPosition] to _splitView.
-    // Investigate.
+    // Investigate. `targetSizeChanged()` is due to BUG #2252.
     if (IS_DART2JS) {
-      _splitView..targetSize = splitViewPosition..targetSizeChanged();
+      _splitView
+          ..targetSize = splitViewPosition
+          ..targetSizeChanged();
     }
   }
 
