@@ -95,12 +95,6 @@ class NavigationManager {
     }
   }
 
-  void _showLocations() {
-    for (var i = 0; i < _locations.length; i++) {
-      print(_locations[i]);
-    }
-  }
-
   void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
     NavigationLocation previousLocation = _editorCurrentLocation;
     if (previousLocation == newLocation) return;
