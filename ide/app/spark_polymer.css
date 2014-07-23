@@ -366,6 +366,10 @@ button.ace_searchbtn.prev:hover {
   width: 100%;
 }
 
+.listview-cell-highlighted .search-result-line {
+  color: #fff;
+}
+
 .search-max-results {
   color: #888;
   font-size: 12px;
