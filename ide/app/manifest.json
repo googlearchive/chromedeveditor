@@ -50,8 +50,23 @@
       "usbDevices": [
         {
           "vendorId": 8888,
+          "productId": 11874,
+          "description": "0x22b8/0x2e62 Moto X (XT1053)"
+        },
+        {
+          "vendorId": 8888,
           "productId": 11875,
-          "description": "0x22b8/0x2e63 Moto X"
+          "description": "0x22b8/0x2e63 Moto X (XT1058)"
+        },
+        {
+          "vendorId": 8888,
+          "productId": 11906,
+          "description": "0x22b8/0x2e76 Moto G (ID1)"
+        },
+        {
+          "vendorId": 8888,
+          "productId": 11894,
+          "description": "0x22b8/0x2e82 Moto G (ID2)"
         },
         {
           "vendorId": 6353,
