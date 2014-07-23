@@ -909,6 +909,8 @@ class MockProjectLocationManager extends ProjectLocationManager {
   Future<LocationResult> createNewFolder(String name) {
     setupRoot();
     return root.createDirectory(name, exclusive: true).then((dir) {
+      dir.createDirectory("deleteme");
+
       return new LocationResult(root, dir, false);
     }).catchError((_) {
       throw "Error creating project '${name}.'";
@@ -2178,7 +2180,7 @@ class NewProjectAction extends SparkActionWithDialog {
       }
 
       ws.WorkspaceRoot root;
-      final locationEntry = location.entry;
+      final DirectoryEntry locationEntry = location.entry;
 
       if (projectLocationManager is MockProjectLocationManager) {
         root = new MockWorkspaceRoot(location.parent, locationEntry.name);
@@ -2226,6 +2228,7 @@ class NewProjectAction extends SparkActionWithDialog {
         }
 
         return new ProjectBuilder(locationEntry, templates).build();
+
 
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
