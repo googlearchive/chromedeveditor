@@ -169,11 +169,15 @@ Future<workspace.Project> linkSampleProject(
   return ws.link(createWsRoot(dir));
 }
 
-MockWorkspaceRoot createWsRoot(Entry entry) => new MockWorkspaceRoot(entry);
+MockWorkspaceRoot createWsRoot(Entry entry) =>
+    new MockWorkspaceRoot(entry, "mock_workspace_root");
 
 class MockWorkspaceRoot extends workspace.WorkspaceRoot {
-  MockWorkspaceRoot(Entry entry) {
-    this.entry = entry;
+  MockWorkspaceRoot(Entry entry, String folderName) {
+    String name;
+
+    MockFileSystem fs = new MockFileSystem();
+    this.entry = fs.createDirectory(folderName);
   }
 
   workspace.Resource createResource(workspace.Workspace ws) {

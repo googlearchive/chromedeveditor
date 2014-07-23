@@ -52,6 +52,7 @@ import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
 import 'test/all.dart' as all_tests;
+import 'test/files_mock.dart';
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
@@ -507,7 +508,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(this).then((manager) {
+    return MockProjectLocationManager.restoreManager(this).then((manager) {
       _projectLocationManager = manager;
     });
   }
@@ -883,6 +884,35 @@ abstract class Spark
     Set<ws.Resource> resources = new Set.from(
         editorManager.files.map((r) => r.project != null ? r.project : r));
     resources.forEach((ws.Resource r) => r.refresh());
+  }
+}
+
+class MockProjectLocationManager extends ProjectLocationManager {
+  DirectoryEntry root;
+  MockProjectLocationManager._(Spark spark) : super._(spark);
+
+  static Future<ProjectLocationManager> restoreManager(Spark spark) {
+    return new Future.value(new MockProjectLocationManager._(spark));
+  }
+
+  void setupRoot() {
+    if (root != null) {
+      return;
+    }
+    MockFileSystem fs = new MockFileSystem();
+    root = fs.createDirectory("root");
+  }
+
+  Future<LocationResult> getProjectLocation() =>
+      new Future.value(new LocationResult(null, null, false));
+
+  Future<LocationResult> createNewFolder(String name) {
+    setupRoot();
+    return root.createDirectory(name, exclusive: true).then((dir) {
+      return new LocationResult(root, dir, false);
+    }).catchError((_) {
+      throw "Error creating project '${name}.'";
+    });
   }
 }
 
@@ -2125,7 +2155,7 @@ class NewProjectAction extends SparkActionWithDialog {
 
   void _invoke([context]) {
     _nameElt.value = '';
-    // Show folder picker, if top-level folder is not set.
+    // Show folder picker if top-level folder is not set.
     spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
@@ -2140,8 +2170,9 @@ class NewProjectAction extends SparkActionWithDialog {
 
     if (name.isEmpty) return;
 
-    spark.projectLocationManager.createNewFolder(name)
-        .then((LocationResult location) {
+    ProjectLocationManager projectLocationManager = spark.projectLocationManager;
+
+    projectLocationManager.createNewFolder(name).then((LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
@@ -2149,7 +2180,9 @@ class NewProjectAction extends SparkActionWithDialog {
       ws.WorkspaceRoot root;
       final locationEntry = location.entry;
 
-      if (location.isSync) {
+      if (projectLocationManager is MockProjectLocationManager) {
+        root = new MockWorkspaceRoot(location.parent, locationEntry.name);
+      } else if (location.isSync) {
         root = new ws.SyncFolderRoot(locationEntry);
       } else {
         root = new ws.FolderChildRoot(location.parent, locationEntry);
