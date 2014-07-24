@@ -94,11 +94,18 @@ class _BowerResolver extends PackageResolver {
   PackageServiceProperties get properties => bowerProperties;
 
   File resolveRefToFile(String url) {
+    Folder folder = project.getChild(bowerProperties.packagesDirName);
+    if (folder == null) return null;
+
     if (url.startsWith('/')) url = url.substring(1);
     if (url.isEmpty) return null;
 
-    Folder folder = project.getChild(bowerProperties.packagesDirName);
-    if (folder == null) return null;
+    if (url.startsWith('../')) {
+      url = url.substring('../'.length);
+    } else if (url.contains('/${bowerProperties.packagesDirName}/')) {
+      String fragment = '/${bowerProperties.packagesDirName}/';
+      url = url.substring(url.indexOf(fragment) + fragment.length);
+    }
 
     return folder.getChildPath(url);
   }

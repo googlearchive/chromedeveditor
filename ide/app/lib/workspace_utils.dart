@@ -11,6 +11,8 @@ import 'package:archive/archive.dart' as archive;
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'dependency.dart';
+import 'package_mgmt/bower.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'workspace.dart';
 
@@ -150,6 +152,17 @@ Resource resolvePath(File file, String path) {
 
     if (pubManager != null) {
       var resolver = pubManager.getResolverFor(file.project);
+      File resolvedFile = resolver.resolveRefToFile(path);
+      if (resolvedFile != null) return resolvedFile;
+    }
+  }
+
+  // Check for a bower reference.
+  if (bowerProperties.isPackageRef(path)) {
+    BowerManager bowerManager = Dependencies.dependency[BowerManager];
+
+    if (bowerManager != null) {
+      var resolver = bowerManager.getResolverFor(file.project);
       File resolvedFile = resolver.resolveRefToFile(path);
       if (resolvedFile != null) return resolvedFile;
     }
