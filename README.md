@@ -1,6 +1,6 @@
 ## Chrome Dev Editor - a developer preview
 
-Chrome Dev Editor (CDE) is a developer tool for building apps on the Chrome platform - [Chrome Apps](https://developer.chrome.com/apps/about_apps) and Web Apps, in JavaScript or [Dart](https://www.dartlang.org/). CDE is built as a Chrome App written in Dart and uses Polymer. CDE runs on Windows, Mac Linux and Chrome OS! CDE supports Git, [Polymer](http://www.polymer-project.org/) and mobile development.
+Chrome Dev Editor (CDE) is a developer tool for building apps on the Chrome platform - [Chrome Apps](https://developer.chrome.com/apps/about_apps) and Web Apps, in JavaScript or [Dart](https://www.dartlang.org/). CDE is built as a Chrome App written in Dart and uses Polymer. CDE runs on Windows, Mac, Linux, and Chrome OS! CDE supports Git, [Polymer](http://www.polymer-project.org/), and mobile development.
 
 <a href="#">
 <img src="https://raw.githubusercontent.com/dart-lang/spark/master/doc/1px.png" width="220" height="0">

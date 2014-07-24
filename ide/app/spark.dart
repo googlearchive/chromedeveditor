@@ -44,8 +44,9 @@ import 'lib/scm.dart';
 import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
-import 'lib/ui/files_controller.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
+import 'lib/ui/files_controller.dart';
+import 'lib/ui/search_view_controller.dart';
 import 'lib/ui/widgets/tabview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
@@ -56,6 +57,7 @@ import 'test/files_mock.dart';
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
+import 'lib/workspace.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -74,7 +76,7 @@ Zone createSparkZone() {
 
 abstract class Spark
     extends SparkModel
-    implements AceManagerDelegate, Notifier {
+    implements AceManagerDelegate, Notifier, SearchViewControllerDelegate {
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
@@ -101,6 +103,7 @@ abstract class Spark
   EventBus _eventBus;
 
   FilesController _filesController;
+  SearchViewController _searchViewController;
 
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
@@ -168,6 +171,24 @@ abstract class Spark
         // Location manager might have overridden the Ace-related flags from
         // "<project location>/.spark.json".
         initAceManagers();
+        initSearchController();
+      });
+    });
+  }
+
+  /**
+   * This method shows the root directory path in the UI element.
+   */
+  Future showRootDirectory() {
+    return localPrefs.getValue('projectFolder').then((folderToken) {
+      if (folderToken == null) {
+        getUIElement('#directoryLabel').text = '';
+        return new Future.value();
+      }
+      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+          getUIElement('#directoryLabel').text = path;
+        });
       });
     });
   }
@@ -309,6 +330,16 @@ abstract class Spark
         }
       });
     });
+    _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+      event =
+          new ResourceChangeEvent.fromList(event.changes, filterRename: true);
+      for (ChangeDelta delta in event.changes) {
+        if (delta.isDelete && delta.resource.isFile) {
+          _navigationManager.removeFile(delta.resource);
+        }
+      }
+    });
+
   }
 
   void _selectLocation(NavigationLocation location) {
@@ -405,6 +436,7 @@ abstract class Spark
         workspace, actionManager, scmManager, eventBus,
         querySelector('#file-item-context-menu'),
         querySelector('#fileViewArea'));
+    _filesController.visibility = true;
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
@@ -416,6 +448,12 @@ abstract class Spark
         .listen((FilesControllerPersistTabEvent event) {
       editorArea.persistTab(event.file);
     });
+  }
+
+  void initSearchController() {
+    _searchViewController =
+        new SearchViewController(workspace, querySelector('#searchViewArea'));
+    _searchViewController.delegate = this;
   }
 
   void initSplitView() {
@@ -484,6 +522,8 @@ abstract class Spark
     actionManager.registerAction(new HistoryAction.forward(this));
     actionManager.registerAction(new ToggleOutlineVisibilityAction(this));
     actionManager.registerAction(new SendFeedbackAction(this));
+    actionManager.registerAction(new ShowSearchView(this));
+    actionManager.registerAction(new ShowFilesView(this));
 
     actionManager.registerKeyListener();
 
@@ -856,7 +896,7 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  Future<bool> filterFilesList(String searchString) {
+  void filterFilesList(String searchString) {
     final completer = new Completer<bool>();
 
     if ( _filterTimer != null) {
@@ -866,14 +906,22 @@ abstract class Spark
 
     _filterTimer = new Timer(new Duration(milliseconds: 500), () {
       _filterTimer = null;
-      completer.complete(_reallyFilterFilesList(searchString));
+      _reallyFilterFilesList(searchString);
     });
-
-    return completer.future;
   }
 
-  bool _reallyFilterFilesList(String searchString) {
-    return _filesController.performFilter(searchString);
+  void _reallyFilterFilesList(String searchString) {
+    if (searchString != null && searchString.length == 0) {
+      searchString = null;
+    }
+
+    if (_searchViewController.visibility) {
+      _filesController.performFilter(null);
+      _searchViewController.performFilter(searchString);
+    } else {
+      _searchViewController.performFilter(null);
+      _filesController.performFilter(searchString);
+    }
   }
 
   void _refreshOpenFiles() {
@@ -884,6 +932,30 @@ abstract class Spark
     Set<ws.Resource> resources = new Set.from(
         editorManager.files.map((r) => r.project != null ? r.project : r));
     resources.forEach((ws.Resource r) => r.refresh());
+  }
+
+  void setSearchViewVisible(bool visible) {
+    InputElement searchField = getUIElement('#fileFilter');
+    querySelector('#searchViewArea').classes.toggle('hidden', !visible);
+    querySelector('#fileViewArea').classes.toggle('hidden', visible);
+    searchField.placeholder =
+        visible ? 'Search in Files' : 'Filter';
+    getUIElement('#showSearchView').attributes['checkmark'] =
+        visible ? 'true' : 'false';
+    getUIElement('#showFilesView').attributes['checkmark'] =
+        !visible ? 'true' : 'false';
+    _searchViewController.visibility = visible;
+    _filesController.visibility = !visible;
+    _reallyFilterFilesList(searchField.value);
+    if (!visible) {
+      querySelector('#searchViewPlaceholder').classes.add('hidden');
+    }
+  }
+
+  // Implementation of SearchViewController
+
+  void searchViewControllerNavigate(SearchViewController controller, NavigationLocation location) {
+    navigationManager.gotoLocation(location);
   }
 }
 
@@ -1002,15 +1074,22 @@ class ProjectLocationManager {
     }*/
 
     // Show a dialog with explaination about what this folder is for.
+    return chooseNewProjectLocation();
+  }
+
+  /**
+   * Opens a pop up and asks the user to change the root directory. Internally,
+   * the stored value is changed here.
+   */
+  Future<LocationResult> chooseNewProjectLocation() {
+    // Show a dialog with explaination about what this folder is for.
     return _showRequestFileSystemDialog().then((bool accepted) {
       if (!accepted) {
         return null;
       }
       // Display a dialog asking the user to choose a default project folder.
       return _selectFolder(suggestedName: 'projects').then((entry) {
-        if (entry == null) {
-          return null;
-        }
+        if (entry == null) return null;
 
         _projectLocation = new LocationResult(entry, entry, false);
         _spark.localPrefs.setValue('projectFolder',
@@ -3635,7 +3714,7 @@ class SettingsAction extends SparkActionWithDialog {
         if (PlatformInfo.isCros) {
           return null;
         } else {
-          return _showRootDirectory();
+          return spark.showRootDirectory();
         }
       })
     ]).then((_) {
@@ -3646,19 +3725,7 @@ class SettingsAction extends SparkActionWithDialog {
     });
   }
 
-  Future _showRootDirectory() {
-    return spark.localPrefs.getValue('projectFolder').then((folderToken) {
-      if (folderToken == null) {
-        getElement('#directoryLabel').text = '';
-        return new Future.value();
-      }
-      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return chrome.fileSystem.getDisplayPath(entry).then((path) {
-          getElement('#directoryLabel').text = path;
-        });
-      });
-    });
-  }
+
 }
 
 class RunTestsAction extends SparkAction {
@@ -3902,6 +3969,23 @@ class SendFeedbackAction extends SparkAction {
 
   void _invoke([context]) {
     window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
+  }
+}
+
+class ShowSearchView extends SparkAction {
+  ShowSearchView(Spark spark)
+      : super(spark, 'show-search-view', 'Search in Files');
+
+  void _invoke([context]) {
+    spark.setSearchViewVisible(true);
+  }
+}
+
+class ShowFilesView extends SparkAction {
+  ShowFilesView(Spark spark) : super(spark, 'show-files-view', 'Filter');
+
+  void _invoke([context]) {
+    spark.setSearchViewVisible(false);
   }
 }
 

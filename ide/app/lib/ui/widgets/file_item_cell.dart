@@ -14,6 +14,7 @@ import 'listview_cell.dart';
 import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
+  static final int height = 25;
   final Resource resource;
   Element _element;
   bool _highlighted;
@@ -27,7 +28,7 @@ class FileItemCell implements ListViewCell {
     if (resource is Project) {
       _element.classes.add('project');
     }
-    fileNameElement.innerHtml = resource.name;
+    fileNameElement.text = resource.name;
     acceptDrop = false;
     updateFileStatus();
 

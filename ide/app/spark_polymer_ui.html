@@ -46,6 +46,28 @@
               on-keydown="{{fileFilterKeydownHandler}}"
               on-input="{{fileFilterInputHandler}}"
               tabindex="0"/>
+          <spark-menu-button
+              id="moreSearch"
+              valueAttr="action-id"
+              arrow="none"
+              on-activate="{{onMenuSelected}}">
+
+            <spark-button highlight="false" style="width: 35px; height: 35px;">
+              <svg id="moreSearchArrow" width="18px" height="18px" viewBox="0 0 24 24">
+                <g><polygon points="7,10 12,15 17,10 "></polygon></g>
+              </svg>
+            </spark-button>
+
+            <spark-menu-item id="showFilesView"
+                             action-id="show-files-view"
+                             label="Filter"
+                             checkmark="true">
+            </spark-menu-item>
+            <spark-menu-item id="showSearchView"
+                             action-id="show-search-view"
+                             label="Search in files">
+            </spark-menu-item>
+          </spark-menu-button>
 
           <spark-button id="runButton" flat round tooltip="Run">
             <svg width="24px" height="24px" viewBox="0 0 24 24">
@@ -98,13 +120,7 @@
           </spark-menu-button>
         </spark-toolbar>
 
-        <content select="#fileViewArea"></content>
-
-        <template if="{{showNoFileFilterMatches}}">
-          <div id="fileNotFoundPlaceholder">
-            No matching files
-          </div>
-        </template>
+        <content select="#leftPanel"></content>
 
         <spark-toolbar id="bottom-toolbar"
             class="toolbar"
@@ -227,8 +243,8 @@
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
-              <option value="web/web_app_polymer_js;polymer,core-elements">
-                JavaScript web app using Polymer
+              <option value="web/web_app_polymer_js">
+                JavaScript web app (using Polymer paper elements)
               </option>
               <option value="web/web_starter_kit">
                 Web Starter Kit
@@ -282,8 +298,8 @@
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
-              <option value="web/web_app_polymer_js;polymer,core-elements">
-                JavaScript web app using Polymer
+              <option value="web/web_app_polymer_js">
+                JavaScript web app (using Polymer paper elements)
               </option>
               <option value="web/web_starter_kit">
                 Web Starter Kit
@@ -552,6 +568,9 @@
               horizontal justify="spaced" spacing="small">
             <label class="settings-label">Root directory:</label>
             <span id="directoryLabel" class="settings-value"></span>
+            <spark-button id="chooseDirectory" on-click="{{onClickRootDirectory}}"
+            class="choose-directory-button">...
+            </spark-button>
           </spark-toolbar>
         </div>
       <!-- /template -->

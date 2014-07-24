@@ -21,7 +21,7 @@ import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';
 import 'navigation.dart';
-import 'package_mgmt/bower.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'platform_info.dart';
 import 'preferences.dart';
@@ -139,6 +139,7 @@ class TextEditor extends Editor {
         selection.offset + selection.length);
 
     aceManager._aceEditor.gotoLine(startSelection.row);
+    aceManager._aceEditor.scrollToLine(startSelection.row, center: true);
 
     ace.Selection aceSel = aceManager._aceEditor.selection;
     aceSel.setSelectionAnchor(startSelection.row, startSelection.column);

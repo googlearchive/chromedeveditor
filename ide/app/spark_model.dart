@@ -14,6 +14,7 @@ import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
+import 'spark.dart';
 
 abstract class SparkModel extends Application {
   static bool _instanceCreated = false;
@@ -33,6 +34,7 @@ abstract class SparkModel extends Application {
   EditorManager get editorManager;
   EditorArea get editorArea;
   ActionManager get actionManager;
+  ProjectLocationManager get projectLocationManager;
 
   EventBus get eventBus;
 
@@ -44,13 +46,12 @@ abstract class SparkModel extends Application {
 
   void onSplitViewUpdate(int position);
   void setGitSettingsResetDoneVisible(bool visible);
+  Future showRootDirectory();
 
   /**
-   * Should filter files in the tree view and return the success of the
-   * operation, i.e. true if matches are found for [filter],
-   * or [filter] is null.
+   * Should filter files in the tree view.
    */
-  Future<bool> filterFilesList(String filter);
+  void filterFilesList(String filter);
 
   /**
    * Hide the splash screen; show the main UI.

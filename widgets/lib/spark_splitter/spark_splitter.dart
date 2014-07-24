@@ -46,8 +46,6 @@ class SparkSplitter extends SparkWidget {
   /// Whether [_target] should be the next or the previous sibling of
   /// the splitter (as determined by [direction], e.g. "left" vs. "right").
   bool _isTargetNextSibling;
-  /// Cached size of [_target] for the period of dragging.
-  int _targetSize;
 
   /// A regexp to get the integer part of the target's computed size.
   // NOTE: returned target sizes look like "953px" most of the time,
@@ -58,6 +56,8 @@ class SparkSplitter extends SparkWidget {
   /// Temporary subsciptions to event streams, active only during dragging.
   StreamSubscription<MouseEvent> _trackSubscr;
   StreamSubscription<MouseEvent> _trackEndSubscr;
+  /// Cached size of [_target] for the period of dragging.
+  int _trackedTargetSize;
 
   /// Constructor.
   SparkSplitter.created() : super.created();
@@ -158,14 +158,14 @@ class SparkSplitter extends SparkWidget {
 
   /// Cache the current actual size of the target.
   void _cacheTargetSize() {
-    _targetSize = _extractTargetSize();
+    _trackedTargetSize = _extractTargetSize();
   }
 
   /// Update the cached and the actual size of the target.
   void _updateTargetSize(int delta) {
-    _targetSize += (_isTargetNextSibling ? -delta : delta);
-    _targetSize = _targetSize.clamp(minTargetSize, maxTargetSize);
-    _commitTargetSize(_targetSize);
+    _trackedTargetSize += (_isTargetNextSibling ? -delta : delta);
+    _trackedTargetSize = _trackedTargetSize.clamp(minTargetSize, maxTargetSize);
+    _commitTargetSize(_trackedTargetSize);
   }
 
   /// When dragging starts, cache the target's size and temporarily subscribe
@@ -208,11 +208,11 @@ class SparkSplitter extends SparkWidget {
 
     // Set the published attribute to the current actual target size and notify
     // clients.
-    targetSize = _targetSize;
-    asyncFire('update', detail: {'targetSize': _targetSize});
+    targetSize = _trackedTargetSize;
+    asyncFire('update', detail: {'targetSize': _trackedTargetSize});
 
     // Prevent possible wrong use of the cached value.
-    _targetSize = null;
+    _trackedTargetSize = null;
 
     classes.remove('active');
   }

@@ -26,10 +26,6 @@ Logger _logger = new Logger('spark.pub');
 final PubProperties pubProperties = new PubProperties();
 
 class PubProperties extends PackageServiceProperties {
-  //
-  // PackageServiceProperties virtual interface:
-  //
-
   String get packageServiceName => 'pub';
   String get packageSpecFileName => 'pubspec.yaml';
   String get packagesDirName => 'packages';
@@ -38,15 +34,14 @@ class PubProperties extends PackageServiceProperties {
   // This will get both the "package:foo/bar.dart" variant when used directly
   // in Dart and the "baz/packages/foo/bar.dart" variant when served over HTTP.
   RegExp get packageRefPrefixRegexp =>
-     new RegExp(r'^(package:|.*/packages/|packages/)(.*)$');
+    new RegExp(r'^(package:|.*/packages/|packages/)(.*)$');
 
   void setSelfReference(Project project, String selfReference) =>
-     project.setMetadata('${packageServiceName}SelfReference', selfReference);
+    project.setMetadata('${packageServiceName}SelfReference', selfReference);
 
   String getSelfReference(Project project) =>
-     project.getMetadata('${packageServiceName}SelfReference');
+    project.getMetadata('${packageServiceName}SelfReference');
 }
-
 
 File findPubspec(Container container) {
   while (container.parent != null && container is! Workspace) {
@@ -68,10 +63,6 @@ class PubManager extends PackageManager {
    */
   PubManager(Workspace workspace) : super(workspace);
 
-  //
-  // PackageManager abstract interface:
-  //
-
   PackageServiceProperties get properties => pubProperties;
 
   void setSelfReference(Project project, String selfReference) {
@@ -83,7 +74,8 @@ class PubManager extends PackageManager {
 
   PackageBuilder getBuilder() => new _PubBuilder(this);
 
-  PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
+  PackageResolver getResolverFor(Project project) =>
+      new _PubResolver._(this, project);
 
   // Don't run pub on Windows: https://github.com/dart-lang/chromedeveditor/issues/2743
   bool canRunPub(Folder project) => pubProperties.isFolderWithPackages(project) && !PlatformInfo.isWin;
@@ -115,10 +107,6 @@ class PubManager extends PackageManager {
     }
     return new Future.value();
   }
-
-  //
-  // - end PackageManager abstract interface.
-  //
 
   Future _installUpgradePackages(
       Folder container,
@@ -184,13 +172,15 @@ class PubDecorator extends Decorator {
  * A class to help resolve pub `package:` references.
  */
 class _PubResolver extends PackageResolver {
+  final PubManager manager;
   final Project project;
 
-  _PubResolver._(this.project);
-
-  //
-  // PackageResolver virtual interface:
-  //
+  _PubResolver._(this.manager, this.project) {
+    // We calculate the pubspec.yaml self-reference name as each project is
+    // initially touched / opened. We do this as a workaround for the workspace
+    // meta-data not persisting (#1578).
+    _calcSelfReference();
+  }
 
   PackageServiceProperties get properties => pubProperties;
 
@@ -256,6 +246,19 @@ class _PubResolver extends PackageResolver {
     }
   }
 
+  Future _calcSelfReference() {
+    Resource file = project.getChild(properties.packageSpecFileName);
+
+    if (file is! File) return new Future.value();
+
+    return (file as File).getContents().then((String str) {
+      try {
+        _PubSpecInfo info = new _PubSpecInfo.parse(str);
+        manager.setSelfReference(file.project, info.name);
+      } catch (e) { }
+    });
+  }
+
   String toString() => 'Pub resolver for ${project}';
 }
 
@@ -269,10 +272,6 @@ class _PubBuilder extends PackageBuilder {
   final PubManager _pubManager;
 
   _PubBuilder(this._pubManager);
-
-  //
-  // PackageBuilder virtual interface:
-  //
 
   PackageServiceProperties get properties => pubProperties;
 
@@ -313,10 +312,6 @@ class _PubBuilder extends PackageBuilder {
 
     return new Future.value();
   }
-
-  //
-  // - PackageBuilder virtual interface.
-  //
 
   Future _analyzePubspec(File file) {
     file.clearMarkers(_packageServiceName);
