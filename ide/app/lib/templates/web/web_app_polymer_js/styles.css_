@@ -46,9 +46,6 @@ paper-fab {
   position: absolute !important;
   top: 35px;
   right: 1em;
-}
-
-paper-fab[higher] {
   z-index: 1;
 }
 
