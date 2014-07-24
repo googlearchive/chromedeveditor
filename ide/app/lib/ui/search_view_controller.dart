@@ -13,7 +13,6 @@ import 'dart:html' as html;
 import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 
-import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
@@ -33,6 +32,18 @@ class SearchResultLineCell implements ListViewCell {
     // TODO: ellipsis should be added on the left in case the matching term is
     // is further on the right.
     element.text = '${line.lineNumber}: ${line.line}';
+  }
+}
+
+class SearchResultFileCell implements ListViewCell {
+  html.Element element = null;
+  bool acceptDrop = false;
+  bool highlighted = false;
+
+  SearchResultFileCell(String filename) {
+    element = new html.DivElement();
+    element.classes.add('search-result-file');
+    element.text = '${filename}';
   }
 }
 
@@ -215,7 +226,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
     if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
-      return new FileItemCell(item.file);
+      return new SearchResultFileCell(item.file.name);
     } else if (_linesMap[nodeUid] != null) {
       WorkspaceSearchResultLine lineInfo = _linesMap[nodeUid];
       return new SearchResultLineCell(lineInfo);
@@ -228,11 +239,11 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     if (_filesMap[nodeUid] != null) {
-      return FileItemCell.height;
+      return 40;
     } else if (nodeUid == reachedMaxResultsCellUid) {
       return 50;
     } else {
-      return 18;
+      return 25;
     }
   }
 
@@ -283,5 +294,5 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   void treeViewSaveExpandedState(TreeView view) {}
   html.Element treeViewSeparatorForNode(TreeView view, String nodeUID) => null;
   int treeViewSeparatorHeightForNode(TreeView view, String nodeUID) => 1;
-  int treeViewDisclosurePositionForNode(TreeView view, String nodeUID) => 2;
+  int treeViewDisclosurePositionForNode(TreeView view, String nodeUID) => 12;
 }

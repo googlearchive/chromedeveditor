@@ -358,15 +358,27 @@ button.ace_searchbtn.prev:hover {
 
 .search-result-line {
   color: #888;
-  font-size: 10px;
+  font-size: 13px;
   overflow: hidden;
   position: absolute;
   text-overflow: ellipsis;
+  top: 2px;
   white-space: nowrap;
   width: 100%;
 }
 
-.listview-cell-highlighted .search-result-line {
+.search-result-file {
+  font-size: 16px;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 10px;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.listview-cell-highlighted .search-result-line,
+.listview-cell-highlighted .search-result-file {
   color: #fff;
 }
 
