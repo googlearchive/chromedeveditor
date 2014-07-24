@@ -49,11 +49,9 @@ abstract class SparkModel extends Application {
   Future showRootDirectory();
 
   /**
-   * Should filter files in the tree view and return the success of the
-   * operation, i.e. true if matches are found for [filter],
-   * or [filter] is null.
+   * Should filter files in the tree view.
    */
-  Future<bool> filterFilesList(String filter);
+  void filterFilesList(String filter);
 
   /**
    * Hide the splash screen; show the main UI.

@@ -38,8 +38,6 @@ class SparkPolymerUI extends SparkWidget {
   // not break the app.
   @observable bool showWipProjectTemplates = false;
 
-  @observable bool showNoFileFilterMatches = false;
-
   SparkSplitView _splitView;
   InputElement _fileFilter;
 
@@ -161,24 +159,16 @@ class SparkPolymerUI extends SparkWidget {
       e..preventDefault()..stopPropagation();
       _fileFilter.value = '';
       _updateFileFilterActive(false);
-      _updateFileFilterNoMatches(false);
       _model.filterFilesList(null);
     }
   }
 
   void fileFilterInputHandler(Event e) {
     _updateFileFilterActive(_fileFilter.value.isNotEmpty);
-    _model.filterFilesList(_fileFilter.value).then((bool matchesFound) {
-      _updateFileFilterNoMatches(!matchesFound);
-    });
+    _model.filterFilesList(_fileFilter.value);
   }
 
   void _updateFileFilterActive(bool active) {
     _fileFilter.classes.toggle('active', active);
-  }
-
-  void _updateFileFilterNoMatches(bool showNoMatchesFound) {
-    showNoFileFilterMatches = showNoMatchesFound;
-    deliverChanges();
   }
 }
