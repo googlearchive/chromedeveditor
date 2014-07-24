@@ -88,7 +88,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     _statusComponent = ui.getShadowDomElement('#sparkStatus');
   }
 
-  bool performFilter(String filterString) {
+  void performFilter(String filterString) {
     if (_search != null) {
       _statusComponent.spinning = false;
       _statusComponent.progressMessage = null;
@@ -110,8 +110,6 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     }
 
     _updateResultsNow();
-
-    return true;
   }
 
   void workspaceSearchFile(WorkspaceSearch search, File file) {

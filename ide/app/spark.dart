@@ -435,6 +435,7 @@ abstract class Spark
         workspace, actionManager, scmManager, eventBus,
         querySelector('#file-item-context-menu'),
         querySelector('#fileViewArea'));
+    _filesController.visibility = true;
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
@@ -452,9 +453,6 @@ abstract class Spark
     _searchViewController =
         new SearchViewController(workspace, querySelector('#searchViewArea'));
     _searchViewController.delegate = this;
-    if (!SparkFlags.searchInFiles) {
-      getUIElement('#moreSearch').style.display = 'none';
-    }
   }
 
   void initSplitView() {
@@ -897,7 +895,7 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  Future<bool> filterFilesList(String searchString) {
+  void filterFilesList(String searchString) {
     final completer = new Completer<bool>();
 
     if ( _filterTimer != null) {
@@ -907,23 +905,21 @@ abstract class Spark
 
     _filterTimer = new Timer(new Duration(milliseconds: 500), () {
       _filterTimer = null;
-      completer.complete(_reallyFilterFilesList(searchString));
+      _reallyFilterFilesList(searchString);
     });
-
-    return completer.future;
   }
 
-  bool _reallyFilterFilesList(String searchString) {
+  void _reallyFilterFilesList(String searchString) {
     if (searchString != null && searchString.length == 0) {
       searchString = null;
     }
 
     if (_searchViewController.visibility) {
       _filesController.performFilter(null);
-      return _searchViewController.performFilter(searchString);
+      _searchViewController.performFilter(searchString);
     } else {
       _searchViewController.performFilter(null);
-      return _filesController.performFilter(searchString);
+      _filesController.performFilter(searchString);
     }
   }
 
@@ -948,6 +944,7 @@ abstract class Spark
     getUIElement('#showFilesView').attributes['checkmark'] =
         !visible ? 'true' : 'false';
     _searchViewController.visibility = visible;
+    _filesController.visibility = !visible;
     _reallyFilterFilesList(searchField.value);
     if (!visible) {
       querySelector('#searchViewPlaceholder').classes.add('hidden');
