@@ -27,7 +27,7 @@
     <core-toolbar>
       <paper-icon-button icon="menu"></paper-icon-button>
       <span flex>``projectName`` toolbar</span>
-      <paper-fab icon="add" raised></paper-fab>
+      <paper-fab icon="add" higher></paper-fab>
     </core-toolbar>
 
     <section>

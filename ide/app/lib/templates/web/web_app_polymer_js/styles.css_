@@ -48,7 +48,7 @@ paper-fab {
   right: 1em;
 }
 
-paper-fab[raised] {
+paper-fab[higher] {
   z-index: 1;
 }
 
