@@ -12,6 +12,7 @@ import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
+import 'package:logging/logging.dart';
 
 import 'html_utils.dart';
 import 'widgets/file_item_cell.dart';
@@ -26,6 +27,8 @@ import '../event_bus.dart';
 import '../preferences.dart' as preferences;
 import '../scm.dart';
 import '../workspace.dart';
+
+Logger _logger = new Logger('spark.files_controller');
 
 /**
  * An event that is sent to indicate the user would like to select a given
@@ -201,8 +204,8 @@ class FilesController implements TreeViewDelegate {
   ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
     if (resource == null) {
-      print('no resource for ${nodeUid}');
-      assert(resource != null);
+      _logger.warning('no resource for ${nodeUid}');
+      return null;
     }
     FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
