@@ -80,11 +80,10 @@ class NavigationManager {
    * This method checks if it has the currently closing file in the navigation history
    * If it does it deletes it from the list.
    */
-  void deleteLocation(File file) {
-    NavigationLocation toDelete = new NavigationLocation(file);
+  void removeFile(File file) {
     var len = _locations.length;
     for (var i = 0; i < len; i++) {
-      if (_locations[i].compare(toDelete)) {
+      if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
         _locations.removeAt(i) ;
         if (i < _position) {
           _position--;
@@ -134,10 +133,6 @@ class NavigationLocation {
   bool operator==(NavigationLocation other) {
     if (other is! NavigationLocation) return false;
     return file == other.file && selection == other.selection;
-  }
-
-  bool compare(NavigationLocation other) {
-    return (file.path == other.file.path) && (file.name == other.file.name);
   }
 
   String toString() => selection == null ? '[${file}]' : '[${file}, ${selection}]';

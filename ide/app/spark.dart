@@ -335,7 +335,7 @@ abstract class Spark
           new ResourceChangeEvent.fromList(event.changes, filterRename: true);
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete && delta.resource.isFile) {
-          _navigationManager.deleteLocation(delta.resource);
+          _navigationManager.removeFile(delta.resource);
         }
       }
     });
