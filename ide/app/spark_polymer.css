@@ -406,7 +406,7 @@ button.ace_searchbtn.prev:hover {
   top: 0;
 }
 
-#searchViewPlaceholder, #searchViewNoResult {
+#searchViewPlaceholder, #searchViewNoResult, #fileViewFilterNoResult {
   background-color: #eee;
   bottom: 48px;
   color: #ccc;
@@ -419,7 +419,8 @@ button.ace_searchbtn.prev:hover {
   top: 48px;
 }
 
-#searchViewPlaceholder.hidden, #searchViewNoResult.hidden {
+#searchViewPlaceholder.hidden, #searchViewNoResult.hidden,
+#fileViewFilterNoResult.hidden {
   display: none;
 }
 

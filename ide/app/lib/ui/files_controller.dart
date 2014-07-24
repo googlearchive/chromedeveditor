@@ -80,6 +80,7 @@ class FilesController implements TreeViewDelegate {
   Map<String, List<String>> _filteredChildrenCache;
   // Expanded state when no search filter is applied.
   List<String> _currentExpandedState = [];
+  bool visibility = false;
 
   DecoratorManager _decoratorManager;
 
@@ -959,7 +960,7 @@ class FilesController implements TreeViewDelegate {
    * true if matches are found. If [filterString] is null, cancells all
    * filtering and returns true.
    */
-  bool performFilter(String filterString) {
+  void performFilter(String filterString) {
     if (filterString != null && filterString.length < 2) {
       filterString = null;
     }
@@ -968,7 +969,7 @@ class FilesController implements TreeViewDelegate {
       _filteredFiles = null;
       _filteredChildrenCache = null;
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
-      return true;
+      _setShowNoResults(false);
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
@@ -987,7 +988,12 @@ class FilesController implements TreeViewDelegate {
       });
 
       _reloadDataAndRestoreExpandedState(filtered.toList());
-      return _filteredFiles.isNotEmpty;
+      _setShowNoResults(_filteredFiles.isEmpty);
     }
+  }
+
+  void _setShowNoResults(bool visible) {
+    html.querySelector('#fileViewFilterNoResult').classes.toggle('hidden',
+        !visible || !visibility);
   }
 }
