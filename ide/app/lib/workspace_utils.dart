@@ -120,6 +120,17 @@ bool isUpToDate(File targetFile, Resource sourceFiles, [Function filter]) {
 
   int timestamp = targetFile.timestamp;
 
+  return isUpToDateTimestamp(timestamp, sourceFiles, filter);
+}
+
+/**
+ * Returns whether the given timestamp is up to date with respect to the source
+ * file(s). An optional filter will cause only files that match the filter to be
+ * checked.
+ *
+ * Returns `true` if timestamp is not older then any source file.
+ */
+bool isUpToDateTimestamp(int timestamp, Resource sourceFiles, [Function filter]) {
   Iterable files = sourceFiles.traverse(includeDerived: false).where((Resource resource) {
     if (resource is File) {
       return filter == null ? true : filter(resource);
