@@ -83,6 +83,9 @@ class BowerManager extends PackageManager {
  * A package resolver for Bower.
  */
 class _BowerResolver extends PackageResolver {
+  static final PACKAGE_REF_PREFIX_RE =
+      new RegExp('^(../|.*/${bowerProperties.packagesDirName}/)');
+
   final Project project;
 
   _BowerResolver._(this.project);
@@ -97,15 +100,8 @@ class _BowerResolver extends PackageResolver {
     Folder folder = project.getChild(bowerProperties.packagesDirName);
     if (folder == null) return null;
 
-    if (url.startsWith('/')) url = url.substring(1);
     if (url.isEmpty) return null;
-
-    if (url.startsWith('../')) {
-      url = url.substring('../'.length);
-    } else if (url.contains('/${bowerProperties.packagesDirName}/')) {
-      String fragment = '/${bowerProperties.packagesDirName}/';
-      url = url.substring(url.indexOf(fragment) + fragment.length);
-    }
+    url = url.replaceFirst(PACKAGE_REF_PREFIX_RE, '');
 
     return folder.getChildPath(url);
   }

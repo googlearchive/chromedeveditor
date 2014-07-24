@@ -151,7 +151,7 @@ Resource resolvePath(File file, String path) {
     PubManager pubManager = Dependencies.dependency[PubManager];
 
     if (pubManager != null) {
-      var resolver = pubManager.getResolverFor(file.project);
+      final resolver = pubManager.getResolverFor(file.project);
       File resolvedFile = resolver.resolveRefToFile(path);
       if (resolvedFile != null) return resolvedFile;
     }
@@ -162,7 +162,7 @@ Resource resolvePath(File file, String path) {
     BowerManager bowerManager = Dependencies.dependency[BowerManager];
 
     if (bowerManager != null) {
-      var resolver = bowerManager.getResolverFor(file.project);
+      final resolver = bowerManager.getResolverFor(file.project);
       File resolvedFile = resolver.resolveRefToFile(path);
       if (resolvedFile != null) return resolvedFile;
     }
