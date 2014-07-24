@@ -12,7 +12,7 @@
     <p>Hello world from Dart!</p>
 
     <div id='container_id'>
-      <p id='text_id'>Click me!</p>
+      <p id='text_id'>Click me <span id='count'></span>!</p>
     </div>
 
     <script src="packages/chrome/bootstrap.js" defer></script>
