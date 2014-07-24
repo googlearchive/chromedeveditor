@@ -452,9 +452,6 @@ abstract class Spark
     _searchViewController =
         new SearchViewController(workspace, querySelector('#searchViewArea'));
     _searchViewController.delegate = this;
-    if (!SparkFlags.searchInFiles) {
-      getUIElement('#moreSearch').style.display = 'none';
-    }
   }
 
   void initSplitView() {
