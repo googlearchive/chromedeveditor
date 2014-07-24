@@ -2178,10 +2178,10 @@ class NewProjectAction extends SparkActionWithDialog {
       }
 
       ws.WorkspaceRoot root;
-      final locationEntry = location.entry;
+      final DirectoryEntry locationEntry = location.entry;
 
       if (projectLocationManager is MockProjectLocationManager) {
-        root = new MockWorkspaceRoot(location.parent, locationEntry.name);
+        root = new MockWorkspaceRoot(locationEntry);
       } else if (location.isSync) {
         root = new ws.SyncFolderRoot(locationEntry);
       } else {
@@ -2226,7 +2226,6 @@ class NewProjectAction extends SparkActionWithDialog {
         }
 
         return new ProjectBuilder(locationEntry, templates).build();
-
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
