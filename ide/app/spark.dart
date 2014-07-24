@@ -56,6 +56,7 @@ import 'test/all.dart' as all_tests;
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
+import 'lib/workspace.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -328,6 +329,16 @@ abstract class Spark
         }
       });
     });
+    _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+      event =
+          new ResourceChangeEvent.fromList(event.changes, filterRename: true);
+      for (ChangeDelta delta in event.changes) {
+        if (delta.isDelete && delta.resource.isFile) {
+          _navigationManager.removeFile(delta.resource);
+        }
+      }
+    });
+
   }
 
   void _selectLocation(NavigationLocation location) {

@@ -76,6 +76,24 @@ class NavigationManager {
     _position++;
   }
 
+  /**
+   * This method checks if it has the currently closing file in the navigation history
+   * If it does it deletes it from the list.
+   */
+  void removeFile(File file) {
+    var len = _locations.length;
+    for (var i = 0; i < len; i++) {
+      if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
+        _locations.removeAt(i) ;
+        if (i < _position) {
+          _position--;
+        }
+        i--;
+        len--;
+      }
+    }
+  }
+
   void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
     NavigationLocation previousLocation = _editorCurrentLocation;
     if (previousLocation == newLocation) return;
@@ -92,7 +110,6 @@ class NavigationManager {
         _locations.add(previousLocation);
       }
     }
-
     _position++;
     _locations.add(newLocation);
 
