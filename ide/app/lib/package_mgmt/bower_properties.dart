@@ -24,7 +24,11 @@ class BowerProperties extends PackageServiceProperties {
 
   String get libDirName => null;
   String get packageRefPrefix => null;
-  RegExp get packageRefPrefixRegexp => null;
+
+  // This will get both the "../" variant and the
+  // "baz/bower_components/foo/bar.dart" variant when served over HTTP.
+  RegExp get packageRefPrefixRegexp =>
+      new RegExp('^(\\.\\./|.*/${packagesDirName}/)(.*)\$');
 
   void setSelfReference(Project project, String selfReference) {}
   String getSelfReference(Project project) => null;
