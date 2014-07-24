@@ -888,28 +888,36 @@ abstract class Spark
 }
 
 class MockProjectLocationManager extends ProjectLocationManager {
-  DirectoryEntry root;
+  LocationResult _projectLocation;
   MockProjectLocationManager._(Spark spark) : super._(spark);
 
   static Future<ProjectLocationManager> restoreManager(Spark spark) {
     return new Future.value(new MockProjectLocationManager._(spark));
   }
 
-  void setupRoot() {
-    if (root != null) {
-      return;
+  Future setupRoot() {
+    if (_projectLocation != null) {
+      return new Future.value(_projectLocation);
     }
     MockFileSystem fs = new MockFileSystem();
-    root = fs.createDirectory("root");
+    DirectoryEntry rootParent = fs.createDirectory("rootParent");
+    return rootParent.createDirectory("root").then((DirectoryEntry root) {
+      _projectLocation = new LocationResult(rootParent, root, false);
+    });
   }
 
-  Future<LocationResult> getProjectLocation() =>
-      new Future.value(new LocationResult(null, null, false));
+  Future<LocationResult> getProjectLocation() {
+    if (_projectLocation == null) {
+      return super.getProjectLocation();
+    } else {
+      return new Future.value(_projectLocation);
+    }
+  }
 
   Future<LocationResult> createNewFolder(String name) {
-    setupRoot();
-    return root.createDirectory(name, exclusive: true).then((dir) {
-      return new LocationResult(root, dir, false);
+//    setupRoot();
+    return _projectLocation.entry.createDirectory(name, exclusive: true).then((dir) {
+      return new LocationResult(_projectLocation.entry, dir, false);
     }).catchError((_) {
       throw "Error creating project '${name}.'";
     });
@@ -2156,9 +2164,14 @@ class NewProjectAction extends SparkActionWithDialog {
   void _invoke([context]) {
     _nameElt.value = '';
     // Show folder picker if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+    ProjectLocationManager locationManager = spark.projectLocationManager;
+    locationManager.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
+      } else {
+        if (locationManager is MockProjectLocationManager) {
+          locationManager.setupRoot();
+        }
       }
     });
   }
