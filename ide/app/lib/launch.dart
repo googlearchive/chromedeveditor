@@ -876,7 +876,7 @@ class BowerPackagesServlet extends PicoServlet {
 
     if (!bowerManager.properties.isFolderWithPackages(project)) return null;
 
-    String url = request.uri.path;
+    String url = _getPath(request);
     File file = bowerManager.getResolverFor(project).resolveRefToFile(url);
     return file;
   }
@@ -1043,14 +1043,21 @@ class Dart2JsServlet extends PicoServlet {
             '${result.output.length ~/ 1024} kb');
         HttpResponse response = new HttpResponse.ok();
         response.setContent(result.output);
-        response.setContentTypeFrom(request.uri.path);
+        response.setContentTypeFrom(_getPath(request));
         return response;
       }
     }).whenComplete(() => completer.complete());
   }
 }
 
-String _getPath(HttpRequest request) => request.uri.pathSegments.join('/');
+/**
+ * Return the [HttpRequest]'s uri with any query parameters stripped off.
+ */
+String _getPath(HttpRequest request) {
+  String path = request.uri.pathSegments.join('/');
+  int index = path.indexOf('?');
+  return index == -1 ? path : path.substring(0, index);
+}
 
 /**
  * Get user disaplyable text for the given error.
