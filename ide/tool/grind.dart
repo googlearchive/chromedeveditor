@@ -154,8 +154,15 @@ Future releaseNightly(GrinderContext context) {
     }
   });
 
-  if (channel == null || _getRepositoryUrl() != MAIN_REPOSITORY_URL) {
+  if (_getRepositoryUrl() != MAIN_REPOSITORY_URL) {
+    // Unexpected situation. Don't try to upload a fork to the web store.
     context.fail("Spark can't be released from here.");
+  }
+
+  if (channel == null) {
+    // This branch is not part of any channel.
+    context.log("Spark can't be released from here.");
+    return;
   }
   String appID = channelConfig['id'];
 
@@ -163,7 +170,8 @@ Future releaseNightly(GrinderContext context) {
   String version =
       _modifyManifestWithDroneIOBuildNumber(context, channelConfig);
   _modifyLocaleWithChannelConfig(context, channelConfig);
-  context.log('Building for channel ${buildBranchName} ${channel}, version ${version}, app ID ${appID}');
+  context.log('Building branch ${buildBranchName}, channel ${channel}, version ${version}');
+  context.log('Uploading app ID ${appID} to the Chrome Web Store');
 
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
