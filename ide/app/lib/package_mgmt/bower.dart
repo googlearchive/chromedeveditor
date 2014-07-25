@@ -73,7 +73,7 @@ class BowerManager extends PackageManager {
         _logger.severe('Error getting Bower packages', e);
         return new Future.error(e);
       }).then((_) {
-        return container.refresh();
+        return Timer.run(() => container.refresh());
       });
     });
   }
