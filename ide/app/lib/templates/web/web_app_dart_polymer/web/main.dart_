@@ -1,0 +1,20 @@
+
+import 'dart:html';
+
+import 'package:paper_elements/paper_toast.dart';
+import 'package:polymer/polymer.dart' as polymer;
+
+void main() {
+  // Init polymer.
+  polymer.initPolymer();
+  
+  // Register the [PaperToast] class as `<paper-toast>`.
+  upgradePaperToast();
+  
+  // On a button click, open a new toast.
+  var button = querySelector('#toastButton');
+  button.onClick.listen((event) {
+    var toast = querySelector('#toast');
+    toast.show();
+  });
+}
