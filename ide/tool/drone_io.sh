@@ -16,6 +16,9 @@ pub get
 
 # Build the archive.
 if test x$DRONE_REPO_SLUG = xgithub.com/dart-lang/spark -o x$FORCE_NIGHTLY = xyes ; then
+  # Retrieve configuration from the master branch
+  curl -o tool/release-config.json \
+      https://raw.githubusercontent.com/dart-lang/chromedeveditor/master/ide/tool/release-config.json
   ./grind release-nightly
 else
   ./grind archive
