@@ -73,6 +73,8 @@ class BowerManager extends PackageManager {
         _logger.severe('Error getting Bower packages', e);
         return new Future.error(e);
       }).then((_) {
+        // Delay refreshing of the folder until after Bower is completely done.
+        // This is needed to fix BUG #2946.
         return Timer.run(() => container.refresh());
       });
     });
