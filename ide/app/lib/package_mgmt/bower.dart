@@ -103,6 +103,8 @@ class _BowerResolver extends PackageResolver {
     if (url.isEmpty) return null;
     url = url.replaceFirst(PACKAGE_REF_PREFIX_RE, '');
 
+    if (url.startsWith('/')) url = url.substring(1);
+
     return folder.getChildPath(url);
   }
 
