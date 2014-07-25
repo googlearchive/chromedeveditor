@@ -2,7 +2,7 @@
   "dev": {
     "name": "Spark (dev)",
     "branch": "0.14",
-    "version": "0.14.0",
+    "version": "0.14.2",
     "id": "hpenkfongmodpaiknffeeeohcoilclii",
     "description": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform - dev version"
   },
