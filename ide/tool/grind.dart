@@ -13,7 +13,7 @@ import 'package:path/path.dart' as path;
 
 import 'webstore_client.dart';
 
-const String MAIN_REPOSITORY_URL = 'https://github.com/dart-lang/spark.git';
+const String MAIN_REPOSITORY_URL = 'git://github.com/dart-lang/spark.git';
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
