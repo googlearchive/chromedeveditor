@@ -336,12 +336,27 @@ class AnalyzerServiceImpl extends ServiceImpl {
     analyzer.AstNode node =
         new analyzer.NodeLocator.con1(offset).searchWithin(ast);
 
+    // Handle imports.
     if (node is analyzer.SimpleStringLiteral &&
         node.parent is analyzer.ImportDirective) {
       analyzer.SimpleStringLiteral importString = node;
       analyzer.ImportDirective importNode = node.parent;
       if (importNode.source is analyzer.FileSource) {
         analyzer.FileSource fileSource = importNode.source;
+        return new SourceDeclaration(importString.value, fileSource.uuid, 0, 0);
+      } else {
+        // TODO(ericarnold): Handle SDK import
+        return null;
+      }
+    }
+
+    // Handle exports.
+    if (node is analyzer.SimpleStringLiteral &&
+        node.parent is analyzer.ExportDirective) {
+      analyzer.SimpleStringLiteral importString = node;
+      analyzer.ExportDirective exportNode = node.parent;
+      if (exportNode.source is analyzer.FileSource) {
+        analyzer.FileSource fileSource = exportNode.source;
         return new SourceDeclaration(importString.value, fileSource.uuid, 0, 0);
       } else {
         // TODO(ericarnold): Handle SDK import
