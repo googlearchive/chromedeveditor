@@ -564,3 +564,25 @@ class JsonPrinter {
     return '\n${_in}';
   }
 }
+
+class FileSystemAccess {
+  static FileSystemAccess _instance;
+
+  bool mock = false;
+
+  static FileSystemAccess get instance {
+    if (_instance == null) _instance = new FileSystemAccess._internal();
+    return _instance;
+  }
+
+  FileSystemAccess._internal();
+
+  Future<String> getDisplayPath(chrome.Entry entry) {
+    if (mock) {
+      /*%TRACE3*/ print("""(4> 7/24/14): entry.fullPath: ${entry.fullPath}"""); // TRACE%
+      return new Future.value(entry.fullPath);
+    } else {
+      return chrome.fileSystem.getDisplayPath(entry);
+    }
+  }
+}

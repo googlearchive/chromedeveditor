@@ -186,7 +186,7 @@ abstract class Spark
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+        return FileSystemAccess.instance.getDisplayPath(entry).then((path) {
           getUIElement('#directoryLabel').text = path;
         });
       });
@@ -961,7 +961,9 @@ abstract class Spark
 
 class MockProjectLocationManager extends ProjectLocationManager {
   LocationResult _projectLocation;
-  MockProjectLocationManager._(Spark spark) : super._(spark);
+  MockProjectLocationManager._(Spark spark) : super._(spark) {
+    FileSystemAccess.instance.mock = true;
+  }
 
   static Future<ProjectLocationManager> restoreManager(Spark spark) {
     return new Future.value(new MockProjectLocationManager._(spark));
@@ -2540,7 +2542,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   }
 
   Future<String> _getLocation() {
-    return chrome.fileSystem.getDisplayPath(_selectedResource.entry)
+    return FileSystemAccess.instance.getDisplayPath(_selectedResource.entry)
         .catchError((e) {
       // SyncFS from ChromeBook falls in here.
       return _selectedResource.entry.fullPath;

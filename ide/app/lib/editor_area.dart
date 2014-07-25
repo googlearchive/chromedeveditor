@@ -19,6 +19,8 @@ import 'ui/widgets/tabview.dart';
 import 'ui/widgets/imageviewer.dart';
 import 'workspace.dart';
 
+import 'utils.dart';
+
 /// A tab associated with a file.
 abstract class EditorTab extends Tab {
   final Resource file;
@@ -282,5 +284,5 @@ class EditorArea extends TabView {
 Future<String> _calculateTooltip(File file) {
   if (file.entry == null) return new Future.value(file.path);
 
-  return chrome.fileSystem.getDisplayPath(file.entry);
+  return FileSystemAccess.instance.getDisplayPath(file.entry);
 }
