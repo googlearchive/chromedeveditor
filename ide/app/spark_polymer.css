@@ -509,7 +509,7 @@ button.ace_searchbtn.prev:hover {
 .outlineItem {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas',
       'source-code-pro', monospace;
-  font-size: 12px;
+  /*font-size: 12px;*/
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -519,8 +519,8 @@ button.ace_searchbtn.prev:hover {
 }
 
 .outlineItem.topLevel.class {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .outlineItem.topLevel.class,

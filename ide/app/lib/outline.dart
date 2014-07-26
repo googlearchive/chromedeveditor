@@ -42,6 +42,8 @@ class _ScrollDirection extends Enum<html.ScrollAlignment> {
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
+  static const ITEM_CSS_CLASS = 'outlineItem';
+
   List<OutlineItem> _outlineItems;
   OutlineItem _selectedItem;
   OffsetRange _lastScrolledOffsetRange = new OffsetRange();
@@ -94,6 +96,18 @@ class Outline {
   }
 
   bool get showing => _visible && !_outlineDiv.classes.contains('collapsed');
+
+  void setFontSize(num size) {
+    List ss = html.document.styleSheets;
+    ss.forEach((s) {
+      s.cssRules.forEach((r) {
+        if (r is html.CssStyleRule && r.selectorText == '.${ITEM_CSS_CLASS}') {
+          r.style.height = '${size + 2}px';
+        }
+      });
+    });
+    _rootList.style.fontSize = '${size}px';
+  }
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
@@ -293,7 +307,7 @@ abstract class OutlineItem {
       _element.append(_typeSpan);
     }
 
-    _element.classes.add("outlineItem ${cssClassName}");
+    _element.classes.add("${Outline.ITEM_CSS_CLASS} ${cssClassName}");
   }
 
   String get displayName => _data.name;
