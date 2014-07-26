@@ -8,6 +8,7 @@
 library spark.deploy;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
@@ -134,14 +135,50 @@ class MobileDeploy {
     return httpRequest;
   }
 
+  /**
+   * Builds a request to given `target` at given `path` and with given `payload`
+   * (body content).
+   */
+  List<int> _buildHttpRequest2(String target, String path, {List<int> payload}) {
+    List<int> httpRequest = [];
+
+    // Build the HTTP request headers.
+    String header =
+        'GET /$path HTTP/1.1\r\n'
+        'User-Agent: Chrome Dev Editor\r\n'
+        'Host: ${target}:$DEPLOY_PORT\r\n';
+    List<int> body = [];
+
+    if (payload != null) {
+      body.addAll(payload);
+    }
+    httpRequest.addAll(header.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+    httpRequest.addAll(body);
+
+    return httpRequest;
+  }
+
+
   List<int> _buildPushRequest(String target, List<int> archivedData) {
     return _buildHttpRequest(target,
         "zippush?appId=${appContainer.project.name}&appType=chrome",
         payload: archivedData);
   }
 
+  List<int> _buildDeleteRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest(target,
+        "deletefiles?appId=${appContainer.project.name}",
+        payload: archivedData);
+  }
+
+
   List<int> _buildLaunchRequest(String target) {
     return _buildHttpRequest(target, "launch?appId=${appContainer.project.name}");
+  }
+
+  List<int> _buildAssetManifestRequest(String target) {
+    return _buildHttpRequest2(target, "assetmanifest?appId=${appContainer.project.name}");
   }
 
   Future _sendTcpRequest(String target, List<int> httpRequest) {
@@ -157,6 +194,7 @@ class MobileDeploy {
   }
 
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
+    print("aici2");
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       return _sendTcpRequest(target, _buildPushRequest(target, archivedData));
@@ -164,6 +202,9 @@ class MobileDeploy {
     ).then((_) {
       monitor.worked(6);
       return _sendTcpRequest(target, _buildLaunchRequest(target));
+    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes)
+    ).then((_) {
+      return _sendTcpRequest(target, _buildAssetManifestRequest(target));
     }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes));
   }
 
@@ -225,6 +266,9 @@ class MobileDeploy {
 
     String body = lines.skip(header.length + 1).join('<br>\n');
 
+    //print("-------------");
+    //print(response);
+
     if (!header.first.contains('200')) {
       // Error! Fail with the error line.
       return new Future.error(
@@ -245,14 +289,47 @@ class MobileDeploy {
     }
 
     // Build the archive.
-    return archiveContainer(appContainer, true).then((List<int> archivedData) {
+    httpRequest = _buildAssetManifestRequest('localhost');
+    return _fetchAndroidDevice().then((deviceResult) {
+      _device = deviceResult;
+       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));})
+    .then((msg) {
+      return _expectHttpOkResponse(msg);
+    }).then((String result) {
+      Map<String,Map<String,String>>assetManifestOnDevice=JSON.decode(result);
+      if(assetManifestOnDevice['assetManifest'] != null) {
+        Map<String,Map<String,String>>assetManifestLocal=JSON.decode(buildAssetManifest(appContainer));
+
+
+        List<String> fileToDelete= [];
+        List<String> fileToAdd= [];
+
+        assetManifestOnDevice['assetManifest'].keys.forEach((key){
+          if((key.startsWith("www/")) && (!assetManifestLocal.containsKey(key))) {
+            fileToDelete.add(key);
+          }
+        });
+
+        assetManifestLocal.keys.forEach((key) {
+          if((key.startsWith("www/")) && (!assetManifestOnDevice['assetManifest'].containsKey(key))) {
+            fileToAdd.add(key);
+          }
+        });
+
+        if(!fileToDelete.isEmpty) {
+          //if I reach to this point I must send this list with files that need to be deleted
+          Map<String,List<String>> toDeleteMap={};
+          toDeleteMap["paths"]=fileToDelete;
+          String command=JSON.encode(toDeleteMap);
+          httpRequest = _buildDeleteRequest('localhost',command.codeUnits);
+          return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
+        }
+        return null;
+      }
+  }).then((_) {
+  return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       httpRequest = _buildPushRequest('localhost', archivedData);
-
-      // Send this payload to the USB code.
-      return _fetchAndroidDevice();
-    }).then((deviceResult) {
-      _device = deviceResult;
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
     }).then((msg) {
       monitor.worked(6);
@@ -261,8 +338,13 @@ class MobileDeploy {
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
-    }).then((List<int> msg) => _expectHttpOkResponse(msg)).whenComplete(() {
+    }).then((msg) {
+      monitor.worked(6);
+      return _expectHttpOkResponse(msg);
+    }).whenComplete(() {
       if (_device != null) _device.dispose();
     });
+    });
   }
+
 }

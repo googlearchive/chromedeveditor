@@ -27,6 +27,10 @@ Future archiveContainer(Container container, [bool addZipManifest = false]) {
   });
 }
 
+String buildAssetManifest(Container container) {
+  return _buildZipAssetManifest(container);
+}
+
 /**
  * Return (or create) the child file of the given folder.
  */
