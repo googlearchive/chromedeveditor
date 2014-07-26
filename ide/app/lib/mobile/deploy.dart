@@ -315,7 +315,6 @@ class MobileDeploy {
             fileToAdd.add(key);
           }
         });
-
         if(!fileToDelete.isEmpty) {
           //if I reach to this point I must send this list with files that need to be deleted
           Map<String,List<String>> toDeleteMap={};
@@ -326,7 +325,14 @@ class MobileDeploy {
         }
         return null;
       }
-  }).then((_) {
+    }).then((msg) {
+      if(msg!=null) {
+        monitor.worked(6);
+        print("deleted ok!");
+        return _expectHttpOkResponse(msg);
+      }
+    }).then((String response) {
+/*  }).then((_) {
   return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       httpRequest = _buildPushRequest('localhost', archivedData);
@@ -340,11 +346,11 @@ class MobileDeploy {
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
     }).then((msg) {
       monitor.worked(6);
-      return _expectHttpOkResponse(msg);
+      return _expectHttpOkResponse(msg);*/
     }).whenComplete(() {
       if (_device != null) _device.dispose();
     });
-    });
+//    });
   }
 
 }
