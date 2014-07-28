@@ -965,17 +965,17 @@ abstract class Spark
    * Check if this project uses Bower, and if so automatically run a
    * `bower install`.
    */
-  void _checkAutoRunBower(ws.Project project) {
-    if (bowerManager.properties.isFolderWithPackages(project)) {
-      jobManager.schedule(new BowerGetJob(this, project));
+  void _checkAutoRunBower(ws.Container container) {
+    if (bowerManager.properties.isFolderWithPackages(container)) {
+      jobManager.schedule(new BowerGetJob(this, container));
     }
   }
 
   /**
    * Check if this project uses Pub, and if so automatically run a `pub install`.
    */
-  void _checkAutoRunPub(ws.Project project) {
-    if (pubManager.canRunPub(project)) {
+  void _checkAutoRunPub(ws.Container container) {
+    if (pubManager.canRunPub(container)) {
       // Don't run pub on Windows (#2743).
       if (PlatformInfo.isWin) {
         showMessage(
@@ -989,7 +989,7 @@ abstract class Spark
         // There is issue with the workspace sending duplicate events.
         // TODO(grv): Revisit workspace events.
         Timer.run(() {
-          jobManager.schedule(new PubGetJob(this, project));
+          jobManager.schedule(new PubGetJob(this, container));
         });
       }
     }
@@ -3507,16 +3507,10 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.canRunPub(resource)) {
-        if (!PlatformInfo.isWin) {
-          spark.jobManager.schedule(new PubGetJob(spark, resource));
-        }
-      }
+      spark._checkAutoRunPub(resource as Container);
 
       // Run Bower if the folder has a bower.json file.
-      if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
-        spark.jobManager.schedule(new BowerGetJob(spark, resource));
-      }
+      spark._checkAutoRunBower(resource as Container);
     }).then((_) {
       return new SparkJobStatus(message: 'Opened folder ${_entry.fullPath}');
     }).catchError((e) {
