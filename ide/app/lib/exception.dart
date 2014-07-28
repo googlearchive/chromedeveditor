@@ -175,7 +175,7 @@ class SparkErrorMessages {
 
   static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
       "Failed to install the application into Chrome; please check Chrome for "
-      "error messages.";
+      "a possible error dialog.";
 
   static const String PUB_ON_WINDOWS_MSG =
       "Running 'pub get' and 'pub upgrade' is currently not supported on "
