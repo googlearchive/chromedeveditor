@@ -77,8 +77,7 @@ class PubManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _PubResolver._(this, project);
 
-  // Don't run pub on Windows: https://github.com/dart-lang/chromedeveditor/issues/2743
-  bool canRunPub(Folder project) => pubProperties.isFolderWithPackages(project) && !PlatformInfo.isWin;
+  bool canRunPub(Folder project) => pubProperties.isFolderWithPackages(project);
 
   Future installPackages(Folder container, ProgressMonitor monitor) =>
       _installUpgradePackages(container, 'get', false, monitor);
@@ -113,6 +112,9 @@ class PubManager extends PackageManager {
       String commandName,
       bool isUpgrade,
       ProgressMonitor monitor) {
+    // Don't run pub on Windows (#2743).
+    if (PlatformInfo.isWin) return new Future.value();
+
     // Fake the total amount of work, since we don't know it. When an update
     // comes from Tavern, just refresh the generic message w/o showing progress.
     monitor.start(

@@ -956,6 +956,40 @@ abstract class Spark
   void searchViewControllerNavigate(SearchViewController controller, NavigationLocation location) {
     navigationManager.gotoLocation(location);
   }
+
+  /**
+   * Check if this project uses Bower, and if so automatically run a
+   * `bower install`.
+   */
+  void _checkAutoRunBower(ws.Project project) {
+    if (bowerManager.properties.isFolderWithPackages(project)) {
+      jobManager.schedule(new BowerGetJob(this, project));
+    }
+  }
+
+  /**
+   * Check if this project uses Pub, and if so automatically run a `pub install`.
+   */
+  void _checkAutoRunPub(ws.Project project) {
+    if (pubManager.canRunPub(project)) {
+      // Don't run pub on Windows (#2743).
+      if (PlatformInfo.isWin) {
+        showMessage(
+            'Run Pub Get',
+            "This Dart project uses pub packages. Currently, we can't run pub "
+            "from the Chrome Dev Editor due to an issue with Windows junction "
+            "points. In order to run this project, please install Dart's "
+            "command-line tools (available at www.dartlang.org), and run "
+            "'pub get'.");
+      } else {
+        // There is issue with the workspace sending duplicate events.
+        // TODO(grv): Revisit workspace events.
+        Timer.run(() {
+          jobManager.schedule(new PubGetJob(this, project));
+        });
+      }
+    }
+  }
 }
 
 /**
@@ -2280,14 +2314,10 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file
-            if (spark.pubManager.canRunPub(project)) {
-              spark.jobManager.schedule(new PubGetJob(spark, project));
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
           });
         });
       });
@@ -3320,18 +3350,10 @@ class _GitCloneTask {
             });
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.canRunPub(project)) {
-              // There is issue with workspace sending duplicate events.
-              // TODO(grv): revisit workspace events.
-              Timer.run(() {
-                spark.jobManager.schedule(new PubGetJob(spark, project));
-              });
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
 
             spark.workspace.save();
           });
@@ -3482,7 +3504,9 @@ class _OpenFolderJob extends Job {
 
       // Run Pub if the folder has a pubspec file.
       if (spark.pubManager.canRunPub(resource)) {
-        spark.jobManager.schedule(new PubGetJob(spark, resource));
+        if (!PlatformInfo.isWin) {
+          spark.jobManager.schedule(new PubGetJob(spark, resource));
+        }
       }
 
       // Run Bower if the folder has a bower.json file.
