@@ -548,7 +548,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return MockProjectLocationManager.restoreManager(this).then((manager) {
+    return FileSystemAccess.instance.restoreManager(this).then((manager) {
       _projectLocationManager = manager;
     });
   }
@@ -956,45 +956,6 @@ abstract class Spark
 
   void searchViewControllerNavigate(SearchViewController controller, NavigationLocation location) {
     navigationManager.gotoLocation(location);
-  }
-}
-
-class MockProjectLocationManager extends ProjectLocationManager {
-  LocationResult _projectLocation;
-  MockProjectLocationManager._(Spark spark) : super._(spark) {
-    FileSystemAccess.instance.mock = true;
-  }
-
-  static Future<ProjectLocationManager> restoreManager(Spark spark) {
-    return new Future.value(new MockProjectLocationManager._(spark));
-  }
-
-  Future setupRoot() {
-    if (_projectLocation != null) {
-      return new Future.value(_projectLocation);
-    }
-    MockFileSystem fs = new MockFileSystem();
-    DirectoryEntry rootParent = fs.createDirectory("rootParent");
-    return rootParent.createDirectory("root").then((DirectoryEntry root) {
-      _projectLocation = new LocationResult(rootParent, root, false);
-    });
-  }
-
-  Future<LocationResult> getProjectLocation() {
-    if (_projectLocation == null) {
-      return super.getProjectLocation();
-    } else {
-      return new Future.value(_projectLocation);
-    }
-  }
-
-  Future<LocationResult> createNewFolder(String name) {
-//    setupRoot();
-    return _projectLocation.entry.createDirectory(name, exclusive: true).then((dir) {
-      return new LocationResult(_projectLocation.entry, dir, false);
-    }).catchError((_) {
-      throw "Error creating project '${name}.'";
-    });
   }
 }
 
@@ -2249,10 +2210,6 @@ class NewProjectAction extends SparkActionWithDialog {
     locationManager.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
-      } else {
-        if (locationManager is MockProjectLocationManager) {
-          locationManager.setupRoot();
-        }
       }
     });
   }
@@ -2274,13 +2231,7 @@ class NewProjectAction extends SparkActionWithDialog {
       ws.WorkspaceRoot root;
       final DirectoryEntry locationEntry = location.entry;
 
-      if (projectLocationManager is MockProjectLocationManager) {
-        root = new MockWorkspaceRoot(locationEntry);
-      } else if (location.isSync) {
-        root = new ws.SyncFolderRoot(locationEntry);
-      } else {
-        root = new ws.FolderChildRoot(location.parent, locationEntry);
-      }
+      root = FileSystemAccess.instance.getRoot();
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
