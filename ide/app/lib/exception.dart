@@ -174,8 +174,8 @@ class SparkErrorMessages {
       " possibly an invalid repo URL?";
 
   static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
-      "It looks like the application failed to get installed in Chrome. "
-      "Has Chrome displayed any errors?";
+      "Failed to install the application into Chrome; please check Chrome for "
+      "error messages.";
 
   static const String PUB_ON_WINDOWS_MSG =
       "Running 'pub get' and 'pub upgrade' is currently not supported on "
