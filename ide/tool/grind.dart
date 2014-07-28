@@ -485,6 +485,11 @@ void _modifyLocaleWithChannelConfig(GrinderContext context,
     messagesJson['app_description'] = {'message': channelConfig['description']};
   }
   file.writeAsStringSync(new JsonPrinter().print(messagesJson));
+
+  // It needs to be copied to compile result directory.
+  copyFile(
+      joinFile(Directory.current, ['app', '_locales', 'en', 'messages.json']),
+      joinDir(BUILD_DIR, ['deploy-out', 'web', '_locales', 'en', 'messages.json']));
 }
 
 void _removePackagesLinks(GrinderContext context, Directory target) {
