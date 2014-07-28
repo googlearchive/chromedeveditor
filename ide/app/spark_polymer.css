@@ -468,6 +468,18 @@ button.ace_searchbtn.prev:hover {
   border: 2px solid #aaf;
 }
 
+#showFileViewButton {
+  font-size: 13px;
+  margin-top: 20px;
+  text-decoration: underline;
+  text-transform: uppercase;
+}
+
+#showFileViewButton:hover {
+  color: #444;
+  cursor: pointer;
+}
+
 #file-item-context-menu {
   top: 0;
   left: 0;

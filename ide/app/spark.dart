@@ -447,6 +447,10 @@ abstract class Spark
         .listen((FilesControllerPersistTabEvent event) {
       editorArea.persistTab(event.file);
     });
+    querySelector('#showFileViewButton').onClick.listen((_) {
+      Action action = actionManager.getAction('show-files-view');
+      action.invoke();
+    });
   }
 
   void initSearchController() {
