@@ -18,7 +18,8 @@ Future archiveContainer(Container container, [bool addZipManifest = false]) {
   archive.Archive arch = new archive.Archive();
   return _recursiveArchive(arch, container, addZipManifest ? 'www/' : '').then((_) {
     if (addZipManifest) {
-      String zipAssetManifestString = _buildZipAssetManifest(container);
+      String zipAssetManifestString = _buildAssetManifestOfModified(container);
+      print(zipAssetManifestString);
       arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
           zipAssetManifestString.codeUnits.length,
           zipAssetManifestString.codeUnits));
@@ -188,9 +189,35 @@ String _buildZipAssetManifest(Container container) {
       zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
     }
   }
+  return JSON.encode(zipAssetManifest);
+}
+
+String _buildAssetManifestOfModified(Container container) {
+  Iterable<Resource> children = container.traverse().skip(1);
+  int rootIndex = container.path.length + 1;
+  Map<String, Map<String, String>> zipAssetManifest = {};
+  for (Resource element in children) {
+    if (element.isFile) {
+      if(element.isChangedSinceDeployment()) {
+        String path = element.path.substring(rootIndex);
+        zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
+      }
+    }
+  }
 
   return JSON.encode(zipAssetManifest);
 }
+
+
+void resetFileChangedFlag(Container container) {
+  Iterable<Resource> children = container.traverse().skip(1);
+  for (Resource element in children) {
+    if (element.isFile) {
+      element.changedSinceDeployment(false);
+    }
+  }
+}
+
 
 Future _recursiveArchive(archive.Archive arch, Container parent,
     [String prefix = '']) {
@@ -198,11 +225,14 @@ Future _recursiveArchive(archive.Archive arch, Container parent,
 
   for (Resource child in parent.getChildren()) {
     if (child is File) {
-      futures.add(child.getBytes().then((buf) {
-        List<int> data = buf.getBytes();
-        arch.addFile(new archive.ArchiveFile('${prefix}${child.name}',
-            data.length, data));
-      }));
+      if(child.isChangedSinceDeployment()) {
+        futures.add(child.getBytes().then((buf) {
+          List<int> data = buf.getBytes();
+          print('${prefix}${child.name}');
+          arch.addFile(new archive.ArchiveFile('${prefix}${child.name}',
+              data.length, data));
+        }));
+      }
     } else if (child is Folder) {
       futures.add(_recursiveArchive(arch, child, '${prefix}${child.name}/'));
     }

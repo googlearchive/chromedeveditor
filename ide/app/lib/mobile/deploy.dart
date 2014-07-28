@@ -266,8 +266,8 @@ class MobileDeploy {
 
     String body = lines.skip(header.length + 1).join('<br>\n');
 
-    //print("-------------");
-    //print(response);
+    print("-------- response http-----");
+    print(response);
 
     if (!header.first.contains('200')) {
       // Error! Fail with the error line.
@@ -297,9 +297,10 @@ class MobileDeploy {
       return _expectHttpOkResponse(msg);
     }).then((String result) {
       Map<String,Map<String,String>>assetManifestOnDevice=JSON.decode(result);
+      print("asset manifest on device");
+      print(assetManifestOnDevice);
       if(assetManifestOnDevice['assetManifest'] != null) {
         Map<String,Map<String,String>>assetManifestLocal=JSON.decode(buildAssetManifest(appContainer));
-
 
         List<String> fileToDelete= [];
         List<String> fileToAdd= [];
@@ -320,6 +321,8 @@ class MobileDeploy {
           Map<String,List<String>> toDeleteMap={};
           toDeleteMap["paths"]=fileToDelete;
           String command=JSON.encode(toDeleteMap);
+          print("deleted=>");
+          print(command);
           httpRequest = _buildDeleteRequest('localhost',command.codeUnits);
           return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
         }
@@ -331,8 +334,8 @@ class MobileDeploy {
         print("deleted ok!");
         return _expectHttpOkResponse(msg);
       }
-    }).then((String response) {
-/*  }).then((_) {
+//    }).then((String response) {
+  }).then((_) {
   return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       httpRequest = _buildPushRequest('localhost', archivedData);
@@ -341,16 +344,17 @@ class MobileDeploy {
       monitor.worked(6);
       return _expectHttpOkResponse(msg);
     }).then((String response) {
+    resetFileChangedFlag(appContainer);
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
     }).then((msg) {
       monitor.worked(6);
-      return _expectHttpOkResponse(msg);*/
+      return _expectHttpOkResponse(msg);
     }).whenComplete(() {
       if (_device != null) _device.dispose();
     });
-//    });
+    });
   }
 
 }

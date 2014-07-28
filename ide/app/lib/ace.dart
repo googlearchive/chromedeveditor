@@ -188,6 +188,7 @@ class TextEditor extends Editor {
       }
 
       _lastSavedHash = _calcMD5(text);
+      file.changedSinceDeployment(true);
 
       return file.setContents(text).then((_) {
         dirty = false;
