@@ -489,7 +489,7 @@ void _modifyLocaleWithChannelConfig(GrinderContext context,
   // It needs to be copied to compile result directory.
   copyFile(
       joinFile(Directory.current, ['app', '_locales', 'en', 'messages.json']),
-      joinDir(BUILD_DIR, ['deploy-out', 'web', '_locales', 'en', 'messages.json']));
+      joinDir(BUILD_DIR, ['deploy-out', 'web', '_locales', 'en']));
 }
 
 void _removePackagesLinks(GrinderContext context, Directory target) {
