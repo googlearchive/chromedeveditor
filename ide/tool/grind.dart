@@ -161,9 +161,10 @@ Future releaseNightly(GrinderContext context) {
 
   if (channel == null) {
     // This branch is not part of any channel.
-    context.log("Spark can't be released from here.");
-    return;
+    context.fail("Spark can't be released from here.");
+    return new Future.error("Spark can't be released from here.");
   }
+
   String appID = channelConfig['id'];
 
   // Tweak the version number in the manifest.json file using drone.io build number.
