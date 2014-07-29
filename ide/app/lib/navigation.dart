@@ -82,16 +82,31 @@ class NavigationManager {
    */
   void removeFile(File file) {
     var len = _locations.length;
+    //print("before=>");
+    //print(_position);
+    //for (var i = 0; i < len; i++) print(_locations[i].file.path);
     for (var i = 0; i < len; i++) {
       if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
         _locations.removeAt(i) ;
-        if (i < _position) {
-          _position--;
-        }
+        _position--;
         i--;
         len--;
       }
     }
+    print("after=>");
+    print(_position);
+    for (var i = 0; i < _locations.length; i++) print(_locations[i].file.path);
+    print("pos means=>");
+    if(_position==-1) {
+      _position=0; //need to increment it because it's nothing on the left side
+      print("outside left");
+    } else if(_position>=_locations.length) {
+      print("outside right");
+    } else {
+      _controller.add(_locations[_position]);
+      print(_locations[_position].file.path);
+    }
+    //TODO:remove the duplicates that are one after another
   }
 
   void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
