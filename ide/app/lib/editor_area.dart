@@ -11,15 +11,12 @@ library spark.editor_area;
 import 'dart:async';
 import 'dart:html' hide File;
 
-import 'package:chrome/chrome_app.dart' as chrome;
-
 import 'ace.dart' as ace;
 import 'editors.dart';
+import 'filesystem.dart';
 import 'ui/widgets/tabview.dart';
 import 'ui/widgets/imageviewer.dart';
 import 'workspace.dart';
-
-import 'utils.dart';
 
 /// A tab associated with a file.
 abstract class EditorTab extends Tab {

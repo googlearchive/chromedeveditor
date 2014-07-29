@@ -29,6 +29,7 @@ import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
 import 'lib/exception.dart';
+import 'lib/filesystem.dart';
 import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
@@ -2228,10 +2229,11 @@ class NewProjectAction extends SparkActionWithDialog {
         return new Future.value();
       }
 
-      ws.WorkspaceRoot root;
+      FileSystemAccess.instance.location = location;
+
       final DirectoryEntry locationEntry = location.entry;
 
-      root = FileSystemAccess.instance.getRoot();
+      ws.WorkspaceRoot root = FileSystemAccess.instance.root;
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
