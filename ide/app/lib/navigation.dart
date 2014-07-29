@@ -82,9 +82,6 @@ class NavigationManager {
    */
   void removeFile(File file) {
     var len = _locations.length;
-    //print("before=>");
-    //print(_position);
-    //for (var i = 0; i < len; i++) print(_locations[i].file.path);
     for (var i = 0; i < len; i++) {
       if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
         _locations.removeAt(i) ;
@@ -93,20 +90,29 @@ class NavigationManager {
         len--;
       }
     }
-    print("after=>");
-    print(_position);
-    for (var i = 0; i < _locations.length; i++) print(_locations[i].file.path);
-    print("pos means=>");
-    if(_position==-1) {
-      _position=0; //need to increment it because it's nothing on the left side
-      print("outside left");
-    } else if(_position>=_locations.length) {
-      print("outside right");
-    } else {
-      _controller.add(_locations[_position]);
-      print(_locations[_position].file.path);
+
+    len = _locations.length;
+    if (len > 1) {
+      for (var i = 1; i < len; i++)
+        if (_locations[i].file == _locations[i-1].file) {
+          _locations.removeAt(i);
+          i--;
+          len--;
+          _position--;
+        }
     }
-    //TODO:remove the duplicates that are one after another
+
+
+    if (_position < 0) {
+      if (!_locations.isEmpty) _position = 0;
+      else _position = -1;
+    } else if (_position >= _locations.length) {
+      if (!_locations.isEmpty) _position = _locations.length - 1;
+      else _position = -1;
+    }
+    if (_position >= 0) {
+      _controller.add(_locations[_position]);
+    }
   }
 
   void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
@@ -127,7 +133,6 @@ class NavigationManager {
     }
     _position++;
     _locations.add(newLocation);
-
     if (fireEvent) {
       _controller.add(newLocation);
     }
