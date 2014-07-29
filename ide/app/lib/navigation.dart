@@ -81,15 +81,13 @@ class NavigationManager {
    * If it does it deletes it from the list.
    */
   void removeFile(File file) {
-    var len = _locations.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0; i < _locations.length; i++) {
       if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
         _locations.removeAt(i) ;
         if (_position >= i) {
            _position--;
         }
         i--;
-        len--;
       }
     }
 
@@ -100,20 +98,22 @@ class NavigationManager {
      * For that reason I need to delete all entries in the history that
      * represent the same file and are on consecutive positions.
      */
-    len = _locations.length;
-    for (var i = 1; i < len; i++)
+    for (var i = 1; i < _locations.length; i++) {
       if (_locations[i].file == _locations[i-1].file) {
         _locations.removeAt(i);
         if (_position >= i) {
            _position--;
         }
         i--;
-        len--;
       }
+    }
 
     if (_position < 0) {
-      if (!_locations.isEmpty) _position = 0;
-      else _position = -1;
+      if (!_locations.isEmpty) {
+        _position = 0;
+      } else {
+        _position = -1;
+      }
     }
 
     if (_position >= 0) {
