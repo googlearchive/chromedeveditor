@@ -1,5 +1,5 @@
 {
-  "app_name": { "message": "Chrome Dev Editor" },
+  "app_name": { "message": "Chrome Dev Editor (dev)" },
   "app_description": { "message": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform" },
 
   "ace_modes": { "message":
