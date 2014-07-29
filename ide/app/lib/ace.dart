@@ -139,6 +139,7 @@ class TextEditor extends Editor {
         selection.offset + selection.length);
 
     aceManager._aceEditor.gotoLine(startSelection.row);
+    aceManager._aceEditor.scrollToLine(startSelection.row, center: true);
 
     ace.Selection aceSel = aceManager._aceEditor.selection;
     aceSel.setSelectionAnchor(startSelection.row, startSelection.column);

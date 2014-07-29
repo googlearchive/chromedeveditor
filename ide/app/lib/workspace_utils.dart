@@ -11,6 +11,8 @@ import 'package:archive/archive.dart' as archive;
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'dependency.dart';
+import 'package_mgmt/bower.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'workspace.dart';
 
@@ -120,6 +122,17 @@ bool isUpToDate(File targetFile, Resource sourceFiles, [Function filter]) {
 
   int timestamp = targetFile.timestamp;
 
+  return isUpToDateTimestamp(timestamp, sourceFiles, filter);
+}
+
+/**
+ * Returns whether the given timestamp is up to date with respect to the source
+ * file(s). An optional filter will cause only files that match the filter to be
+ * checked.
+ *
+ * Returns `true` if timestamp is not older then any source file.
+ */
+bool isUpToDateTimestamp(int timestamp, Resource sourceFiles, [Function filter]) {
   Iterable files = sourceFiles.traverse(includeDerived: false).where((Resource resource) {
     if (resource is File) {
       return filter == null ? true : filter(resource);
@@ -149,7 +162,18 @@ Resource resolvePath(File file, String path) {
     PubManager pubManager = Dependencies.dependency[PubManager];
 
     if (pubManager != null) {
-      var resolver = pubManager.getResolverFor(file.project);
+      final resolver = pubManager.getResolverFor(file.project);
+      File resolvedFile = resolver.resolveRefToFile(path);
+      if (resolvedFile != null) return resolvedFile;
+    }
+  }
+
+  // Check for a bower reference.
+  if (bowerProperties.isPackageRef(path)) {
+    BowerManager bowerManager = Dependencies.dependency[BowerManager];
+
+    if (bowerManager != null) {
+      final resolver = bowerManager.getResolverFor(file.project);
       File resolvedFile = resolver.resolveRefToFile(path);
       if (resolvedFile != null) return resolvedFile;
     }

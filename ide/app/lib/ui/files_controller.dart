@@ -12,6 +12,7 @@ import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
+import 'package:logging/logging.dart';
 
 import 'html_utils.dart';
 import 'widgets/file_item_cell.dart';
@@ -26,6 +27,8 @@ import '../event_bus.dart';
 import '../preferences.dart' as preferences;
 import '../scm.dart';
 import '../workspace.dart';
+
+Logger _logger = new Logger('spark.files_controller');
 
 /**
  * An event that is sent to indicate the user would like to select a given
@@ -80,6 +83,7 @@ class FilesController implements TreeViewDelegate {
   Map<String, List<String>> _filteredChildrenCache;
   // Expanded state when no search filter is applied.
   List<String> _currentExpandedState = [];
+  bool visibility = false;
 
   DecoratorManager _decoratorManager;
 
@@ -201,8 +205,8 @@ class FilesController implements TreeViewDelegate {
   ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
     if (resource == null) {
-      print('no resource for ${nodeUid}');
-      assert(resource != null);
+      _logger.warning('no resource for ${nodeUid}');
+      return null;
     }
     FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
@@ -955,11 +959,9 @@ class FilesController implements TreeViewDelegate {
   }
 
   /**
-   * Filters the files using [filterString] as part of the name and returns
-   * true if matches are found. If [filterString] is null, cancells all
-   * filtering and returns true.
+   * Filters the files using [filterString] as part of the name.
    */
-  bool performFilter(String filterString) {
+  void performFilter(String filterString) {
     if (filterString != null && filterString.length < 2) {
       filterString = null;
     }
@@ -968,7 +970,7 @@ class FilesController implements TreeViewDelegate {
       _filteredFiles = null;
       _filteredChildrenCache = null;
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
-      return true;
+      _setShowNoResults(false);
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
@@ -987,7 +989,12 @@ class FilesController implements TreeViewDelegate {
       });
 
       _reloadDataAndRestoreExpandedState(filtered.toList());
-      return _filteredFiles.isNotEmpty;
+      _setShowNoResults(_filteredFiles.isEmpty);
     }
+  }
+
+  void _setShowNoResults(bool visible) {
+    html.querySelector('#fileViewFilterNoResult').classes.toggle('hidden',
+        !visible || !visibility);
   }
 }

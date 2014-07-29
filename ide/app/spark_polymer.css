@@ -358,12 +358,28 @@ button.ace_searchbtn.prev:hover {
 
 .search-result-line {
   color: #888;
-  font-size: 10px;
+  font-size: 13px;
   overflow: hidden;
   position: absolute;
   text-overflow: ellipsis;
+  top: 2px;
   white-space: nowrap;
   width: 100%;
+}
+
+.search-result-file {
+  font-size: 16px;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 10px;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.listview-cell-highlighted .search-result-line,
+.listview-cell-highlighted .search-result-file {
+  color: #fff;
 }
 
 .search-max-results {
@@ -402,7 +418,7 @@ button.ace_searchbtn.prev:hover {
   top: 0;
 }
 
-#searchViewPlaceholder, #searchViewNoResult {
+#searchViewPlaceholder, #searchViewNoResult, #fileViewFilterNoResult {
   background-color: #eee;
   bottom: 48px;
   color: #ccc;
@@ -415,7 +431,8 @@ button.ace_searchbtn.prev:hover {
   top: 48px;
 }
 
-#searchViewPlaceholder.hidden, #searchViewNoResult.hidden {
+#searchViewPlaceholder.hidden, #searchViewNoResult.hidden,
+#fileViewFilterNoResult.hidden {
   display: none;
 }
 
@@ -449,6 +466,18 @@ button.ace_searchbtn.prev:hover {
 
 #fileViewArea .listview-dragover.listview-dragover-active {
   border: 2px solid #aaf;
+}
+
+#showFileViewButton {
+  font-size: 13px;
+  margin-top: 20px;
+  text-decoration: underline;
+  text-transform: uppercase;
+}
+
+#showFileViewButton:hover {
+  color: #444;
+  cursor: pointer;
 }
 
 #file-item-context-menu {

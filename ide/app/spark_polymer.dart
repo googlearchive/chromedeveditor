@@ -211,9 +211,11 @@ class SparkPolymer extends Spark {
     syncPrefs.getValue('outlineSize', '200').then((String position) {
       int value = int.parse(position, onError: (_) => null);
       if (value != null) {
+        // TODO(ussuri): BUG #2252. Note: deliverChanges() here didn't work
+        // in deployed code, unlike the similar snippet below.
         outlineResizer
             ..targetSize = value
-            ..deliverChanges();
+            ..targetSizeChanged();
       }
     });
     outlineResizer.on['update'].listen(_onOutlineSizeUpdate);
@@ -224,6 +226,7 @@ class SparkPolymer extends Spark {
     syncPrefs.getValue('splitViewPosition', '300').then((String position) {
       int value = int.parse(position, onError: (_) => null);
       if (value != null) {
+        // TODO(ussuri): BUG #2252.
         _ui
             ..splitViewPosition = value
             ..deliverChanges();

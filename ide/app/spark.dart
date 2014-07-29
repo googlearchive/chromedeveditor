@@ -56,6 +56,7 @@ import 'test/all.dart' as all_tests;
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
+import 'lib/workspace.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -328,6 +329,16 @@ abstract class Spark
         }
       });
     });
+    _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+      event =
+          new ResourceChangeEvent.fromList(event.changes, filterRename: true);
+      for (ChangeDelta delta in event.changes) {
+        if (delta.isDelete && delta.resource.isFile) {
+          _navigationManager.removeFile(delta.resource);
+        }
+      }
+    });
+
   }
 
   void _selectLocation(NavigationLocation location) {
@@ -424,6 +435,7 @@ abstract class Spark
         workspace, actionManager, scmManager, eventBus,
         querySelector('#file-item-context-menu'),
         querySelector('#fileViewArea'));
+    _filesController.visibility = true;
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
@@ -435,15 +447,16 @@ abstract class Spark
         .listen((FilesControllerPersistTabEvent event) {
       editorArea.persistTab(event.file);
     });
+    querySelector('#showFileViewButton').onClick.listen((_) {
+      Action action = actionManager.getAction('show-files-view');
+      action.invoke();
+    });
   }
 
   void initSearchController() {
     _searchViewController =
         new SearchViewController(workspace, querySelector('#searchViewArea'));
     _searchViewController.delegate = this;
-    if (!SparkFlags.searchInFiles) {
-      getUIElement('#moreSearch').style.display = 'none';
-    }
   }
 
   void initSplitView() {
@@ -886,7 +899,7 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  Future<bool> filterFilesList(String searchString) {
+  void filterFilesList(String searchString) {
     final completer = new Completer<bool>();
 
     if ( _filterTimer != null) {
@@ -896,23 +909,21 @@ abstract class Spark
 
     _filterTimer = new Timer(new Duration(milliseconds: 500), () {
       _filterTimer = null;
-      completer.complete(_reallyFilterFilesList(searchString));
+      _reallyFilterFilesList(searchString);
     });
-
-    return completer.future;
   }
 
-  bool _reallyFilterFilesList(String searchString) {
+  void _reallyFilterFilesList(String searchString) {
     if (searchString != null && searchString.length == 0) {
       searchString = null;
     }
 
     if (_searchViewController.visibility) {
       _filesController.performFilter(null);
-      return _searchViewController.performFilter(searchString);
+      _searchViewController.performFilter(searchString);
     } else {
       _searchViewController.performFilter(null);
-      return _filesController.performFilter(searchString);
+      _filesController.performFilter(searchString);
     }
   }
 
@@ -937,6 +948,7 @@ abstract class Spark
     getUIElement('#showFilesView').attributes['checkmark'] =
         !visible ? 'true' : 'false';
     _searchViewController.visibility = visible;
+    _filesController.visibility = !visible;
     _reallyFilterFilesList(searchField.value);
     if (!visible) {
       querySelector('#searchViewPlaceholder').classes.add('hidden');
@@ -947,6 +959,40 @@ abstract class Spark
 
   void searchViewControllerNavigate(SearchViewController controller, NavigationLocation location) {
     navigationManager.gotoLocation(location);
+  }
+
+  /**
+   * Check if this project uses Bower, and if so automatically run a
+   * `bower install`.
+   */
+  void _checkAutoRunBower(ws.Container container) {
+    if (bowerManager.properties.isFolderWithPackages(container)) {
+      jobManager.schedule(new BowerGetJob(this, container));
+    }
+  }
+
+  /**
+   * Check if this project uses Pub, and if so automatically run a `pub install`.
+   */
+  void _checkAutoRunPub(ws.Container container) {
+    if (pubManager.canRunPub(container)) {
+      // Don't run pub on Windows (#2743).
+      if (PlatformInfo.isWin) {
+        showMessage(
+            'Run Pub Get',
+            "This Dart project uses pub packages. Currently, we can't run pub "
+            "from the Chrome Dev Editor due to an issue with Windows junction "
+            "points. In order to run this project, please install Dart's "
+            "command-line tools (available at www.dartlang.org), and run "
+            "'pub get'.");
+      } else {
+        // There is issue with the workspace sending duplicate events.
+        // TODO(grv): Revisit workspace events.
+        Timer.run(() {
+          jobManager.schedule(new PubGetJob(this, container));
+        });
+      }
+    }
   }
 }
 
@@ -2272,14 +2318,10 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file
-            if (spark.pubManager.canRunPub(project)) {
-              spark.jobManager.schedule(new PubGetJob(spark, project));
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
           });
         });
       });
@@ -3312,18 +3354,10 @@ class _GitCloneTask {
             });
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.canRunPub(project)) {
-              // There is issue with workspace sending duplicate events.
-              // TODO(grv): revisit workspace events.
-              Timer.run(() {
-                spark.jobManager.schedule(new PubGetJob(spark, project));
-              });
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
 
             spark.workspace.save();
           });
@@ -3473,14 +3507,10 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.canRunPub(resource)) {
-        spark.jobManager.schedule(new PubGetJob(spark, resource));
-      }
+      spark._checkAutoRunPub(resource as Container);
 
       // Run Bower if the folder has a bower.json file.
-      if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
-        spark.jobManager.schedule(new BowerGetJob(spark, resource));
-      }
+      spark._checkAutoRunBower(resource as Container);
     }).then((_) {
       return new SparkJobStatus(message: 'Opened folder ${_entry.fullPath}');
     }).catchError((e) {

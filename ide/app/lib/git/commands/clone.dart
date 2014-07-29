@@ -55,7 +55,7 @@ class Clone {
   }
 
   Future clone() {
-    _stopwatch = new PrintProfiler('clone');
+    _stopwatch = new PrintProfiler('clone ${_options.repoUrl}');
     return _clone();
   }
 
