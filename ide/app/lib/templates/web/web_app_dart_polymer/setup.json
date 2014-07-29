@@ -1,5 +1,12 @@
 {
   "directories": {
+    "lib": {
+      "files": [
+        { "source": "sample_app.css_", "dest": "sample_app.css" },
+        { "source": "sample_app.dart_", "dest": "sample_app.dart" },
+        { "source": "sample_app.html_", "dest": "sample_app.html" }
+      ]
+    },
     "web": {
       "files": [
         { "source": "index.html_", "dest": "index.html" },
