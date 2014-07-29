@@ -853,6 +853,7 @@ class AceManager {
     if (session == null) {
       _currentSession = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.session = _currentSession;
+      currentFile = null;
     } else {
       _currentSession = session;
       _aceEditor.session = _currentSession;
