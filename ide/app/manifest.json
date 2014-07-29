@@ -196,7 +196,8 @@
         "text/json",
         "text/xml",
         "text/yaml"
-      ]
+      ],
+      "title": "__MSG_app_name__"
     }
   },
   "oauth2": {
