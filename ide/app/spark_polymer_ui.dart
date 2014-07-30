@@ -6,7 +6,6 @@ library spark_polymer.ui;
 
 import 'dart:html';
 
-import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
@@ -128,7 +127,7 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onClickRootDirectory() {
-    _model.projectLocationManager.chooseNewProjectLocation().then((LocationResult res){
+    _model.projectLocationManager.chooseNewProjectLocation(false).then((LocationResult res){
       if (res != null) {
         _model.showRootDirectory();
       }
