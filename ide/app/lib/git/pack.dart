@@ -169,7 +169,6 @@ class Pack {
     PackedObject doExpand(PackedObject baseObj, PackedObject deltaObj) {
       deltaObj.type = baseObj.type;
       deltaObj.data = applyDelta(baseObj.data, deltaObj.data);
-      deltaObj.shaBytes = getObjectHash(deltaObj.type, deltaObj.data);
       return deltaObj;
     }
 
@@ -287,6 +286,7 @@ class Pack {
        Future expandDeltified(PackedObject obj) {
          _checkCancel();
          return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
+           deltifiedObj.shaBytes = getObjectHash(deltifiedObj.type, deltifiedObj.data);
            deltifiedObj.data = null;
            // TODO(grv): Add progress.
          });
