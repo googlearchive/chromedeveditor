@@ -68,7 +68,6 @@ class Index {
   }
 
   void updateIndexForFile(FileStatus status) {
-
     FileStatus oldStatus = _statusIdx[status.path];
 
     if (oldStatus != null) {
