@@ -9,14 +9,14 @@
   "nightly": {
     "name": "Spark (nightly)",
     "branch": "master",
-    "version": "0.15.0",
+    "version": "0.15",
     "id": "kcjgcakhgelcejampmijgkjkadfcncjl",
     "description": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform - nightly version"
   },
   "stable": {
     "name": "Chrome Dev Editor (developer preview)",
     "branch": "0.13",
-    "version": "0.13.0",
+    "version": "0.13.2346",
     "id": "pnoffddplpippgcfjdhbmhkofpnaalpg"
   }
 }

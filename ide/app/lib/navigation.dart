@@ -81,16 +81,43 @@ class NavigationManager {
    * If it does it deletes it from the list.
    */
   void removeFile(File file) {
-    var len = _locations.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0; i < _locations.length; i++) {
       if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
         _locations.removeAt(i) ;
-        if (i < _position) {
-          _position--;
+        if (_position >= i) {
+           _position--;
         }
         i--;
-        len--;
       }
+    }
+
+    /*
+     * in some cases it might happened that the previous location and the
+     * next location in the history are the same. In that case, when the file
+     * is deleted, the same file will be in the history on consecutive positions.
+     * For that reason I need to delete all entries in the history that
+     * represent the same file and are on consecutive positions.
+     */
+    for (var i = 1; i < _locations.length; i++) {
+      if (_locations[i].file == _locations[i-1].file) {
+        _locations.removeAt(i);
+        if (_position >= i) {
+           _position--;
+        }
+        i--;
+      }
+    }
+
+    if (_position < 0) {
+      if (!_locations.isEmpty) {
+        _position = 0;
+      } else {
+        _position = -1;
+      }
+    }
+
+    if (_position >= 0) {
+      _controller.add(_locations[_position]);
     }
   }
 
@@ -112,7 +139,6 @@ class NavigationManager {
     }
     _position++;
     _locations.add(newLocation);
-
     if (fireEvent) {
       _controller.add(newLocation);
     }
