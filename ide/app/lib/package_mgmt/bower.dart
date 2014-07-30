@@ -17,13 +17,13 @@ import 'package:logging/logging.dart';
 import 'bower_fetcher.dart';
 import 'bower_properties.dart';
 import 'package_manager.dart';
+import '../csp/csp_fixer.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
 
 class BowerManager extends PackageManager {
-
   /**
    * Create a new [BowerManager] instance. This is a heavy-weight object; it
    * creates a new [Builder].
@@ -48,7 +48,8 @@ class BowerManager extends PackageManager {
       _installOrUpgradePackages(container.project, FetchMode.UPGRADE, monitor);
 
   // TODO(keertip): implement for bower
-  Future<dynamic> arePackagesInstalled(Folder container) => new Future.value(true);
+  Future<dynamic> arePackagesInstalled(Folder container) =>
+      new Future.value(true);
 
   //
   // - end PackageManager abstract interface.
@@ -73,9 +74,15 @@ class BowerManager extends PackageManager {
         _logger.severe('Error getting Bower packages', e);
         return new Future.error(e);
       }).then((_) {
-        // Delay refreshing of the folder until after Bower is completely done.
-        // This is needed to fix BUG #2946.
-        return Timer.run(() => container.refresh());
+        // Delay postprocessing of the folder until after Bower is done.
+        return Timer.run(() {
+          final cspFixer = new CspFixer(packagesDir, includeDerived: true);
+          cspFixer.process().then((_) {
+            // Delay refreshing of the folder until after postprocessing is done.
+            // This is needed to fix BUG #2946.
+            return Timer.run(() => container.refresh());
+          });
+        });
       });
     });
   }
