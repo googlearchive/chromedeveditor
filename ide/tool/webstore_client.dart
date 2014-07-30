@@ -44,6 +44,7 @@ class WebStoreClient {
           }, onError: (e) {
             completer.completeError('Connection to server closed unexpectedly');
           }, onDone: () {
+            print('request token: ${result}');
             Map<String, String> response = JSON.decode(result) as Map<String, String>;
             _token = response['access_token'];
             if (_token == null) {
@@ -82,6 +83,7 @@ class WebStoreClient {
           }, onError: (e) {
             completer.completeError('Connection to server closed unexpectedly');
           }, onDone: () {
+            print('upload item: ${result}');
             completer.complete(result);
           });
 
@@ -108,6 +110,7 @@ class WebStoreClient {
           }, onError: (e) {
             completer.completeError('Connection to server closed unexpectedly');
           }, onDone: () {
+            print('publish item: ${result}');
             completer.complete(result);
           });
 
