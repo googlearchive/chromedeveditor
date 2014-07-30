@@ -239,8 +239,8 @@ class MobileDeploy {
     AndroidDevice _device;
 
     Future _setTimeout(Future httpPushFuture) {
-      return httpPushFuture.timeout(new Duration(seconds: 30), onTimeout: () {
-        return new Future.error('Push timed out: Total time exceeds 30 seconds');
+      return httpPushFuture.timeout(new Duration(seconds: 60), onTimeout: () {
+        return new Future.error('Push timed out: Total time exceeds 60 seconds');
       });
     }
 
