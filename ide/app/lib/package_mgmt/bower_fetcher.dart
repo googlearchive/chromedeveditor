@@ -274,14 +274,14 @@ Some dependencies could not be resolved and have been skipped.
 To fix, add or modify the following entry in .spark.json under your workspace 
 directory: 
 
-  "bower-mapped-dependencies": {
+  "bower-override-dependencies": {
     ${_unresolvedDepsComments.join('\n    ')}
   }
 
 Alternatively, you can have any dependency ignored by adding its name to 
 the following list in .spark.json:
 
-  "bower-ignored-dependencies": [
+  "bower-ignore-dependencies": [
   ]
 
 Finally, you can also map unsupported complex versions to latest stable 
