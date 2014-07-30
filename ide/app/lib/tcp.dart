@@ -14,11 +14,14 @@
 library spark.tcp;
 
 import 'dart:async';
+import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 export 'package:chrome/chrome_app.dart' show SocketInfo;
 
 const LOCAL_HOST = '127.0.0.1';
+
+bool _checkSocketsAvailable() => js.context['chrome']['sockets'] != null;
 
 /**
  * An [Exception] implementation for socket errors.
@@ -56,6 +59,14 @@ class TcpClient {
 
   static Future<TcpClient> createClient(String host, int port,
       {bool throwOnError: true}) {
+    if (!_checkSocketsAvailable()) {
+      return new Future.error('chrome.sockets API not available');
+    }
+
+    if (!chrome.sockets.tcp.available) {
+      return new Future.error('chrome.sockets API not available');
+    }
+
     return chrome.sockets.tcp.create().then((chrome.CreateInfo createInfo) {
       int socketId = createInfo.socketId;
 
@@ -166,6 +177,14 @@ class TcpServer {
   final int port;
 
   static Future<TcpServer> createServerSocket([int port = 0]) {
+    if (!_checkSocketsAvailable()) {
+      return new Future.error('chrome.sockets API not available');
+    }
+
+    if (!chrome.sockets.tcpServer.available) {
+      return new Future.error('chrome.sockets.tcpServer API not available');
+    }
+
     return chrome.sockets.tcpServer.create().then((chrome.CreateInfo info) {
       int socketId = info.socketId;
       return chrome.sockets.tcpServer.listen(socketId, LOCAL_HOST, port, 5).then((int result) {
