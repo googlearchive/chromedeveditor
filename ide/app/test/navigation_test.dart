@@ -69,6 +69,7 @@ defineTests() {
       expect(manager.currentLocation, isNotNull);
       expect(manager.forwardLocation, isNotNull);
     });
+
     test('remove files in random order', () {
       MockNavigationLocationProviderWithFiles locationProvider = new MockNavigationLocationProviderWithFiles();
       NavigationManager manager = new NavigationManager(locationProvider);
