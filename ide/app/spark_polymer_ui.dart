@@ -14,7 +14,7 @@ import 'spark_flags.dart';
 import 'spark_model.dart';
 import 'lib/event_bus.dart';
 import 'lib/platform_info.dart';
-import 'spark.dart';
+import 'lib/filesystem.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {

@@ -281,5 +281,5 @@ class EditorArea extends TabView {
 Future<String> _calculateTooltip(File file) {
   if (file.entry == null) return new Future.value(file.path);
 
-  return FileSystemAccess.instance.getDisplayPath(file.entry);
+  return fileSystemAccess.getDisplayPath(file.entry);
 }

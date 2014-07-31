@@ -12,7 +12,9 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
+import 'filesystem.dart';
 import 'tcp.dart' as tcp;
+import '../test/files_mock.dart';
 import 'utils.dart';
 
 const int _DEFAULT_TESTPORT = 5120;
@@ -48,6 +50,10 @@ class TestDriver {
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
+    setOverrideFilesystemAccess(new MockFileSystemAccess());
+    fileSystemAccess.setOverrideRoot(new MockWorkspaceRoot(
+        fileSystemAccess.location.entry));
+
     if (_logListener == null) {
       _createTestUI();
     }
