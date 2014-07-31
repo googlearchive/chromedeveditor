@@ -9,6 +9,8 @@ import 'dart:async';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:unittest/unittest.dart';
 
+import "../files_mock.dart";
+import "../../lib/filesystem.dart";
 import "ui_access.dart";
 
 class DialogTester {
@@ -77,6 +79,19 @@ class SparkUITester {
   }
 }
 
+oneTest() {
+  SparkUITester sparkTester = SparkUITester.instance;
+  SparkUIAccess sparkAccess = SparkUIAccess.instance;
+  group('one dev', () {
+    test('one dev', () {
+      return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu,
+          sparkAccess.okCancelDialog.cancelButton, sparkAccess.okCancelDialog)
+          .then((_) => sparkAccess.selectSparkMenu())
+          .then((_) => sparkAccess.newProjectMenu.select());
+    });
+  });
+}
+
 defineTests() {
   SparkUITester sparkTester = SparkUITester.instance;
   SparkUIAccess sparkAccess = SparkUIAccess.instance;
@@ -102,7 +117,17 @@ defineTests() {
     });
   });
 
-  group('Menu items with no projects folder selected', () {
+  group('about dialog', () {
+    test('open and close the dialog via x button', () {
+      AboutDialogAccess aboutDialog = sparkAccess.aboutMenu.dialogAccess;
+      return sparkTester.openAndCloseWithX(sparkAccess.aboutMenu).then((_) {
+        return sparkTester.openAndCloseWithButton(sparkAccess.aboutMenu,
+            aboutDialog.doneButton);
+      });
+    });
+  });
+
+  group('Menu items with no projects root selected', () {
     test('New project menu item', () {
       OkCancelDialogAccess okCancelDialog = sparkAccess.okCancelDialog;
       return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu,
@@ -122,13 +147,16 @@ defineTests() {
     });
   });
 
-  group('about dialog', () {
-    test('open and close the dialog via x button', () {
-      AboutDialogAccess aboutDialog = sparkAccess.aboutMenu.dialogAccess;
-      return sparkTester.openAndCloseWithX(sparkAccess.aboutMenu).then((_) {
-        return sparkTester.openAndCloseWithButton(sparkAccess.aboutMenu,
-            aboutDialog.doneButton);
+  group('Menu items with mock project root selected', () {
+    test('New project menu item', () {
+      MockFileSystemAccess mockFsa = fileSystemAccess;
+      return mockFsa.locationManager.setupRoot().then((_) {
+        return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
+      }).then((_) {
+        return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu,
+            sparkAccess.newProjectDialog.createButton);
       });
     });
   });
+
 }

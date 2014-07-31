@@ -13,6 +13,7 @@ import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
 import 'filesystem.dart';
+import '../spark.dart';
 import 'tcp.dart' as tcp;
 import '../test/files_mock.dart';
 import 'utils.dart';
@@ -27,6 +28,7 @@ Logger _logger = new Logger('spark.tests');
 class TestDriver {
   final Notifier _notifier;
 
+  Spark _spark;
   StreamSubscription _logListener;
   StreamController<unittest.TestCase> _onTestFinished =
       new StreamController.broadcast();
@@ -37,7 +39,18 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this._notifier,
+  WorkspaceRoot _root;
+  WorkspaceRoot get root {
+    if (_root == null) {
+      _root = new MockWorkspaceRoot(fileSystemAccess.location.entry);
+    }
+
+    return _root;
+  }
+
+  // TODO(ericarnold): Spark gets passed here twice (once as a Notifier and once
+  //                   as spark), but maybe this is okay?
+  TestDriver(this._defineTestsFn, this._notifier, this._spark,
       {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 
@@ -51,8 +64,7 @@ class TestDriver {
    */
   Future<bool> runTests() {
     setOverrideFilesystemAccess(new MockFileSystemAccess());
-    fileSystemAccess.setOverrideRoot(new MockWorkspaceRoot(
-        fileSystemAccess.location.entry));
+    restoreManager(_spark);
 
     if (_logListener == null) {
       _createTestUI();

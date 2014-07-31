@@ -210,7 +210,8 @@ abstract class Spark
   BowerManager get bowerManager => dependencies[BowerManager];
   DecoratorManager get decoratorManager => dependencies[DecoratorManager];
   ActionManager get actionManager => _actionManager;
-  ProjectLocationManager get projectLocationManager => _projectLocationManager;
+  ProjectLocationManager get projectLocationManager =>
+      fileSystemAccess.locationManager;
   NavigationManager get navigationManager => _navigationManager;
   EventBus get eventBus => _eventBus;
 
@@ -549,9 +550,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return fileSystemAccess.restoreManager(this).then((manager) {
-      _projectLocationManager = manager;
-    });
+    return restoreManager(this);
   }
 
   //
@@ -3518,7 +3517,7 @@ class RunTestsAction extends SparkAction {
 
   void _initTestDriver() {
     if (testDriver == null) {
-      testDriver = new TestDriver(all_tests.defineTests, spark,
+      testDriver = new TestDriver(all_tests.defineTests, spark, spark,
           connectToTestListener: true);
     }
   }

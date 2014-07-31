@@ -15,7 +15,8 @@ import 'workspace.dart' as ws;
 
 FileSystemAccess _fileSystemAccess = null;
 void setOverrideFilesystemAccess(FileSystemAccess fsa) {
-
+  assert(_fileSystemAccess == null);
+  _fileSystemAccess = fsa;
 }
 
 FileSystemAccess get fileSystemAccess {
@@ -26,10 +27,27 @@ FileSystemAccess get fileSystemAccess {
   return _fileSystemAccess;
 }
 
+restoreManager(Spark spark) {
+  if (_fileSystemAccess is MockFileSystemAccess) {
+    MockFileSystemAccess mockFSA = _fileSystemAccess;
+    return mockFSA.restoreMockManager(spark);
+  } else {
+    return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
+      if (folderToken != null) {
+        return fileSystemAccess.restoreManager(spark, folderToken);
+      }
+    });
+  }
+}
+
 /**
  * Provides an abstracted access to the filesystem
  */
 class FileSystemAccess {
+  ProjectLocationManager _locationManager;
+  ProjectLocationManager get locationManager =>
+      _locationManager;
+
   ws.WorkspaceRoot _root;
   ws.WorkspaceRoot get root {
     if (_root == null) {
@@ -56,20 +74,43 @@ class FileSystemAccess {
     return chrome.fileSystem.getDisplayPath(entry);
   }
 
-  restoreManager(Spark spark) {
-    return ProjectLocationManager.restoreManager(spark);
+  restoreManager(Spark spark, String folderToken) {
+    return ProjectLocationManager.restoreManager(spark, folderToken)
+        .then((ProjectLocationManager manager) {
+      _locationManager = manager;
+      return manager;
+    });
   }
 }
 
 class MockFileSystemAccess extends FileSystemAccess {
-  MockFileSystemAccess() : super._();
+  MockProjectLocationManager _locationManager;
+  MockProjectLocationManager get locationManager =>
+      _locationManager;
+
+  MockFileSystemAccess() : super._() {
+  }
 
   Future<String> getDisplayPath(chrome.Entry entry) {
     return new Future.value(entry.fullPath);
   }
 
-  restoreManager(Spark spark) {
-    return MockProjectLocationManager.restoreManager(spark);
+  restoreManager(Spark spark, String folderToken) =>
+      throw "Can't restore mock manager";
+
+  restoreMockManager(Spark spark) {
+    return MockProjectLocationManager.restoreManager(spark)
+        .then((ProjectLocationManager manager) {
+          _locationManager = manager;
+          return manager;
+        }).then((_) {
+          MockFileSystem fs = new MockFileSystem();
+          DirectoryEntry rootParent = fs.createDirectory("rootParent");
+
+          rootParent.createDirectory("root").then((DirectoryEntry root) {
+            location = new LocationResult(rootParent, root, false);
+          });
+        });
   }
 }
 
@@ -87,21 +128,19 @@ class ProjectLocationManager {
    * Create a ProjectLocationManager asynchronously, restoring the default
    * project location from the given preferences.
    */
-  static Future<ProjectLocationManager> restoreManager(Spark spark) {
-    //localPrefs, workspace
-    return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
-      if (folderToken == null) {
-        return new ProjectLocationManager._(spark);
-      }
+  static Future<ProjectLocationManager> restoreManager(Spark spark,
+      String folderToken) {
+    if (folderToken == null) {
+      return new Future.value(new ProjectLocationManager._(spark));
+    }
 
-      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return _initFlagsFromProjectLocation(entry).then((_) {
-          return new ProjectLocationManager._(spark,
-              new LocationResult(entry, entry, false));
-        });
-      }).catchError((e) {
-        return new ProjectLocationManager._(spark);
+    return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+      return _initFlagsFromProjectLocation(entry).then((_) {
+        return new Future.value(new ProjectLocationManager._(spark,
+            new LocationResult(entry, entry, false)));
       });
+    }).catchError((e) {
+      return new Future.value(new ProjectLocationManager._(spark));
     });
   }
 

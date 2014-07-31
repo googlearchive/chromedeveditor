@@ -23,8 +23,8 @@ class SparkUIAccess {
 
   OkCancelDialogAccess okCancelDialog = new OkCancelDialogAccess();
   AboutDialogAccess aboutDialog = new AboutDialogAccess();
+  NewProjectDialogAccess newProjectDialog = new NewProjectDialogAccess();
   DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
-  DialogAccess newProjectDialog = new DialogAccess("newProjectDialog");
 
   MenuItemAccess newProjectMenu;
   MenuItemAccess gitCloneMenu;
@@ -151,4 +151,13 @@ class AboutDialogAccess extends DialogAccess {
   AboutDialogAccess() : super("aboutDialog");
 
   void clickDoneButton() => _sparkAccess.clickElement(doneButton);
+}
+
+class NewProjectDialogAccess extends DialogAccess {
+  SparkDialogButton get createButton => _getButtonByTitle("Create");
+  SparkDialogButton get cancelButton => _getButtonByTitle("Cancel");
+
+  NewProjectDialogAccess() : super("newProjectDialog");
+
+  void clickCreateButton() => _sparkAccess.clickElement(createButton);
 }
