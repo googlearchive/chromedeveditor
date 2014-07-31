@@ -15,6 +15,8 @@ import 'dart:math' as math;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
+import 'package:crypto/crypto.dart' as crypto;
+
 
 import 'builder.dart';
 import 'enum.dart';
@@ -1028,14 +1030,25 @@ class File extends Resource {
   List<Marker> _markers = [];
   int _timestamp;
   bool _changedSinceDeployment=true;
+  String fileContentsHash="0";
 
   File(Container parent, chrome.Entry entry) : super(parent, entry) {
     entry.getMetadata().then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
       _changedSinceDeployment=true;
+
+    });
+    getContents().then((String content) {
+      fileContentsHash = _calcMD5(content);
     });
   }
 
+
+  String _calcMD5(String text) {
+    crypto.MD5 md5 = new crypto.MD5();
+    md5.add(text.codeUnits);
+    return crypto.CryptoUtils.bytesToHex(md5.close());
+  }
   int get timestamp => _timestamp;
 
   Future<String> getContents() => _fileEntry.readText();
