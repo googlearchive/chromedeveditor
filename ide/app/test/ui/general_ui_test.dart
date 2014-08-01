@@ -166,7 +166,12 @@ defineTests() {
         return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
       }).then((_) => sparkTester.openAndCloseWith(sparkAccess.newProjectMenu, (_) {
         return new Future.value().then((_) {
-            return sparkAccess.newProjectDialog.setNameField("hello");
+            return sparkAccess.newProjectDialog.setNameField("foo");
+        }).then((_) =>
+            sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton));
+      })).then((_) => sparkTester.openAndCloseWith(sparkAccess.newProjectMenu, (_) {
+        return new Future.value().then((_) {
+            return sparkAccess.newProjectDialog.setNameField("bar");
         }).then((_) =>
             sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton));
       }));

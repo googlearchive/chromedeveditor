@@ -2042,11 +2042,9 @@ class NewProjectAction extends SparkActionWithDialog {
         return new Future.value();
       }
 
-      fileSystemAccess.location = location;
-
       final DirectoryEntry locationEntry = location.entry;
 
-      ws.WorkspaceRoot root = fileSystemAccess.root;
+      ws.WorkspaceRoot root = fileSystemAccess.getRootFor(location);
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {

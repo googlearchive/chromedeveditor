@@ -39,15 +39,6 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  WorkspaceRoot _root;
-  WorkspaceRoot get root {
-    if (_root == null) {
-      _root = new MockWorkspaceRoot(fileSystemAccess.location.entry);
-    }
-
-    return _root;
-  }
-
   // TODO(ericarnold): Spark gets passed here twice (once as a Notifier and once
   //                   as spark), but maybe this is okay?
   TestDriver(this._defineTestsFn, this._notifier, this._spark,

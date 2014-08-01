@@ -51,11 +51,7 @@ class FileSystemAccess {
   ws.WorkspaceRoot _root;
   ws.WorkspaceRoot get root {
     if (_root == null) {
-      if (location.isSync) {
-        _root = new ws.SyncFolderRoot(location.entry);
-      } else {
-        _root = new ws.FolderChildRoot(location.parent, location.entry);
-      }
+      _root = getRootFor(location);
     }
 
     return _root;
@@ -80,6 +76,14 @@ class FileSystemAccess {
       _locationManager = manager;
       return manager;
     });
+  }
+
+  ws.WorkspaceRoot getRootFor(LocationResult location) {
+    if (location.isSync) {
+      return new ws.SyncFolderRoot(location.entry);
+    } else {
+      return new ws.FolderChildRoot(location.parent, location.entry);
+    }
   }
 }
 
@@ -119,6 +123,10 @@ class MockFileSystemAccess extends FileSystemAccess {
           _locationManager = manager;
           return manager;
         });
+  }
+
+  ws.WorkspaceRoot getRootFor(LocationResult location) {
+    return new MockWorkspaceRoot(location.entry);
   }
 }
 
