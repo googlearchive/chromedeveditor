@@ -814,6 +814,16 @@ class FilesController implements TreeViewDelegate {
     if (decoration != null) {
       fileItemCell.setFileInfo(decoration);
     }
+
+    // TODO(devoncarew): Roll the scm decoration into the regular decorator
+    // framework.
+    ScmProjectOperations scm = _scmManager.getScmOperationsFor(resource.project);
+    if (scm != null) {
+      ScmFileStatus status = scm.getFileStatus(resource);
+      fileItemCell.setGitStatus(
+          dirty: status.status != 'committed',
+          added: status.status == 'added');
+    }
   }
 
   void _recursiveAddResource(Resource resource) {
