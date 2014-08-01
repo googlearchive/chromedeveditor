@@ -122,6 +122,8 @@ class BowerFetcher {
   }
 
   List<_Package> _parseDepsFromSpec(String spec) {
+    if (spec.isEmpty) spec = '{}';
+
     Map<String, dynamic> specMap;
     try {
       specMap = JSON.decode(spec);
