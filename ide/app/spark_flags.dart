@@ -34,6 +34,8 @@ class SparkFlags {
       _flags['bower-override-dependencies'];
   static List<String> get bowerIgnoredDeps =>
       _flags['bower-ignore-dependencies'];
+  static bool get bowerUseGitClone =>
+      _flags['bower-use-git-clone'] == true;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.
