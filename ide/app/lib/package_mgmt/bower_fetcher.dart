@@ -12,7 +12,6 @@ library spark.package_mgmt.bower_fetcher;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:html' as html;
 
 import 'package:archive/archive.dart' as arc;
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -21,6 +20,7 @@ import 'package:logging/logging.dart';
 import '../enum.dart';
 import '../jobs.dart';
 import '../scm.dart';
+import '../utils.dart' as util;
 import '../../spark_flags.dart';
 
 final Logger _logger = new Logger('spark.bower_fetcher');
@@ -157,26 +157,9 @@ class BowerFetcher {
   }
 
   Future<String> _readRemoteSpecFile(_Package package) {
-    final completer = new Completer();
-    final request = new html.HttpRequest();
-
-    request.open('GET', package.getSingleFileUrl(_packageSpecFileName));
-    request.onLoadEnd.listen((event) {
-      if (request.status == 200) {
-        completer.complete(request.responseText);
-      } else if (request.status == 404) {
-        // Remote bower.json doesn't exist: it's just a leaf package with no
-        // dependencies. Emulate that by returning an empty JSON.
-        completer.complete('{}');
-      } else {
-        completer.completeError(
-            "Failed to load $_packageSpecFileName for '${package.name}': "
-            "${request.statusText}");
-      }
-    });
-    request.send();
-
-    return completer.future;
+    final String url = package.getSingleFileUrl(_packageSpecFileName);
+    return util.downloadFileViaXhr(url).catchError((e) =>
+        throw "Failed to load $_packageSpecFileName for '${package.name}': $e");
   }
 
   Future _fetchPackage(_Package package, FetchMode mode) {
@@ -252,25 +235,11 @@ class BowerFetcher {
 
   Future _fetchPackageViaZip(_Package package, chrome.DirectoryEntry dir) {
     final String url = package.getZipUrl();
-    final completer = new Completer();
-
-    final request = new html.HttpRequest();
-    request.open('GET', url);
-    request.overrideMimeType('text\/plain; charset=x-user-defined');
-    request.onLoadEnd.listen((event) {
-      if (request.status == 200) {
-        _inflateArchive(request.responseText.codeUnits, dir).then((_) {
-          completer.complete();
-        });
-      } else {
-        completer.completeError(
-            "Failed to download zipped package '${package.name}': "
-            "${request.statusText}");
-      }
+    return util.downloadFileViaXhr(url).then((String fileText) {
+      return _inflateArchive(fileText.codeUnits, dir);
+    }).catchError((e) {
+      throw "Failed to download zipped package '${package.name}': $e";
     });
-    request.send();
-
-    return completer.future;
   }
 
   Future _inflateArchive(List<int> bytes, chrome.DirectoryEntry dir) {
