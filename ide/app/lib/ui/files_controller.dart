@@ -683,8 +683,10 @@ class FilesController implements TreeViewDelegate {
 
   void _addAllFiles() {
     for (Resource resource in _workspace.getChildren()) {
-      _files.add(resource);
-      _recursiveAddResource(resource);
+      if (_showResource(resource)) {
+        _files.add(resource);
+        _recursiveAddResource(resource);
+      }
     }
     _sortTopLevel();
     localPrefs.getValue('FilesExpandedState').then((String state) {
@@ -708,18 +710,18 @@ class FilesController implements TreeViewDelegate {
     List<String> updatedSelection = new List.from(_treeView.selection);
     List<String> updatedExpanded = new List.from(_treeView.expandedState);
 
-    event.changes.where((d) => _showResource(d.resource))
-        .forEach((ChangeDelta change) {
+    event.changes.forEach((ChangeDelta change) {
+      Resource resource = change.resource;
       if (change.type == EventType.ADD) {
-        var resource = change.resource;
-        if (resource.isTopLevel) {
-          _files.add(resource);
-          needsSortTopLevel = true;
+        if (_showResource(resource)) {
+          if (resource.isTopLevel) {
+            _files.add(resource);
+            needsSortTopLevel = true;
+          }
+          _filesMap[resource.uuid] = resource;
+          needsReloadData = true;
         }
-        _filesMap[resource.uuid] = resource;
-        needsReloadData = true;
       } else if (change.type == EventType.DELETE) {
-        var resource = change.resource;
         if (resource.isTopLevel) {
           _files.remove(resource);
           needsSortTopLevel = true;
@@ -746,7 +748,6 @@ class FilesController implements TreeViewDelegate {
         updatedSelection = [change.resource.uuid];
         needsUpdateSelection = true;
 
-        var resource = change.resource;
         if (resource.isTopLevel) {
           _files.remove(change.originalResource);
           _files.add(resource);
@@ -758,6 +759,26 @@ class FilesController implements TreeViewDelegate {
         });
         // Add new resources.
         _recursiveAddResource(resource);
+      }
+
+      Resource cacheResource = resource.project.getChild('cache');
+      if (cacheResource != null) {
+        print('update cache ${cacheResource}');
+        if (!cacheResource.isScmPrivate() && !_filesMap.containsKey(cacheResource.uuid)) {
+          // If there's a folder of a project named cache and pubspec.yaml is
+          // disappear, we need to show that folder.
+          _recursiveAddResource(cacheResource);
+          needsReloadData = true;
+          needsUpdateSelection = true;
+        } else if (cacheResource.isScmPrivate() && _filesMap.containsKey(cacheResource.uuid)) {
+          // It happens when a folder of a project is renamed to cache while
+          // there's a pubspec.yaml file. We need to hide that folder.
+          cacheResource.traverse(includeDerived: false, includeScmPrivate: true).forEach((Resource res) {
+            _filesMap.remove(res.uuid);
+          });
+          needsReloadData = true;
+          needsUpdateSelection = true;
+        }
       }
     });
 
@@ -827,12 +848,11 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _recursiveAddResource(Resource resource) {
+    if (!_showResource(resource)) return;
     _filesMap[resource.uuid] = resource;
     if (resource is Container) {
       resource.getChildren().forEach((child) {
-        if (_showResource(child)) {
-          _recursiveAddResource(child);
-        }
+        _recursiveAddResource(child);
       });
     }
   }
