@@ -101,6 +101,8 @@ class BowerFetcher {
         }
       });
 
+      // Download all the packages in parallel; also, failure to download some
+      // don't affect the others.
       return Future.wait(futures);
     });
   }
@@ -122,6 +124,9 @@ class BowerFetcher {
   }
 
   List<_Package> _parseDepsFromSpec(String spec) {
+    // The local or remote spec file is empty of missing.
+    if (spec.isEmpty) return [];
+
     Map<String, dynamic> specMap;
     try {
       specMap = JSON.decode(spec);
@@ -248,6 +253,10 @@ class BowerFetcher {
     final List<int> cleansedBytes = bytes.map((b) => b & 0xff).toList();
     final arc.Archive archive =
         new arc.ZipDecoder().decodeBytes(cleansedBytes, verify: false);
+    // Sequentially write files in the archive to [dir].
+    // TODO(ussuri): Consider doing  this in parallel using [Future.wait], as
+    // [_writeArchiveFile] does both I/O and CPU (for decompression). Also,
+    // that would make writes independent from each other.
     return Future.forEach(archive.files, (arc.ArchiveFile file) {
       _writeArchiveFile(file, dir);
     });
@@ -258,6 +267,7 @@ class BowerFetcher {
     if (file.size == 0 && file.name.endsWith('/')) {
       // GitHub archives always contain a top level directory named
       // <package_name>-<branch>. We're not interested in it.
+      // We also don't have to create any sub-directories: [_writeFile] will.
       return new Future.value();
     } else {
       // Same as above: strip the top level directory from the file name.
