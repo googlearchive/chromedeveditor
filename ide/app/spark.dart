@@ -2104,7 +2104,7 @@ class NewProjectAction extends SparkActionWithDialog {
           });
         });
       });
-    }).catchError((e) {
+    }).catchError((Exception e) {
       spark.showErrorMessage('Error Creating Project', exception: e);
     });
   }

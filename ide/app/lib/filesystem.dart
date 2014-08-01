@@ -88,7 +88,22 @@ class MockFileSystemAccess extends FileSystemAccess {
   MockProjectLocationManager get locationManager =>
       _locationManager;
 
+  WorkspaceRoot _root;
+  WorkspaceRoot get root {
+    if (_root == null) {
+      _root = new MockWorkspaceRoot(location.entry);
+    }
+
+    return _root;
+  }
+
   MockFileSystemAccess() : super._() {
+    MockFileSystem fs = new MockFileSystem();
+    DirectoryEntry rootParent = fs.createDirectory("rootParent");
+
+    rootParent.createDirectory("root").then((DirectoryEntry root) {
+      location = new LocationResult(rootParent, root, false);
+    });
   }
 
   Future<String> getDisplayPath(chrome.Entry entry) {
@@ -103,13 +118,6 @@ class MockFileSystemAccess extends FileSystemAccess {
         .then((ProjectLocationManager manager) {
           _locationManager = manager;
           return manager;
-        }).then((_) {
-          MockFileSystem fs = new MockFileSystem();
-          DirectoryEntry rootParent = fs.createDirectory("rootParent");
-
-          rootParent.createDirectory("root").then((DirectoryEntry root) {
-            location = new LocationResult(rootParent, root, false);
-          });
         });
   }
 }

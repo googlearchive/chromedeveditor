@@ -37,7 +37,7 @@ class SparkUITester {
 
   SparkUITester._internal();
 
-  Future _open(DialogTester dialogTester, MenuItemAccess menuItem) {
+  Future open(DialogTester dialogTester, MenuItemAccess menuItem) {
     expect(dialogTester.functionallyOpened, false);
     expect(dialogTester.visuallyOpened, false);
 
@@ -55,7 +55,7 @@ class SparkUITester {
   Future openAndCloseWithX(MenuItemAccess menuItem, [DialogAccess dialog]) {
     DialogTester dialogTester =
         new DialogTester(dialog != null ? dialog : menuItem.dialogAccess);
-    return _open(dialogTester, menuItem).then((_) {
+    return open(dialogTester, menuItem).then((_) {
       dialogTester.clickClosingX();
       return dialogTester.dialogAccess.onTransitionComplete.first;
     }).then((_) {
@@ -69,8 +69,20 @@ class SparkUITester {
                                 [DialogAccess dialog]) {
     DialogTester dialogTester =
         new DialogTester(dialog != null ? dialog : menuItem.dialogAccess);
-    return _open(dialogTester, menuItem).then((_) {
+    return open(dialogTester, menuItem).then((_) {
       dialogTester.clickButton(button);
+      return dialogTester.dialogAccess.onTransitionComplete.first;
+    }).then((_) {
+      expect(dialogTester.functionallyOpened, false);
+      expect(dialogTester.visuallyOpened, false);
+    }).then((_) => new Future.delayed(Duration.ZERO));
+  }
+
+  Future openAndCloseWith(MenuItemAccess menuItem, Function callback,
+                                [DialogAccess dialog]) {
+    DialogTester dialogTester =
+        new DialogTester(dialog != null ? dialog : menuItem.dialogAccess);
+    return open(dialogTester, menuItem).then((_) => callback(dialogTester)).then((_) {
       return dialogTester.dialogAccess.onTransitionComplete.first;
     }).then((_) {
       expect(dialogTester.functionallyOpened, false);
@@ -152,10 +164,12 @@ defineTests() {
       MockFileSystemAccess mockFsa = fileSystemAccess;
       return mockFsa.locationManager.setupRoot().then((_) {
         return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
-      }).then((_) {
-        return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu,
-            sparkAccess.newProjectDialog.createButton);
-      });
+      }).then((_) => sparkTester.openAndCloseWith(sparkAccess.newProjectMenu, (_) {
+        return new Future.value().then((_) {
+            return sparkAccess.newProjectDialog.setNameField("hello");
+        }).then((_) =>
+            sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton));
+      }));
     });
   });
 
