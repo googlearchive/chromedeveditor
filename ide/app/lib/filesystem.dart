@@ -206,28 +206,36 @@ class ProjectLocationManager {
     }*/
 
     // Show a dialog with explaination about what this folder is for.
-    return chooseNewProjectLocation();
+    return chooseNewProjectLocation(true);
   }
 
   /**
    * Opens a pop up and asks the user to change the root directory. Internally,
    * the stored value is changed here.
    */
-  Future<LocationResult> chooseNewProjectLocation() {
+  Future<LocationResult> chooseNewProjectLocation(bool showFileSystemDialog) {
     // Show a dialog with explaination about what this folder is for.
-    return _showRequestFileSystemDialog().then((bool accepted) {
-      if (!accepted) {
-        return null;
-      }
-      // Display a dialog asking the user to choose a default project folder.
-      return selectFolder(suggestedName: 'projects').then((entry) {
-        if (entry == null) return null;
-
-        _projectLocation = new LocationResult(entry, entry, false);
-        _spark.localPrefs.setValue('projectFolder',
-            chrome.fileSystem.retainEntry(entry));
-        return _projectLocation;
+    if (showFileSystemDialog) {
+      return _showRequestFileSystemDialog().then((bool accepted) {
+        if (!accepted) {
+          return null;
+        }
+        return _selectFolderDialog();
       });
+    } else {
+      return _selectFolderDialog();
+    }
+  }
+
+  Future<LocationResult> _selectFolderDialog() {
+    // Display a dialog asking the user to choose a default project folder.
+    return _selectFolder(suggestedName: 'projects').then((entry) {
+      if (entry == null) return null;
+
+      _projectLocation = new LocationResult(entry, entry, false);
+      _spark.localPrefs.setValue('projectFolder',
+          chrome.fileSystem.retainEntry(entry));
+      return _projectLocation;
     });
   }
 
@@ -328,7 +336,6 @@ class MockProjectLocationManager extends ProjectLocationManager {
   }
 
   Future<LocationResult> createNewFolder(String name) {
-//    setupRoot();
     return _projectLocation.entry.createDirectory(name, exclusive: true).then((dir) {
       return new LocationResult(_projectLocation.entry, dir, false);
     }).catchError((_) {
@@ -341,7 +348,7 @@ class MockProjectLocationManager extends ProjectLocationManager {
  * Allows a user to select a folder on disk. Returns the selected folder
  * entry. Returns `null` in case the user cancels the action.
  */
-Future<chrome.DirectoryEntry> selectFolder({String suggestedName}) {
+Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
   Completer completer = new Completer();
   chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
       type: chrome.ChooseEntryType.OPEN_DIRECTORY);
