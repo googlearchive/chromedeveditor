@@ -404,6 +404,16 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
   }
 
   Future launch(Application application, LaunchTarget launchTarget) {
+    if (!management.available) {
+      return new Future.error(
+          'Unable to launch; the chrome.management API is not available.');
+    }
+
+    if (!developerPrivate.available) {
+      return new Future.error(
+          'Unable to launch; the chrome.developerPrivate API is not available.');
+    }
+
     Container container = application.primaryResource;
 
     String idToLaunch;
