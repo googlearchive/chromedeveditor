@@ -431,7 +431,8 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
       // TODO(grv): This assumes that the loaded extension is directly loaded
       // from its location. This will not work with syncfs projects as they are
       // copied into apps_target directory. Remove this hack once the api returns
-      // the appID on loading.
+      // the appID on loading. The issue is tracked here
+      // https://github.com/dart-lang/chromedeveditor/issues/3054
       return _getAppId(container.path);
     }).then((String launchId) {
       _launchId(launchId);
