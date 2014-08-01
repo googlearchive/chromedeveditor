@@ -428,7 +428,11 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
       return new Future.delayed(new Duration(milliseconds: 100));
     }).then((_) {
       if (idToLaunch != null) return idToLaunch;
-      return _getAppId(container.name);
+      // TODO(grv): This assumes that the loaded extension is directly loaded
+      // from its location. This will not work with syncfs projects as they are
+      // copied into apps_target directory. Remove this hack once the api returns
+      // the appID on loading.
+      return _getAppId(container.path);
     }).then((String launchId) {
       _launchId(launchId);
     });
@@ -450,10 +454,10 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
    * TODO(grv): This is a temporary function until loadDirectory returns the
    * app_id.
    */
-  Future<String> _getAppId(String name) {
+  Future<String> _getAppId(String path) {
     return developerPrivate.getItemsInfo(false, false).then((List<ItemInfo> items) {
       for (ItemInfo item in items) {
-        if (item.is_unpacked && item.path.endsWith(name)) {
+        if (item.is_unpacked && item.path.endsWith(path)) {
           return item.id;
         }
       };
