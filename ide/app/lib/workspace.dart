@@ -210,8 +210,9 @@ class Workspace extends Container {
     return _roots.map((root) => root.resource).toList(growable: false);
   }
 
-  Iterable<Resource> traverse({bool includeDerived: true}) {
-    return Resource._workspaceTraversal(this, includeDerived);
+  Iterable<Resource> traverse({bool includeDerived: true,
+                               bool includeScmPrivate: false}) {
+    return Resource._workspaceTraversal(this, includeDerived, includeScmPrivate);
   }
 
   List<File> getFiles() {
@@ -639,7 +640,7 @@ abstract class Resource {
 
   static List<String> _resourceUuids(Resource resource) {
     if (resource is Container) {
-      return resource.traverse().map((r) => r.uuid).toList();
+      return resource.traverse(includeScmPrivate: true).map((r) => r.uuid).toList();
     } else {
       return [resource.uuid];
     }
@@ -676,6 +677,7 @@ abstract class Resource {
       for (int i = 0 ; i < originalUuids.length ; i++) {
         mapping[originalUuids[i]] = uuids[i];
       }
+      print('rename mapping: ${mapping}');
       List<ChangeDelta> additions = ChangeDelta.containerAdd(res);
       _fireResourceChange(new ChangeDelta.rename(this, res, mapping,
           deletions, additions));
@@ -763,8 +765,9 @@ abstract class Resource {
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
    */
-  Iterable<Resource> traverse({bool includeDerived: true}) {
-    return _workspaceTraversal(this, includeDerived);
+  Iterable<Resource> traverse({bool includeDerived: true,
+                               bool includeScmPrivate: false}) {
+    return _workspaceTraversal(this, includeDerived, includeScmPrivate);
   }
 
   /**
@@ -773,14 +776,17 @@ abstract class Resource {
    */
   Future refresh();
 
-  static Iterable<Resource> _workspaceTraversal(Resource r, bool includeDerived) {
+  static Iterable<Resource> _workspaceTraversal(Resource r,
+                                                bool includeDerived,
+                                                bool includeScmPrivate) {
     if (r is Container) {
-      if (r.isScmPrivate()) return [];
+      if (!includeScmPrivate && r.isScmPrivate()) return [];
       if (!includeDerived && r.isDerived()) return [];
 
       return [
           [r],
-          r.getChildren().expand((r) => _workspaceTraversal(r, includeDerived))
+          r.getChildren().expand((r) =>
+              _workspaceTraversal(r, includeDerived, includeScmPrivate))
       ].expand((i) => i);
     } else {
       return [r];
