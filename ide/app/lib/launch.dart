@@ -404,6 +404,16 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
   }
 
   Future launch(Application application, LaunchTarget launchTarget) {
+    if (!management.available) {
+      return new Future.error(
+          'Unable to launch; the chrome.management API is not available.');
+    }
+
+    if (!developerPrivate.available) {
+      return new Future.error(
+          'Unable to launch; the chrome.developerPrivate API is not available.');
+    }
+
     Container container = application.primaryResource;
 
     String idToLaunch;
@@ -538,7 +548,7 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
       CompilerService compiler = services.getService("compiler");
 
       server.addServlet(new StaticResourcesServlet());
-      server.addServlet(new Dart2JsServlet(workspace, compiler, notifier));
+      server.addServlet(new Dart2JsServlet(workspace, notifier, compiler));
       server.addServlet(new PubPackagesServlet(workspace, pubManager));
       server.addServlet(new WorkspaceServlet(workspace));
       server.addServlet(new BowerPackagesServlet(this, bowerManager));
@@ -876,7 +886,7 @@ class BowerPackagesServlet extends PicoServlet {
 
     if (!bowerManager.properties.isFolderWithPackages(project)) return null;
 
-    String url = request.uri.path;
+    String url = _getPath(request);
     File file = bowerManager.getResolverFor(project).resolveRefToFile(url);
     return file;
   }
@@ -990,10 +1000,12 @@ class StaticResourcesServlet extends PicoServlet {
  */
 class Dart2JsServlet extends PicoServlet {
   final Workspace workspace;
-  final CompilerService compiler;
   final Notifier notifier;
+  CompilerService compiler;
 
-  Dart2JsServlet(this.workspace, this.compiler, this.notifier);
+  Dart2JsServlet(this.workspace, this.notifier, CompilerService compiler) {
+    this.compiler = new _CachingCompiler(compiler);
+  }
 
   bool canServe(HttpRequest request) {
     String path = _getPath(request);
@@ -1017,8 +1029,8 @@ class Dart2JsServlet extends PicoServlet {
     file.workspace.jobManager.schedule(
         new ProgressJob('Compiling ${file.name}…', completer));
 
-    // TODO(devoncarew): Cache the compiled results. Re-use if this file is
-    // requested again and the dependencies haven't changed.
+    // We cache the compiled results and re-use if this file is requested again
+    // and the dependencies haven't changed.
     return compiler.compileFile(file).then((CompileResult result) {
       if (!result.hasOutput) {
         // Display a message to the user. In the future, we may want to write
@@ -1041,14 +1053,21 @@ class Dart2JsServlet extends PicoServlet {
             '${result.output.length ~/ 1024} kb');
         HttpResponse response = new HttpResponse.ok();
         response.setContent(result.output);
-        response.setContentTypeFrom(request.uri.path);
+        response.setContentTypeFrom(_getPath(request));
         return response;
       }
     }).whenComplete(() => completer.complete());
   }
 }
 
-String _getPath(HttpRequest request) => request.uri.pathSegments.join('/');
+/**
+ * Return the [HttpRequest]'s uri with any query parameters stripped off.
+ */
+String _getPath(HttpRequest request) {
+  String path = request.uri.pathSegments.join('/');
+  int index = path.indexOf('?');
+  return index == -1 ? path : path.substring(0, index);
+}
 
 /**
  * Get user disaplyable text for the given error.
@@ -1098,4 +1117,56 @@ bool _dartFileUpToDate(File file, {bool csp: false}) {
   // TODO(devoncarew): Do we need to skip secondary package files?
   return isUpToDate(jsFile, file.project,
       (File file) => file.name.endsWith('.dart'));
+}
+
+/**
+ * An implementation of [CompilerService] which delegates through to another
+ * [CompilerService] while caching successful compiles.
+ */
+class _CachingCompiler implements CompilerService {
+  final CompilerService _compiler;
+
+  CompileResult _cachedResult;
+  File _cachedFile;
+  int _cachedTimestamp;
+
+  _CachingCompiler(this._compiler);
+
+  Future<CompileResult> compileFile(File file, {bool csp: false}) {
+    if (_cachedResult != null && _cachedFile == file) {
+      if (_isUpToDate(file, _cachedTimestamp)) {
+        return new Future.value(_cachedResult);
+      }
+    }
+
+    _cachedResult = null;
+    _cachedFile = null;
+
+    // Reset the cached timestamp.
+    _cachedTimestamp = new DateTime.now().millisecondsSinceEpoch;
+
+    return _compiler.compileFile(file, csp: csp).then((result) {
+      if (result.getSuccess()) {
+        _cachedResult = result;
+        _cachedFile = file;
+      }
+
+      return result;
+    });
+  }
+
+  bool _isUpToDate(File file, int cachedTimestamp) {
+    // TODO(devoncarew): Do we need to skip secondary package files?
+    return isUpToDateTimestamp(cachedTimestamp, file.project,
+        (File file) => file.name.endsWith('.dart'));
+  }
+
+  Future<CompileResult> compileString(String string) =>
+      _compiler.compileString(string);
+
+  String get serviceId => _compiler.serviceId;
+
+  void set services(Services _services) { }
+
+  Services get services => _compiler.services;
 }

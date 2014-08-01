@@ -503,14 +503,14 @@
               horizontal justify="spaced" spacing="small">
             <label class="settings-label">Editor theme:</label>
             <span class="settings-value"></span>
-            <spark-button id="themeMinus" class="plus-minus-button"
+            <spark-button id="themeMinus" class="change-setting-button"
                 flat round padding="none" on-click="{{onThemeMinus}}">
               <!--TODO(ussuri): Use SVG <use> directives instead here and below.-->
               <svg viewBox="0 0 24 24" width="24" height="24">
                 <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
               </svg>
             </spark-button>
-            <spark-button id="themePlus" class="plus-minus-button"
+            <spark-button id="themePlus" class="change-setting-button"
                 flat round padding="none" on-click="{{onThemePlus}}">
               <svg viewBox="0 0 24 24" width="24" height="24">
                 <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
@@ -525,13 +525,13 @@
             horizontal justify="spaced" spacing="small">
           <label class="settings-label">Editor font:</label>
           <span class="settings-value"></span>
-          <spark-button id="fontMinus" class="plus-minus-button"
+          <spark-button id="fontMinus" class="change-setting-button"
               flat round padding="none" on-click="{{onFontSmaller}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M19,13H5v-2h14V13z"></path>
             </svg>
           </spark-button>
-          <spark-button id="fontPlus" class="plus-minus-button"
+          <spark-button id="fontPlus" class="change-setting-button"
               flat round padding="none" on-click="{{onFontLarger}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>
@@ -545,13 +545,13 @@
             horizontal justify="spaced" spacing="small">
           <label class="settings-label">Key bindings:</label>
           <span class="settings-value"></span>
-          <spark-button id="keysMinus" class="plus-minus-button"
+          <spark-button id="keysMinus" class="change-setting-button"
               flat round padding="none" on-click="{{onKeysMinus}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
             </svg>
           </spark-button>
-          <spark-button id="keysPlus" class="plus-minus-button"
+          <spark-button id="keysPlus" class="change-setting-button"
               flat round padding="none" on-click="{{onKeysPlus}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
@@ -568,8 +568,11 @@
               horizontal justify="spaced" spacing="small">
             <label class="settings-label">Root directory:</label>
             <span id="directoryLabel" class="settings-value"></span>
-            <spark-button id="chooseDirectory" on-click="{{onClickRootDirectory}}"
-            class="choose-directory-button">...
+            <spark-button id="chooseDirectory" class="change-setting-button"
+                flat round padding="medium" on-click="{{onClickRootDirectory}}">
+              <svg viewBox="0 0 24 24" width="24" height="24">
+                <path d="M10,4H4C2.9,4,2,4.9,2,6l0,12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"></path>
+              </svg>
             </spark-button>
           </spark-toolbar>
         </div>

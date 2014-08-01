@@ -125,6 +125,7 @@ spark-dialog {
   color: #666;
   text-align: center;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #settingsDialog .settings-block {
@@ -133,12 +134,12 @@ spark-dialog {
   background-color: white;
 }
 
-#settingsDialog .plus-minus-button {
+#settingsDialog .change-setting-button {
   width: 30px;
   height: 30px;
 }
 
-#settingsDialog .settings-value + .plus-minus-button {
+#settingsDialog .settings-value + .change-setting-button {
   margin-left: 5px;
 }
 
@@ -274,11 +275,6 @@ label[for="stripWhitespace"] {
   display: inline-block;
   margin-left: 10px;
   vertical-align: middle;
-}
-
-#directoryLabel {
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 #moreSearch {

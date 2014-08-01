@@ -450,6 +450,10 @@ abstract class Spark
         .listen((FilesControllerPersistTabEvent event) {
       editorArea.persistTab(event.file);
     });
+    querySelector('#showFileViewButton').onClick.listen((_) {
+      Action action = actionManager.getAction('show-files-view');
+      action.invoke();
+    });
   }
 
   void initSearchController() {
@@ -957,6 +961,234 @@ abstract class Spark
   void searchViewControllerNavigate(SearchViewController controller, NavigationLocation location) {
     navigationManager.gotoLocation(location);
   }
+
+  /**
+   * Check if this project uses Bower, and if so automatically run a
+   * `bower install`.
+   */
+  void _checkAutoRunBower(ws.Container container) {
+    if (bowerManager.properties.isFolderWithPackages(container)) {
+      jobManager.schedule(new BowerGetJob(this, container));
+    }
+  }
+
+  /**
+   * Check if this project uses Pub, and if so automatically run a `pub install`.
+   */
+  void _checkAutoRunPub(ws.Container container) {
+    if (pubManager.canRunPub(container)) {
+      // Don't run pub on Windows (#2743).
+      if (PlatformInfo.isWin) {
+        showMessage(
+            'Run Pub Get',
+            "This Dart project uses pub packages. Currently, we can't run pub "
+            "from the Chrome Dev Editor due to an issue with Windows junction "
+            "points. In order to run this project, please install Dart's "
+            "command-line tools (available at www.dartlang.org), and run "
+            "'pub get'.");
+      } else {
+        // There is issue with the workspace sending duplicate events.
+        // TODO(grv): Revisit workspace events.
+        Timer.run(() {
+          jobManager.schedule(new PubGetJob(this, container));
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Used to manage the default location to create new projects.
+ *
+ * This class also abstracts a bit other the differences between Chrome OS and
+ * Windows/Mac/linux.
+ */
+class ProjectLocationManager {
+  LocationResult _projectLocation;
+  final Spark _spark;
+
+  /**
+   * Create a ProjectLocationManager asynchronously, restoring the default
+   * project location from the given preferences.
+   */
+  static Future<ProjectLocationManager> restoreManager(Spark spark) {
+    //localPrefs, workspace
+    return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
+      if (folderToken == null) {
+        return new ProjectLocationManager._(spark);
+      }
+
+      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+        return _initFlagsFromProjectLocation(entry).then((_) {
+          return new ProjectLocationManager._(spark,
+              new LocationResult(entry, entry, false));
+        });
+      }).catchError((e) {
+        return new ProjectLocationManager._(spark);
+      });
+    });
+  }
+
+  /**
+   * Try to read and set the highest precedence developer flags from
+   * "<project_location>/.spark.json".
+   */
+  static Future _initFlagsFromProjectLocation(chrome.DirectoryEntry projDir) {
+    return projDir.getFile('.spark.json').then(
+        (chrome.ChromeFileEntry flagsFile) {
+      return SparkFlags.initFromFile(flagsFile.readText());
+    }).catchError((_) {
+      // Ignore missing file.
+      return new Future.value();
+    });
+  }
+
+  //this._prefs, this._workspace
+  ProjectLocationManager._(this._spark, [this._projectLocation]);
+
+  /**
+   * Returns the default location to create new projects in. For Chrome OS, this
+   * will be the sync filesystem. This method can return `null` if the user
+   * cancels the folder selection dialog.
+   */
+  Future<LocationResult> getProjectLocation() {
+    if (_projectLocation != null) {
+      // Check if the saved location exists. If so, return it. Otherwise, get a
+      // new location.
+      return _projectLocation.exists().then((bool value) {
+        if (value) {
+          return _projectLocation;
+        } else {
+          _projectLocation = null;
+          return getProjectLocation();
+        }
+      });
+    }
+
+    // On Chrome OS, use the sync filesystem.
+    // TODO(grv): Enable syncfs once the api is more stable.
+    /*if (PlatformInfo.isCros && _spark.workspace.syncFsIsAvailable) {
+      return chrome.syncFileSystem.requestFileSystem().then((fs) {
+        var entry = fs.root;
+        return new LocationResult(entry, entry, true);
+      });
+    }*/
+
+    // Show a dialog with explaination about what this folder is for.
+    return chooseNewProjectLocation(true);
+  }
+
+  /**
+   * Opens a pop up and asks the user to change the root directory. Internally,
+   * the stored value is changed here.
+   */
+  Future<LocationResult> chooseNewProjectLocation(bool showFileSystemDialog) {
+    // Show a dialog with explaination about what this folder is for.
+    if (showFileSystemDialog) {
+      return _showRequestFileSystemDialog().then((bool accepted) {
+        if (!accepted) {
+          return null;
+        }
+        return _selectFolderDialog();
+      });
+    } else {
+      return _selectFolderDialog();
+    }
+  }
+
+  Future<LocationResult> _selectFolderDialog() {
+    // Display a dialog asking the user to choose a default project folder.
+    return _selectFolder(suggestedName: 'projects').then((entry) {
+      if (entry == null) return null;
+
+      _projectLocation = new LocationResult(entry, entry, false);
+      _spark.localPrefs.setValue('projectFolder',
+          chrome.fileSystem.retainEntry(entry));
+      return _projectLocation;
+    });
+  }
+
+  Future<bool> _showRequestFileSystemDialog() {
+    return _spark.askUserOkCancel('Please choose a folder to store your Chrome Dev Editor projects.',
+        okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
+  }
+
+  /**
+   * This will create a new folder in default project location. It will attempt
+   * to use the given [defaultName], but will disambiguate it if necessary. For
+   * example, if `defaultName` already exists, the created folder might be named
+   * something like `defaultName-1` instead.
+   */
+  Future<LocationResult> createNewFolder(String defaultName) {
+    return getProjectLocation().then((LocationResult root) {
+      return root == null ? null : _create(root, defaultName, 1);
+    });
+  }
+
+  Future<LocationResult> _create(
+      LocationResult location, String baseName, int count) {
+    String name = count == 1 ? baseName : '${baseName}-${count}';
+
+    return location.parent.createDirectory(name, exclusive: true).then((dir) {
+      return new LocationResult(location.parent, dir, location.isSync);
+    }).catchError((_) {
+      if (count > 50) {
+        throw "Error creating project '${baseName}.'";
+      } else {
+        return _create(location, baseName, count + 1);
+      }
+    });
+  }
+}
+
+class LocationResult {
+  /**
+   * The parent Entry. This can be useful for persistng the info across
+   * sessions.
+   */
+  final chrome.DirectoryEntry parent;
+
+  /**
+   * The created location.
+   */
+  final chrome.DirectoryEntry entry;
+
+  /**
+   * Whether the entry was created in the sync filesystem.
+   */
+  final bool isSync;
+
+  LocationResult(this.parent, this.entry, this.isSync);
+
+  /**
+   * The name of the created entry.
+   */
+  String get name => entry.name;
+
+  Future<bool> exists() {
+    if (isSync) return new Future.value(true);
+
+    return entry.getMetadata().then((_) {
+      return true;
+    }).catchError((e) {
+      return false;
+    });
+  }
+}
+
+/**
+ * Allows a user to select a folder on disk. Returns the selected folder
+ * entry. Returns `null` in case the user cancels the action.
+ */
+Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
+  Completer completer = new Completer();
+  chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+      type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+  if (suggestedName != null) options.suggestedName = suggestedName;
+  chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    completer.complete(res.entry);
+  }).catchError((e) => completer.complete(null));
+  return completer.future;
 }
 
 /**
@@ -2091,14 +2323,10 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file
-            if (spark.pubManager.canRunPub(project)) {
-              spark.jobManager.schedule(new PubGetJob(spark, project));
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
           });
         });
       });
@@ -3131,18 +3359,10 @@ class _GitCloneTask {
             });
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.canRunPub(project)) {
-              // There is issue with workspace sending duplicate events.
-              // TODO(grv): revisit workspace events.
-              Timer.run(() {
-                spark.jobManager.schedule(new PubGetJob(spark, project));
-              });
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
 
             spark.workspace.save();
           });
@@ -3292,14 +3512,10 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.canRunPub(resource)) {
-        spark.jobManager.schedule(new PubGetJob(spark, resource));
-      }
+      spark._checkAutoRunPub(resource as Container);
 
       // Run Bower if the folder has a bower.json file.
-      if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
-        spark.jobManager.schedule(new BowerGetJob(spark, resource));
-      }
+      spark._checkAutoRunBower(resource as Container);
     }).then((_) {
       return new SparkJobStatus(message: 'Opened folder ${_entry.fullPath}');
     }).catchError((e) {

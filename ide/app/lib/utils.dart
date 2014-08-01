@@ -565,3 +565,30 @@ class JsonPrinter {
   }
 }
 
+/**
+ * Downloads a remote file at [url]. Returns the file's text. If file doesn't
+ * exist, returns an empty string.
+ */
+Future<String> downloadFileViaXhr(
+    String url,
+    [String mimeType = 'text\/plain; charset=x-user-defined']) {
+  final completer = new Completer();
+  final request = new html.HttpRequest();
+
+  request.open('GET', url);
+  request.overrideMimeType(mimeType);
+  request.onLoadEnd.listen((event) {
+    if (request.status == 200) {
+      completer.complete(request.responseText);
+    } else if (request.status == 404) {
+      // Remote file doesn't exist.
+      completer.complete('');
+    } else {
+      completer.completeError(
+          "Failed to download '$url': ${request.statusText}");
+    }
+  });
+  request.send();
+
+  return completer.future;
+}

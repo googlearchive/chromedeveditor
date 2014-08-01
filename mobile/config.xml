@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns     = "http://www.w3.org/ns/widgets"
+        xmlns:cdv = "http://cordova.apache.org/ns/1.0"
+        id        = "com.your.company.HelloWorld"
+        version   = "0.14.0">
+    <name>__MSG_app_name__</name>
+
+    <description>
+        __MSG_app_description__
+    </description>
+
+    <author>
+        Author name and email
+    </author>
+
+    <preference name="KeyboardShrinksView" value="true" />
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarBackgroundColor" value="#000000" />
+    <preference name="iosPersistentFileLocation" value="Library" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
+
+    <content src="plugins/org.chromium.bootstrap/chromeapp.html" />
+</widget>

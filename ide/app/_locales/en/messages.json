@@ -1,6 +1,6 @@
 {
   "app_name": { "message": "Chrome Dev Editor" },
-  "app_description": { "message": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform - Web Apps and Chrome Apps, written in JavaScript or Dart" },
+  "app_description": { "message": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform" },
 
   "ace_modes": { "message":
     "css,dart,html,javascript,json,less,markdown,text,xml,yaml"

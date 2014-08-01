@@ -4,6 +4,7 @@
 
 library spark.workspace_search;
 
+import 'utils.dart';
 import 'workspace.dart';
 
 import 'dart:async';
@@ -79,7 +80,17 @@ class WorkspaceSearch {
       return new Future.error('interrupted');
     }
 
+    if (isImageFilename(file.name)) {
+      return new Future.value();
+    }
+
     return file.getContents().then((String content) {
+      // If the file contains control characters, it's likely that it's a binary
+      // file, then we don't search text in it.
+      if (content.contains(new RegExp(r'[\000-\010]|[\013-\014]|[\016-\037]'))) {
+        return new Future.value();
+      }
+
       int currentIndex = 0;
       int lineNumber = 1;
       List<WorkspaceSearchResultLine> matches = [];
