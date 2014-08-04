@@ -1039,12 +1039,6 @@ class File extends Resource {
     });
   }
 
-
-  String _calcMD5(String text) {
-    crypto.MD5 md5 = new crypto.MD5();
-    md5.add(text.codeUnits);
-    return crypto.CryptoUtils.bytesToHex(md5.close());
-  }
   int get timestamp => _timestamp;
 
   Future<String> getContents() => _fileEntry.readText();

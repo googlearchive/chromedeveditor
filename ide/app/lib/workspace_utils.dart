@@ -192,12 +192,6 @@ String _buildZipAssetManifest(Container container) {
   return JSON.encode(zipAssetManifest);
 }
 
-String _calcMD5(String text) {
-  crypto.MD5 md5 = new crypto.MD5();
-  md5.add(text.codeUnits);
-  return crypto.CryptoUtils.bytesToHex(md5.close());
-}
-
 String _buildAssetManifestOfModified(Container container) {
   Iterable<Resource> children = container.traverse().skip(1);
   int rootIndex = container.path.length + 1;
@@ -206,7 +200,6 @@ String _buildAssetManifestOfModified(Container container) {
     if (element.isFile) {
       if(element.isChangedSinceDeployment()) {
         String path = element.path.substring(rootIndex);
-//       zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": element.fileContentsHash};
        zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
       }
     }

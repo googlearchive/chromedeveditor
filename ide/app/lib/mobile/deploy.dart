@@ -162,7 +162,7 @@ class MobileDeploy {
 
   List<int> _buildPushRequest(String target, List<int> archivedData) {
     return _buildHttpRequest(target,
-        "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=test",
+        "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
         payload: archivedData);
   }
 
