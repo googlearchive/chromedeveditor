@@ -20,8 +20,6 @@ Future archiveContainer(Container container, [bool addZipManifest = false]) {
   return _recursiveArchive(arch, container, addZipManifest ? 'www/' : '').then((_) {
     if (addZipManifest) {
       String zipAssetManifestString = _buildAssetManifestOfModified(container);
-      print("asset manifest local");
-      print(zipAssetManifestString);
       arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
           zipAssetManifestString.codeUnits.length,
           zipAssetManifestString.codeUnits));
@@ -208,7 +206,8 @@ String _buildAssetManifestOfModified(Container container) {
     if (element.isFile) {
       if(element.isChangedSinceDeployment()) {
         String path = element.path.substring(rootIndex);
-       zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": element.fileContentsHash};
+//       zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": element.fileContentsHash};
+       zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
       }
     }
   }
@@ -236,7 +235,6 @@ Future _recursiveArchive(archive.Archive arch, Container parent,
       if(child.isChangedSinceDeployment()) {
         futures.add(child.getBytes().then((buf) {
           List<int> data = buf.getBytes();
-          print('${prefix}${child.name}');
           arch.addFile(new archive.ArchiveFile('${prefix}${child.name}',
               data.length, data));
         }));

@@ -194,7 +194,6 @@ class MobileDeploy {
   }
 
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
-    print("aici2");
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       return _sendTcpRequest(target, _buildPushRequest(target, archivedData));
@@ -266,9 +265,6 @@ class MobileDeploy {
 
     String body = lines.skip(header.length + 1).join('<br>\n');
 
-    print("-------- response http-----");
-    print(response);
-
     if (!header.first.contains('200')) {
       // Error! Fail with the error line.
       return new Future.error(
@@ -281,6 +277,8 @@ class MobileDeploy {
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;
     AndroidDevice _device;
+    List<String> fileToDelete= [];
+    List<String> fileToAdd= [];
 
     Future _setTimeout(Future httpPushFuture) {
       return httpPushFuture.timeout(new Duration(seconds: 30), onTimeout: () {
@@ -288,7 +286,12 @@ class MobileDeploy {
       });
     }
 
-    // Build the archive.
+    /*
+     * 1. Request the asset manifest file for this app from the device
+     * 2. Compare the asset manifest from the device with the one build here
+     * 3. All the differences betwenn the two are either added for deletion or for addition
+     * 4. The zip that is pushed contains only files that are changed since the last deployement.
+     */
     httpRequest = _buildAssetManifestRequest('localhost');
     return _fetchAndroidDevice().then((deviceResult) {
       _device = deviceResult;
@@ -296,33 +299,27 @@ class MobileDeploy {
     .then((msg) {
       return _expectHttpOkResponse(msg);
     }).then((String result) {
-      Map<String,Map<String,String>>assetManifestOnDevice=JSON.decode(result);
-      print("asset manifest on device");
-      print(assetManifestOnDevice);
-      if(assetManifestOnDevice['assetManifest'] != null) {
-        Map<String,Map<String,String>>assetManifestLocal=JSON.decode(buildAssetManifest(appContainer));
+      Map<String, Map<String, String>> assetManifestOnDevice = JSON.decode(result);
+      if (assetManifestOnDevice['assetManifest'] != null) {
+        Map<String, Map<String, String>> assetManifestLocal = JSON.decode(buildAssetManifest(appContainer));
 
-        List<String> fileToDelete= [];
-        List<String> fileToAdd= [];
-
-        assetManifestOnDevice['assetManifest'].keys.forEach((key){
-          if((key.startsWith("www/")) && (!assetManifestLocal.containsKey(key))) {
+        assetManifestOnDevice['assetManifest'].keys.forEach((key) {
+          if ((key.startsWith("www/")) && (!assetManifestLocal.containsKey(key))) {
             fileToDelete.add(key);
           }
         });
 
         assetManifestLocal.keys.forEach((key) {
-          if((key.startsWith("www/")) && (!assetManifestOnDevice['assetManifest'].containsKey(key))) {
+          if ((key.startsWith("www/")) && (!assetManifestOnDevice['assetManifest'].containsKey(key))) {
             fileToAdd.add(key);
           }
         });
-        if(!fileToDelete.isEmpty) {
+
+        if (!fileToDelete.isEmpty) {
           //if I reach to this point I must send this list with files that need to be deleted
-          Map<String,List<String>> toDeleteMap={};
-          toDeleteMap["paths"]=fileToDelete;
-          String command=JSON.encode(toDeleteMap);
-          print("deleted=>");
-          print(command);
+          Map<String, List<String>> toDeleteMap = {};
+          toDeleteMap["paths"] = fileToDelete;
+          String command = JSON.encode(toDeleteMap);
           httpRequest = _buildDeleteRequest('localhost',command.codeUnits);
           return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
         }
@@ -331,10 +328,8 @@ class MobileDeploy {
     }).then((msg) {
       if(msg!=null) {
         monitor.worked(6);
-        print("deleted ok!");
         return _expectHttpOkResponse(msg);
       }
-//    }).then((String response) {
   }).then((_) {
   return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
@@ -344,7 +339,9 @@ class MobileDeploy {
       monitor.worked(6);
       return _expectHttpOkResponse(msg);
     }).then((String response) {
-    resetFileChangedFlag(appContainer);
+      //here is read the new project etag
+      Map<String, String>etagResponse=JSON.decode(response);
+      resetFileChangedFlag(appContainer);
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
