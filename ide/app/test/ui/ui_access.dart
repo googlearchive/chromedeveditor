@@ -5,7 +5,6 @@
 library spark.ui_access;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:html';
 
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';

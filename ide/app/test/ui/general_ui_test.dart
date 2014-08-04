@@ -9,7 +9,6 @@ import 'dart:async';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:unittest/unittest.dart';
 
-import "../files_mock.dart";
 import "../../lib/filesystem.dart";
 import "ui_access.dart";
 

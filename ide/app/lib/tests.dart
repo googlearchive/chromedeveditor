@@ -15,7 +15,6 @@ import 'package:unittest/unittest.dart' as unittest;
 import 'filesystem.dart';
 import '../spark.dart';
 import 'tcp.dart' as tcp;
-import '../test/files_mock.dart';
 import 'utils.dart';
 
 const int _DEFAULT_TESTPORT = 5120;
