@@ -3969,6 +3969,11 @@ class RunPythonAction extends SparkAction {
     List<ws.Resource> selection = spark._getSelection();
     if (selection.length == 0) return;
     ws.File file = selection.first;
+    if (!file.name.endsWith('.py')) {
+      spark.showErrorMessage('Not a python script',
+          message: 'Please select a python script to run.');
+      return;
+    }
     file.getContents().then((content) {
       return _connect().then((_) {
         return _fs.writeStringToFile('/saltpig/domfs/foo.py', content).then((_) {
