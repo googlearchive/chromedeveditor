@@ -14,16 +14,10 @@ import 'dependency.dart';
 import 'package_mgmt/pub.dart';
 import 'workspace.dart';
 
-import 'preferences.dart' as preferences;
-
-
 Future archiveContainer(Container container, [bool addZipManifest = false]) {
   archive.Archive arch = new archive.Archive();
-  return getDeploymentTime(container.project.name).then((String depTime) {
-    return _recursiveArchiveModifiedFiles(arch, container,
-        depTime, addZipManifest ? 'www/' : '').then((_) {
-      String zipAssetManifestString =
-          _buildAssetManifestOfModified(container, depTime);
+  return _recursiveArchive(arch, container, addZipManifest ? 'www/' : '').then((_) {
+      String zipAssetManifestString = buildAssetManifest(container);
         if (addZipManifest) {
           arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
               zipAssetManifestString.codeUnits.length,
@@ -31,8 +25,25 @@ Future archiveContainer(Container container, [bool addZipManifest = false]) {
         }
         return new archive.ZipEncoder().encode(arch);
     });
+}
+
+Future archiveModifiedFilesInContainer(Container container, [bool addZipManifest = false]) {
+  archive.Archive arch = new archive.Archive();
+  int depTime = getDeploymentTime(container);
+  return _recursiveArchiveModifiedFiles(arch, container,
+      depTime, addZipManifest ? 'www/' : '').then((_) {
+    String zipAssetManifestString =
+        _buildAssetManifestOfModified(container, depTime);
+    print(zipAssetManifestString);
+      if (addZipManifest) {
+        arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
+            zipAssetManifestString.codeUnits.length,
+            zipAssetManifestString.codeUnits));
+      }
+      return new archive.ZipEncoder().encode(arch);
   });
 }
+
 
 String buildAssetManifest(Container container) {
   return _buildZipAssetManifest(container);
@@ -198,7 +209,7 @@ String _buildZipAssetManifest(Container container) {
   return JSON.encode(zipAssetManifest);
 }
 
-String _buildAssetManifestOfModified(Container container, String depTime) {
+String _buildAssetManifestOfModified(Container container, int depTime) {
   Iterable<Resource> children = container.traverse().skip(1);
   int rootIndex = container.path.length + 1;
   Map<String, Map<String, String>> zipAssetManifest = {};
@@ -214,9 +225,9 @@ String _buildAssetManifestOfModified(Container container, String depTime) {
   return JSON.encode(zipAssetManifest);
 }
 
-bool _isChangedSinceDeployment(File file, String depTime) {
+bool _isChangedSinceDeployment(File file, int depTime) {
   if (depTime != null) {
-    if (file.timestamp < int.parse(depTime)) {
+    if (file.timestamp < depTime) {
       return false;
     } else {
       return true;
@@ -227,44 +238,55 @@ bool _isChangedSinceDeployment(File file, String depTime) {
 }
 
 /**
- * This method reads the last deployment time from the local storage
- * and returns it.
- */
-Future<String> getDeploymentTime(String projName) {
-  return preferences.localStore.getValue("deployment-time").then((String mapTime) {
-    if (projName == null) return "0";
-    Map<String, String> depTime = JSON.decode(mapTime);
-    return depTime[projName];
-  }).catchError((_) {
-    return "0";
-  });
-}
-
-/**
  * This method sets the deployment time for a project.
  * The deployment time is saved in the local storage in order to be accessible
  * across sessions.
  */
-Future setDeploymentTime(String projName, int time) {
-  return preferences.localStore.getValue("deployment-time").then((String mapTime) {
-    Map<String, String> depTime = JSON.decode(mapTime);
-    depTime[projName]=time.toString();
-    return preferences.localStore.setValue("deployment-time", JSON.encode(depTime)).
-        then((_) {
-      return null;
-    });
-  }).catchError((_) {
-    Map<String, String> depTime = {};
-    depTime[projName]=time.toString();
-    return preferences.localStore.setValue("deployment-time", JSON.encode(depTime)).
-        then((_) {
-      return null;
-    });
-  });
+void setDeploymentTime(Container container, int time) {
+  container.setMetadata('deployment-time', time);
+}
+
+/**
+ * This method reads the last deployment time from the local storage
+ * and returns it.
+ */
+int getDeploymentTime(Container container) {
+  int ret = container.getMetadata('deployment-time');
+  if (ret != null) return ret;
+  return 0;
+}
+
+void setEtag(Container container, String etag) {
+  container.setMetadata('etag', etag);
+}
+
+String getEtag(Container container) {
+  String ret = container.getMetadata('etag');
+  if (ret != null) return ret;
+  return "0";
+}
+
+
+Future _recursiveArchive(archive.Archive arch, Container parent,
+                                      [String prefix = '']) {
+  List<Future> futures = [];
+
+  for (Resource child in parent.getChildren()) {
+    if (child is File) {
+      futures.add(child.getBytes().then((buf) {
+        List<int> data = buf.getBytes();
+        arch.addFile(new archive.ArchiveFile('${prefix}${child.name}',
+            data.length, data));
+      }));
+    } else if (child is Folder) {
+      futures.add(_recursiveArchive(arch, child, '${prefix}${child.name}/'));
+    }
+  }
+  return Future.wait(futures);
 }
 
 Future _recursiveArchiveModifiedFiles(archive.Archive arch, Container parent,
-    String depTime, [String prefix = '']) {
+    int depTime, [String prefix = '']) {
   List<Future> futures = [];
 
   for (Resource child in parent.getChildren()) {
@@ -280,6 +302,5 @@ Future _recursiveArchiveModifiedFiles(archive.Archive arch, Container parent,
       futures.add(_recursiveArchiveModifiedFiles(arch, child, depTime, '${prefix}${child.name}/'));
     }
   }
-
   return Future.wait(futures);
 }

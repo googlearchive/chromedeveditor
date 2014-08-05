@@ -2404,7 +2404,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
 
     _monitor.runCancellableFuture(f).then((_) {
       _hide();
-      ws_utils.setDeploymentTime(deployContainer.project.name,
+      ws_utils.setDeploymentTime(deployContainer,
           (new DateTime.now()).millisecondsSinceEpoch);
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {

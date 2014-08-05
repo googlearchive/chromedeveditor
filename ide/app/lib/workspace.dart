@@ -16,7 +16,6 @@ import 'dart:math' as math;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
-
 import 'builder.dart';
 import 'enum.dart';
 import 'exception.dart';

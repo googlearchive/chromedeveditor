@@ -299,7 +299,9 @@ class MobileDeploy {
       if (assetManifestOnDevice['assetManifest'] != null) {
         Map<String, Map<String, String>> assetManifestLocal
             = JSON.decode(buildAssetManifest(appContainer));
-
+        if (getEtag(appContainer) != assetManifestOnDevice['assetManifestEtag']) {
+          setDeploymentTime(appContainer, 0);
+        }
         assetManifestOnDevice['assetManifest'].keys.forEach((key) {
           if ((key.startsWith("www/"))
               && (!assetManifestLocal.containsKey(key))) {
@@ -323,7 +325,7 @@ class MobileDeploy {
         }
         return null;
       } else {
-        return setDeploymentTime(appContainer.project.name, 0);
+        return setDeploymentTime(appContainer, 0);
       }
     }).then((msg) {
       if(msg != null) {
@@ -331,7 +333,7 @@ class MobileDeploy {
         return _expectHttpOkResponse(msg);
       }
     }).then((_) {
-      return archiveContainer(appContainer, true)
+      return archiveModifiedFilesInContainer(appContainer, true)
           .then((List<int> archivedData) {
             monitor.worked(3);
             httpRequest = _buildPushRequest('localhost', archivedData);
@@ -341,6 +343,7 @@ class MobileDeploy {
             return _expectHttpOkResponse(msg);
     }).then((String response) {
       Map<String, String> etagResponse = JSON.decode(response);
+      setEtag(appContainer, etagResponse['assetManifestEtag']);
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
