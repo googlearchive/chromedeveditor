@@ -464,6 +464,8 @@ String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
   manifestDict['version'] = version;
   manifestDict['x-spark-revision'] = revision;
   manifestDict.remove('key');
+  Map oauth2Config = manifestDict['oauth2'];
+  oauth2Config['client_id'] = channelConfig['oauth2-clientid'];
   file.writeAsStringSync(new JsonPrinter().print(manifestDict));
 
   // It needs to be copied to compile result directory.
