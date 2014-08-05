@@ -168,6 +168,7 @@ class BowerFetcher {
   }
 
   Future _fetchPackage(_Package package, FetchMode mode) {
+    // TEMP: Leave both options for now for experimentation.
     final Function fetchPackageFunc =
         SparkFlags.bowerUseGitClone ? _fetchPackageViaGit : _fetchPackageViaZip;
 
@@ -314,14 +315,14 @@ Some dependencies could not be resolved and have been skipped.
 To fix, add or modify the following entry in .spark.json under your workspace 
 directory: 
 
-  "bower-mapped-dependencies": {
+  "bower-override-dependencies": {
     ${_unresolvedDepsComments.join('\n    ')}
   }
 
 Alternatively, you can have any dependency ignored by adding its name to 
 the following list in .spark.json:
 
-  "bower-ignored-dependencies": [
+  "bower-ignore-dependencies": [
   ]
 
 Finally, you can also map unsupported complex versions to latest stable 
