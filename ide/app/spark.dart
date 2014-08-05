@@ -53,6 +53,7 @@ import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
 import 'test/all.dart' as all_tests;
+import 'lib/wam/wamfs.dart';
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
@@ -527,6 +528,7 @@ abstract class Spark
     actionManager.registerAction(new SendFeedbackAction(this));
     actionManager.registerAction(new ShowSearchView(this));
     actionManager.registerAction(new ShowFilesView(this));
+    actionManager.registerAction(new RunPythonAction(this));
 
     actionManager.registerKeyListener();
 
@@ -3946,6 +3948,41 @@ class ShowFilesView extends SparkAction {
   void _invoke([context]) {
     spark.setSearchViewVisible(false);
   }
+}
+
+class RunPythonAction extends SparkAction {
+  WAMFS _fs;
+  bool _connected;
+
+  RunPythonAction(Spark spark) : super(spark, 'run-python', 'Run Python') {
+    _fs = new WAMFS();
+  }
+
+  Future _connect() {
+    if (_connected) return new Future.value();
+    return _fs.connect('bjffolomlcjmflonfneaijabbpnflija', '/saltpig').then((_) {
+      _connected = true;
+    });
+  }
+
+  void _invoke([context]) {
+    List<ws.Resource> selection = spark._getSelection();
+    if (selection.length == 0) return;
+    ws.File file = selection.first;
+    file.getContents().then((content) {
+      return _connect().then((_) {
+        return _fs.writeStringToFile('/saltpig/domfs/foo.py', content).then((_) {
+          _fs.executeCommand('/saltpig/exe/python', ['/mnt/html5/foo.py'],
+              (String string) {
+                print('stdout: ${string}');
+              }, (String string) {
+                print('stderr: ${string}');
+              });
+        });
+      });
+    });
+  }
+
 }
 
 // Analytics code.
