@@ -3628,7 +3628,14 @@ class CspFixJob extends Job {
       super('Refactoring ${resource.name} for CSP compatibility…');
 
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
-    return new CspFixer(_resource, monitor).process();
+    return new CspFixer(_resource, monitor).process()
+        .then((_) {
+      _spark.showSuccessMessage(
+        "Successfully refactored ${_resource.name} for CSP");
+    }).catchError((e) {
+      _spark.showErrorMessage(
+        "Error while refactoring ${_resource.name} for CSP", exception: e);
+    });
   }
 }
 
