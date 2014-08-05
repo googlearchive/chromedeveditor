@@ -142,7 +142,7 @@ class _CspFixerSingleFile {
     });
   }
 
-  _outlineEventHandlers() {
+  void _outlineEventHandlers() {
     // TODO(ussuri): Implement.
   }
 
