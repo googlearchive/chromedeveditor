@@ -168,6 +168,7 @@ class BowerFetcher {
   }
 
   Future _fetchPackage(_Package package, FetchMode mode) {
+    // TEMP: Leave both options for now for experimentation.
     final Function fetchPackageFunc =
         SparkFlags.bowerUseGitClone ? _fetchPackageViaGit : _fetchPackageViaZip;
 
