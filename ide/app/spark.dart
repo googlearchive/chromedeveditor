@@ -600,8 +600,20 @@ abstract class Spark
     });
   }
 
-  Future<SparkJobStatus> importFolder(
-      [List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
+  Future<SparkJobStatus> importFolder([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        return _startImportFolderJob(resources, entry);
+      }
+    }).catchError((e) {
+      if (e is String && e != "User cancelled") throw e;
+    });
+  }
+
+  Future<SparkJobStatus> _startImportFolderJob([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
     ws.Folder folder = resources.first;
     return folder.importDirectoryEntry(entry).then((_) {
       return new SparkJobStatus(
@@ -3922,22 +3934,13 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
       : super(spark, "folder-import", "Import Folder…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
-    importFolder(resources).catchError((e) {
-      spark.showErrorMessage('Error while importing file', exception: e);
-    });
-  }
-
-  Future importFolder([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        Future<SparkJobStatus> f = spark.importFolder(resources, entry);
+    Future<SparkJobStatus> f;
+    f = spark.importFolder(resources).then((SparkJobStatus jobStatus) {
+      if (jobStatus != null) {
         _waitForJob(name, 'Importing folder…', f);
       }
-    }).catchError((String e) {
-      if (e != "User cancelled") throw e;
+    }).catchError((e) {
+      spark.showErrorMessage('Error while importing file', exception: e);
     });
   }
 
