@@ -24,7 +24,7 @@ final Logger _logger = new Logger('spark.csp_fixer');
  * to inlined scripts.
  */
 class CspFixer {
-  static final _HTML_FNAME_RE = new RegExp(r'^(.+)\.(htm|html|HTM|HTML)$');
+  static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
 
   final ws.Folder _rootDir;
   final bool _includeDerived;
@@ -41,14 +41,12 @@ class CspFixer {
   }
 
   Future _processFile(ws.File file) {
-    final Match m = _HTML_FNAME_RE.matchAsPrefix(file.path);
-    if (m == null) return new Future.value();
-
-    final String htmlBasePath = m.group(1);
-    final String htmlExt = m.group(2);
+    if (_HTML_FNAME_RE.matchAsPrefix(file.path) == null) {
+      return new Future.value();
+    }
 
     return file.getContents().then((final String htmlText) {
-      _logger.info("processing ${file.path} for CSP...");
+      _logger.info("Processing ${file.path} for CSP compatibility...");
 
       dom.Document doc;
       try {
@@ -61,10 +59,10 @@ class CspFixer {
       List<_FileWriter> newFiles = [];
       int scriptIdx = 1;
 
-      // For every inline <script> tag in the HTML:
-      // 1) output the script into a new file;
+      // Outline all inline <script> tags in the HTML:
+      // 1) output each script into a new file;
       // 2) remove the original <script>'s body from the HTML;
-      // 3) point the resulting empty <script>'s src at the outlined file.
+      // 3) point the resulting empty <script>'s [src] at the outlined file.
       doc.querySelectorAll('script').forEach((script) {
         if (script.innerHtml.isNotEmpty) {
           final String scriptName = '${file.name}.$scriptIdx.js';
@@ -76,17 +74,21 @@ class CspFixer {
         }
       });
 
-      // If there are any files to write, the original HTML has been altered.
+      // If there are any files to write, the original HTML has been altered:
+      // Back up the original HTML and replace it with the postprocessed one.
       if (newFiles.isNotEmpty) {
-        // Back up the original HTML.
         newFiles.add(
             new _FileWriter(file.parent, file.name + '.orig', htmlText));
-        // Write the processed HTML over the original.
+        // NOTE: doc.outerHtml may insert previously missing parts of a standard
+        // HTML document. One important example is Polymer elements, which
+        // normally don't have <head> or <body>, but will after postprocessing.
+        // That doesn't affect their functionality, though, so it's ok.
         newFiles.add(
             new _FileWriter(file.parent, file.name, doc.outerHtml));
       }
 
-      // Write files sequentially.
+      // Write files sequentially: multiple packages of the project are already
+      // parallelized at a higher level, plus parallelizing I/O doesn't do much.
       return Future.forEach(newFiles, (_FileWriter writer) => writer.write());
     });
   }
