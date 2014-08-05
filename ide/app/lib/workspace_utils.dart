@@ -9,7 +9,6 @@ import 'dart:convert';
 
 import 'package:archive/archive.dart' as archive;
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 
 import 'dependency.dart';
 import 'package_mgmt/pub.dart';
@@ -17,7 +16,7 @@ import 'workspace.dart';
 
 Future archiveContainer(Container container, [bool addZipManifest = false]) {
   archive.Archive arch = new archive.Archive();
-  return _recursiveArchive(arch, container, addZipManifest ? 'www/' : '').then((_) {
+  return _recursiveArchiveModifiedFiles(arch, container, addZipManifest ? 'www/' : '').then((_) {
     if (addZipManifest) {
       String zipAssetManifestString = _buildAssetManifestOfModified(container);
       arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
@@ -198,7 +197,7 @@ String _buildAssetManifestOfModified(Container container) {
   Map<String, Map<String, String>> zipAssetManifest = {};
   for (Resource element in children) {
     if (element.isFile) {
-      if(element.isChangedSinceDeployment()) {
+      if(element.changedSinceDeployment) {
         String path = element.path.substring(rootIndex);
        zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
       }
@@ -213,19 +212,18 @@ void resetFileChangedFlag(Container container) {
   Iterable<Resource> children = container.traverse().skip(1);
   for (Resource element in children) {
     if (element.isFile) {
-      element.changedSinceDeployment(false);
+      element.changedSinceDeployment = false;
     }
   }
 }
 
-
-Future _recursiveArchive(archive.Archive arch, Container parent,
+Future _recursiveArchiveModifiedFiles(archive.Archive arch, Container parent,
     [String prefix = '']) {
   List<Future> futures = [];
 
   for (Resource child in parent.getChildren()) {
     if (child is File) {
-      if(child.isChangedSinceDeployment()) {
+      if(child.changedSinceDeployment) {
         futures.add(child.getBytes().then((buf) {
           List<int> data = buf.getBytes();
           arch.addFile(new archive.ArchiveFile('${prefix}${child.name}',
@@ -233,7 +231,7 @@ Future _recursiveArchive(archive.Archive arch, Container parent,
         }));
       }
     } else if (child is Folder) {
-      futures.add(_recursiveArchive(arch, child, '${prefix}${child.name}/'));
+      futures.add(_recursiveArchiveModifiedFiles(arch, child, '${prefix}${child.name}/'));
     }
   }
 
