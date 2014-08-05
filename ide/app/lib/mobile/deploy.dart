@@ -322,6 +322,8 @@ class MobileDeploy {
           return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
         }
         return null;
+      } else {
+        return setDeploymentTime(appContainer.project.name, 0);
       }
     }).then((msg) {
       if(msg != null) {

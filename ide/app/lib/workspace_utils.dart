@@ -249,11 +249,17 @@ Future setDeploymentTime(String projName, int time) {
   return preferences.localStore.getValue("deployment-time").then((String mapTime) {
     Map<String, String> depTime = JSON.decode(mapTime);
     depTime[projName]=time.toString();
-    return preferences.localStore.setValue("deployment-time", JSON.encode(depTime));
+    return preferences.localStore.setValue("deployment-time", JSON.encode(depTime)).
+        then((_) {
+      return null;
+    });
   }).catchError((_) {
     Map<String, String> depTime = {};
     depTime[projName]=time.toString();
-    return preferences.localStore.setValue("deployment-time", JSON.encode(depTime));
+    return preferences.localStore.setValue("deployment-time", JSON.encode(depTime)).
+        then((_) {
+      return null;
+    });
   });
 }
 
