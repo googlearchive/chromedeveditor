@@ -17,7 +17,6 @@ import 'package:logging/logging.dart';
 import 'bower_fetcher.dart';
 import 'bower_properties.dart';
 import 'package_manager.dart';
-import '../csp/csp_fixer.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
@@ -74,15 +73,9 @@ class BowerManager extends PackageManager {
         _logger.severe('Error getting Bower packages', e);
         return new Future.error(e);
       }).then((_) {
-        // Delay postprocessing of the folder until after Bower is done.
-        return Timer.run(() {
-          final cspFixer = new CspFixer(packagesDir, includeDerived: true);
-          cspFixer.process().then((_) {
-            // Delay refreshing of the folder until after postprocessing is done.
-            // This is needed to fix BUG #2946.
-            return Timer.run(() => container.refresh());
-          });
-        });
+        // Delay refreshing of the folder until after postprocessing is done.
+        // This is needed to fix BUG #2946.
+        return Timer.run(() => container.refresh());
       });
     });
   }

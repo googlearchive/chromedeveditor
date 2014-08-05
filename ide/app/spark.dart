@@ -39,6 +39,7 @@ import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
 import 'lib/platform_info.dart';
 import 'lib/preferences.dart' as preferences;
+import 'lib/refactor/csp_fixer.dart';
 import 'lib/services.dart';
 import 'lib/scm.dart';
 import 'lib/templates/templates.dart';
@@ -483,6 +484,7 @@ abstract class Spark
     actionManager.registerAction(new PubUpgradeAction(this));
     actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new BowerUpgradeAction(this));
+    actionManager.registerAction(new CspFixAction(this));
     actionManager.registerAction(new ApplicationRunAction.run(this));
     actionManager.registerAction(new ApplicationRunAction.deploy(this));
     actionManager.registerAction(new CompileDartAction(this));
@@ -937,6 +939,7 @@ abstract class Spark
     resources.forEach((ws.Resource r) => r.refresh());
   }
 
+  // TODO(ussuri): Polymerize.
   void setSearchViewVisible(bool visible) {
     InputElement searchField = getUIElement('#fileFilter');
     querySelector('#searchViewArea').classes.toggle('hidden', !visible);
@@ -1903,7 +1906,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 abstract class PackageManagementAction
     extends SparkAction implements ContextAction {
   PackageManagementAction(Spark spark, String id, String name) :
-    super(spark, id, name);
+      super(spark, id, name);
 
   void _invoke([context]) {
     if (!_canRunAction()) {
@@ -1991,12 +1994,34 @@ class BowerUpgradeAction extends BowerAction {
   Job _createJob(ws.Folder container) => new BowerUpgradeJob(spark, container);
 }
 
+class CspFixAction extends SparkAction implements ContextAction {
+  CspFixAction(Spark spark) :
+      super(spark, "csp-fix", "Refactor for CSP");
+
+  void _invoke([List context]) {
+    if (context == null) {
+      context = [spark.focusManager.currentResource];
+    }
+    context.forEach((ws.Resource resource) {
+      spark.jobManager.schedule(new CspFixJob(spark, resource))
+        .then((status) {
+        // TODO(ussuri): Take action on the returned status.
+      });
+    });
+  }
+
+  String get category => 'refactor';
+
+  bool appliesTo(List list) => CspFixer.mightProcess(list);
+}
+
 /**
  * A context menu item to compile a Dart file to JavaScript. Currently this is
  * only available for Dart files in a chrome app.
  */
 class CompileDartAction extends SparkAction implements ContextAction {
-  CompileDartAction(Spark spark) : super(spark, "dart-compile", "Compile to JavaScript");
+  CompileDartAction(Spark spark) :
+      super(spark, "dart-compile", "Compile to JavaScript");
 
   void _invoke([context]) {
     ws.Resource resource;
@@ -3553,6 +3578,7 @@ abstract class PackageManagementJob extends Job {
 
     return _run(monitor).then((_) {
       _spark.showSuccessMessage("Successfully ran $_commandName");
+      // TODO(ussuri): Once there is confidence in CspFixer, perhaps run it here.
     }).catchError((e) {
       _spark.showErrorMessage("Error while running $_commandName", exception: e);
     });
@@ -3591,6 +3617,19 @@ class BowerUpgradeJob extends PackageManagementJob {
 
   Future _run(ProgressMonitor monitor) =>
       _spark.bowerManager.upgradePackages(_container, monitor);
+}
+
+class CspFixJob extends Job {
+  final Spark _spark;
+  final ws.Resource _resource;
+
+  CspFixJob(this._spark, ws.Resource resource) :
+      _resource = resource,
+      super('Refactoring ${resource.name} for CSP compatibility…');
+
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
+    return new CspFixer(_resource, monitor).process();
+  }
 }
 
 class CompileDartJob extends Job {
