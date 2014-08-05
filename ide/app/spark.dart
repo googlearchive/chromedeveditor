@@ -596,7 +596,7 @@ abstract class Spark
         folder.importFileEntry(entry);
       }
     }).catchError((String e) {
-      if (e != "User cancelled") throw e;
+      if (_isCancelledException(e)) throw e;
     });
   }
 
@@ -609,9 +609,11 @@ abstract class Spark
         return _startImportFolderJob(resources, entry);
       }
     }).catchError((e) {
-      if (e is String && e != "User cancelled") throw e;
+      if (_isCancelledException(e)) throw e;
     });
   }
+
+  bool _isCancelledException(String e) => e is String && e != "User cancelled";
 
   Future<SparkJobStatus> _startImportFolderJob([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
     ws.Folder folder = resources.first;
