@@ -1028,12 +1028,10 @@ class Folder extends Container {
 class File extends Resource {
   List<Marker> _markers = [];
   int _timestamp;
-  bool changedSinceDeployment = true;
 
   File(Container parent, chrome.Entry entry) : super(parent, entry) {
     entry.getMetadata().then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
-      changedSinceDeployment = true;
     });
   }
 

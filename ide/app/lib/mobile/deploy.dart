@@ -135,6 +135,27 @@ class MobileDeploy {
     return httpRequest;
   }
 
+  List<int> _buildHttpRequest2(String target, String path, {List<int> payload}) {
+    List<int> httpRequest = [];
+
+    // Build the HTTP request headers.
+    String header =
+        'GET /$path HTTP/1.1\r\n'
+        'User-Agent: Chrome Dev Editor\r\n'
+        'Host: ${target}:$DEPLOY_PORT\r\n';
+    List<int> body = [];
+
+    if (payload != null) {
+      body.addAll(payload);
+    }
+    httpRequest.addAll(header.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+    httpRequest.addAll(body);
+
+    return httpRequest;
+  }
+
+
   List<int> _buildPushRequest(String target, List<int> archivedData) {
     return _buildHttpRequest(target,
         "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
@@ -153,7 +174,7 @@ class MobileDeploy {
   }
 
   List<int> _buildAssetManifestRequest(String target) {
-    return _buildHttpRequest(target,
+    return _buildHttpRequest2(target,
         "assetmanifest?appId=${appContainer.project.name}");
   }
 
@@ -261,7 +282,6 @@ class MobileDeploy {
         return new Future.error('Push timed out: Total time exceeds 30 seconds');
       });
     }
-
     /*
      * 1. Request the asset manifest file for this app from the device
      * 2. Compare the asset manifest from the device with the one build here
@@ -319,7 +339,6 @@ class MobileDeploy {
             return _expectHttpOkResponse(msg);
     }).then((String response) {
       Map<String, String> etagResponse = JSON.decode(response);
-      resetFileChangedFlag(appContainer);
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
