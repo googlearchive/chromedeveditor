@@ -595,6 +595,8 @@ abstract class Spark
         ws.Folder folder = resources.first;
         folder.importFileEntry(entry);
       }
+    }).catchError((String e) {
+      if (e != "User cancelled") throw e;
     });
   }
 
@@ -3920,14 +3922,22 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
       : super(spark, "folder-import", "Import Folder…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
+    importFolder(resources).catchError((e) {
+      spark.showErrorMessage('Error while importing file', exception: e);
+    });
+  }
+
+  Future importFolder([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
            type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
         Future<SparkJobStatus> f = spark.importFolder(resources, entry);
         _waitForJob(name, 'Importing folder…', f);
       }
+    }).catchError((String e) {
+      if (e != "User cancelled") throw e;
     });
   }
 
