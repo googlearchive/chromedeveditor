@@ -596,7 +596,7 @@ abstract class Spark
         folder.importFileEntry(entry);
       }
     }).catchError((String e) {
-      if (_isCancelledException(e)) throw e;
+      if (!_isCancelledException(e)) throw e;
     });
   }
 
@@ -609,11 +609,11 @@ abstract class Spark
         return _startImportFolderJob(resources, entry);
       }
     }).catchError((e) {
-      if (_isCancelledException(e)) throw e;
+      if (!_isCancelledException(e)) throw e;
     });
   }
 
-  bool _isCancelledException(String e) => e is String && e != "User cancelled";
+  bool _isCancelledException(e) => e == "User cancelled";
 
   Future<SparkJobStatus> _startImportFolderJob([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
     ws.Folder folder = resources.first;
@@ -3941,6 +3941,7 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
       if (jobStatus != null) {
         _waitForJob(name, 'Importing folder…', f);
       }
+      return jobStatus;
     }).catchError((e) {
       spark.showErrorMessage('Error while importing file', exception: e);
     });
