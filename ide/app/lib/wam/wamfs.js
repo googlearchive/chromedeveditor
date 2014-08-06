@@ -1,11 +1,15 @@
+// Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 'use strict';
 
-var WAMFS = function() {
+var WamFS = function() {
   // Our in-memory wam-ready file system.
   this.jsfs = new wam.jsfs.FileSystem();
 }
 
-WAMFS.prototype.connect = function(extensionID, mountPath, onSuccess, onError) {
+WamFS.prototype.connect = function(extensionID, mountPath, onSuccess, onError) {
   // Reflect our DOM file system into the wam file system.
   this.jsfs.makeEntry('/domfs', new wam.jsfs.dom.FileSystem(),
                       function() {
@@ -16,7 +20,7 @@ WAMFS.prototype.connect = function(extensionID, mountPath, onSuccess, onError) {
                       });
 };
 
-WAMFS.prototype._mount = function(id, path, onSuccess, onError) {
+WamFS.prototype._mount = function(id, path, onSuccess, onError) {
   // wam remote file system object.
   var rfs = null;
 
@@ -83,27 +87,25 @@ WAMFS.prototype._mount = function(id, path, onSuccess, onError) {
   transport.connect(id);
 };
 
-WAMFS.prototype.copyFile = function(source, destination, onSuccess, onError) {
-  var executeContext = this.jsfs.defaultBinding.createExecuteContext();
-  executeContext.copyFile(source, destination,
-                          function() {
-                            onSuccess();
-                          }, function(e) {
-                            onError(e);
-                          });
+WamFS.prototype.copyFile = function(source, destination, onSuccess, onError) {
+  this.jsfs.defaultBinding.copyFile(source, destination,
+                                    function() {
+                                      onSuccess();
+                                    }, function(e) {
+                                      onError(e);
+                                    });
 };
 
-WAMFS.prototype.readFile = function(filename, onSuccess, onError) {
-  var executeContext = this.jsfs.defaultBinding.createExecuteContext();
-  executeContext.readFile(filename,
-                          function() {
-                            onSuccess();
-                          }, function(e) {
-                            onError(e);
-                          });
+WamFS.prototype.readFile = function(filename, onSuccess, onError) {
+  this.jsfs.defaultBinding.readFile(filename,
+                                    function() {
+                                      onSuccess();
+                                    }, function(e) {
+                                      onError(e);
+                                    });
 };
 
-WAMFS.prototype.writeDataToFile = function(filename, content, onSuccess, onError) {
+WamFS.prototype.writeDataToFile = function(filename, content, onSuccess, onError) {
   this.jsfs.defaultBinding.writeFile(filename,
                                      {mode: {create: true}},
                                      {dataType: 'arraybuffer', data: content},
@@ -114,7 +116,7 @@ WAMFS.prototype.writeDataToFile = function(filename, content, onSuccess, onError
                                      });
 };
 
-WAMFS.prototype.writeStringToFile = function(filename, stringContent, onSuccess, onError) {
+WamFS.prototype.writeStringToFile = function(filename, stringContent, onSuccess, onError) {
   this.jsfs.defaultBinding.writeFile(filename,
                                      {mode: {create: true}},
                                      {dataType: 'utf8-string', data: stringContent},
@@ -125,7 +127,7 @@ WAMFS.prototype.writeStringToFile = function(filename, stringContent, onSuccess,
                                      });
 };
 
-WAMFS.prototype.executeCommand = function(executablePath, parameters,
+WamFS.prototype.executeCommand = function(executablePath, parameters,
       printStdout, printStderr, onSuccess, onError) {
   var executeContext = this.jsfs.defaultBinding.createExecuteContext();
   executeContext.onStdOut.addListener(function(l) {
