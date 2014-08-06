@@ -599,7 +599,7 @@ abstract class Spark
         ws.Folder folder = resources.first;
         folder.importFileEntry(entry);
       }
-    }).catchError((String e) {
+    }).catchError((e) {
       if (!_isCancelledException(e)) throw e;
     });
   }
