@@ -268,7 +268,7 @@ String getEtag(Container container) {
 
 
 Future _recursiveArchive(archive.Archive arch, Container parent,
-                                      [String prefix = '']) {
+    [String prefix = '']) {
   List<Future> futures = [];
 
   for (Resource child in parent.getChildren()) {

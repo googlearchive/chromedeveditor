@@ -605,7 +605,7 @@ class AndroidDevice {
       responseChunks = new Queue<ByteData>();
 
       Future readChunk() {
-        return receive().timeout(new Duration(milliseconds: 800)).then((msg) {
+        return receive().timeout(new Duration(milliseconds: 5000)).then((msg) {
           if (msg.command == AdbUtil.A_WRTE) {
             responseChunks.add(msg.dataBuffer);
             return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
