@@ -271,25 +271,19 @@ void setDeploymentTime(Container container, int time) {
 }
 
 /**
- * This method reads the last deployment time from the local storage
- * and returns it.
+ * This method reads the last deployment time from the local storage and returns
+ * it.
  */
 int getDeploymentTime(Container container) {
   int ret = container.getMetadata('deployment-time');
-  if (ret != null) return ret;
-  return 0;
+  return ret != null ? ret : 0;
 }
 
 void setEtag(Container container, String etag) {
   container.setMetadata('etag', etag);
 }
 
-String getEtag(Container container) {
-  String ret = container.getMetadata('etag');
-  if (ret != null) return ret;
-  return "0";
-}
-
+String getEtag(Container container) => container.getMetadata('etag');
 
 Future _recursiveArchive(archive.Archive arch, Container parent,
     [String prefix = '']) {
