@@ -107,7 +107,7 @@ class SparkException implements Exception {
             errorCode: SparkErrorConstants.GIT_INVALID_REPO_URL);
       case GitErrorConstants.GIT_PULL_NON_FAST_FORWARD:
         return new SparkException(SparkErrorMessages.GIT_PULL_NON_FAST_FORWARD,
-                   errorCode: SparkErrorConstants.GIT_PULL_NON_FAST_FORWARD);
+            errorCode: SparkErrorConstants.GIT_PULL_NON_FAST_FORWARD);
     }
 
     return new SparkException(e.toString());
@@ -179,7 +179,9 @@ class SparkErrorMessages {
       " possibly an invalid repo URL?";
 
   static const String GIT_PULL_NON_FAST_FORWARD =
-      "Currently non-fast-forward pull are not supported.";
+      "Merge conflicts detected. Chrome Dev Editor does not currently support "
+      "non-fast forward pulls. As a work-around you can merge your changes on "
+      "the remote server and pull those merged changes in.";
 
   static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
       "It looks like the application failed to get installed in Chrome. "
