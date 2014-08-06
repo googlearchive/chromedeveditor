@@ -6,6 +6,7 @@
 - added a new Dart Chrome App project type
 - added a search in files feature
 - improved the performance of the files view
+- improved the performance of our bower support
 
 ### And other changes:
 - the main folder for projects can now be changed
