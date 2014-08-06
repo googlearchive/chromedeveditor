@@ -249,7 +249,7 @@ class ListView {
    * This method adds in the DOM the visible cells.
    */
   void _showVisible() {
-    final int slop = 100;
+    const int slop = 100;
 
     int scopeTop = math.max(_container.scrollTop - slop, 0);
     int scopeBottom = _container.scrollTop + _container.offsetHeight + slop;
