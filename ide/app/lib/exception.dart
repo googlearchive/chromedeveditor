@@ -105,6 +105,9 @@ class SparkException implements Exception {
       case GitErrorConstants.GIT_INVALID_REPO_URL:
         return new SparkException(SparkErrorMessages.GIT_INVALID_REPO_URL,
             errorCode: SparkErrorConstants.GIT_INVALID_REPO_URL);
+      case GitErrorConstants.GIT_PULL_NON_FAST_FORWARD:
+        return new SparkException(SparkErrorMessages.GIT_PULL_NON_FAST_FORWARD,
+            errorCode: SparkErrorConstants.GIT_PULL_NON_FAST_FORWARD);
     }
 
     return new SparkException(e.toString());
@@ -131,6 +134,8 @@ class SparkErrorConstants {
       "git.push_non_fast_forward";
   static const String GIT_PUSH_NO_REMOTE = "git.push_no_remote";
   static const String GIT_PUSH_NO_COMMITS = "git.push_no_commits";
+
+  static const String GIT_PULL_NON_FAST_FORWARD = "git.pull_non_fast_farward";
 
   static const String GIT_BRANCH_EXISTS = 'git.branch_exists';
   static const String GIT_BRANCH_UP_TO_DATE = "git.branch_up_to_date";
@@ -172,6 +177,11 @@ class SparkErrorMessages {
       "the server. This may happen when pushing commits with large changes.";
   static const String GIT_INVALID_REPO_URL  = "Received an error from the server;"
       " possibly an invalid repo URL?";
+
+  static const String GIT_PULL_NON_FAST_FORWARD =
+      "Merge conflicts detected. Chrome Dev Editor does not currently support "
+      "non-fast forward pulls. As a work-around you can merge your changes on "
+      "the remote server and pull those merged changes in.";
 
   static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
       "Failed to install the application into Chrome; please check Chrome for "

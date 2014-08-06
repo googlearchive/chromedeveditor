@@ -89,6 +89,8 @@ class Pull {
   }
 
   Future _nonFastForwardPull(String localSha, String commonSha, String remoteSha) {
+    // TODO(grv): Support non-fast-foward pulls.
+    return new Future.error(new GitException(GitErrorConstants.GIT_PULL_NON_FAST_FORWARD));
     var shas = [localSha, commonSha, remoteSha];
     return store.getHeadRef().then((String headRefName) {
       return store.getTreesFromCommits(shas).then((trees) {
@@ -99,8 +101,8 @@ class Pull {
             options.commitMessage = MERGE_BRANCH_COMMIT_MSG + options.branchName;
             // Create a merge commit by default.
             return Commit.createCommit(options, localSha, finalTreeSha,
-                headRefName).then((_) {
-              return Checkout.checkout(options, finalTreeSha);
+                headRefName).then((commitSha) {
+              return Checkout.checkout(options, commitSha);
             });
           });
         }).catchError((e) {
