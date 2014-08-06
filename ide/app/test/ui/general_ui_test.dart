@@ -164,17 +164,12 @@ defineTests() {
       return mockFsa.locationManager.setupRoot().then((_) {
         return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
       }).then((_) => sparkTester.openAndCloseWith(sparkAccess.newProjectMenu, (_) {
-        return new Future.value().then((_) {
-            return sparkAccess.newProjectDialog.setNameField("foo");
-        }).then((_) =>
-            sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton));
+        sparkAccess.newProjectDialog.setNameField("foo");
+        sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton);
       })).then((_) => sparkTester.openAndCloseWith(sparkAccess.newProjectMenu, (_) {
-        return new Future.value().then((_) {
-            return sparkAccess.newProjectDialog.setNameField("bar");
-        }).then((_) =>
-            sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton));
+        sparkAccess.newProjectDialog.setNameField("bar");
+        sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton);
       }));
     });
   });
-
 }

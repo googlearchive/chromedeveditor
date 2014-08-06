@@ -12,9 +12,9 @@ import 'lib/app.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
+import 'lib/filesystem.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
-import 'lib/filesystem.dart';
 
 abstract class SparkModel extends Application {
   static bool _instanceCreated = false;

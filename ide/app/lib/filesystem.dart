@@ -13,7 +13,8 @@ import '../spark_flags.dart';
 import '../test/files_mock.dart';
 import 'workspace.dart' as ws;
 
-FileSystemAccess _fileSystemAccess = null;
+FileSystemAccess _fileSystemAccess;
+
 void setOverrideFilesystemAccess(FileSystemAccess fsa) {
   assert(_fileSystemAccess == null);
   _fileSystemAccess = fsa;
@@ -27,7 +28,7 @@ FileSystemAccess get fileSystemAccess {
   return _fileSystemAccess;
 }
 
-restoreManager(Spark spark) {
+Future restoreManager(Spark spark) {
   if (_fileSystemAccess is MockFileSystemAccess) {
     MockFileSystemAccess mockFSA = _fileSystemAccess;
     return mockFSA.restoreMockManager(spark);
@@ -45,8 +46,7 @@ restoreManager(Spark spark) {
  */
 class FileSystemAccess {
   ProjectLocationManager _locationManager;
-  ProjectLocationManager get locationManager =>
-      _locationManager;
+  ProjectLocationManager get locationManager => _locationManager;
 
   ws.WorkspaceRoot _root;
   ws.WorkspaceRoot get root {
@@ -70,7 +70,7 @@ class FileSystemAccess {
     return chrome.fileSystem.getDisplayPath(entry);
   }
 
-  restoreManager(Spark spark, String folderToken) {
+  Future restoreManager(Spark spark, String folderToken) {
     return ProjectLocationManager.restoreManager(spark, folderToken)
         .then((ProjectLocationManager manager) {
       _locationManager = manager;
@@ -89,8 +89,7 @@ class FileSystemAccess {
 
 class MockFileSystemAccess extends FileSystemAccess {
   MockProjectLocationManager _locationManager;
-  MockProjectLocationManager get locationManager =>
-      _locationManager;
+  MockProjectLocationManager get locationManager => _locationManager;
 
   WorkspaceRoot _root;
   WorkspaceRoot get root {
@@ -114,7 +113,7 @@ class MockFileSystemAccess extends FileSystemAccess {
     return new Future.value(entry.fullPath);
   }
 
-  restoreManager(Spark spark, String folderToken) =>
+  Future restoreManager(Spark spark, String folderToken) =>
       throw "Can't restore mock manager";
 
   restoreMockManager(Spark spark) {
