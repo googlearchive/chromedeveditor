@@ -11,6 +11,7 @@ library spark.ui.widgets.listview;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
+import 'dart:math' as math;
 
 import 'listview_cell.dart';
 import 'listview_row.dart';
@@ -248,8 +249,11 @@ class ListView {
    * This method adds in the DOM the visible cells.
    */
   void _showVisible() {
-    int scopeTop = _container.scrollTop;
-    int scopeBottom = _container.scrollTop + _container.offsetHeight;
+    const int slop = 100;
+
+    int scopeTop = math.max(_container.scrollTop - slop, 0);
+    int scopeBottom = _container.scrollTop + _container.offsetHeight + slop;
+
     if (_rows.length == 0) {
       return;
     }
