@@ -323,12 +323,12 @@ class MobileDeploy {
           httpRequest = _buildDeleteRequest('localhost', command.codeUnits);
           return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
         }
-        return null;
+        return new Future.value();
       } else {
         return setDeploymentTime(appContainer, 0);
       }
     }).then((msg) {
-      if(msg != null) {
+      if (msg != null) {
         monitor.worked(6);
         return _expectHttpOkResponse(msg);
       }
