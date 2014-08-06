@@ -7,7 +7,6 @@
 library spark.csp.fixer;
 
 import 'dart:async';
-import 'dart:html';
 
 import 'package:html5lib/dom.dart' as dom;
 import 'package:html5lib/parser.dart' as html_parser;
