@@ -54,7 +54,7 @@ class CspFixer {
         "Refactoring ${_resource.name} for CSP compatibility…",
         maxWork: 1);
 
-    List<ws.File> files;
+    Iterable<ws.File> files;
     if (_resource is ws.File) {
       files = [_resource];
     } else if (_resource is ws.Container) {
@@ -86,9 +86,9 @@ class _CspFixerSingleFile {
   _CspFixerSingleFile(this._file);
 
   Future process() {
-    _logger.warning("Processing ${_file.path}...");
-
     if (!willProcess(_file)) return new Future.value();
+
+    _logger.info("Processing ${_file.path}...");
 
     return _file.getContents().then((final String htmlText) {
       try {
@@ -103,12 +103,13 @@ class _CspFixerSingleFile {
       // TODO(ussuri): Fix other known and fixable CSP violations.
 
       // If there are any files to write, the original HTML has been altered:
-      // Back up the original HTML and replace it with the postprocessed one.
+      // 1) back up the original HTML file;
+      // 2) replace it with the postprocessed HTML text.
       if (_newFiles.isNotEmpty) {
         _newFiles.add(
             new _FileWriter(_file.parent, _file.name + '.pre_csp', htmlText));
-        // NOTE: doc.outerHtml may insert previously missing parts of a standard
-        // HTML document. One important example is Polymer elements, which
+        // NOTE: doc.outerHtml may insert originally omitted parts of a standard
+        // HTML document spec. One important example is Polymer elements, which
         // normally don't have <head> or <body>, but will after postprocessing.
         // That doesn't affect their functionality, though, so it's ok.
         _newFiles.add(
