@@ -42,7 +42,7 @@ Future restoreManager(Spark spark) {
 }
 
 /**
- * Provides an abstracted access to the filesystem
+ * Provides abstracted access to the filesystem
  */
 class FileSystemAccess {
   ProjectLocationManager _locationManager;
@@ -85,6 +85,11 @@ class FileSystemAccess {
       return new ws.FolderChildRoot(location.parent, location.entry);
     }
   }
+  
+  Future<LocationResult> getProjectLocation() => locationManager.getProjectLocation();
+  Future<LocationResult> createNewFolder(String name) => locationManager.createNewFolder(name);
+  Future<LocationResult> chooseNewProjectLocation(bool showFileSystemDialog) =>
+      locationManager.chooseNewProjectLocation(showFileSystemDialog);
 }
 
 class MockFileSystemAccess extends FileSystemAccess {

@@ -127,7 +127,7 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onClickRootDirectory() {
-    _model.projectLocationManager.chooseNewProjectLocation(false).then((LocationResult res){
+    fileSystemAccess.chooseNewProjectLocation(false).then((LocationResult res){
       if (res != null) {
         _model.showRootDirectory();
       }

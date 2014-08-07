@@ -12,7 +12,6 @@ import 'lib/app.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
-import 'lib/filesystem.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
 
@@ -34,7 +33,6 @@ abstract class SparkModel extends Application {
   EditorManager get editorManager;
   EditorArea get editorArea;
   ActionManager get actionManager;
-  ProjectLocationManager get projectLocationManager;
 
   EventBus get eventBus;
 

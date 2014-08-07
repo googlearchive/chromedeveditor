@@ -212,8 +212,6 @@ abstract class Spark
   BowerManager get bowerManager => dependencies[BowerManager];
   DecoratorManager get decoratorManager => dependencies[DecoratorManager];
   ActionManager get actionManager => _actionManager;
-  ProjectLocationManager get projectLocationManager =>
-      fileSystemAccess.locationManager;
   NavigationManager get navigationManager => _navigationManager;
   EventBus get eventBus => _eventBus;
 
@@ -2122,8 +2120,7 @@ class NewProjectAction extends SparkActionWithDialog {
   void _invoke([context]) {
     _nameElt.value = '';
     // Show folder picker if top-level folder is not set.
-    ProjectLocationManager locationManager = spark.projectLocationManager;
-    locationManager.getProjectLocation().then((LocationResult r) {
+    fileSystemAccess.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
       }
@@ -2137,9 +2134,7 @@ class NewProjectAction extends SparkActionWithDialog {
 
     if (name.isEmpty) return;
 
-    ProjectLocationManager projectLocationManager = spark.projectLocationManager;
-
-    projectLocationManager.createNewFolder(name).then((LocationResult location) {
+    fileSystemAccess.createNewFolder(name).then((LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
@@ -2463,7 +2458,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+    fileSystemAccess.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
         Timer.run(_copyClipboard);
@@ -3195,7 +3190,7 @@ class _GitCloneTask {
   }
 
   Future run() {
-    return spark.projectLocationManager.createNewFolder(_projectName).then(
+    return fileSystemAccess.createNewFolder(_projectName).then(
         (LocationResult location) {
       if (location == null) {
         return new Future.value();
