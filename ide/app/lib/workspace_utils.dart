@@ -52,19 +52,6 @@ String buildAssetManifest(Container container) {
 }
 
 /**
- * Return (or create) the child file of the given folder.
- */
-Future<File> getCreateFile(Folder parent, String filename) {
-  File file = parent.getChild(filename);
-
-  if (file == null) {
-    return parent.createNewFile(filename);
-  } else {
-    return new Future.value(file);
-  }
-}
-
-/**
  * Copy the given `source` Resource into the `target` Container. The
  */
 Future copyResource(Resource source, Folder target) {
