@@ -87,7 +87,7 @@ class MobileDeploy {
     monitor.start('Deploying…', maxWork: 10);
 
     _logger.info('deploying application to ip host');
-    HttpDeployer dep= new HttpDeployer(appContainer, _prefs, target);
+    HttpDeployer dep = new HttpDeployer(appContainer, _prefs, target);
     return dep.deploy(monitor);
   }
 
@@ -162,12 +162,12 @@ abstract class AbstractDeployer {
    * Builds a request to given `target` at given `path` and with given `payload`
    * (body content).
    */
-  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
+  List<int> _buildHttpRequest(String httpMethod, String target, String path, {List<int> payload}) {
     List<int> httpRequest = [];
 
     // Build the HTTP request headers.
     String header =
-        'POST /$path HTTP/1.1\r\n'
+        '$httpMethod /$path HTTP/1.1\r\n'
         'User-Agent: Chrome Dev Editor\r\n'
         'Host: ${target}:$DEPLOY_PORT\r\n';
     List<int> body = [];
@@ -181,51 +181,26 @@ abstract class AbstractDeployer {
 
     return httpRequest;
   }
-
-  /**
-   * Builds a GET request to given `target` at given `path` and with given `payload`
-   * (body content).
-   */
-  List<int> _buildHttpRequestGet(String target, String path, {List<int> payload}) {
-    List<int> httpRequest = [];
-
-    // Build the HTTP request headers.
-    String header =
-        'GET /$path HTTP/1.1\r\n'
-        'User-Agent: Chrome Dev Editor\r\n'
-        'Host: ${target}:$DEPLOY_PORT\r\n';
-    List<int> body = [];
-
-    if (payload != null) {
-      body.addAll(payload);
-    }
-    httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
-    httpRequest.addAll(body);
-
-    return httpRequest;
-  }
-
 
   List<int> _buildPushRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest(target,
+    return _buildHttpRequest("POST",target,
         "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
         payload: archivedData);
   }
 
   List<int> _buildDeleteRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest(target,
+    return _buildHttpRequest("POST",target,
         "deletefiles?appId=${appContainer.project.name}",
         payload: archivedData);
   }
 
 
   List<int> _buildLaunchRequest(String target) {
-    return _buildHttpRequest(target, "launch?appId=${appContainer.project.name}");
+    return _buildHttpRequest("POST",target, "launch?appId=${appContainer.project.name}");
   }
 
   List<int> _buildAssetManifestRequest(String target) {
-    return _buildHttpRequestGet(target,
+    return _buildHttpRequest("GET",target,
         "assetmanifest?appId=${appContainer.project.name}");
   }
 
@@ -295,7 +270,7 @@ abstract class AbstractDeployer {
     });
   }
 
-  void _updateContainerEtag (String response) {
+  void _updateContainerEtag(String response) {
     Map<String, String> etagResponse = JSON.decode(response);
     setEtag(appContainer, etagResponse['assetManifestEtag']);
   }
