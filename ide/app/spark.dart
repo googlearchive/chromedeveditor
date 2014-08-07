@@ -1045,10 +1045,18 @@ abstract class SparkAction extends Action {
     // Send an action event with the 'main' event category.
     _analyticsTracker.sendEvent('main', id);
 
-    try {
+    if (SparkFlags.developerMode) {
       _invoke(context);
-    } catch (e) {
-      spark.showErrorMessage('Error Invoking ${name}', exception: e);
+    } else {
+      try {
+        _invoke(context);
+      } catch (e) {
+        // Throw the exception to the debugger if we're in developer mode.
+        if (SparkFlags.developerMode) {
+          throw e;
+        }
+        spark.showErrorMessage('Error Invoking ${name}', exception: e);
+      }
     }
   }
 
