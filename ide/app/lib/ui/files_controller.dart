@@ -119,7 +119,7 @@ class FilesController implements TreeViewDelegate {
     return _filteredFiles != null ?  _filteredFiles : _files;
   }
 
-   Map<String, List<String>> _currentChildrenCache() {
+  Map<String, List<String>> _currentChildrenCache() {
     return  _filteredChildrenCache != null ? _filteredChildrenCache : _childrenCache;
   }
 

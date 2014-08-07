@@ -561,6 +561,8 @@ class AceManager {
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
+    ace.Mode.extensionMap['gyp'] = ace.Mode.PYTHON;
+    ace.Mode.extensionMap['gypi'] = ace.Mode.PYTHON;
     ace.Mode.extensionMap['idl'] = ace.Mode.C_CPP;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;

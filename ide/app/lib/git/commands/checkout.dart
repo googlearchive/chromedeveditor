@@ -88,18 +88,18 @@ class Checkout {
   }
 
   /**
-   * Switches the workspace to a given git branch or a given [treeSha].
+   * Switches the workspace to a given git branch or a given [newSha].
    * Throws a BRANCH_NOT_FOUND exception if the branch does not exist.
    *
    * TODO(grv): Support checkout of single file, commit heads etc.
    */
-  static Future checkout(GitOptions options, [String treeSha]) {
+  static Future checkout(GitOptions options, [String newSha]) {
     ObjectStore store = options.store;
     String branch = options.branchName;
 
     return store.getHeadSha().then((String currentSha) {
-      if (treeSha != null) {
-        return _checkout(options, currentSha, treeSha);
+      if (newSha != null) {
+        return _checkout(options, currentSha, newSha);
       } else {
         return store.getHeadForRef(REFS_HEADS + branch).then((String branchSha) {
           return _checkout(options, currentSha, branchSha);

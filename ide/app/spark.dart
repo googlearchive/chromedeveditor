@@ -490,9 +490,7 @@ abstract class Spark
     actionManager.registerAction(new ApplicationRunAction.deploy(this));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
-    if (SparkFlags.showGitPull) {
-      actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
-    }
+    actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this, getDialogElement('#statusDialog')));
@@ -599,11 +597,27 @@ abstract class Spark
         ws.Folder folder = resources.first;
         folder.importFileEntry(entry);
       }
+    }).catchError((e) {
+      if (!_isCancelledException(e)) throw e;
     });
   }
 
-  Future<SparkJobStatus> importFolder(
-      [List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
+  Future<SparkJobStatus> importFolder([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        return _startImportFolderJob(resources, entry);
+      }
+    }).catchError((e) {
+      if (!_isCancelledException(e)) throw e;
+    });
+  }
+
+  bool _isCancelledException(e) => e == "User cancelled";
+
+  Future<SparkJobStatus> _startImportFolderJob([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
     ws.Folder folder = resources.first;
     return folder.importDirectoryEntry(entry).then((_) {
       return new SparkJobStatus(
@@ -2472,6 +2486,8 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
 
     _monitor.runCancellableFuture(f).then((_) {
       _hide();
+      ws_utils.setDeploymentTime(deployContainer,
+          (new DateTime.now()).millisecondsSinceEpoch);
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
       if (e is! UserCancelledException) {
@@ -3968,14 +3984,14 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
       : super(spark, "folder-import", "Import Folder…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        Future<SparkJobStatus> f = spark.importFolder(resources, entry);
+    Future<SparkJobStatus> f;
+    f = spark.importFolder(resources).then((SparkJobStatus jobStatus) {
+      if (jobStatus != null) {
         _waitForJob(name, 'Importing folder…', f);
       }
+      return jobStatus;
+    }).catchError((e) {
+      spark.showErrorMessage('Error while importing file', exception: e);
     });
   }
 

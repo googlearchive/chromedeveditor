@@ -8,6 +8,7 @@
 library spark.deploy;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
@@ -134,14 +135,47 @@ class MobileDeploy {
     return httpRequest;
   }
 
+  List<int> _buildHttpRequest2(String target, String path, {List<int> payload}) {
+    List<int> httpRequest = [];
+
+    // Build the HTTP request headers.
+    String header =
+        'GET /$path HTTP/1.1\r\n'
+        'User-Agent: Chrome Dev Editor\r\n'
+        'Host: ${target}:$DEPLOY_PORT\r\n';
+    List<int> body = [];
+
+    if (payload != null) {
+      body.addAll(payload);
+    }
+    httpRequest.addAll(header.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+    httpRequest.addAll(body);
+
+    return httpRequest;
+  }
+
+
   List<int> _buildPushRequest(String target, List<int> archivedData) {
     return _buildHttpRequest(target,
-        "zippush?appId=${appContainer.project.name}&appType=chrome",
+        "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
         payload: archivedData);
   }
 
+  List<int> _buildDeleteRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest(target,
+        "deletefiles?appId=${appContainer.project.name}",
+        payload: archivedData);
+  }
+
+
   List<int> _buildLaunchRequest(String target) {
     return _buildHttpRequest(target, "launch?appId=${appContainer.project.name}");
+  }
+
+  List<int> _buildAssetManifestRequest(String target) {
+    return _buildHttpRequest2(target,
+        "assetmanifest?appId=${appContainer.project.name}");
   }
 
   Future _sendTcpRequest(String target, List<int> httpRequest) {
@@ -164,6 +198,9 @@ class MobileDeploy {
     ).then((_) {
       monitor.worked(6);
       return _sendTcpRequest(target, _buildLaunchRequest(target));
+    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes)
+    ).then((_) {
+      return _sendTcpRequest(target, _buildAssetManifestRequest(target));
     }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes));
   }
 
@@ -237,32 +274,86 @@ class MobileDeploy {
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;
     AndroidDevice _device;
+    List<String> fileToDelete = [];
+    List<String> fileToAdd = [];
 
     Future _setTimeout(Future httpPushFuture) {
       return httpPushFuture.timeout(new Duration(seconds: 60), onTimeout: () {
         return new Future.error('Push timed out: Total time exceeds 60 seconds');
       });
     }
-
-    // Build the archive.
-    return archiveContainer(appContainer, true).then((List<int> archivedData) {
-      monitor.worked(3);
-      httpRequest = _buildPushRequest('localhost', archivedData);
-
-      // Send this payload to the USB code.
-      return _fetchAndroidDevice();
-    }).then((deviceResult) {
+    /*
+     * 1. Request the asset manifest file for this app from the device
+     * 2. Compare the asset manifest from the device with the one build here
+     * 3. All the differences betwenn the two are either added for deletion or for addition
+     * 4. The zip that is pushed contains only files that are changed since the last deployement.
+     */
+    httpRequest = _buildAssetManifestRequest('localhost');
+    return _fetchAndroidDevice().then((deviceResult) {
       _device = deviceResult;
+       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));})
+    .then((msg) {
+      return _expectHttpOkResponse(msg);
+    }).then((String result) {
+      Map<String, Map<String, String>> assetManifestOnDevice = JSON.decode(result);
+      if (assetManifestOnDevice['assetManifest'] != null) {
+        Map<String, Map<String, String>> assetManifestLocal
+            = JSON.decode(buildAssetManifest(appContainer));
+        if (getEtag(appContainer) != assetManifestOnDevice['assetManifestEtag']) {
+          setDeploymentTime(appContainer, 0);
+        }
+        assetManifestOnDevice['assetManifest'].keys.forEach((key) {
+          if ((key.startsWith("www/"))
+              && (!assetManifestLocal.containsKey(key))) {
+            fileToDelete.add(key);
+          }
+        });
+
+        assetManifestLocal.keys.forEach((key) {
+          if ((key.startsWith("www/")) &&
+              (!assetManifestOnDevice['assetManifest'].containsKey(key))) {
+            fileToAdd.add(key);
+          }
+        });
+
+        if (fileToDelete.isNotEmpty) {
+          Map<String, List<String>> toDeleteMap = {};
+          toDeleteMap["paths"] = fileToDelete;
+          String command = JSON.encode(toDeleteMap);
+          httpRequest = _buildDeleteRequest('localhost', command.codeUnits);
+          return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
+        }
+        return new Future.value();
+      } else {
+        return setDeploymentTime(appContainer, 0);
+      }
+    }).then((msg) {
+      if (msg != null) {
+        monitor.worked(6);
+        return _expectHttpOkResponse(msg);
+      }
+    }).then((_) {
+      return archiveModifiedFilesInContainer(appContainer, true)
+          .then((List<int> archivedData) {
+            monitor.worked(3);
+            httpRequest = _buildPushRequest('localhost', archivedData);
+            return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
+          }).then((msg) {
+            monitor.worked(6);
+            return _expectHttpOkResponse(msg);
+    }).then((String response) {
+      Map<String, String> etagResponse = JSON.decode(response);
+      setEtag(appContainer, etagResponse['assetManifestEtag']);
+      monitor.worked(8);
+      httpRequest = _buildLaunchRequest('localhost');
       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
     }).then((msg) {
       monitor.worked(6);
       return _expectHttpOkResponse(msg);
-    }).then((String response) {
-      monitor.worked(8);
-      httpRequest = _buildLaunchRequest('localhost');
-      return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
-    }).then((List<int> msg) => _expectHttpOkResponse(msg)).whenComplete(() {
+    }).whenComplete(() {
       if (_device != null) _device.dispose();
     });
+    });
   }
+
 }
