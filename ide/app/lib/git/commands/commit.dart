@@ -119,8 +119,8 @@ class Commit {
     });
   }
 
-  static Future createCommit(GitOptions options, String parent, String treeSha,
-      String refName) {
+  static Future<String> createCommit(GitOptions options, String parent,
+      String treeSha, String refName) {
     ObjectStore store = options.store;
     String dateString = getCurrentTimeAsString();
     StringBuffer commitContent = new StringBuffer();

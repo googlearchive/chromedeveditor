@@ -22,8 +22,6 @@ class SparkFlags {
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
   static bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
   static bool get showWipProjectTemplates => _flags['wip-project-templates'] == true;
-  static bool get showGitPull => _flags['show-git-pull'] == true;
-  static bool get showGitBranch => _flags['show-git-branch'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
   static bool get enableMultiSelect => _flags['enable-multiselect'] == true;
   static bool get searchInFiles => _flags['search-in-files'] == true;
