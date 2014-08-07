@@ -489,6 +489,7 @@ abstract class AbstractDeployer {
   }
 
   Future _expectHttpOkResponse(List<int> msg) {
+    print("expect");
     String response = new String.fromCharCodes(msg);
     List<String> lines = response.split('\r\n');
     Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
@@ -649,7 +650,17 @@ class HttpDeployer extends AbstractDeployer {
     TcpClient client;
     return TcpClient.createClient(_target, DEPLOY_PORT).then((TcpClient client) {
       client.write(httpRequest);
-      return client.stream.timeout(new Duration(minutes: 1)).first;
+      Stream st = client.stream.timeout(new Duration(minutes: 1));
+      var broadcastStream = st.asBroadcastStream();
+      return broadcastStream.first.then((List<int> l1) {
+        return broadcastStream.first.then((List<int> l2) {
+          List<int> l3 = new List<int>();
+          l3.addAll(l1);
+          l3.addAll(l2);
+          return l3;
+        });
+      });
+
     }).whenComplete(() {
       if (client != null) {
         client.dispose();
