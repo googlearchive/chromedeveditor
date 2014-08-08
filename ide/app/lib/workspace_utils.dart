@@ -27,6 +27,8 @@ Future archiveContainer(Container container, [bool addZipManifest = false]) {
     });
 }
 
+/// The [toAddList] List contains the files that need to be mandatory
+/// pushed to the device
 Future archiveModifiedFilesInContainer(Container container, [bool addZipManifest = false,
     List<String> toAddList]) {
   archive.Archive arch = new archive.Archive();
@@ -304,7 +306,7 @@ Future _recursiveArchiveModifiedFiles(archive.Archive arch, Container parent,
       }
     } else if (child is Folder) {
       futures.add(_recursiveArchiveModifiedFiles(arch, child, depTime,
-                                  toAddList, '${prefix}${child.name}/'));
+         toAddList, '${prefix}${child.name}/'));
     }
   }
   return Future.wait(futures);
