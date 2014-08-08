@@ -124,6 +124,7 @@ abstract class AbstractDeployer {
   final Container appContainer;
   final PreferenceStore _prefs;
 
+  List<String> fileToAdd = [];
   List<DeviceInfo> _knownDevices = [];
 
   AbstractDeployer(this.appContainer, this._prefs) {
@@ -263,12 +264,11 @@ abstract class AbstractDeployer {
 
   Future _deleteObsoleteFiles(String result) {
     List<String> fileToDelete = [];
-    List<String> fileToAdd = [];
 
     Map<String, Map<String, String>> assetManifestOnDevice = JSON.decode(result);
     if (assetManifestOnDevice['assetManifest'] != null) {
-      Map<String, Map<String, String>> assetManifestLocal
-          = JSON.decode(buildAssetManifest(appContainer));
+      Map<String, Map<String, String>> assetManifestLocal =
+          JSON.decode(buildAssetManifest(appContainer));
       if (getEtag(appContainer) != assetManifestOnDevice['assetManifestEtag']) {
         setDeploymentTime(appContainer, 0);
       }
@@ -285,12 +285,6 @@ abstract class AbstractDeployer {
           fileToAdd.add(key);
         }
       });
-
-      if (fileToAdd.isNotEmpty) {
-        /*  TODO make sure that the files that are not on the device
-        * usualy because of the rename are commited
-         */
-      }
 
       if (fileToDelete.isNotEmpty) {
         Map<String, List<String>> toDeleteMap = {};
@@ -325,7 +319,7 @@ abstract class AbstractDeployer {
         return _expectHttpOkResponse(msg);
       }
     }).then((_) {
-      return archiveModifiedFilesInContainer(appContainer, true)
+      return archiveModifiedFilesInContainer(appContainer, true, fileToAdd)
         .then((List<int> archivedData) {
           monitor.worked(3);
           httpRequest = _buildPushRequest(_getTarget(), archivedData);
@@ -388,10 +382,9 @@ class HttpDeployer extends AbstractDeployer {
     TcpClient client;
     return TcpClient.createClient(_target, DEPLOY_PORT).then((TcpClient client) {
       client.write(httpRequest);
-      Stream st = client.stream;
-      var broadcastStream = st.asBroadcastStream();
+      Stream st = client.stream.timeout(new Duration(minutes: 1));
       List<int> response = new List<int>();
-      return broadcastStream.forEach((List<int> data) {
+      return st.forEach((List<int> data) {
         response.addAll(data);
       }).catchError((_) {
         return response;
