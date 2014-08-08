@@ -20,7 +20,6 @@ import 'builder.dart';
 import 'enum.dart';
 import 'exception.dart';
 import 'jobs.dart';
-import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart';
 
@@ -860,6 +859,12 @@ class Folder extends Container {
    * filesystem to the current folder.
    */
   Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
+    return _importFileEntry(sourceEntry).then((_) {
+      refresh();
+    });
+  }
+
+  Future<File> _importFileEntry(chrome.ChromeFileEntry sourceEntry) {
     return createNewFile(sourceEntry.name).then((File file) {
       return sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
         return file.setBytes(buffer.getBytes()).then((_) => file);
@@ -889,8 +894,12 @@ class Folder extends Container {
    */
   Future importDirectoryEntry(chrome.DirectoryEntry entry) {
     Map<String, chrome.Entry> importFileMap = {};
-    return _listFilesRecursive(entry, importFileMap).then((_)
-        => _importDirectoryEntry(entry, importFileMap));
+
+    return _listFilesRecursive(entry, importFileMap).then((_) {
+      return _importDirectoryEntry(entry, importFileMap);
+    }).then((_) {
+      refresh();
+    });
   }
 
   Future _importDirectoryEntry(chrome.DirectoryEntry entry,
@@ -909,7 +918,7 @@ class Folder extends Container {
           if (child is chrome.DirectoryEntry) {
             futures.add(folder._importDirectoryEntry(child, importFileMap));
           } else if (child is chrome.ChromeFileEntry) {
-            futures.add(folder.importFileEntry(child));
+            futures.add(folder._importFileEntry(child));
           }
         }
         return Future.wait(futures).then((_) {
@@ -947,7 +956,7 @@ class Folder extends Container {
 
   //TODO(keertip): remove check for 'cache'
   bool isScmPrivate() => name == '.git' || name == '.svn'
-      || (name =='cache' && pubProperties.isFolderWithPackages(parent));
+      || name =='cache';
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.

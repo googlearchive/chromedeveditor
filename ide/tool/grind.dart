@@ -13,6 +13,8 @@ import 'package:path/path.dart' as path;
 
 import 'webstore_client.dart';
 
+const String MAIN_REPOSITORY_URL = 'git://github.com/dart-lang/spark.git';
+
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 final Directory BUILD_DIR = new Directory('build');
@@ -25,7 +27,7 @@ final String clientSecret =
     Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
 final String refreshToken =
     Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
-final String appID = Platform.environment['SPARK_APP_ID'];
+final String buildBranchName = Platform.environment['DRONE_BRANCH'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
@@ -47,8 +49,6 @@ void main([List<String> args]) {
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
     defineTask('build-android-rsa', taskFunction: buildAndroidRSA);
-    defineTask('release', taskFunction: release,
-        depends : ['mode-notest', 'deploy']);
     defineTask('release-nightly', taskFunction : releaseNightly,
         depends : ['mode-notest', 'deploy']);
   }
@@ -131,57 +131,6 @@ void deploy(GrinderContext context) {
   }
 }
 
-// Creates a release build to be uploaded to Chrome Web Store.
-// It will perform the following steps:
-// - Sources will be compiled in Javascript using "compile" task
-// - If the current branch/repo is not releasable, we just create an archive
-//   tagged with a revision number.
-// - Using increaseBuildNumber, for a given revision number a.b.c where a, b
-//   and c are integers, we increase c, the build number and write it to the
-//   manifest.json file.
-// - We duplicate the manifest.json file to build/polymer-build/web since we'll
-//   create the Chrome App from here.
-// - "archive" task will create a spark.zip file in dist/, based on the content
-//   of build/polymer-build/web.
-// - If everything is successful and no exception interrupted the process,
-//   we'll commit the new manifest.json containing the updated version number
-//   to the repository. The developer still needs to push it to the remote
-//   repository.
-// - We eventually rename dist/spark.zip to dist/spark-a.b.c.zip to reflect the
-//   new version number.
-void release(GrinderContext context) {
-  // If repository is not original repository of Spark and the branch is not
-  // master.
-  if (!_canReleaseFromHere()) {
-    _archiveWithRevision(context);
-    return;
-  }
-
-  String version = _increaseBuildNumber(context, removeKey: true);
-  // Creating an archive of the Chrome App.
-  context.log('Creating build ${version}');
-
-  String filename = 'spark-${version}.zip';
-  archive(context, filename);
-
-  var sep = Platform.pathSeparator;
-  _runCommandSync(
-      context,
-      'git checkout app${sep}manifest.json');
-  _increaseBuildNumber(context);
-  _runCommandSync(
-      context,
-      'git commit -m "Build version ${version}" app${sep}manifest.json');
-
-  context.log('Created ${filename}');
-  context.log('** A commit has been created, you need to push it. ***');
-  print('Do you want to push to the remote git repository now? (y/n [n])');
-  var line = stdin.readLineSync();
-  if (line.trim() == 'y') {
-    _runCommandSync(context, 'git push origin master');
-  }
-}
-
 Future releaseNightly(GrinderContext context) {
   if (clientID == null) {
     context.fail("SPARK_UPLOADER_CLIENTID environment variable should be set and contain the client ID.");
@@ -192,12 +141,38 @@ Future releaseNightly(GrinderContext context) {
   if (refreshToken == null) {
     context.fail("SPARK_UPLOADER_REFRESHTOKEN environment variable should be set and contain the refresh token.");
   }
-  if (appID == null) {
-    context.fail("SPARK_APP_ID environment variable should be set and contain the refresh token.");
+
+  File file = new File('tool/release-config.json');
+  String content = file.readAsStringSync();
+  var config = JSON.decode(content);
+  String channel = null;
+  Map<String, String> channelConfig = null;
+  config.forEach((String key, Map<String, String> currentChannelConfig) {
+    if (buildBranchName == currentChannelConfig['branch']) {
+      channel = key;
+      channelConfig = currentChannelConfig;
+    }
+  });
+
+  if (_getRepositoryUrl() != MAIN_REPOSITORY_URL) {
+    // Unexpected situation. Don't try to upload a fork to the web store.
+    context.fail("Spark can't be released from here.");
   }
 
+  if (channel == null) {
+    // This branch is not part of any channel.
+    context.fail("Spark can't be released from here.");
+    return new Future.error("Spark can't be released from here.");
+  }
+
+  String appID = channelConfig['id'];
+
+  // Tweak the version number in the manifest.json file using drone.io build number.
   String version =
-      _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
+      _modifyManifestWithDroneIOBuildNumber(context, channelConfig);
+  _modifyLocaleWithChannelConfig(context, channelConfig);
+  context.log('Building branch ${buildBranchName}, channel ${channel}, version ${version}');
+  context.log('Uploading app ID ${appID} to the Chrome Web Store');
 
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
@@ -205,6 +180,7 @@ Future releaseNightly(GrinderContext context) {
   archive(context, filename);
   context.log('Created ${filename}');
 
+  // Upload it to webstore.
   WebStoreClient client =
       new WebStoreClient(appID, clientID, clientSecret, refreshToken);
   context.log('Authenticating...');
@@ -447,11 +423,6 @@ void _changeMode({bool useTestMode: true}) {
   }
 }
 
-// Returns the name of the current branch.
-String _getBranchName() {
-  return _getCommandOutput('git rev-parse --abbrev-ref HEAD');
-}
-
 // Returns the URL of the git repository.
 String _getRepositoryUrl() {
   return _getCommandOutput('git config remote.origin.url');
@@ -460,14 +431,6 @@ String _getRepositoryUrl() {
 // Returns the current revision identifier of the local copy.
 String _getCurrentRevision() {
   return _getCommandOutput('git rev-parse HEAD').substring(0, 10);
-}
-
-// We can build a real release only if the repository is the original
-// repository of spark and master is the working branch since we need to
-// increase the version and commit it to the repository.
-bool _canReleaseFromHere() {
-  return (_getRepositoryUrl() == 'https://github.com/dart-lang/spark.git') &&
-         (_getBranchName() == 'master');
 }
 
 // In case, release is performed on a non-releasable branch/repository, we just
@@ -480,40 +443,8 @@ void _archiveWithRevision(GrinderContext context) {
   context.log("Created ${filename}");
 }
 
-// Increase the build number in the manifest.json file. Returns the full
-// version.
-String _increaseBuildNumber(GrinderContext context, {bool removeKey: false}) {
-  // Tweaking build version in manifest.
-  File file = new File('app/manifest.json');
-  String content = file.readAsStringSync();
-  var manifestDict = JSON.decode(content);
-  String version = manifestDict['version'];
-  RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
-  Iterable<Match> matches = exp.allMatches(version);
-  assert(matches.length > 0);
-
-  Match m = matches.first;
-  String majorVersion = m.group(1);
-  int buildVersion = int.parse(m.group(2));
-  buildVersion++;
-
-  version = '${majorVersion}.${buildVersion}';
-  manifestDict['version'] = version;
-  if (removeKey) {
-    manifestDict.remove('key');
-  }
-  file.writeAsStringSync(new JsonPrinter().print(manifestDict));
-
-  // It needs to be copied to compile result directory.
-  copyFile(
-      joinFile(Directory.current, ['app', 'manifest.json']),
-      joinDir(BUILD_DIR, ['deploy-out', 'web']));
-
-  return version;
-}
-
 String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
-                                             {bool removeKey: false})
+                                             Map<String, String> channelConfig)
 {
   String buildNumber = Platform.environment['DRONE_BUILD_NUMBER'];
   String revision = Platform.environment['DRONE_COMMIT'];
@@ -526,23 +457,17 @@ String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
   File file = new File('app/manifest.json');
   String content = file.readAsStringSync();
   var manifestDict = JSON.decode(content);
-  String version = manifestDict['version'];
-  RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
-  Iterable<Match> matches = exp.allMatches(version);
-  assert(matches.length > 0);
-
-  Match m = matches.first;
-  String majorVersion = m.group(1);
+  String majorVersion = channelConfig['version'];
   int buildVersion = int.parse(buildNumber);
 
-  version = '${majorVersion}.${buildVersion}';
+  String version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
   manifestDict['x-spark-revision'] = revision;
-  manifestDict['name'] = 'Spark Nightly';
-  manifestDict['short_name'] = 'Spark Nightly';
-  manifestDict['description'] = 'A Chrome app based development environment - Nightly version';
-  if (removeKey) {
-    manifestDict.remove('key');
+  manifestDict.remove('key');
+  Map oauth2Config = manifestDict['oauth2'];
+  String clientID = channelConfig['oauth2-clientid'];
+  if (clientID != null) {
+    oauth2Config['client_id'] = clientID;
   }
   file.writeAsStringSync(new JsonPrinter().print(manifestDict));
 
@@ -552,6 +477,25 @@ String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
       joinDir(BUILD_DIR, ['deploy-out', 'web']));
 
   return version;
+}
+
+void _modifyLocaleWithChannelConfig(GrinderContext context,
+                                    Map<String, String> channelConfig) {
+  File file = new File('app/_locales/en/messages.json');
+  String content = file.readAsStringSync();
+  var messagesJson = JSON.decode(content);
+  if (channelConfig['name'] != null) {
+    messagesJson['app_name'] = {'message': channelConfig['name']};
+  }
+  if (channelConfig['description'] != null) {
+    messagesJson['app_description'] = {'message': channelConfig['description']};
+  }
+  file.writeAsStringSync(new JsonPrinter().print(messagesJson));
+
+  // It needs to be copied to compile result directory.
+  copyFile(
+      joinFile(Directory.current, ['app', '_locales', 'en', 'messages.json']),
+      joinDir(BUILD_DIR, ['deploy-out', 'web', '_locales', 'en']));
 }
 
 void _removePackagesLinks(GrinderContext context, Directory target) {

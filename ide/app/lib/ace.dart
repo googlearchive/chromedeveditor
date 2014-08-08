@@ -139,6 +139,7 @@ class TextEditor extends Editor {
         selection.offset + selection.length);
 
     aceManager._aceEditor.gotoLine(startSelection.row);
+    aceManager._aceEditor.scrollToLine(startSelection.row, center: true);
 
     ace.Selection aceSel = aceManager._aceEditor.selection;
     aceSel.setSelectionAnchor(startSelection.row, startSelection.column);
@@ -560,6 +561,8 @@ class AceManager {
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
+    ace.Mode.extensionMap['gyp'] = ace.Mode.PYTHON;
+    ace.Mode.extensionMap['gypi'] = ace.Mode.PYTHON;
     ace.Mode.extensionMap['idl'] = ace.Mode.C_CPP;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
@@ -853,6 +856,7 @@ class AceManager {
     if (session == null) {
       _currentSession = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.session = _currentSession;
+      currentFile = null;
     } else {
       _currentSession = session;
       _aceEditor.session = _currentSession;

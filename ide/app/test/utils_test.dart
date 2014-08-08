@@ -13,7 +13,8 @@ import '../lib/utils.dart';
 defineTests() {
   group('utils', () {
     test('i18n found', () {
-      expect(i18n('app_name'), 'Chrome Dev Editor');
+      String appname = i18n('app_name');
+      expect(appname.contains('Spark') || appname.contains('Chrome Dev Editor'), true);
     });
 
     test('i18n not found', () {
@@ -41,7 +42,6 @@ defineTests() {
       expect(match.group(3), 'chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13');
     });
 
-    /*
     test('minimizeStackTrace', () {
       try {
         throw new ArgumentError('happy message');
@@ -52,7 +52,6 @@ defineTests() {
         expect(description.startsWith('#'), false);
       }
     });
-    */
 
     test('StreamReader, read 1', () {
       StreamReader reader = new StreamReader(new Stream.fromIterable([[1, 2, 3, 4]]));

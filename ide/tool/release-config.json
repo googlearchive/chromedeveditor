@@ -1,0 +1,25 @@
+{
+  "dev": {
+    "name": "Spark (dev)",
+    "branch": "0.15",
+    "version": "0.15.0",
+    "id": "hpenkfongmodpaiknffeeeohcoilclii",
+    "description": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform - dev version",
+    "oauth2-clientid": "450494089748-v53iih45odoooegmomoij2do6eeok65m.apps.googleusercontent.com"
+  },
+  "nightly": {
+    "name": "Spark (nightly)",
+    "branch": "master",
+    "version": "0.15",
+    "id": "kcjgcakhgelcejampmijgkjkadfcncjl",
+    "description": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform - nightly version",
+    "oauth2-clientid": "450494089748-gp35cruaj31fchdh2423raf015luc82u.apps.googleusercontent.com"
+  },
+  "stable": {
+    "name": "Chrome Dev Editor (developer preview)",
+    "branch": "0.14",
+    "version": "0.14.2883",
+    "id": "pnoffddplpippgcfjdhbmhkofpnaalpg",
+    "oauth2-clientid": "450494089748-t8dpd0irtkfhh76g5dq54gjnut5ipggp.apps.googleusercontent.com"
+  }
+}

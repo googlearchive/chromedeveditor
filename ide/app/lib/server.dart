@@ -311,7 +311,8 @@ class HttpResponse {
    * based on the file extension.
    */
   void setContentTypeFrom(String path) {
-    headers.contentType = mime.lookupMimeType(path);
+    String type = mime.lookupMimeType(path);
+    headers.contentType = type != null ? type : 'application/octet-stream';
   }
 
   Future _send(tcp.TcpClient client) {

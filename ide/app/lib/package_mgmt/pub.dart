@@ -26,10 +26,6 @@ Logger _logger = new Logger('spark.pub');
 final PubProperties pubProperties = new PubProperties();
 
 class PubProperties extends PackageServiceProperties {
-  //
-  // PackageServiceProperties virtual interface:
-  //
-
   String get packageServiceName => 'pub';
   String get packageSpecFileName => 'pubspec.yaml';
   String get packagesDirName => 'packages';
@@ -67,10 +63,6 @@ class PubManager extends PackageManager {
    */
   PubManager(Workspace workspace) : super(workspace);
 
-  //
-  // PackageManager abstract interface:
-  //
-
   PackageServiceProperties get properties => pubProperties;
 
   void setSelfReference(Project project, String selfReference) {
@@ -82,10 +74,10 @@ class PubManager extends PackageManager {
 
   PackageBuilder getBuilder() => new _PubBuilder(this);
 
-  PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
+  PackageResolver getResolverFor(Project project) =>
+      new _PubResolver._(this, project);
 
-  // Don't run pub on Windows: https://github.com/dart-lang/chromedeveditor/issues/2743
-  bool canRunPub(Folder project) => pubProperties.isFolderWithPackages(project) && !PlatformInfo.isWin;
+  bool canRunPub(Folder project) => pubProperties.isFolderWithPackages(project);
 
   Future installPackages(Folder container, ProgressMonitor monitor) =>
       _installUpgradePackages(container, 'get', false, monitor);
@@ -115,15 +107,14 @@ class PubManager extends PackageManager {
     return new Future.value();
   }
 
-  //
-  // - end PackageManager abstract interface.
-  //
-
   Future _installUpgradePackages(
       Folder container,
       String commandName,
       bool isUpgrade,
       ProgressMonitor monitor) {
+    // Don't run pub on Windows (#2743).
+    if (PlatformInfo.isWin) return new Future.value();
+
     // Fake the total amount of work, since we don't know it. When an update
     // comes from Tavern, just refresh the generic message w/o showing progress.
     monitor.start(
@@ -183,13 +174,15 @@ class PubDecorator extends Decorator {
  * A class to help resolve pub `package:` references.
  */
 class _PubResolver extends PackageResolver {
+  final PubManager manager;
   final Project project;
 
-  _PubResolver._(this.project);
-
-  //
-  // PackageResolver virtual interface:
-  //
+  _PubResolver._(this.manager, this.project) {
+    // We calculate the pubspec.yaml self-reference name as each project is
+    // initially touched / opened. We do this as a workaround for the workspace
+    // meta-data not persisting (#1578).
+    _calcSelfReference();
+  }
 
   PackageServiceProperties get properties => pubProperties;
 
@@ -255,6 +248,19 @@ class _PubResolver extends PackageResolver {
     }
   }
 
+  Future _calcSelfReference() {
+    Resource file = project.getChild(properties.packageSpecFileName);
+
+    if (file is! File) return new Future.value();
+
+    return (file as File).getContents().then((String str) {
+      try {
+        _PubSpecInfo info = new _PubSpecInfo.parse(str);
+        manager.setSelfReference(file.project, info.name);
+      } catch (e) { }
+    });
+  }
+
   String toString() => 'Pub resolver for ${project}';
 }
 
@@ -268,10 +274,6 @@ class _PubBuilder extends PackageBuilder {
   final PubManager _pubManager;
 
   _PubBuilder(this._pubManager);
-
-  //
-  // PackageBuilder virtual interface:
-  //
 
   PackageServiceProperties get properties => pubProperties;
 
@@ -312,10 +314,6 @@ class _PubBuilder extends PackageBuilder {
 
     return new Future.value();
   }
-
-  //
-  // - PackageBuilder virtual interface.
-  //
 
   Future _analyzePubspec(File file) {
     file.clearMarkers(_packageServiceName);

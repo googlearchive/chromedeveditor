@@ -84,9 +84,13 @@
   <spark-polymer-ui id="topUi">
     <div id="leftPanel" tabindex="0" beforeSplit>
       <div id="fileViewArea"></div>
+      <div id="fileViewFilterNoResult" class="hidden">
+        No matching files
+      </div>
       <div id="searchViewArea" class="hidden"></div>
       <div id="searchViewPlaceholder" class="hidden">
-        Type a string to search in the workspace
+        <div>Type a string to search in the workspace</div>
+        <div id="showFileViewButton">Close Search</div>
       </div>
       <div id="searchViewNoResult" class="hidden">
         No matching files
@@ -142,6 +146,8 @@
 
   <script type="application/javascript" src="third_party/uuid.js/uuid.js"></script>
   <script type="application/javascript" src="lib/mobile/android_rsa.js"></script>
+  <script type="application/javascript" src="third_party/wam/wam_fs.concat.js"></script>
+  <script type="application/javascript" src="lib/wam/wamfs.js"></script>
 
   <!-- Start Spark in a deployed build. -->
   <script type="application/dart" src="spark_polymer.dart"></script>

@@ -12,14 +12,15 @@ library spark.package_mgmt.bower_fetcher;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:html' as html;
 
+import 'package:archive/archive.dart' as arc;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import '../enum.dart';
 import '../jobs.dart';
 import '../scm.dart';
+import '../utils.dart' as util;
 import '../../spark_flags.dart';
 
 final Logger _logger = new Logger('spark.bower_fetcher');
@@ -40,6 +41,8 @@ class _PrepareDirRes {
 }
 
 class BowerFetcher {
+  static final _ZIP_TOP_LEVEL_DIR_RE = new RegExp('[^/]*\/');
+
   static final ScmProvider _git = getProviderType('git');
 
   final chrome.DirectoryEntry _packagesDir;
@@ -98,6 +101,8 @@ class BowerFetcher {
         }
       });
 
+      // Download all the packages in parallel; also, failure to download some
+      // don't affect the others.
       return Future.wait(futures);
     });
   }
@@ -119,6 +124,9 @@ class BowerFetcher {
   }
 
   List<_Package> _parseDepsFromSpec(String spec) {
+    // The local or remote spec file is empty of missing.
+    if (spec.isEmpty) return [];
+
     Map<String, dynamic> specMap;
     try {
       specMap = JSON.decode(spec);
@@ -154,44 +162,31 @@ class BowerFetcher {
   }
 
   Future<String> _readRemoteSpecFile(_Package package) {
-    final completer = new Completer();
-    final request = new html.HttpRequest();
-
-    request.open('GET', package.getUrlForDownloading(_packageSpecFileName));
-    request.onLoad.listen((event) {
-      if (request.status == 200) {
-        completer.complete(request.responseText);
-      } else if (request.status == 404) {
-        // Remote bower.json doesn't exist: it's just a leaf package with no
-        // dependencies. Emulate that by returning an empty JSON.
-        completer.complete('{}');
-      } else {
-        completer.completeError(
-            "Failed to load $_packageSpecFileName for '${package.name}': "
-            "${request.statusText}");
-      }
-    });
-    request.send();
-
-    return completer.future;
+    final String url = package.getSingleFileUrl(_packageSpecFileName);
+    return util.downloadFileViaXhr(url).catchError((e) =>
+        throw "Failed to load $_packageSpecFileName for '${package.name}': $e");
   }
 
   Future _fetchPackage(_Package package, FetchMode mode) {
+    // TEMP: Leave both options for now for experimentation.
+    final Function fetchPackageFunc =
+        SparkFlags.bowerUseGitClone ? _fetchPackageViaGit : _fetchPackageViaZip;
+
     return _preparePackageDir(package, mode).then((_PrepareDirRes res) {
       if (!res.existed && mode == FetchMode.INSTALL) {
         // _preparePackageDir created the directory.
-        return _clonePackage(package, res.entry);
+        return fetchPackageFunc(package, res.entry);
       } else if (!res.existed && mode == FetchMode.UPGRADE) {
         // _preparePackageDir created the directory.
         // TODO(ussuri): Verify that installing missing packages is what
         // 'bower update' really does (maybe it just updates existing ones).
-        return _clonePackage(package, res.entry);
+        return fetchPackageFunc(package, res.entry);
       } else if (res.existed && mode == FetchMode.INSTALL) {
         // Skip fetching (don't even try to analyze the directory's contents).
         return new Future.value();
       } else if (res.existed && mode == FetchMode.UPGRADE) {
         // TODO(ussuri): #1694 - when fixed, switch to using 'git pull'.
-        return _clonePackage(package, res.entry);
+        return fetchPackageFunc(package, res.entry);
       } else {
         throw new StateError('Unhandled case');
       }
@@ -237,10 +232,56 @@ class BowerFetcher {
     });
   }
 
-  Future _clonePackage(_Package package, chrome.DirectoryEntry dir) {
-    final String url = package.getUrlForCloning();
+  Future _fetchPackageViaGit(_Package package, chrome.DirectoryEntry dir) {
+    final String url = package.getCloneUrl();
     return _git.clone(url, dir, branchName: package.branch).catchError((e) {
-      throw "Package ${package.name} not cloned: $e";
+      throw "Failed to clone package '${package.name}': $e";
+    });
+  }
+
+  Future _fetchPackageViaZip(_Package package, chrome.DirectoryEntry dir) {
+    final String url = package.getZipUrl();
+    return util.downloadFileViaXhr(url).then((String fileText) {
+      return _inflateArchive(fileText.codeUnits, dir);
+    }).catchError((e) {
+      throw "Failed to download zipped package '${package.name}': $e";
+    });
+  }
+
+  Future _inflateArchive(List<int> bytes, chrome.DirectoryEntry dir) {
+    // For some reason, [bytes], in particular obtained via an XHR, need
+    // to be cleansed first; otherwise, [ArchiveFile.content] below hangs.
+    final List<int> cleansedBytes = bytes.map((b) => b & 0xff).toList();
+    final arc.Archive archive =
+        new arc.ZipDecoder().decodeBytes(cleansedBytes, verify: false);
+    // Sequentially write files in the archive to [dir].
+    // TODO(ussuri): Consider doing  this in parallel using [Future.wait], as
+    // [_writeArchiveFile] does both I/O and CPU (for decompression). Also,
+    // that would make writes independent from each other.
+    return Future.forEach(archive.files, (arc.ArchiveFile file) {
+      _writeArchiveFile(file, dir);
+    });
+  }
+
+  Future _writeArchiveFile(arc.ArchiveFile file, chrome.DirectoryEntry dir) {
+    // NOTE: [ArchiveFile.isFile] always returns true (bug?). Use a workaround.
+    if (file.size == 0 && file.name.endsWith('/')) {
+      // GitHub archives always contain a top level directory named
+      // <package_name>-<branch>. We're not interested in it.
+      // We also don't have to create any sub-directories: [_writeFile] will.
+      return new Future.value();
+    } else {
+      // Same as above: strip the top level directory from the file name.
+      String fileName = file.name.replaceFirst(_ZIP_TOP_LEVEL_DIR_RE, '');
+      return _writeFile(fileName, file.content, dir);
+    }
+  }
+
+  Future _writeFile(String path, List<int> bytes, chrome.DirectoryEntry dir) {
+    return dir.createFile(path, exclusive: false).then(
+        (chrome.ChromeFileEntry entry) {
+      final buffer = new chrome.ArrayBuffer.fromBytes(bytes);
+      return entry.writeBytes(buffer);
     });
   }
 
@@ -274,14 +315,14 @@ Some dependencies could not be resolved and have been skipped.
 To fix, add or modify the following entry in .spark.json under your workspace 
 directory: 
 
-  "bower-mapped-dependencies": {
+  "bower-override-dependencies": {
     ${_unresolvedDepsComments.join('\n    ')}
   }
 
 Alternatively, you can have any dependency ignored by adding its name to 
 the following list in .spark.json:
 
-  "bower-ignored-dependencies": [
+  "bower-ignore-dependencies": [
   ]
 
 Finally, you can also map unsupported complex versions to latest stable 
@@ -438,10 +479,13 @@ class _Package {
   bool operator==(_Package another) =>
       path == another.path && branch == another.branch;
 
-  String getUrlForCloning() =>
+  String getCloneUrl() =>
       '$_GITHUB_ROOT_URL/$path';
 
-  String getUrlForDownloading(String remoteFilePath) =>
+  String getZipUrl() =>
+      '$_GITHUB_ROOT_URL/$path/archive/$branch.zip';
+
+  String getSingleFileUrl(String remoteFilePath) =>
       '$_GITHUB_USER_CONTENT_URL/$path/$branch/$remoteFilePath';
 
   String get spec => '"$name": "$fullPath"';

@@ -6,7 +6,6 @@ library spark_polymer.ui;
 
 import 'dart:html';
 
-import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
@@ -38,8 +37,6 @@ class SparkPolymerUI extends SparkWidget {
   // that it controls, so it doesn't have to be on at start-up time in order to
   // not break the app.
   @observable bool showWipProjectTemplates = false;
-
-  @observable bool showNoFileFilterMatches = false;
 
   SparkSplitView _splitView;
   InputElement _fileFilter;
@@ -78,9 +75,11 @@ class SparkPolymerUI extends SparkWidget {
   void splitViewPositionChanged() {
     // TODO(ussuri): In deployed code, this was critical for correct
     // propagation of the client's changes in [splitViewPosition] to _splitView.
-    // Investigate.
+    // Investigate. `targetSizeChanged()` is due to BUG #2252.
     if (IS_DART2JS) {
-      _splitView..targetSize = splitViewPosition..targetSizeChanged();
+      _splitView
+          ..targetSize = splitViewPosition
+          ..targetSizeChanged();
     }
   }
 
@@ -128,7 +127,7 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onClickRootDirectory() {
-    _model.projectLocationManager.chooseNewProjectLocation().then((LocationResult res){
+    _model.projectLocationManager.chooseNewProjectLocation(false).then((LocationResult res){
       if (res != null) {
         _model.showRootDirectory();
       }
@@ -160,24 +159,16 @@ class SparkPolymerUI extends SparkWidget {
       e..preventDefault()..stopPropagation();
       _fileFilter.value = '';
       _updateFileFilterActive(false);
-      _updateFileFilterNoMatches(false);
       _model.filterFilesList(null);
     }
   }
 
   void fileFilterInputHandler(Event e) {
     _updateFileFilterActive(_fileFilter.value.isNotEmpty);
-    _model.filterFilesList(_fileFilter.value).then((bool matchesFound) {
-      _updateFileFilterNoMatches(!matchesFound);
-    });
+    _model.filterFilesList(_fileFilter.value);
   }
 
   void _updateFileFilterActive(bool active) {
     _fileFilter.classes.toggle('active', active);
-  }
-
-  void _updateFileFilterNoMatches(bool showNoMatchesFound) {
-    showNoFileFilterMatches = showNoMatchesFound;
-    deliverChanges();
   }
 }
