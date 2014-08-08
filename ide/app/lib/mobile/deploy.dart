@@ -49,18 +49,6 @@ class MobileDeploy {
     if (appContainer == null) {
       throw new ArgumentError('must provide an app to push');
     }
-
-    final List permissions = chrome.runtime.getManifest()['permissions'];
-
-    for (final p in permissions) {
-      if (p is Map && (p as Map).containsKey('usbDevices')) {
-        final List usbDevices = (p as Map)['usbDevices'];
-        for (final Map<String, dynamic> d in usbDevices) {
-          _knownDevices.add(
-              new DeviceInfo(d['vendorId'], d['productId'], d['description']));
-        }
-      }
-    }
   }
 
   /**
@@ -112,8 +100,6 @@ class MobileDeploy {
 
   Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
     // Start ADT on the device.
-    //return client.startActivity(AdbApplication.CHROME_ADT);
-
     // TODO: a SocketException, code == -100 here often means that the App Dev
     // Tool is not running on the device.
     // Setup port forwarding to DEPLOY_PORT on the device.
@@ -183,24 +169,24 @@ abstract class AbstractDeployer {
   }
 
   List<int> _buildPushRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest("POST",target,
+    return _buildHttpRequest("POST" ,target,
         "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
         payload: archivedData);
   }
 
   List<int> _buildDeleteRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest("POST",target,
+    return _buildHttpRequest("POST" ,target,
         "deletefiles?appId=${appContainer.project.name}",
         payload: archivedData);
   }
 
 
   List<int> _buildLaunchRequest(String target) {
-    return _buildHttpRequest("POST",target, "launch?appId=${appContainer.project.name}");
+    return _buildHttpRequest("POST" ,target, "launch?appId=${appContainer.project.name}");
   }
 
   List<int> _buildAssetManifestRequest(String target) {
-    return _buildHttpRequest("GET",target,
+    return _buildHttpRequest("GET" ,target,
         "assetmanifest?appId=${appContainer.project.name}");
   }
 
@@ -257,11 +243,11 @@ abstract class AbstractDeployer {
     }
   }
 
-  ///This method sends the command to the device and it's
-  ///implementation depends on the deployment choice
+  /// This method sends the command to the device and it's
+  /// implementation depends on the deployment choice
   Future<List<int>> _pushRequestToDevice(String);
 
-  //Get the deployment targte URL
+  /// Get the deployment target URL
   String _getTarget();
 
   Future _setTimeout(Future httpPushFuture) {
@@ -319,11 +305,11 @@ abstract class AbstractDeployer {
     }
   }
 
-  ///when the deployment is done this function is called to ensure
-  ///that the used resources are disposed
+  /// when the deployment is done this function is called to ensure
+  /// that the used resources are disposed
   void _doWhenComplete();
 
-  ///Defines the deployement flow
+  /// Implements the deployement flow
   Future deploy(ProgressMonitor monitor) {
     List<int> httpRequest;
 
@@ -404,13 +390,13 @@ class HttpDeployer extends AbstractDeployer {
       client.write(httpRequest);
       Stream st = client.stream;
       var broadcastStream = st.asBroadcastStream();
-      List<int> l3 = new List<int>();
-      return broadcastStream.forEach((List<int> l1) {
-        l3.addAll(l1);
+      List<int> response = new List<int>();
+      return broadcastStream.forEach((List<int> data) {
+        response.addAll(data);
       }).catchError((_) {
-        return l3;
+        return response;
       }).whenComplete(() {
-        return l3;
+        return response;
       });
     }).whenComplete(() {
       if (client != null) {
