@@ -39,42 +39,6 @@
             horizontal
             justify="spaced"
             spacing="small">
-          <input type="fileFilter"
-              id="fileFilter"
-              placeholder="Filter"
-              spellcheck="false"
-              on-keydown="{{fileFilterKeydownHandler}}"
-              on-input="{{fileFilterInputHandler}}"
-              tabindex="0"/>
-          <spark-menu-button
-              id="moreSearch"
-              valueAttr="action-id"
-              arrow="none"
-              on-activate="{{onMenuSelected}}">
-
-            <spark-button highlight="false" style="width: 35px; height: 35px;">
-              <svg id="moreSearchArrow" width="18px" height="18px" viewBox="0 0 24 24">
-                <g><polygon points="7,10 12,15 17,10 "></polygon></g>
-              </svg>
-            </spark-button>
-
-            <spark-menu-item id="showFilesView"
-                             action-id="show-files-view"
-                             label="Filter"
-                             checkmark="true">
-            </spark-menu-item>
-            <spark-menu-item id="showSearchView"
-                             action-id="show-search-view"
-                             label="Search in files">
-            </spark-menu-item>
-          </spark-menu-button>
-
-          <spark-button id="runButton" flat round tooltip="Run">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          </spark-button>
-
           <spark-menu-button
               id="mainMenu"
               valueAttr="action-id"
@@ -118,8 +82,47 @@
             </spark-menu-item>
             <spark-menu-item action-id="help-about" label="About Chrome Dev Editor">
             </spark-menu-item>
-
           </spark-menu-button>
+
+          <div>
+            <input type="fileFilter"
+                id="fileFilter"
+                placeholder="Filter"
+                spellcheck="false"
+                on-keydown="{{fileFilterKeydownHandler}}"
+                on-input="{{fileFilterInputHandler}}"
+                tabindex="0"/>
+  
+            <spark-menu-button
+                id="moreSearch"
+                valueAttr="action-id"
+                arrow="none"
+                on-activate="{{onMenuSelected}}">
+  
+              <spark-button id="moreSearchArrow"
+                  menuButton highlight="false" padding="medium">
+                <svg width="18px" height="18px" viewBox="0 0 24 24">
+                  <g><polygon points="7,10 12,15 17,10 "></polygon></g>
+                </svg>
+              </spark-button>
+  
+              <spark-menu-item id="showFilesView"
+                  action-id="show-files-view"
+                  label="Filter"
+                  checkmark="true">
+              </spark-menu-item>
+              <spark-menu-item id="showSearchView"
+                  action-id="show-search-view"
+                  label="Search in files">
+              </spark-menu-item>
+            </spark-menu-button>
+          </div>
+
+          <spark-button id="runButton" flat round tooltip="Run">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </spark-button>
         </spark-toolbar>
 
         <content select="#leftPanel"></content>
