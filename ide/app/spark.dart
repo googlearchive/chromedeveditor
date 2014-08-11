@@ -33,6 +33,7 @@ import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
+import 'lib/mobile/android_rsa.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
@@ -140,6 +141,7 @@ abstract class Spark
     initEditorManager();
     initEditorArea();
     initNavigationManager();
+    initAndroidRSA();
 
     createActions();
 
@@ -341,6 +343,10 @@ abstract class Spark
       }
     });
 
+  }
+
+  void initAndroidRSA() {
+    AndroidRSA.loadPlugin();
   }
 
   void _selectLocation(NavigationLocation location) {

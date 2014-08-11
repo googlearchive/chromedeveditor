@@ -45,26 +45,33 @@ AndroidRSA._queue = [];
 AndroidRSA._callbacks = {};
 
 // It's a reference to the embed tag for the NaCL module.
+// Null before loadPlugin(), or if the module fails to load or has crashed.
 AndroidRSA._module = null;
 
-// True when the module loads.
+// True when the module is successfully loaded.
+// False before and during initialization, or if the module fails to load or
+// has crashed.
 AndroidRSA._moduleLoaded = false;
+
+// True if the module failed to load or has crashed.
+AndroidRSA._moduleFailed = false;
 
 // Called when the NaCL module is loaded.
 AndroidRSA._onModuleLoad = function() {
-  console.log('Android RSA module loaded.');
   AndroidRSA._moduleLoaded = true;
   AndroidRSA._queueConsume();
 };
 
 // Called if the NaCL module fails to load.
 AndroidRSA._onModuleError = function(e) {
-  console.log('Android RSA module error', e);
+  AndroidRSA._moduleFailed = true;
+  console.log('Android RSA module error:', e);
 };
 
 // Called if the NaCL module crashes.
 AndroidRSA._onModuleCrash = function(e) {
-  console.log('Android RSA module crashed', e);
+  AndroidRSA._moduleFailed = true;
+  console.log('Android RSA module crashed:', e);
 };
 
 // This method is called when a message is received from the NaCL module.
@@ -97,13 +104,10 @@ AndroidRSA._handleMessage = function(messageEvent) {
 };
 
 // Create the DOM node to host the plugin.
-AndroidRSA._createPlugin = function() {
+AndroidRSA.loadPlugin = function() {
   var module = AndroidRSA._module = document.createElement('object');
   module.setAttribute('height', '0');
   module.setAttribute('width', '0');
-
-  var container = document.getElementById('android-rsa-container');
-  container.appendChild(module);
 
   module.addEventListener('load', AndroidRSA._onModuleLoad);
   module.addEventListener('crash', AndroidRSA._onModuleCrash);
@@ -112,12 +116,20 @@ AndroidRSA._createPlugin = function() {
 
   module.setAttribute('src', 'lib/mobile/nacl_android_rsa.nmf');
   module.setAttribute('type', 'application/x-pnacl');
+
+  var container = document.getElementById('android-rsa-container');
+  container.appendChild(module);
 };
 
 // Queues a command.
 AndroidRSA._runCommand = function(command, parameters, callback) {
-  if (!AndroidRSA._module)
-    AndroidRSA._createPlugin();
+  if (AndroidRSA._moduleFailed) {
+    throw 'AndroidRSA NaCl module failure';
+  }
+
+  if (!AndroidRSA._module) {
+    AndroidRSA.loadPlugin();
+  }
 
   var uuid = UUID.generate();
   var item = {'uuid': uuid, 'command': command, 'parameters': parameters};
