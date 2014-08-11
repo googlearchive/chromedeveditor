@@ -84,14 +84,13 @@
             </spark-menu-item>
           </spark-menu-button>
 
-          <div>
-            <input type="fileFilter"
-                id="fileFilter"
+          <div id="fileFilterGroup">
+            <input id="fileFilter"
+                type="text"
                 placeholder="Filter"
                 spellcheck="false"
                 on-keydown="{{fileFilterKeydownHandler}}"
-                on-input="{{fileFilterInputHandler}}"
-                tabindex="0"/>
+                on-input="{{fileFilterInputHandler}}"/>
   
             <spark-menu-button
                 id="moreSearchMenu"
