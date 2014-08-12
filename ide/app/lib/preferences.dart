@@ -22,13 +22,13 @@ final Logger _logger = new Logger('preferences');
  * A PreferenceStore backed by `chome.storage.local`.
  */
 PreferenceStore localStore = new _ChromePreferenceStore(
-    chrome.storage.local, 'local', new Duration(seconds: 2));
+    chrome.storage.local, 'local', new Duration(milliseconds: 100));
 
 /**
  * A PreferenceStore backed by `chome.storage.sync`.
  */
 PreferenceStore syncStore = new _ChromePreferenceStore(
-    chrome.storage.sync, 'sync', new Duration(seconds: 6));
+    chrome.storage.sync, 'sync', new Duration(milliseconds: 100));
 
 /**
  * Preferences specific to Spark.
@@ -244,7 +244,6 @@ class _ChromePreferenceStore implements PreferenceStore {
       return new Future.value(_map[key]);
     } else {
       return _storageArea.get(key).then((Map<String, String> map) {
-        // TODO(ussuri): Shouldn't we cache the just read value in _map?
         final String val = map == null ? null : map[key];
         return val != null ? val : defaultVal;
       });
@@ -290,7 +289,7 @@ class _ChromePreferenceStore implements PreferenceStore {
   void flush() {
     if (_map.isNotEmpty) {
       _storageArea.set(_map);
-      _logger.info('saved preferences: ${_map.keys}');
+      _logger.warning('flushed: ');// + _map.toString());// _map.keys.fold('', (str, key) => '$str, $key=${_map[key]}'));
       _map.clear();
     }
 
