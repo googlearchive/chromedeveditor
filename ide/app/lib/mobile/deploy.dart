@@ -49,18 +49,6 @@ class MobileDeploy {
     if (appContainer == null) {
       throw new ArgumentError('must provide an app to push');
     }
-
-    final List permissions = chrome.runtime.getManifest()['permissions'];
-
-    for (final p in permissions) {
-      if (p is Map && (p as Map).containsKey('usbDevices')) {
-        final List usbDevices = (p as Map)['usbDevices'];
-        for (final Map<String, dynamic> d in usbDevices) {
-          _knownDevices.add(
-              new DeviceInfo(d['vendorId'], d['productId'], d['description']));
-        }
-      }
-    }
   }
 
   /**
@@ -87,8 +75,8 @@ class MobileDeploy {
     monitor.start('Deploying…', maxWork: 10);
 
     _logger.info('deploying application to ip host');
-
-    return _sendHttpPush(target, monitor);
+    HttpDeployer dep = new HttpDeployer(appContainer, _prefs, target);
+    return dep.deploy(monitor);
   }
 
   /**
@@ -101,7 +89,6 @@ class MobileDeploy {
     // Try to find a local ADB server. If we fail, try to use USB.
     return AdbClientTcp.createClient().then((AdbClientTcp client) {
       _logger.info('deploying application via adb server');
-
       return _pushToAdbServer(client, monitor);
     }, onError: (_) {
       _logger.info('deploying application via ADB over USB');
@@ -111,16 +98,63 @@ class MobileDeploy {
     });
   }
 
+  Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
+    // Start ADT on the device.
+    // TODO: a SocketException, code == -100 here often means that the App Dev
+    // Tool is not running on the device.
+    // Setup port forwarding to DEPLOY_PORT on the device.
+    return client.forwardTcp(DEPLOY_PORT, DEPLOY_PORT).then((_) {
+      // Push the app binary on DEPLOY_PORT.
+      ADBDeployer dep = new ADBDeployer(appContainer, _prefs);
+      return dep.deploy(monitor);
+    });
+  }
+
+  Future _pushViaUSB(ProgressMonitor monitor) {
+    USBDeployer dep = new USBDeployer(appContainer, _prefs);
+    return dep.init().then((_) {
+      return dep.deploy(monitor);
+    });
+  }
+}
+
+abstract class AbstractDeployer {
+  static const int DEPLOY_PORT = 2424;
+
+  final Container appContainer;
+  final PreferenceStore _prefs;
+
+  List<String> fileToAdd = [];
+  List<DeviceInfo> _knownDevices = [];
+
+  AbstractDeployer(this.appContainer, this._prefs) {
+    if (appContainer == null) {
+      throw new ArgumentError('must provide an app to push');
+    }
+
+    final List permissions = chrome.runtime.getManifest()['permissions'];
+
+    for (final p in permissions) {
+      if (p is Map && (p as Map).containsKey('usbDevices')) {
+        final List usbDevices = (p as Map)['usbDevices'];
+        for (final Map<String, dynamic> d in usbDevices) {
+          _knownDevices.add(
+              new DeviceInfo(d['vendorId'], d['productId'], d['description']));
+        }
+      }
+    }
+  }
+
   /**
    * Builds a request to given `target` at given `path` and with given `payload`
    * (body content).
    */
-  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
+  List<int> _buildHttpRequest(String httpMethod, String target, String path, {List<int> payload}) {
     List<int> httpRequest = [];
 
     // Build the HTTP request headers.
     String header =
-        'POST /$path HTTP/1.1\r\n'
+        '$httpMethod /$path HTTP/1.1\r\n'
         'User-Agent: Chrome Dev Editor\r\n'
         'Host: ${target}:$DEPLOY_PORT\r\n';
     List<int> body = [];
@@ -134,77 +168,29 @@ class MobileDeploy {
 
     return httpRequest;
   }
-
-  List<int> _buildHttpRequest2(String target, String path, {List<int> payload}) {
-    List<int> httpRequest = [];
-
-    // Build the HTTP request headers.
-    String header =
-        'GET /$path HTTP/1.1\r\n'
-        'User-Agent: Chrome Dev Editor\r\n'
-        'Host: ${target}:$DEPLOY_PORT\r\n';
-    List<int> body = [];
-
-    if (payload != null) {
-      body.addAll(payload);
-    }
-    httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
-    httpRequest.addAll(body);
-
-    return httpRequest;
-  }
-
 
   List<int> _buildPushRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest(target,
+    return _buildHttpRequest("POST" ,target,
         "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
         payload: archivedData);
   }
 
   List<int> _buildDeleteRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest(target,
+    return _buildHttpRequest("POST" ,target,
         "deletefiles?appId=${appContainer.project.name}",
         payload: archivedData);
   }
 
 
   List<int> _buildLaunchRequest(String target) {
-    return _buildHttpRequest(target, "launch?appId=${appContainer.project.name}");
+    return _buildHttpRequest("POST" ,target, "launch?appId=${appContainer.project.name}");
   }
 
   List<int> _buildAssetManifestRequest(String target) {
-    return _buildHttpRequest2(target,
+    return _buildHttpRequest("GET" ,target,
         "assetmanifest?appId=${appContainer.project.name}");
   }
 
-  Future _sendTcpRequest(String target, List<int> httpRequest) {
-    TcpClient client;
-    return TcpClient.createClient(target, DEPLOY_PORT).then((TcpClient client) {
-      client.write(httpRequest);
-      return client.stream.timeout(new Duration(minutes: 1)).first;
-    }).whenComplete(() {
-      if (client != null) {
-        client.dispose();
-      }
-    });
-  }
-
-  Future _sendHttpPush(String target, ProgressMonitor monitor) {
-    return archiveContainer(appContainer, true).then((List<int> archivedData) {
-      monitor.worked(3);
-      return _sendTcpRequest(target, _buildPushRequest(target, archivedData));
-    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes)
-    ).then((_) {
-      monitor.worked(6);
-      return _sendTcpRequest(target, _buildLaunchRequest(target));
-    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes)
-    ).then((_) {
-      return _sendTcpRequest(target, _buildAssetManifestRequest(target));
-    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes));
-  }
-
-  // Safe to call multiple times. It will open the device if it has not been opened yet.
   Future<AndroidDevice> _fetchAndroidDevice() {
     AndroidDevice device = new AndroidDevice(_prefs);
 
@@ -240,19 +226,6 @@ class MobileDeploy {
     }).then((_) => device);
   }
 
-  Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
-    // Start ADT on the device.
-    //return client.startActivity(AdbApplication.CHROME_ADT);
-
-    // TODO: a SocketException, code == -100 here often means that the App Dev
-    // Tool is not running on the device.
-    // Setup port forwarding to DEPLOY_PORT on the device.
-    return client.forwardTcp(DEPLOY_PORT, DEPLOY_PORT).then((_) {
-      // Push the app binary on DEPLOY_PORT.
-      return _sendHttpPush('127.0.0.1', monitor);
-    });
-  }
-
   Future _expectHttpOkResponse(List<int> msg) {
     String response = new String.fromCharCodes(msg);
     List<String> lines = response.split('\r\n');
@@ -271,89 +244,172 @@ class MobileDeploy {
     }
   }
 
-  Future _pushViaUSB(ProgressMonitor monitor) {
-    List<int> httpRequest;
-    AndroidDevice _device;
-    List<String> fileToDelete = [];
-    List<String> fileToAdd = [];
+  /// This method sends the command to the device and it's
+  /// implementation depends on the deployment choice
+  Future<List<int>> _pushRequestToDevice(String);
 
-    Future _setTimeout(Future httpPushFuture) {
-      return httpPushFuture.timeout(new Duration(seconds: 60), onTimeout: () {
-        return new Future.error('Push timed out: Total time exceeds 60 seconds');
-      });
-    }
-    /*
-     * 1. Request the asset manifest file for this app from the device
-     * 2. Compare the asset manifest from the device with the one build here
-     * 3. All the differences betwenn the two are either added for deletion or for addition
-     * 4. The zip that is pushed contains only files that are changed since the last deployement.
-     */
-    httpRequest = _buildAssetManifestRequest('localhost');
-    return _fetchAndroidDevice().then((deviceResult) {
-      _device = deviceResult;
-       return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));})
-    .then((msg) {
-      return _expectHttpOkResponse(msg);
-    }).then((String result) {
-      Map<String, Map<String, String>> assetManifestOnDevice = JSON.decode(result);
-      if (assetManifestOnDevice['assetManifest'] != null) {
-        Map<String, Map<String, String>> assetManifestLocal
-            = JSON.decode(buildAssetManifest(appContainer));
-        if (getEtag(appContainer) != assetManifestOnDevice['assetManifestEtag']) {
-          setDeploymentTime(appContainer, 0);
-        }
-        assetManifestOnDevice['assetManifest'].keys.forEach((key) {
-          if ((key.startsWith("www/"))
-              && (!assetManifestLocal.containsKey(key))) {
-            fileToDelete.add(key);
-          }
-        });
+  /// Get the deployment target URL
+  String _getTarget();
 
-        assetManifestLocal.keys.forEach((key) {
-          if ((key.startsWith("www/")) &&
-              (!assetManifestOnDevice['assetManifest'].containsKey(key))) {
-            fileToAdd.add(key);
-          }
-        });
-
-        if (fileToDelete.isNotEmpty) {
-          Map<String, List<String>> toDeleteMap = {};
-          toDeleteMap["paths"] = fileToDelete;
-          String command = JSON.encode(toDeleteMap);
-          httpRequest = _buildDeleteRequest('localhost', command.codeUnits);
-          return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
-        }
-        return new Future.value();
-      } else {
-        return setDeploymentTime(appContainer, 0);
-      }
-    }).then((msg) {
-      if (msg != null) {
-        monitor.worked(6);
-        return _expectHttpOkResponse(msg);
-      }
-    }).then((_) {
-      return archiveModifiedFilesInContainer(appContainer, true)
-          .then((List<int> archivedData) {
-            monitor.worked(3);
-            httpRequest = _buildPushRequest('localhost', archivedData);
-            return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
-          }).then((msg) {
-            monitor.worked(6);
-            return _expectHttpOkResponse(msg);
-    }).then((String response) {
-      Map<String, String> etagResponse = JSON.decode(response);
-      setEtag(appContainer, etagResponse['assetManifestEtag']);
-      monitor.worked(8);
-      httpRequest = _buildLaunchRequest('localhost');
-      return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
-    }).then((msg) {
-      monitor.worked(6);
-      return _expectHttpOkResponse(msg);
-    }).whenComplete(() {
-      if (_device != null) _device.dispose();
-    });
+  Future _setTimeout(Future httpPushFuture) {
+    return httpPushFuture.timeout(new Duration(seconds: 30), onTimeout: () {
+      return new Future.error('Push timed out: Total time exceeds 30 seconds');
     });
   }
 
+  void _updateContainerEtag(String response) {
+    Map<String, String> etagResponse = JSON.decode(response);
+    setEtag(appContainer, etagResponse['assetManifestEtag']);
+  }
+
+  Future _deleteObsoleteFiles(String result) {
+    List<String> fileToDelete = [];
+
+    Map<String, Map<String, String>> assetManifestOnDevice = JSON.decode(result);
+    if (assetManifestOnDevice['assetManifest'] != null) {
+      Map<String, Map<String, String>> assetManifestLocal =
+          JSON.decode(buildAssetManifest(appContainer));
+      if (getEtag(appContainer) != assetManifestOnDevice['assetManifestEtag']) {
+        setDeploymentTime(appContainer, 0);
+      }
+      assetManifestOnDevice['assetManifest'].keys.forEach((key) {
+        if ((key.startsWith("www/"))
+            && (!assetManifestLocal.containsKey(key))) {
+          fileToDelete.add(key);
+        }
+      });
+
+      assetManifestLocal.keys.forEach((key) {
+        if ((key.startsWith("www/")) &&
+            (!assetManifestOnDevice['assetManifest'].containsKey(key))) {
+          fileToAdd.add(key);
+        }
+      });
+
+      if (fileToDelete.isNotEmpty) {
+        Map<String, List<String>> toDeleteMap = {};
+        toDeleteMap["paths"] = fileToDelete;
+        String command = JSON.encode(toDeleteMap);
+        List<int> httpRequest = _buildDeleteRequest(_getTarget(), command.codeUnits);
+        return _setTimeout(_pushRequestToDevice(httpRequest));
+      }
+      return new Future.value();
+    } else {
+      return new Future.value(setDeploymentTime(appContainer, 0));
+    }
+  }
+
+  /// when the deployment is done this function is called to ensure
+  /// that the used resources are disposed
+  void _doWhenComplete();
+
+  /// Implements the deployement flow
+  Future deploy(ProgressMonitor monitor) {
+    List<int> httpRequest;
+
+    httpRequest = _buildAssetManifestRequest(_getTarget());
+    return _setTimeout(_pushRequestToDevice(httpRequest))
+      .then((msg) {
+        return _expectHttpOkResponse(msg);
+    }).then((String result) {
+        return _deleteObsoleteFiles(result);
+    }).then((msg) {
+      if (msg != null) {
+        monitor.worked(2);
+        return _expectHttpOkResponse(msg);
+      }
+    }).then((_) {
+      return archiveModifiedFilesInContainer(appContainer, true, fileToAdd)
+        .then((List<int> archivedData) {
+          monitor.worked(3);
+          httpRequest = _buildPushRequest(_getTarget(), archivedData);
+          return _setTimeout(_pushRequestToDevice(httpRequest));
+     }).then((msg) {
+         monitor.worked(6);
+         return _expectHttpOkResponse(msg);
+    }).then((String response) {
+      _updateContainerEtag(response);
+      monitor.worked(7);
+      httpRequest = _buildLaunchRequest(_getTarget());
+      return _setTimeout(_pushRequestToDevice(httpRequest));
+    }).then((msg) {
+      monitor.worked(8);
+      return _expectHttpOkResponse(msg);
+    }).whenComplete(() {
+      _doWhenComplete();
+    });
+    });
+  }
+}
+
+class USBDeployer extends AbstractDeployer {
+  static const int DEPLOY_PORT = 2424;
+  static const String TARGET = 'localhost';
+  AndroidDevice _device;
+
+  USBDeployer(Container appContainer, PreferenceStore _prefs)
+     : super(appContainer, _prefs) {
+  }
+
+  Future init () {
+    return _fetchAndroidDevice().then((deviceResult) {
+      _device = deviceResult;
+      return new Future.value();
+    });
+  }
+
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest) {
+    return _device.sendHttpRequest(httpRequest, DEPLOY_PORT);
+  }
+
+  String _getTarget() {
+    return TARGET;
+  }
+
+  void _doWhenComplete() {
+    if (_device != null) _device.dispose();
+  }
+}
+
+class HttpDeployer extends AbstractDeployer {
+  static const int DEPLOY_PORT = 2424;
+  String _target;
+
+  HttpDeployer(Container appContainer, PreferenceStore _prefs, this._target)
+     : super(appContainer, _prefs);
+
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest) {
+    TcpClient client;
+    return TcpClient.createClient(_target, DEPLOY_PORT).then((TcpClient client) {
+      client.write(httpRequest);
+      Stream st = client.stream.timeout(new Duration(minutes: 1));
+      List<int> response = new List<int>();
+      return st.forEach((List<int> data) {
+        response.addAll(data);
+      }).catchError((_) {
+        return response;
+      }).whenComplete(() {
+        return response;
+      });
+    }).whenComplete(() {
+      if (client != null) {
+        client.dispose();
+      }
+    });
+  }
+
+  String _getTarget() {
+    return _target;
+  }
+
+  void _doWhenComplete() {
+  }
+}
+
+class ADBDeployer extends HttpDeployer {
+  static const String TARGET = '127.0.0.1';
+
+  ADBDeployer(Container appContainer, PreferenceStore _prefs)
+     : super(appContainer, _prefs, TARGET) {
+  }
 }

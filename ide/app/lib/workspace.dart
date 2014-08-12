@@ -313,6 +313,10 @@ class Workspace extends Container {
     return _store.setValue('workspaceRoots', JSON.encode(data));
   }
 
+  Future<File> getOrCreateFile(String name, [bool createIfMissing = false]) {
+    return new Future.error('getOrCreateFile() not valid for the Workspace');
+  }
+
   bool get syncFsIsAvailable => _syncFileSystem != null;
 
   // List of files modified by the server.
@@ -591,6 +595,11 @@ abstract class Container extends Resource {
 
     return severity;
   }
+
+  /**
+   * Gets an existing [File] (or creates a new one) with the given name.
+   */
+  Future<File> getOrCreateFile(String name, [bool createIfMissing = false]);
 }
 
 abstract class Resource {
@@ -826,9 +835,6 @@ class Folder extends Container {
     });
   }
 
-  /**
-   * Gets an existing or creates a new [File] with the given name.
-   */
   Future<File> getOrCreateFile(String name, [bool createIfMissing = false]) {
     File file = getChild(name);
     if (file != null) {
