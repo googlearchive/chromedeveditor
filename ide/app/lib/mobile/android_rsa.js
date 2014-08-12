@@ -44,14 +44,35 @@ AndroidRSA._queue = [];
 // uuid -> function.
 AndroidRSA._callbacks = {};
 
-// It's a reference to the NaCL module.
+// It's a reference to the embed tag for the NaCL module.
+// Null before loadPlugin(), or if the module fails to load or has crashed.
 AndroidRSA._module = null;
 
-// This method is called when the NaCL module is loaded.
-AndroidRSA._moduleDidLoad = function() {
-  AndroidRSA._module = document.getElementById('android-rsa');
+// True when the module is successfully loaded.
+// False before and during initialization, or if the module fails to load or
+// has crashed.
+AndroidRSA._moduleLoaded = false;
+
+// True if the module failed to load or has crashed.
+AndroidRSA._moduleFailed = false;
+
+// Called when the NaCL module is loaded.
+AndroidRSA._onModuleLoad = function() {
+  AndroidRSA._moduleLoaded = true;
   AndroidRSA._queueConsume();
-}
+};
+
+// Called if the NaCL module fails to load.
+AndroidRSA._onModuleError = function(e) {
+  AndroidRSA._moduleFailed = true;
+  console.log('Android RSA module error:', e);
+};
+
+// Called if the NaCL module crashes.
+AndroidRSA._onModuleCrash = function(e) {
+  AndroidRSA._moduleFailed = true;
+  console.log('Android RSA module crashed:', e);
+};
 
 // This method is called when a message is received from the NaCL module.
 AndroidRSA._handleMessage = function(messageEvent) {
@@ -80,10 +101,36 @@ AndroidRSA._handleMessage = function(messageEvent) {
     delete AndroidRSA._callbacks[messageEvent.data.uuid];
     callback(messageEvent.data);
   }
-}
+};
+
+// Create the DOM node to host the plugin.
+AndroidRSA.loadPlugin = function() {
+  var module = AndroidRSA._module = document.createElement('object');
+  module.setAttribute('height', '0');
+  module.setAttribute('width', '0');
+
+  module.addEventListener('load', AndroidRSA._onModuleLoad);
+  module.addEventListener('crash', AndroidRSA._onModuleCrash);
+  module.addEventListener('error', AndroidRSA._onModuleError);
+  module.addEventListener('message', AndroidRSA._handleMessage);
+
+  module.setAttribute('src', 'lib/mobile/nacl_android_rsa.nmf');
+  module.setAttribute('type', 'application/x-pnacl');
+
+  var container = document.getElementById('android-rsa-container');
+  container.appendChild(module);
+};
 
 // Queues a command.
 AndroidRSA._runCommand = function(command, parameters, callback) {
+  if (AndroidRSA._moduleFailed) {
+    throw 'AndroidRSA NaCl module failure';
+  }
+
+  if (!AndroidRSA._module) {
+    AndroidRSA.loadPlugin();
+  }
+
   var uuid = UUID.generate();
   var item = {'uuid': uuid, 'command': command, 'parameters': parameters};
 
@@ -92,24 +139,24 @@ AndroidRSA._runCommand = function(command, parameters, callback) {
 
   AndroidRSA._queueAddItem(item);
   AndroidRSA._queueConsume();
-}
+};
 
 // Adds an command to the command queue.
 AndroidRSA._queueAddItem = function(item) {
   AndroidRSA._queue.push(item);
-}
+};
 
 // Consume the queue of commands.
 AndroidRSA._queueConsume = function() {
-  if (AndroidRSA._module == null) {
+  if (!AndroidRSA._moduleLoaded) {
     return;
   }
-  
+
   AndroidRSA._queue.forEach(function(item) {
     AndroidRSA._module.postMessage(item);
   });
   AndroidRSA._queue = [];
-}
+};
 
 /**
  * AndroidRSA.generateKey(function callback, function error_handler)
@@ -134,13 +181,14 @@ AndroidRSA.generateKey = function(callback, error_handler) {
       }
     }
   });
-}
+};
 
 /**
- * AndroidRSA.sign(string key, string buffer, function callback, function error_handler)
+ * AndroidRSA.sign(string key, string buffer, function callback,
+ *                 function error_handler)
  *
  * Returns the signature of the buffer using the given key.
- * buffer is a base64-encoded buffer passed as a string. 
+ * buffer is a base64-encoded buffer passed as a string.
  *
  * AndroidRSA.sign(privatekey, buffer, function(signature) {
  *   sendSignatureOverTheWire(signature, ...);
@@ -160,13 +208,14 @@ AndroidRSA.sign = function(key, buffer, callback, error_handler) {
       }
     }
   });
-}
+};
 
 /**
- * AndroidRSA.getPublicKey(string privatekey, function callback, function error_handler)
- * 
+ * AndroidRSA.getPublicKey(string privatekey, function callback,
+ *                         function error_handler)
+ *
  * Returns the public key in a format used in the ADB protocol.
- * 
+ *
  * AndroidRSA.getPublicKey(privatekey, function(publickey) {
  *   sendKeyOverTheWire(publickey, ...);
  * }, function(error_code) {
@@ -185,13 +234,15 @@ AndroidRSA.getPublicKey = function(key, callback, error_handler) {
       }
     }
   });
-}
+};
 
 /**
- * AndroidRSA.randomSeed(string buffer, function callback, function error_handler)
+ * AndroidRSA.randomSeed(string buffer, function callback,
+ *                       function error_handler)
  *
- * Seeds the pseudo random number generator with some unpredictable data (buffer).
- * buffer is a base64-encoded buffer passed as a string. 
+ * Seeds the pseudo random number generator with some unpredictable data
+ * (buffer).
+ * buffer is a base64-encoded buffer passed as a string.
  *
  * AndroidRSA.randomSeed(buffer, function() {
  *   console.log('random seed done');
@@ -211,13 +262,4 @@ AndroidRSA.randomSeed = function(buffer, callback, error_handler) {
       }
     }
   });
-}
-
-// Registers handler for NaCL module loading and callbacks.
-AndroidRSA._register = function() {
-  var container = document.getElementById('android-rsa-container');
-  container.addEventListener('load', AndroidRSA._moduleDidLoad, true);
-  container.addEventListener('message', AndroidRSA._handleMessage, true);
-}
-
-AndroidRSA._register();
+};
