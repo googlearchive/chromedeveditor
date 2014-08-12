@@ -86,14 +86,6 @@ spark-dialog {
   height: 32px;
 }
 
-#moreSearchButton {
-  fill: #7d7d7d;
-}
-
-#moreSearchButton:hover {
-  fill: #444;
-}
-
 #fileNotFoundPlaceholder {
   color: #ccc;
   display: block;
@@ -108,12 +100,6 @@ spark-dialog {
   right: 0;
   width: 95px;
   z-index: 150;
-}
-
-#runButton > i,
-#leftNav > i,
-#rightNav > i {
-  font-size: 16px;
 }
 
 #sparkStatusContainer {
