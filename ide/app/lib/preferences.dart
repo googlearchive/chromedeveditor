@@ -289,7 +289,7 @@ class _ChromePreferenceStore implements PreferenceStore {
   void flush() {
     if (_map.isNotEmpty) {
       _storageArea.set(_map);
-      _logger.warning('flushed: ');// + _map.toString());// _map.keys.fold('', (str, key) => '$str, $key=${_map[key]}'));
+      _logger.info('flushed: ' + _map.toString());
       _map.clear();
     }
 
