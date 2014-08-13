@@ -98,9 +98,14 @@ class Pull {
             options.branchName = branch;
             options.commitMessage = MERGE_BRANCH_COMMIT_MSG + options.branchName;
             // Create a merge commit by default.
-            return Commit.createCommit(options, localSha, finalTreeSha,
+            return Commit.createCommit(options, [remoteSha, localSha], finalTreeSha,
                 headRefName).then((commitSha) {
-              return Checkout.checkout(options, commitSha);
+              return Checkout.checkout(options, commitSha).then((_) {
+                return FileOps.createFileWithContent(options.root, '.git/${headRefName}',
+                    commitSha + '\n', 'Text').then((_) {
+                  return store.writeConfig().then((_) => commitSha);
+                });
+              });
             });
           });
         }).catchError((e) {
