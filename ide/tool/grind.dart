@@ -70,7 +70,7 @@ void setup(GrinderContext context) {
   }
 
   PubTools pub = new PubTools();
-  pub.get(context);
+  pub.upgrade(context);
 
   // Copy from ./packages to ./app/packages.
   copyDirectory(getDir('packages'), getDir('app/packages'), context);
