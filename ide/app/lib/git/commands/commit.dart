@@ -126,9 +126,9 @@ class Commit {
     StringBuffer commitContent = new StringBuffer();
     commitContent.write('tree ${treeSha}\n');
     parents.forEach((String parent) {
-      if (parent != null && parent.length > 0) {
+      if (parent != null && parent.isNotEmpty) {
         commitContent.write('parent ${parent}');
-        if (parent[parent.length -1] != '\n') {
+        if (!parent.endsWith('\n')) {
           commitContent.write('\n');
         }
       }
