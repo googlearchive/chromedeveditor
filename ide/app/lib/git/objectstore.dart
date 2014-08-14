@@ -126,7 +126,7 @@ class ObjectStore {
   }
 
   Future clearRemoteRefs() {
-    return root.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then(
+    return root.createDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then(
         (dir) => dir.removeRecursively()).catchError((e){});
   }
 
@@ -175,7 +175,7 @@ class ObjectStore {
   }
 
   Future<List<String>> getLocalHeads() {
-    return _rootDir.getDirectory(GIT_REFS_HEADS_PATH).then((dir) {
+    return _rootDir.createDirectory(GIT_REFS_HEADS_PATH).then((dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
         return entries.map((entry) => entry.name).toList();
       });
@@ -183,7 +183,7 @@ class ObjectStore {
   }
 
   Future<List<String>> getRemoteHeads() {
-    return _rootDir.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then((dir) {
+    return _rootDir.createDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then((dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
         return entries.map((entry) => entry.name).toList();
       });
@@ -527,17 +527,27 @@ class ObjectStore {
     });
   }
 
+  Future _createRemoteRefs() {
+    return _rootDir.createDirectory(gitPath + 'refs').then((dir) {
+      return dir.createDirectory('remotes').then((dir) {
+        return dir.createDirectory('origin');
+      });
+    });
+  }
+
   Future _init() {
     return FileOps.createDirectoryRecursive(_rootDir,
         gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
       this.objectDir = objectDir;
       return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
           GIT_HEAD_FILE_DEFAULT_CONTENT, 'Text').then((entry)  {
-            return _initHelper();
-          }, onError: (e) {
-            print(e);
-            throw e;
-          });
+        return _createRemoteRefs().then((_) {
+          return _initHelper();
+        });
+      }, onError: (e) {
+        print(e);
+        throw e;
+      });
     }, onError: (e) {
       throw e;
     });
