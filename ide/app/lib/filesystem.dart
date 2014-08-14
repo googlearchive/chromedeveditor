@@ -19,12 +19,10 @@ MockFileSystemAccess _mockFileSystemAccess;
 void setMockFilesystemAccess() {
   // TODO(ericarnold): Assert something else about FSA
 //  assert(_fileSystemAccess == null);
-  _mockFileSystemAccess = new MockFileSystemAccess();
+  _fileSystemAccess = new MockFileSystemAccess();
 }
 
 FileSystemAccess get fileSystemAccess {
-  if (_mockFileSystemAccess != null) return _mockFileSystemAccess;
-
   if (_fileSystemAccess == null) {
     _fileSystemAccess = new FileSystemAccess._();
   }
@@ -33,17 +31,13 @@ FileSystemAccess get fileSystemAccess {
 }
 
 Future<ProjectLocationManager> restoreManager(Spark spark) {
-  if (_mockFileSystemAccess != null) {
-    return _mockFileSystemAccess.restoreMockManager(spark);
-  } else {
-    return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
-      return fileSystemAccess.restoreManager(spark, folderToken);
-    });
-  }
+  return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
+    return fileSystemAccess.restoreManager(spark, folderToken);
+  });
 }
 
 /**
- * Provides abstracted access to the filesystem
+ * Provides abstracted access to all filesystem functions
  */
 class FileSystemAccess {
   ProjectLocationManager _locationManager;
@@ -119,10 +113,7 @@ class MockFileSystemAccess extends FileSystemAccess {
     return new Future.value(entry.fullPath);
   }
 
-  Future restoreManager(Spark spark, String folderToken) =>
-      throw "Can't restore mock manager";
-
-  Future<ProjectLocationManager> restoreMockManager(Spark spark) {
+  Future<ProjectLocationManager> restoreManager(Spark spark, String folderToken) {
     return MockProjectLocationManager.restoreManager(spark)
         .then((ProjectLocationManager manager) {
           _locationManager = manager;
@@ -151,6 +142,8 @@ class ProjectLocationManager {
    */
   static Future<ProjectLocationManager> restoreManager(Spark spark,
       String folderToken) {
+
+    // If there is nothing to restore, create a new ProjectLocationManager.
     if (folderToken == null) {
       return new Future.value(new ProjectLocationManager._(spark));
     }
