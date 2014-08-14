@@ -194,7 +194,11 @@ class ObjectStore {
     return FileOps.readFileText(_rootDir, gitPath + headRefName).then((content) {
       return content.substring(0,40);
       }, onError: (e) {
-      return new Future.value(HEAD_MASTER_SHA);
+      if (headRefName == HEAD_MASTER_REF_PATH) {
+        return new Future.value(HEAD_MASTER_SHA);
+      } else {
+        return new Future.error(e);
+      }
     });
   }
 
