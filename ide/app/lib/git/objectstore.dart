@@ -502,7 +502,7 @@ class ObjectStore {
         });
       });
     }
-    return getNextCommits([sha], [remoteRef.sha]);
+    return getNextCommits([sha], knownShas.keys);
   }
 
   Future<List<LooseObject>> retrieveObjectBlobsAsString(List<String> shas) {
