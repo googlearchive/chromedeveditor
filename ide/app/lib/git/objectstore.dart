@@ -193,7 +193,7 @@ class ObjectStore {
   Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFileText(_rootDir, gitPath + headRefName).then((content) {
       return content.substring(0,40);
-      }, onError: (e) {
+    }, onError: (e) {
       if (headRefName == HEAD_MASTER_REF_PATH) {
         return new Future.value(HEAD_MASTER_SHA);
       } else {
@@ -549,7 +549,6 @@ class ObjectStore {
           return _initHelper();
         });
       }, onError: (e) {
-        print(e);
         throw e;
       });
     }, onError: (e) {
