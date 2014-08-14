@@ -478,13 +478,13 @@ class ObjectStore {
       return _getParentCommits(remoteShas).then((remoteCommits) {
         List<String> nextLevelRemote = [];
         remoteCommits.forEach((commit) {
-          knownShas[commit.sha]= true;
+          knownShas[commit.sha] = true;
           nextLevelRemote.addAll(commit.parents);
         });
         return _getParentCommits(shas).then((localCommits) {
           List<String> nextLevelLocal = [];
           localCommits.forEach((commit) {
-            if (!knownShas[commit.sha]) {
+            if (knownShas[commit.sha] != true) {
               commits.add(commit);
               nextLevelLocal.addAll(commit.parents);
             }
@@ -492,7 +492,7 @@ class ObjectStore {
           // All commits at this level are already knwon to the remote.
           if (nextLevelLocal.isEmpty) {
             List<CommitObject> localCommits = [];
-            commits = commits.where((CommitObject commit) => !knownShas[commit.sha]);
+            commits = commits.where((CommitObject commit) => knownShas[commit.sha] != true);
             return new CommitPushEntry(commits, remoteRef);
           } else {
             return getNextCommits(nextLevelLocal, nextLevelRemote);
