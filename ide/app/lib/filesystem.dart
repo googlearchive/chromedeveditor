@@ -45,8 +45,17 @@ Future restoreManager(Spark spark) {
  * Provides abstracted access to the filesystem
  */
 class FileSystemAccess {
+  Spark _spark;
+  
   ProjectLocationManager _locationManager;
-  ProjectLocationManager get locationManager => _locationManager;
+  ProjectLocationManager get locationManager {
+    // RestoreManager will handle this if we have something to restore, but
+    // if not, we should instantiate.
+    if (_locationManager == null) {
+      _locationManager = new ProjectLocationManager._(_spark);
+    }
+    return _locationManager;
+  }
 
   ws.WorkspaceRoot _root;
   ws.WorkspaceRoot get root {
@@ -71,6 +80,7 @@ class FileSystemAccess {
   }
 
   Future restoreManager(Spark spark, String folderToken) {
+    this._spark = spark;
     return ProjectLocationManager.restoreManager(spark, folderToken)
         .then((ProjectLocationManager manager) {
       _locationManager = manager;

@@ -100,7 +100,6 @@ abstract class Spark
   EditorArea _editorArea;
   LaunchManager _launchManager;
   ActionManager _actionManager;
-  ProjectLocationManager _projectLocationManager;
   NavigationManager _navigationManager;
 
   EventBus _eventBus;
