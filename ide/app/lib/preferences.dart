@@ -254,16 +254,27 @@ class _ChromePreferenceStore implements PreferenceStore {
    * Removes list of items.
    */
   Future removeValue(List<String> keys) {
-    return _storageArea.remove(keys).then((Map<String, String> map) {
+    // Using a completer ensures the correct updating order: source of truth
+    // (_storageArea) first, cache (_map) second.
+    var completer = new Completer();
+    _storageArea.remove(keys).then((Map<String, String> map) {
       keys.forEach((key) => _map.remove(key));
+      completer.complete();
     });
+    return completer.future;
   }
 
   /**
    * Removes all preferences.
    */
   Future clear() {
-    return _storageArea.clear().then((_) => _map.clear());
+    // See comment in [removeValue].
+    var completer = new Completer();
+    _storageArea.clear().then((_) {
+      _map.clear();
+      completer.complete();
+    });
+    return completer.future;
   }
 
   /**
