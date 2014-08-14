@@ -32,7 +32,7 @@ FileSystemAccess get fileSystemAccess {
   return _fileSystemAccess;
 }
 
-Future restoreManager(Spark spark) {
+Future<ProjectLocationManager> restoreManager(Spark spark) {
   if (_mockFileSystemAccess != null) {
     return _mockFileSystemAccess.restoreMockManager(spark);
   } else {
@@ -71,7 +71,7 @@ class FileSystemAccess {
     return chrome.fileSystem.getDisplayPath(entry);
   }
 
-  Future restoreManager(Spark spark, String folderToken) {
+  Future<ProjectLocationManager> restoreManager(Spark spark, String folderToken) {
     return ProjectLocationManager.restoreManager(spark, folderToken)
         .then((ProjectLocationManager manager) {
       _locationManager = manager;
@@ -86,7 +86,7 @@ class FileSystemAccess {
       return new ws.FolderChildRoot(location.parent, location.entry);
     }
   }
-  
+
   Future<LocationResult> getProjectLocation() => locationManager.getProjectLocation();
   Future<LocationResult> createNewFolder(String name) => locationManager.createNewFolder(name);
   Future<LocationResult> chooseNewProjectLocation(bool showFileSystemDialog) =>
@@ -122,7 +122,7 @@ class MockFileSystemAccess extends FileSystemAccess {
   Future restoreManager(Spark spark, String folderToken) =>
       throw "Can't restore mock manager";
 
-  restoreMockManager(Spark spark) {
+  Future<ProjectLocationManager> restoreMockManager(Spark spark) {
     return MockProjectLocationManager.restoreManager(spark)
         .then((ProjectLocationManager manager) {
           _locationManager = manager;

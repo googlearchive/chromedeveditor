@@ -12,8 +12,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import 'filesystem.dart';
 import '../spark.dart';
+import 'filesystem.dart';
 import 'tcp.dart' as tcp;
 import 'utils.dart';
 
