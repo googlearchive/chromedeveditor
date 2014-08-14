@@ -14,13 +14,17 @@ import '../test/files_mock.dart';
 import 'workspace.dart' as ws;
 
 FileSystemAccess _fileSystemAccess;
+MockFileSystemAccess _mockFileSystemAccess;
 
-void setOverrideFilesystemAccess(FileSystemAccess fsa) {
-  assert(_fileSystemAccess == null);
-  _fileSystemAccess = fsa;
+void setMockFilesystemAccess() {
+  // TODO(ericarnold): Assert something else about FSA
+//  assert(_fileSystemAccess == null);
+  _mockFileSystemAccess = new MockFileSystemAccess();
 }
 
 FileSystemAccess get fileSystemAccess {
+  if (_mockFileSystemAccess != null) return _mockFileSystemAccess;
+
   if (_fileSystemAccess == null) {
     _fileSystemAccess = new FileSystemAccess._();
   }
@@ -29,14 +33,11 @@ FileSystemAccess get fileSystemAccess {
 }
 
 Future restoreManager(Spark spark) {
-  if (_fileSystemAccess is MockFileSystemAccess) {
-    MockFileSystemAccess mockFSA = _fileSystemAccess;
-    return mockFSA.restoreMockManager(spark);
+  if (_mockFileSystemAccess != null) {
+    return _mockFileSystemAccess.restoreMockManager(spark);
   } else {
     return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
-      if (folderToken != null) {
-        return fileSystemAccess.restoreManager(spark, folderToken);
-      }
+      return fileSystemAccess.restoreManager(spark, folderToken);
     });
   }
 }
@@ -45,17 +46,8 @@ Future restoreManager(Spark spark) {
  * Provides abstracted access to the filesystem
  */
 class FileSystemAccess {
-  Spark _spark;
-  
   ProjectLocationManager _locationManager;
-  ProjectLocationManager get locationManager {
-    // RestoreManager will handle this if we have something to restore, but
-    // if not, we should instantiate.
-    if (_locationManager == null) {
-      _locationManager = new ProjectLocationManager._(_spark);
-    }
-    return _locationManager;
-  }
+  ProjectLocationManager get locationManager => _locationManager;
 
   ws.WorkspaceRoot _root;
   ws.WorkspaceRoot get root {
@@ -80,7 +72,6 @@ class FileSystemAccess {
   }
 
   Future restoreManager(Spark spark, String folderToken) {
-    this._spark = spark;
     return ProjectLocationManager.restoreManager(spark, folderToken)
         .then((ProjectLocationManager manager) {
       _locationManager = manager;

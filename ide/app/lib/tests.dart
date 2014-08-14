@@ -53,7 +53,7 @@ class TestDriver {
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
-    setOverrideFilesystemAccess(new MockFileSystemAccess());
+    setMockFilesystemAccess();
     restoreManager(_spark);
 
     if (_logListener == null) {
