@@ -108,7 +108,7 @@ class ObjectStore {
       return gitDir.getDirectory(OBJECT_FOLDER_PATH).then((objectsDir) {
 
         objectDir = objectsDir;
-        return objectsDir.getDirectory('pack').then((
+        return objectsDir.createDirectory('pack').then((
             chrome.DirectoryEntry packDir) {
           return FileOps.listFiles(packDir).then((List<chrome.Entry> entries) {
             Iterable<chrome.Entry> packEntries = entries.where((e)
@@ -192,7 +192,9 @@ class ObjectStore {
 
   Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFileText(_rootDir, gitPath + headRefName).then((content) {
-      return content.substring(0, 40);
+      return content.substring(0,40);
+      }, onError: (e) {
+      return new Future.value(HEAD_MASTER_SHA);
     });
   }
 
