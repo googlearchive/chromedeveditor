@@ -416,7 +416,6 @@ class ObjectStore {
     return new Future.value();
   }
 
-
   Future<CommitPushEntry> getCommitsForPush(List<GitRef> baseRefs,
       Map<String, String> remoteHeads) {
     // special case of empty remote.
@@ -459,36 +458,49 @@ class ObjectStore {
     });
   }
 
-  Future<CommitPushEntry> _getCommits(GitRef remoteRef,
-      Map<String, bool> remoteShas, String sha) {
-    List commits = [];
-    Future<CommitPushEntry> getNextCommit(String sha) {
-
+  Future<List<CommitObject>> _getParentCommits(List<String> shas) {
+    List<CommitObject> parents = [];
+    return Future.forEach(shas, (String sha) {
       return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((
           CommitObject commitObj) {
+        parents.add(commitObj);
+      }, onError: (e) => true);
+    }).then((_) {
+      return parents;
+    });
+  }
 
-        Completer completer = new Completer();
-        commits.add(commitObj);
-
-        if (commitObj.parents.length > 1) {
-          // this means a local merge commit.
-          _nonFastForwardPush();
-          completer.completeError("");
-        } else if (commitObj.parents.length == 0
-            || commitObj.parents.first == remoteRef.sha
-            || remoteShas[commitObj.parents[0]] == true) {
-          completer.complete(new CommitPushEntry(commits, remoteRef));
-        } else {
-          return getNextCommit(commitObj.parents.first);
-        }
-
-        return completer.future;
-
-      }, onError: (e) {
-        _nonFastForwardPush();
+  Future<CommitPushEntry> _getCommits(GitRef remoteRef,
+      Map<String, bool> knownShas, String sha) {
+    List commits = [];
+    knownShas[remoteRef.sha] = true;
+    Future<CommitPushEntry> getNextCommits(List shas, List remoteShas) {
+      return _getParentCommits(remoteShas).then((remoteCommits) {
+        List<String> nextLevelRemote = [];
+        remoteCommits.forEach((commit) {
+          knownShas[commit.sha] = true;
+          nextLevelRemote.addAll(commit.parents);
+        });
+        return _getParentCommits(shas).then((localCommits) {
+          List<String> nextLevelLocal = [];
+          localCommits.forEach((commit) {
+            if (knownShas[commit.sha] != true) {
+              commits.add(commit);
+              nextLevelLocal.addAll(commit.parents);
+            }
+          });
+          // All commits at this level are already knwon to the remote.
+          if (nextLevelLocal.isEmpty) {
+            List<CommitObject> localCommits = [];
+            commits = commits.where((CommitObject commit) => knownShas[commit.sha] != true);
+            return new CommitPushEntry(commits, remoteRef);
+          } else {
+            return getNextCommits(nextLevelLocal, nextLevelRemote);
+          }
+        });
       });
     }
-    return getNextCommit(sha);
+    return getNextCommits([sha], [remoteRef.sha]);
   }
 
   Future<List<LooseObject>> retrieveObjectBlobsAsString(List<String> shas) {

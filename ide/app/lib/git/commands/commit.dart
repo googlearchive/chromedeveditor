@@ -119,18 +119,20 @@ class Commit {
     });
   }
 
-  static Future<String> createCommit(GitOptions options, String parent,
+  static Future<String> createCommit(GitOptions options, List<String> parents,
       String treeSha, String refName) {
     ObjectStore store = options.store;
     String dateString = getCurrentTimeAsString();
     StringBuffer commitContent = new StringBuffer();
     commitContent.write('tree ${treeSha}\n');
-    if (parent != null && parent.length > 0) {
-      commitContent.write('parent ${parent}');
-      if (parent[parent.length -1] != '\n') {
-        commitContent.write('\n');
+    parents.forEach((String parent) {
+      if (parent != null && parent.isNotEmpty) {
+        commitContent.write('parent ${parent}');
+        if (!parent.endsWith('\n')) {
+          commitContent.write('\n');
+        }
       }
-    }
+    });
 
     String name = options.name == null ? "" : options.name;
     String email = options.email == null ? "" : options.email;
@@ -140,13 +142,8 @@ class Commit {
     commitContent.write('committer ${name} <${email}> ${dateString}');
     commitContent.write('\n\n${commitMsg}\n');
 
-    return store.writeRawObject(ObjectTypes.COMMIT_STR,
-        commitContent.toString()).then((String commitSha) {
-      return FileOps.createFileWithContent(options.root, '.git/${refName}',
-          commitSha + '\n', 'Text').then((_) {
-        return store.writeConfig().then((_) => commitSha);
-      });
-    });
+    return store.writeRawObject(
+        ObjectTypes.COMMIT_STR, commitContent.toString());
   }
 
   static Future _createCommitFromWorkingTree(GitOptions options, String parent,
@@ -155,7 +152,13 @@ class Commit {
     return walkFiles(options.root, store).then((String sha) {
       // update the index.
       return store.index.onCommit().then((_) {
-        return createCommit(options, parent, sha, refName);
+        return createCommit(options, parent != null ? [parent] : [], sha, refName)
+            .then((commitSha) {
+          return FileOps.createFileWithContent(options.root, '.git/${refName}',
+              commitSha + '\n', 'Text').then((_) {
+            return store.writeConfig().then((_) => commitSha);
+          });
+        });
       });
     });
   }

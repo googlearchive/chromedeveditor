@@ -29,13 +29,16 @@ Future archiveContainer(Container container, [bool addZipManifest = false]) {
     });
 }
 
-Future archiveModifiedFilesInContainer(Container container, [bool addZipManifest = false]) {
+/// The [toAddList] List contains the files that need to be mandatory
+/// pushed to the device
+Future archiveModifiedFilesInContainer(Container container, [bool addZipManifest = false,
+    List<String> toAddList]) {
   archive.Archive arch = new archive.Archive();
   int depTime = getDeploymentTime(container);
   return _recursiveArchiveModifiedFiles(arch, container,
-      depTime, addZipManifest ? 'www/' : '').then((_) {
+      depTime, toAddList, addZipManifest ? 'www/' : '').then((_) {
     String zipAssetManifestString =
-        _buildAssetManifestOfModified(container, depTime);
+        _buildAssetManifestOfModified(container, depTime, toAddList);
     print(zipAssetManifestString);
       if (addZipManifest) {
         arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
@@ -49,19 +52,6 @@ Future archiveModifiedFilesInContainer(Container container, [bool addZipManifest
 
 String buildAssetManifest(Container container) {
   return _buildZipAssetManifest(container);
-}
-
-/**
- * Return (or create) the child file of the given folder.
- */
-Future<File> getCreateFile(Folder parent, String filename) {
-  File file = parent.getChild(filename);
-
-  if (file == null) {
-    return parent.createNewFile(filename);
-  } else {
-    return new Future.value(file);
-  }
 }
 
 /**
@@ -233,14 +223,16 @@ String _buildZipAssetManifest(Container container) {
   return JSON.encode(zipAssetManifest);
 }
 
-String _buildAssetManifestOfModified(Container container, int depTime) {
+String _buildAssetManifestOfModified(Container container, int depTime,
+             List<String> toAddList) {
   Iterable<Resource> children = container.traverse().skip(1);
   int rootIndex = container.path.length + 1;
   Map<String, Map<String, String>> zipAssetManifest = {};
   for (Resource element in children) {
     if (element.isFile) {
-      if (_isChangedSinceDeployment(element, depTime)) {
-          String path = element.path.substring(rootIndex);
+      String path = element.path.substring(rootIndex);
+      if (_isChangedSinceDeployment(element, depTime) ||
+          (toAddList.contains("www/$path"))) {
           zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
       }
     }
@@ -310,12 +302,13 @@ Future _recursiveArchive(archive.Archive arch, Container parent,
 }
 
 Future _recursiveArchiveModifiedFiles(archive.Archive arch, Container parent,
-    int depTime, [String prefix = '']) {
+    int depTime, List<String> toAddList, [String prefix = '']) {
   List<Future> futures = [];
 
   for (Resource child in parent.getChildren()) {
     if (child is File) {
-      if (_isChangedSinceDeployment(child, depTime)) {
+      if (_isChangedSinceDeployment(child, depTime) ||
+          (toAddList.contains('${prefix}${child.name}'))) {
         futures.add(child.getBytes().then((buf) {
           List<int> data = buf.getBytes();
           arch.addFile(new archive.ArchiveFile('${prefix}${child.name}',
@@ -323,7 +316,8 @@ Future _recursiveArchiveModifiedFiles(archive.Archive arch, Container parent,
         }));
       }
     } else if (child is Folder) {
-      futures.add(_recursiveArchiveModifiedFiles(arch, child, depTime, '${prefix}${child.name}/'));
+      futures.add(_recursiveArchiveModifiedFiles(arch, child, depTime,
+         toAddList, '${prefix}${child.name}/'));
     }
   }
   return Future.wait(futures);
