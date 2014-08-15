@@ -193,7 +193,13 @@ class Merge {
     });
   }
 
-  static Future<String> _getSourceBranchSha(ObjectStore store, String sourceBranchName) {
+  /**
+   * Identify if the given branch is a local or remote branch and return the
+   * headSha value. This will not do an automatic fetch thus return the local
+   * headSha of the remote branch.
+   */
+  static Future<String> _getSourceBranchSha(ObjectStore store,
+      String sourceBranchName) {
     if (sourceBranchName.startsWith('origin/')) {
       sourceBranchName = sourceBranchName.split('/').last;
       return store.getRemoteHeadForRef(sourceBranchName);
@@ -207,26 +213,29 @@ class Merge {
     ObjectStore store = options.store;
     return store.getHeadRef().then((headRefName) {
       return store.getHeadForRef(headRefName).then((localSha) {
-        return _getSourceBranchSha(store, sourceBranchName).then((String sourceSha) {
+        return _getSourceBranchSha(store, sourceBranchName).then(
+            (String sourceSha) {
           if (localSha == sourceSha) {
             return new Future.error(
               new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE));
           }
+
           return store.getCommonAncestor([sourceSha, localSha]).then((commonSha) {
             if (commonSha == sourceSha) {
               return new Future.error(
                   new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE));
             } else if (commonSha == localSha) {
-              // The current branch has not diverged and the branch to be merged is already ahead.
-              // Move the local head to the new branch.
+              // The current branch has not diverged and the branch to be merged
+              // is already ahead. Move the local head to the new branch.
               return Checkout.checkout(options, sourceSha).then((_) {
-                return FileOps.createFileWithContent(options.root, '.git/${headRefName}',
-                    sourceSha + '\n', 'Text').then((_) {
+                return FileOps.createFileWithContent(options.root,
+                    '.git/${headRefName}', sourceSha + '\n', 'Text').then((_) {
                   return store.writeConfig().then((_) => sourceSha);
                 });
               });
             } else {
-              String commitMsg = "Merge branch ${options.branchName} into ${sourceBranchName}";
+              String commitMsg =
+                  "Merge branch ${options.branchName} into ${sourceBranchName}";
               return _merge(options, localSha, sourceSha, commonSha, commitMsg);
             }
           });
@@ -245,17 +254,19 @@ class Merge {
     List shas = [localSha, commonSha, sourceSha];
     return store.getHeadRef().then((String headRefName) {
       return store.getTreesFromCommits(shas).then((trees) {
-        return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
-            .then((String finalTreeSha) {
+        return Merge.mergeTrees(store, trees[0], trees[1], trees[2]).then(
+            (String finalTreeSha) {
+
           return store.getCurrentBranch().then((branch) {
             options.branchName = branch;
             options.commitMessage = commitMsg;
             // Create a merge commit by default.
+
             return Commit.createCommit(options, [sourceSha, localSha], finalTreeSha,
                 headRefName).then((commitSha) {
               return Checkout.checkout(options, commitSha).then((_) {
-                return FileOps.createFileWithContent(options.root, '.git/${headRefName}',
-                    commitSha + '\n', 'Text').then((_) {
+                return FileOps.createFileWithContent(options.root,
+                    '.git/${headRefName}', commitSha + '\n', 'Text').then((_) {
                   return store.writeConfig().then((_) => commitSha);
                 });
               });
