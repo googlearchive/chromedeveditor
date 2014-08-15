@@ -35,6 +35,7 @@ import 'git/commands/diff.dart';
 import 'git/commands/fetch.dart';
 import 'git/commands/ignore.dart';
 import 'git/commands/index.dart';
+import 'git/commands/merge.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
@@ -426,8 +427,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
                                           username: username,
                                           password: password);
 
-      return new Future.error('some merge conflicts');
-      return Branch.branch(options, sourceBranchName).catchError(
+      return Merge.merge(options, sourceBranchName).catchError(
           (e) => throw SparkException.fromException(e));
     });
   }
