@@ -193,6 +193,8 @@ abstract class ScmProjectOperations {
 
   Future checkoutBranch(String branchName);
 
+  Future mergeBranch(String branchName, String sourceBranchName);
+
   Future diff();
 
   void markResolved(Resource resource);
@@ -410,6 +412,21 @@ class GitScmProjectOperations extends ScmProjectOperations {
                                           username: username,
                                           password: password);
 
+      return Branch.branch(options, sourceBranchName).catchError(
+          (e) => throw SparkException.fromException(e));
+    });
+  }
+
+  Future mergeBranch(String branchName, String sourceBranchName,
+                     {String username, String password}) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry,
+                                          branchName: branchName,
+                                          store: store,
+                                          username: username,
+                                          password: password);
+
+      return new Future.error('some merge conflicts');
       return Branch.branch(options, sourceBranchName).catchError(
           (e) => throw SparkException.fromException(e));
     });

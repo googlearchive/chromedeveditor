@@ -498,6 +498,7 @@ abstract class Spark
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitMergeAction(this, getDialogElement("#gitMergeDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitResolveConflictsAction(this));
@@ -2888,6 +2889,94 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
   bool appliesTo(context) => _isScmProject(context);
 }
 
+class GitMergeAction extends SparkActionWithProgressDialog implements ContextAction {
+  ws.Project project;
+  GitScmProjectOperations gitOperations;
+  InputElement _branchNameElement;
+  SelectElement _selectElement;
+
+  GitMergeAction(Spark spark, Element dialog)
+      : super(spark, "git-merge", "Merge Branch…", dialog) {
+    _branchNameElement = _triggerOnReturn("#gitBranchName");
+    _selectElement = getElement("#gitRemoteBranches");
+  }
+
+  void _invoke([context]) {
+    project = context.first;
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
+
+    // Clear out the old select options.
+    // TODO (ussuri) : Polymerize.
+    _selectElement.length = 0;
+    _branchNameElement.value = gitOperations.getBranchName();
+    _branchNameElement.disabled = true;
+
+    gitOperations.getLocalBranchNames().then((Iterable<String> localBranches) {
+      List branches = localBranches.toList();
+      branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+      for (String branch in branches) {
+        _selectElement.append(new OptionElement(data: branch, value: branch));
+      }
+
+      gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
+        List branches = remoteBranches.toList();
+        branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+        for (String branch in branches) {
+          branch = 'origin/${branch}';
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+        _selectElement.selectedIndex = 0;
+      }).then((_) {
+        _show();
+      });
+    });
+  }
+
+  void _commit() {
+    String branchName = "";
+    int selectIndex = _selectElement.selectedIndex;
+    branchName = (_selectElement.children[selectIndex]
+        as OptionElement).value;
+
+    _setProgressMessage("Creating branch ${_branchNameElement.value}…");
+    _toggleProgressVisible(true);
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = true;
+    closeButton.deliverChanges();
+
+    SparkDialogButton branchButton = getElement('#gitBranch');
+    branchButton.disabled = true;
+    branchButton.deliverChanges();
+
+    _GitMergeJob job = new _GitMergeJob(
+        gitOperations, _branchNameElement.value, branchName, spark);
+    spark.jobManager.schedule(job).then((_) {
+      _restoreDialog();
+      _hide();
+    }).catchError((e) {
+      spark.showErrorMessage(
+          'Error creating branch ${_branchNameElement.value}', exception: e);
+    });
+    _branchNameElement.disabled = false;
+  }
+
+  void _restoreDialog() {
+    SparkDialogButton commitButton = getElement('#gitBranch');
+    commitButton.disabled = false;
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = false;
+    _toggleProgressVisible(false);
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isScmProject(context);
+}
+
 class GitCommitAction extends SparkActionWithProgressDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
@@ -3504,6 +3593,42 @@ class _GitBranchJob extends Job {
       }).catchError((e) {
         e = SparkException.fromException(e);
         spark.showErrorMessage('Error creating branch ${_branchName}', exception : e);
+      });
+    });
+  }
+}
+
+class _GitMergeJob extends Job {
+  GitScmProjectOperations gitOperations;
+  String _branchName;
+  String _sourceBranchName;
+  String url;
+  Spark spark;
+
+  _GitMergeJob(this.gitOperations, String branchName, this._sourceBranchName,
+      this.spark) : super("Creating ${branchName}…") {
+    _branchName = branchName;
+  }
+
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
+    monitor.start(name, maxWork: 1);
+
+    return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      String username;
+      String password;
+      if (value != null) {
+        Map<String, String> info = JSON.decode(value);
+        username = info['username'];
+        password = info['password'];
+      }
+      return gitOperations.mergeBranch(_branchName, _sourceBranchName,
+          username: username, password: password).then((_) {
+        //return gitOperations.checkoutBranch(_branchName).then((_) {
+          //spark.showSuccessMessage('Created ${_branchName}');
+        //});
+      }).catchError((e) {
+        e = SparkException.fromException(e);
+        spark.showErrorMessage('Error in merging branch ${_branchName}', exception : e);
       });
     });
   }
