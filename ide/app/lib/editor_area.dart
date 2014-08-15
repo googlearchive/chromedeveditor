@@ -11,10 +11,9 @@ library spark.editor_area;
 import 'dart:async';
 import 'dart:html' hide File;
 
-import 'package:chrome/chrome_app.dart' as chrome;
-
 import 'ace.dart' as ace;
 import 'editors.dart';
+import 'filesystem.dart';
 import 'ui/widgets/tabview.dart';
 import 'ui/widgets/imageviewer.dart';
 import 'workspace.dart';
@@ -281,5 +280,5 @@ class EditorArea extends TabView {
 Future<String> _calculateTooltip(File file) {
   if (file.entry == null) return new Future.value(file.path);
 
-  return chrome.fileSystem.getDisplayPath(file.entry);
+  return fileSystemAccess.getDisplayPath(file.entry);
 }

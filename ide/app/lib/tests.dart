@@ -12,6 +12,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
+import '../spark.dart';
+import 'filesystem.dart';
 import 'tcp.dart' as tcp;
 import 'utils.dart';
 
@@ -25,6 +27,7 @@ Logger _logger = new Logger('spark.tests');
 class TestDriver {
   final Notifier _notifier;
 
+  Spark _spark;
   StreamSubscription _logListener;
   StreamController<unittest.TestCase> _onTestFinished =
       new StreamController.broadcast();
@@ -35,7 +38,9 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this._notifier,
+  // TODO(ericarnold): Spark gets passed here twice (once as a Notifier and once
+  //                   as spark), but maybe this is okay?
+  TestDriver(this._defineTestsFn, this._notifier, this._spark,
       {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 
@@ -48,6 +53,9 @@ class TestDriver {
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
+    setMockFilesystemAccess();
+    restoreManager(_spark);
+
     if (_logListener == null) {
       _createTestUI();
     }

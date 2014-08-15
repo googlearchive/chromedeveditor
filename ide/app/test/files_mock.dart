@@ -372,7 +372,7 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
     if (entry is! DirectoryEntry) {
       return new Future.error("directory doesn't exist");
     } else {
-      return new Future.value(_createFile(path));
+      return new Future.value(_createDirectory(path));
     }
   }
 

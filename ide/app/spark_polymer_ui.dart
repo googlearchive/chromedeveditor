@@ -13,8 +13,8 @@ import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 import 'spark_flags.dart';
 import 'spark_model.dart';
 import 'lib/event_bus.dart';
+import 'lib/filesystem.dart';
 import 'lib/platform_info.dart';
-import 'spark.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
@@ -127,7 +127,7 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onClickRootDirectory() {
-    _model.projectLocationManager.chooseNewProjectLocation(false).then((LocationResult res){
+    fileSystemAccess.chooseNewProjectLocation(false).then((LocationResult res){
       if (res != null) {
         _model.showRootDirectory();
       }
