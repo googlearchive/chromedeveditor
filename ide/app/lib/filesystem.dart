@@ -15,11 +15,18 @@ import 'workspace.dart' as ws;
 
 FileSystemAccess _fileSystemAccess;
 
+/**
+ * Sets the used FileSystemAccess class, allowing overriding versions of the
+ * filesystem
+ */
 void setMockFilesystemAccess() {
   assert(_fileSystemAccess == null || _fileSystemAccess.root == null);
   _fileSystemAccess = new MockFileSystemAccess();
 }
 
+/**
+ * Returns the current FilesystemAccess
+ */
 FileSystemAccess get fileSystemAccess {
   if (_fileSystemAccess == null) {
     _fileSystemAccess = new FileSystemAccess._();
@@ -28,6 +35,9 @@ FileSystemAccess get fileSystemAccess {
   return _fileSystemAccess;
 }
 
+/**
+ * Restores the ProjectLocationManager and returns a future with its value.
+ */
 Future<ProjectLocationManager> restoreManager(Spark spark) {
   return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
     return fileSystemAccess.restoreManager(spark, folderToken);
@@ -35,19 +45,28 @@ Future<ProjectLocationManager> restoreManager(Spark spark) {
 }
 
 /**
- * Provides abstracted access to all filesystem functions
+ * Provides abstracted access to all filesystem functions.
  */
 class FileSystemAccess {
   ProjectLocationManager _locationManager;
+
+  /**
+   * The ProjectLocationManager (default location to create new projects) if one
+   * has been chosen.
+   */
   ProjectLocationManager get locationManager => _locationManager;
 
-  LocationResult location;
+  LocationResult _location;
 
   ws.WorkspaceRoot _root;
+
+  /**
+   * The root where all projects are held
+   */
   ws.WorkspaceRoot get root {
     if (_root == null) {
-      if (location != null) {
-        _root = getRootFor(location);
+      if (_location != null) {
+        _root = getRootFor(_location);
       }
     }
 
@@ -56,15 +75,17 @@ class FileSystemAccess {
 
   FileSystemAccess._();
 
-  void setOverrideRoot(ws.WorkspaceRoot root) {
-    assert(_root == null);
-    _root = root;
-  }
-
+  /**
+   * Returns the full display path for an entry.
+   */
   Future<String> getDisplayPath(chrome.Entry entry) {
     return chrome.fileSystem.getDisplayPath(entry);
   }
 
+  /**
+   * Restores the ProjectLocationManager and returns a future with its value,
+   * based on a folder token.
+   */
   Future<ProjectLocationManager> restoreManager(Spark spark, String folderToken) {
     return ProjectLocationManager.restoreManager(spark, folderToken)
         .then((ProjectLocationManager manager) {
@@ -73,6 +94,9 @@ class FileSystemAccess {
     });
   }
 
+  /**
+   * Creates a root for the given LocationResult.
+   */
   ws.WorkspaceRoot getRootFor(LocationResult location) {
     if (location.isSync) {
       return new ws.SyncFolderRoot(location.entry);
@@ -81,8 +105,25 @@ class FileSystemAccess {
     }
   }
 
+  /**
+   * Returns the default location to create new projects in. For Chrome OS, this
+   * will be the sync filesystem. This method can return `null` if the user
+   * cancels the folder selection dialog.
+   */
   Future<LocationResult> getProjectLocation() => locationManager.getProjectLocation();
+
+  /**
+   * This will create a new folder in default project location. It will attempt
+   * to use the given [defaultName], but will disambiguate it if necessary. For
+   * example, if `defaultName` already exists, the created folder might be named
+   * something like `defaultName-1` instead.
+   */
   Future<LocationResult> createNewFolder(String name) => locationManager.createNewFolder(name);
+
+  /**
+   * Opens a pop up and asks the user to change the root directory. Internally,
+   * the stored value is changed here.
+   */
   Future<LocationResult> chooseNewProjectLocation(bool showFileSystemDialog) =>
       locationManager.chooseNewProjectLocation(showFileSystemDialog);
 }
@@ -94,7 +135,7 @@ class MockFileSystemAccess extends FileSystemAccess {
   WorkspaceRoot _root;
   WorkspaceRoot get root {
     if (_root == null) {
-      _root = new MockWorkspaceRoot(location.entry);
+      _root = new MockWorkspaceRoot(_location.entry);
     }
 
     return _root;
@@ -105,7 +146,7 @@ class MockFileSystemAccess extends FileSystemAccess {
     DirectoryEntry rootParent = fs.createDirectory("rootParent");
 
     rootParent.createDirectory("root").then((DirectoryEntry root) {
-      location = new LocationResult(rootParent, root, false);
+      _location = new LocationResult(rootParent, root, false);
     });
   }
 
