@@ -14,11 +14,9 @@ import '../test/files_mock.dart';
 import 'workspace.dart' as ws;
 
 FileSystemAccess _fileSystemAccess;
-MockFileSystemAccess _mockFileSystemAccess;
 
 void setMockFilesystemAccess() {
-  // TODO(ericarnold): Assert something else about FSA
-//  assert(_fileSystemAccess == null);
+  assert(_fileSystemAccess == null || _fileSystemAccess.root == null);
   _fileSystemAccess = new MockFileSystemAccess();
 }
 
@@ -43,23 +41,25 @@ class FileSystemAccess {
   ProjectLocationManager _locationManager;
   ProjectLocationManager get locationManager => _locationManager;
 
+  LocationResult location;
+
   ws.WorkspaceRoot _root;
   ws.WorkspaceRoot get root {
     if (_root == null) {
-      _root = getRootFor(location);
+      if (location != null) {
+        _root = getRootFor(location);
+      }
     }
 
     return _root;
   }
 
+  FileSystemAccess._();
+
   void setOverrideRoot(ws.WorkspaceRoot root) {
     assert(_root == null);
     _root = root;
   }
-
-  LocationResult location;
-
-  FileSystemAccess._();
 
   Future<String> getDisplayPath(chrome.Entry entry) {
     return chrome.fileSystem.getDisplayPath(entry);
