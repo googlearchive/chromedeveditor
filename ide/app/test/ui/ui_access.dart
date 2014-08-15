@@ -23,8 +23,8 @@ class SparkUIAccess {
 
   OkCancelDialogAccess okCancelDialog = new OkCancelDialogAccess();
   AboutDialogAccess aboutDialog = new AboutDialogAccess();
+  NewProjectDialogAccess newProjectDialog = new NewProjectDialogAccess();
   DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
-  DialogAccess newProjectDialog = new DialogAccess("newProjectDialog");
 
   MenuItemAccess newProjectMenu;
   MenuItemAccess gitCloneMenu;
@@ -57,6 +57,11 @@ class SparkUIAccess {
         clientY: bounds.top.toInt() + bounds.height ~/ 2));
   }
 
+  void _sendKeyEvent(Element element, String eventType, int keyCode) {
+    Rectangle<int> bounds = element.getBoundingClientRect();
+    element.dispatchEvent(new KeyEvent(eventType, keyCode: keyCode));
+  }
+
   Future selectSparkMenu() {
     Future transitionFuture = onMenuTransitioned.first;
     _sparkMenuButton.click();
@@ -68,6 +73,28 @@ class SparkUIAccess {
     _sendMouseEvent(element, "click");
   }
 
+  // TODO(ericarnold): This doesn't work
+  void sendKey(Element element, int keyCode) {
+    var streamDown = KeyEvent.keyDownEvent.forTarget(document.body);
+    var streamPress = KeyEvent.keyPressEvent.forTarget(document.body);
+    var streamUp = KeyEvent.keyUpEvent.forTarget(document.body);
+
+    // TODO(ericarnold): Add keydown for modifiers for this character
+    streamDown.add(new KeyEvent('keydown', keyCode: keyCode));
+    streamPress.add(new KeyEvent('keypress', keyCode: keyCode));
+    streamUp.add(new KeyEvent('keyup', keyCode: keyCode));
+    // TODO(ericarnold): Add keyup for modifiers for this character
+  }
+
+  Future sendString(InputElement input, String text, [bool useKeys]) {
+    input.focus();
+    if (!useKeys) {
+      input.dispatchEvent(new TextEvent('textInput', data: text));
+    } else {
+      text.codeUnits.forEach((int keyCode) => sendKey(input, keyCode));
+    }
+    return new Future.value();
+  }
 }
 
 class MenuItemAccess {
@@ -95,7 +122,7 @@ class DialogAccess {
 
   SparkModal get modalElement => _dialog.getShadowDomElement("#modal");
   bool get opened => modalElement.opened;
-  SparkWidget get closingXButton => _getButtonBySelector("#closingX");
+  SparkWidget get closingXButton => _getBySelector("#closingX");
 
   bool get fullyVisible {
     Rectangle<int> bounds = modalElement.getBoundingClientRect();
@@ -120,12 +147,11 @@ class DialogAccess {
 //  void clickButtonWithSelector(String query) =>
 //      clickButton(_getButtonBySelector(query));
 
-
   SparkWidget _getButtonByTitle(String title) =>
       _dialogButtons.firstWhere((b) => b.text.toLowerCase() == title.toLowerCase());
 
-  SparkWidget _getButtonBySelector(String query) {
-    SparkWidget button = _dialog.querySelector(query);
+  Element _getBySelector(String query) {
+    Element button = _dialog.querySelector(query);
 
     if (button == null) button = _dialog.getShadowDomElement(query);
 
@@ -151,4 +177,19 @@ class AboutDialogAccess extends DialogAccess {
   AboutDialogAccess() : super("aboutDialog");
 
   void clickDoneButton() => _sparkAccess.clickElement(doneButton);
+}
+
+class NewProjectDialogAccess extends DialogAccess {
+  SparkDialogButton get createButton => _getButtonByTitle("Create");
+  SparkDialogButton get cancelButton => _getButtonByTitle("Cancel");
+  Element get nameField => _getBySelector("#name");
+
+  NewProjectDialogAccess() : super("newProjectDialog");
+
+  void clickCreateButton() => _sparkAccess.clickElement(createButton);
+
+  void setNameField(String text) {
+    var nameField = this.nameField;
+    _sparkAccess.sendString(nameField, text, false);
+  }
 }
