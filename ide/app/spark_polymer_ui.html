@@ -439,6 +439,19 @@
       <spark-dialog-button id="gitBranch" submit>Create Branch</spark-dialog-button>
     </spark-dialog>
 
+    <!-- Git Merge dialog -->
+    <spark-dialog id="gitMergeDialog" headerTitle="Merge Branch">
+      <label for="gitBranchName">Current branch</label>
+      <input id="gitBranchName" type="text" class="form-control"
+          required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
+      <div class="form-group">
+        <label for="gitRemoteBranches">Select branch to merge </label>
+        <select id="gitRemoteBranches" class="form-control"></select>
+      </div>
+      <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="gitBranch" submit>Merge Branch</spark-dialog-button>
+    </spark-dialog>
+
     <!-- Git Checkout dialog -->
     <spark-dialog id="gitCheckoutDialog" headerTitle="Git Checkout">
       <div class="form-group">
