@@ -1,5 +1,6 @@
 {
   "files": [
+    { "source": "CONTRIBUTING.md_", "dest": "CONTRIBUTING.md" },
     { "source": "LICENSE_", "dest": "LICENSE" },
     { "source": "README.md_", "dest": "README.md" },
     { "source": "gulpfile.js_", "dest": "gulpfile.js" },
@@ -8,7 +9,7 @@
   "directories": {
     "app": {
       "files": [
-        { "source": "404.html_", "dest": "404.html" },
+        { "source": "apple-touch-icon-precomposed.png_", "dest": "apple-touch-icon-precomposed.png" },
         { "source": "basic.html_", "dest": "basic.html" },
         { "source": "favicon.ico_", "dest": "favicon.ico" },
         { "source": "humans.txt_", "dest": "humans.txt" },
@@ -17,10 +18,31 @@
         { "source": "robots.txt_", "dest": "robots.txt" }
       ],
       "directories": {
+        "fonts": {
+          "files": [
+            { "source": "RobotoCondensed-Bold.eot_", "dest": "RobotoCondensed-Bold.eot" },
+            { "source": "RobotoCondensed-Bold.ttf_", "dest": "RobotoCondensed-Bold.ttf" },
+            { "source": "RobotoCondensed-Bold.woff_", "dest": "RobotoCondensed-Bold.woff" },
+            { "source": "RobotoCondensed-BoldItalic.eot_", "dest": "RobotoCondensed-BoldItalic.eot" },
+            { "source": "RobotoCondensed-BoldItalic.ttf_", "dest": "RobotoCondensed-BoldItalic.ttf" },
+            { "source": "RobotoCondensed-BoldItalic.woff_", "dest": "RobotoCondensed-BoldItalic.woff" },
+            { "source": "RobotoCondensed-Italic.eot_", "dest": "RobotoCondensed-Italic.eot" },
+            { "source": "RobotoCondensed-Italic.ttf_", "dest": "RobotoCondensed-Italic.ttf" },
+            { "source": "RobotoCondensed-Italic.woff_", "dest": "RobotoCondensed-Italic.woff" },
+            { "source": "RobotoCondensed-Light.eot_", "dest": "RobotoCondensed-Light.eot" },
+            { "source": "RobotoCondensed-Light.ttf_", "dest": "RobotoCondensed-Light.ttf" },
+            { "source": "RobotoCondensed-Light.woff_", "dest": "RobotoCondensed-Light.woff" },
+            { "source": "RobotoCondensed-LightItalic.eot_", "dest": "RobotoCondensed-LightItalic.eot" },
+            { "source": "RobotoCondensed-LightItalic.ttf_", "dest": "RobotoCondensed-LightItalic.ttf" },
+            { "source": "RobotoCondensed-LightItalic.woff_", "dest": "RobotoCondensed-LightItalic.woff" },
+            { "source": "RobotoCondensed-Regular.eot_", "dest": "RobotoCondensed-Regular.eot" },
+            { "source": "RobotoCondensed-Regular.ttf_", "dest": "RobotoCondensed-Regular.ttf" },
+            { "source": "RobotoCondensed-Regular.woff_", "dest": "RobotoCondensed-Regular.woff" }
+          ]
+        },
         "images": {
           "files": [
-            { "source": "hamburger.svg_", "dest": "hamburger.svg" },
-            { "source": "search.svg_", "dest": "search.svg" }
+            { "source": "hamburger.svg_", "dest": "hamburger.svg" }
           ],
           "directories": {
             "icons": {
@@ -29,8 +51,8 @@
                 { "source": "icons.eot_", "dest": "icons.eot" },
                 { "source": "icons.svg_", "dest": "icons.svg" },
                 { "source": "icons.ttf_", "dest": "icons.ttf" },
+{ "source": "icons.woff2_", "dest": "icons.woff2" },
                 { "source": "icons.woff_", "dest": "icons.woff" },
-                { "source": "icons.woff2_", "dest": "icons.woff2" },
                 { "source": "placeholder--medium.png_", "dest": "placeholder--medium.png" },
                 { "source": "placeholder--small.png_", "dest": "placeholder--small.png" },
                 { "source": "placeholder--wide.png_", "dest": "placeholder--wide.png" }
@@ -38,13 +60,9 @@
             },
             "touch": {
               "files": [
-                { "source": "apple-touch-icon-114x114-precomposed.png_", "dest": "apple-touch-icon-114x114-precomposed.png" },
-                { "source": "apple-touch-icon-144x144-precomposed.png_", "dest": "apple-touch-icon-144x144-precomposed.png" },
-                { "source": "apple-touch-icon-57x57-precomposed.png_", "dest": "apple-touch-icon-57x57-precomposed.png" },
-                { "source": "apple-touch-icon-72x72-precomposed.png_", "dest": "apple-touch-icon-72x72-precomposed.png" },
-                { "source": "ms-touch-icon-144x144-precomposed.png_", "dest": "ms-touch-icon-144x144-precomposed.png" },
-                { "source": "touch-icon-196x196.png_", "dest": "touch-icon-196x196.png" },
-                { "source": "touch-icon-57x57.png_", "dest": "touch-icon-57x57.png" }
+                { "source": "chrome-touch-icon-196x196.png_", "dest": "chrome-touch-icon-196x196.png" },
+                { "source": "icon-128x128.png_", "dest": "icon-128x128.png" },
+                { "source": "ms-touch-icon-144x144-precomposed.png_", "dest": "ms-touch-icon-144x144-precomposed.png" }
               ]
             }
           }
@@ -67,13 +85,14 @@
           "directories": {
             "components": {
               "files": [
-                { "source": "components.css_", "dest": "components.css" },
-                { "source": "components.scss_", "dest": "components.scss" },
                 { "source": "_global.scss_", "dest": "_global.scss" },
                 { "source": "_helper.scss_", "dest": "_helper.scss" },
                 { "source": "_normalize.scss_", "dest": "_normalize.scss" },
+                { "source": "_palette.scss_", "dest": "_palette.scss" },
                 { "source": "_themed.scss_", "dest": "_themed.scss" },
-                { "source": "_utils.scss_", "dest": "_utils.scss" }
+                { "source": "_utils.scss_", "dest": "_utils.scss" },
+                { "source": "components.css_", "dest": "components.css" },
+                { "source": "components.scss_", "dest": "components.scss" }
               ],
               "directories": {
                 "_components": {
