@@ -380,6 +380,7 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
         '--package-root=packages',
         '--suppress-warnings',
         '--suppress-hints',
+        '--csp',
         '--out=' + joinDir(target, ['${filePath}.js']).path
       ],
       environment: {
@@ -388,7 +389,7 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
   );
 
   // clean up unnecessary (and large) files
-  deleteEntity(joinFile(target, ['${filePath}.js']), context);
+  //deleteEntity(joinFile(target, ['${filePath}.js']), context);
   deleteEntity(joinFile(target, ['${filePath}.js.deps']), context);
   deleteEntity(joinFile(target, ['${filePath}.js.map']), context);
 
@@ -402,8 +403,8 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
         context);
   }
 
-  _rename(joinFile(target, ['${filePath}.precompiled.js']).path,
-          joinFile(target, ['${filePath}.js']).path, context);
+//  _rename(joinFile(target, ['${filePath}.precompiled.js']).path,
+//          joinFile(target, ['${filePath}.js']).path, context);
 
   _printSize(context, joinFile(target, ['${filePath}.js']));
 }
