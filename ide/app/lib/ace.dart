@@ -284,11 +284,14 @@ class DartEditor extends TextEditor {
   void activate() {
     super.activate();
 
-    if (_session != null) {
-      _outline.build(file.name, _session.value);
-    }
+    // Outline will be built in reconcile().
+    //_outline.build(file.name, _session.value);
 
     _outline.scrollPosition = outlineScrollPosition;
+
+    if (file.project != null) {
+      aceManager._analysisService.getCreateProjectAnalyzer(file.project);
+    }
   }
 
   @override
@@ -935,10 +938,6 @@ class AceManager {
     int offsetEnd = _currentSession.document.positionToIndex(range.end);
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
-  }
-
-  Future prepareForLinking(workspace.Project project) {
-    return _analysisService.prepareForLinking(project);
   }
 }
 

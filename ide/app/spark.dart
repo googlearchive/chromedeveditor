@@ -50,7 +50,6 @@ import 'lib/utils.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/search_view_controller.dart';
-import 'lib/ui/widgets/tabview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
@@ -402,17 +401,14 @@ abstract class Spark
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
-        editorArea.onSelected.listen((Tab tab) {
-          if (tab is AceEditorTab && tab.file != null) {
-            Future declarationFuture =
-                aceManager.prepareForLinking(tab.file.project);
-          }
-        });
+
         if (fileUuid == null) {
           editorArea.tabs[0].select();
           return;
         }
+
         ws.Resource resource = workspace.restoreResource(fileUuid);
+
         if (resource == null) {
           editorArea.tabs[0].select();
           return;
