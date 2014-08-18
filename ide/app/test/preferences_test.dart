@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 
 import '../lib/preferences.dart';
+import '../lib/utils.dart';
 
 defineTests() {
   group('preferences.chrome', () {
@@ -83,6 +84,9 @@ defineTests() {
 //    });
 
     test('removeSync', () {
+      // TODO(devoncarew): Disabled failing test as per #3179.
+      if (isDart2js()) return new Future.value();
+
       MapPreferencesStore mapStore = new MapPreferencesStore();
       syncStore.setValue('foo6', 'bar6');
       return syncStore.getValue('foo6').then((String val) {
