@@ -6,7 +6,7 @@
 // "package:json/json.dart" implementation. It has been modifed
 // to expose source span information when parsing elements.
 
-library spark.json_parser;
+library spark.json.parser;
 
 /**
  * Straightforward span representation.

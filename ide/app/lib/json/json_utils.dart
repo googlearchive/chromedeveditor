@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.json_utils;
+library spark.json.utils;
 
 /**
  * Representation of a (Line, Column) pair, both 1-based.
@@ -40,8 +40,9 @@ class StringLineOffsets {
    */
   int _calcLineIndex(int position) {
     assert(position >= 0);
-    if (_lineOffsets == null)
+    if (_lineOffsets == null) {
       _lineOffsets = _createLineOffsets(_contents);
+    }
 
     int lineIndex = _binarySearch(_lineOffsets, position);
     if (lineIndex < 0) {
@@ -64,12 +65,13 @@ class StringLineOffsets {
    int max = items.length - 1;
    while (min <= max) {
      int med = (min + max) ~/ 2;
-     if (items[med] < item)
+     if (items[med] < item) {
        min = med + 1;
-     else if (items[med] > item)
+     } else if (items[med] > item) {
        max = med - 1;
-     else
+     } else {
        return med;
+     }
    }
    return ~min;
   }
