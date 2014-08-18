@@ -20,13 +20,22 @@
   border-radius: 50%;
 }
 
-:host(:not([highlight="false"]):hover) {
+:host([hoverStyle="background"]:hover) {
   background: #eee;
 }
 
-:host(:not([highlight="false"]):active,
-      [active]:not([highlight="false"])) {
+:host([hoverStyle="foreground"]:hover) {
+  fill: #444;
+}
+
+:host([hoverStyle="background"]:active,
+      [hoverStyle="background"][active]) {
   background: #e4e4e4;
+}
+
+:host([hoverStyle="foreground"]:active,
+      [hoverStyle="foreground"][active]) {
+  fill: #666;
 }
 
 :host([raised]) {
