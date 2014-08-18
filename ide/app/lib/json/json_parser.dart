@@ -367,7 +367,9 @@ class JsonParser {
   int _parseTrue(int position) {
     assert(_source.codeUnitAt(position) == CHAR_t);
     if (_source.length < position + 4) _fail(position, "Unexpected identifier");
-    if (_source.codeUnitAt(position + 1) != CHAR_r || _source.codeUnitAt(position + 2) != CHAR_u || _source.codeUnitAt(position + 3) != CHAR_e) {
+    if (_source.codeUnitAt(position + 1) != CHAR_r ||
+        _source.codeUnitAt(position + 2) != CHAR_u ||
+        _source.codeUnitAt(position + 3) != CHAR_e) {
       _fail(position);
     }
     _listener.handleBool(new Span(position, position + 4), true);
@@ -382,7 +384,10 @@ class JsonParser {
   int _parseFalse(int position) {
     assert(_source.codeUnitAt(position) == CHAR_f);
     if (_source.length < position + 5) _fail(position, "Unexpected identifier");
-    if (_source.codeUnitAt(position + 1) != CHAR_a || _source.codeUnitAt(position + 2) != CHAR_l || _source.codeUnitAt(position + 3) != CHAR_s || _source.codeUnitAt(position + 4) != CHAR_e) {
+    if (_source.codeUnitAt(position + 1) != CHAR_a ||
+        _source.codeUnitAt(position + 2) != CHAR_l ||
+        _source.codeUnitAt(position + 3) != CHAR_s ||
+        _source.codeUnitAt(position + 4) != CHAR_e) {
       _fail(position);
     }
     _listener.handleBool(new Span(position, position + 4), false);
@@ -396,7 +401,9 @@ class JsonParser {
   int _parseNull(int position) {
     assert(_source.codeUnitAt(position) == CHAR_n);
     if (_source.length < position + 4) _fail(position, "Unexpected identifier");
-    if (_source.codeUnitAt(position + 1) != CHAR_u || _source.codeUnitAt(position + 2) != CHAR_l || _source.codeUnitAt(position + 3) != CHAR_l) {
+    if (_source.codeUnitAt(position + 1) != CHAR_u ||
+        _source.codeUnitAt(position + 2) != CHAR_l ||
+        _source.codeUnitAt(position + 3) != CHAR_l) {
       _fail(position);
     }
     _listener.handleNull(new Span(position, position + 4));
@@ -414,7 +421,9 @@ class JsonParser {
       }
       char = _source.codeUnitAt(position);
       if (char == QUOTE) {
-        _listener.handleString(new Span(start - 1, position + 1), _source.substring(start, position));
+        _listener.handleString(
+            new Span(start - 1, position + 1),
+            _source.substring(start, position));
         return position + 1;
       }
       if (char < SPACE) {
