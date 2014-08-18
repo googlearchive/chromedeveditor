@@ -12,7 +12,7 @@ import '../jobs.dart';
 import '../workspace.dart';
 import '../package_mgmt/bower_properties.dart';
 import 'json_parser.dart';
-import 'utils.dart';
+import 'json_utils.dart';
 
 /**
  * A [Builder] implementation to add validation warnings to JSON files.

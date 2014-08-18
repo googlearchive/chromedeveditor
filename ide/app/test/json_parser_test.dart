@@ -6,7 +6,7 @@ library spark.jason_parser_test;
 
 import 'package:unittest/unittest.dart';
 import '../lib/json/json_parser.dart';
-import '../lib/json/utils.dart';
+import '../lib/json/json_utils.dart';
 
 /**
  * Event data collected for each json parser event.
