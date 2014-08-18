@@ -89,7 +89,7 @@ class _LoggingEventChecker {
   final _LoggingListener listener;
   int eventIndex;
 
-  _LoggingEventChecker(this.listener);
+  _LoggingEventChecker(this.listener): eventIndex = 0;
 
   void event(
       int kind,
