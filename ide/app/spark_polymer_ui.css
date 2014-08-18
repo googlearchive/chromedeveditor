@@ -295,3 +295,8 @@ label[for="stripWhitespace"] {
 #moreSearch:hover {
   fill: #444;
 }
+
+#directoryLabel {
+  overflow: hidden;
+  white-space: nowrap;
+}
