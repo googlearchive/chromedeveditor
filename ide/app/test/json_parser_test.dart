@@ -62,27 +62,27 @@ class _LoggingListener extends JsonListener {
   }
 
   void handleString(Span span, String value) =>
-    _addEvent(_LoggingEvent.STRING_VALUE, span, value);
+      _addEvent(_LoggingEvent.STRING_VALUE, span, value);
   void handleNumber(Span span, num value) =>
-    _addEvent(_LoggingEvent.NUMBER_VALUE, span, value);
+      _addEvent(_LoggingEvent.NUMBER_VALUE, span, value);
   void handleBool(Span span, bool value) =>
-    _addEvent(_LoggingEvent.BOOL_VALUE, span, value);
+      _addEvent(_LoggingEvent.BOOL_VALUE, span, value);
   void handleNull(Span span) =>
-    _addEvent(_LoggingEvent.NULL_VALUE, span, null);
+      _addEvent(_LoggingEvent.NULL_VALUE, span, null);
   void beginObject(int position) =>
-    _addEvent(_LoggingEvent.BEGIN_OBJECT, new Span(position, position), null);
+      _addEvent(_LoggingEvent.BEGIN_OBJECT, new Span(position, position), null);
   void propertyName(Span span) =>
-    _addEvent(_LoggingEvent.PROPERTY_NAME, span, null);
+      _addEvent(_LoggingEvent.PROPERTY_NAME, span, null);
   void propertyValue(Span span) =>
-    _addEvent(_LoggingEvent.PROPERTY_VALUE, span, null);
+      _addEvent(_LoggingEvent.PROPERTY_VALUE, span, null);
   void endObject(Span span) =>
-    _addEvent(_LoggingEvent.END_OBJECT, span, null);
+      _addEvent(_LoggingEvent.END_OBJECT, span, null);
   void beginArray(int position) =>
-    _addEvent(_LoggingEvent.BEGIN_ARRAY, new Span(position, position), null);
+      _addEvent(_LoggingEvent.BEGIN_ARRAY, new Span(position, position), null);
   void arrayElement(Span span) =>
-    _addEvent(_LoggingEvent.ARRAY_ELEMENT, span, null);
+      _addEvent(_LoggingEvent.ARRAY_ELEMENT, span, null);
   void endArray(Span span) =>
-    _addEvent(_LoggingEvent.END_ARRAY, span, null);
+      _addEvent(_LoggingEvent.END_ARRAY, span, null);
 }
 
 class _LoggingEventChecker {
