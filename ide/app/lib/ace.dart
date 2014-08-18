@@ -639,11 +639,6 @@ class AceManager {
       _markerSession = currentSession;
       _linkingMarkerId = _markerSession.addMarker(markerRange,
           "ace_link_marker", type: ace.Marker.TEXT);
-
-      // If we are hovering, we can assume that the mouse is over the identifier.
-      contentElement.style.cursor = "pointer";
-    } else {
-      contentElement.style.cursor = null;
     }
   }
 
