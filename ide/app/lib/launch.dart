@@ -1083,8 +1083,9 @@ String _createTextForError(File file, CompileResult result) {
   buf.write('Error compiling ${file.path}:<br><br>');
 
   for (CompileError problem in result.problems) {
-    buf.write('[${problem.kind}] ${problem.message} '
-        '(${problem.file.path}:${problem.line})<br>');
+    String path = problem.file == null ? '' : problem.file.path;
+    buf.write(
+        '[${problem.kind}] ${problem.message} (${path}:${problem.line})<br>');
   }
 
   return buf.toString();
