@@ -12,7 +12,7 @@
   <p>An example of ``tagName`` looks like this:</p>
 
   <``tagName`` id="element" title="Hello, I'm &lt;``tagName``&gt;, a custom Polymer element...">
-    <span>And this is my client-provided content!<div>
+    <span>And this is my client-provided content!</span>
   </``tagName``>
 </body>
 </html>
