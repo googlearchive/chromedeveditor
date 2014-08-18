@@ -30,60 +30,73 @@ class _LoggingEvent {
   final LineColumn startLineColumn;
   final LineColumn endLineColumn;
 
-  _LoggingEvent(this.kind, this.span, this.value, this.startLineColumn, this.endLineColumn);
+  _LoggingEvent(
+      this.kind,
+      this.span,
+      this.value,
+      this.startLineColumn,
+      this.endLineColumn);
 }
 
 /**
- * Json parse listener that collects all events into a flat list of [_LoggingEvent].
+ * Json parser listener that collects all events into a flat list of
+ * [_LoggingEvent].
  */
 class _LoggingListener extends JsonListener {
   final String contents;
+  final StringLineOffsets lineOffsets;
   final List<_LoggingEvent> events = new List();
-  StringLineOffsets lineOffsets;
 
-  _LoggingListener(this.contents) {
-    lineOffsets = new StringLineOffsets(contents);
-  }
+  _LoggingListener(String contents) :
+      this.contents = contents,
+      lineOffsets = new StringLineOffsets(contents);
+
   void _addEvent(int kind, Span span, var value) {
-    events.add(new _LoggingEvent(kind, span, value, lineOffsets.getLineColumn(span.start), lineOffsets.getLineColumn(span.end)));
+    events.add(new _LoggingEvent(
+        kind,
+        span,
+        value,
+        lineOffsets.getLineColumn(span.start),
+        lineOffsets.getLineColumn(span.end)));
   }
-  void handleString(Span span, String value) {
+
+  void handleString(Span span, String value) =>
     _addEvent(_LoggingEvent.STRING_VALUE, span, value);
-  }
-  void handleNumber(Span span, num value) {
+  void handleNumber(Span span, num value) =>
     _addEvent(_LoggingEvent.NUMBER_VALUE, span, value);
-  }
-  void handleBool(Span span, bool value) {
+  void handleBool(Span span, bool value) =>
     _addEvent(_LoggingEvent.BOOL_VALUE, span, value);
-  }
-  void handleNull(Span span) {
+  void handleNull(Span span) =>
     _addEvent(_LoggingEvent.NULL_VALUE, span, null);
-  }
-  void beginObject(int position) {
+  void beginObject(int position) =>
     _addEvent(_LoggingEvent.BEGIN_OBJECT, new Span(position, position), null);
-  }
-  void propertyName(Span span) {
+  void propertyName(Span span) =>
     _addEvent(_LoggingEvent.PROPERTY_NAME, span, null);
-  }
-  void propertyValue(Span span) {
+  void propertyValue(Span span) =>
     _addEvent(_LoggingEvent.PROPERTY_VALUE, span, null);
-  }
-  void endObject(Span span) {
+  void endObject(Span span) =>
     _addEvent(_LoggingEvent.END_OBJECT, span, null);
-  }
-  void beginArray(int position) {
+  void beginArray(int position) =>
     _addEvent(_LoggingEvent.BEGIN_ARRAY, new Span(position, position), null);
-  }
-  void arrayElement(Span span) {
+  void arrayElement(Span span) =>
     _addEvent(_LoggingEvent.ARRAY_ELEMENT, span, null);
-  }
-  void endArray(Span span) {
+  void endArray(Span span) =>
     _addEvent(_LoggingEvent.END_ARRAY, span, null);
-  }
 }
 
-void defineTests() {
-  void expectEvent(_LoggingListener listener, int eventIndex, int kind, int startLine, int startColumn, int endLine, int endColumn, [var value]) {
+class _LoggingEventChecker {
+  final _LoggingListener listener;
+  int eventIndex;
+
+  _LoggingEventChecker(this.listener);
+
+  void event(
+      int kind,
+      int startLine,
+      int startColumn,
+      int endLine,
+      int endColumn,
+      [var value]) {
     expect(eventIndex, lessThan(listener.events.length));
     _LoggingEvent event = listener.events[eventIndex];
     if (value == null) {
@@ -95,12 +108,15 @@ void defineTests() {
     expect(event.endLineColumn.line, equals(endLine));
     expect(event.endLineColumn.column, equals(endColumn));
     expect(event.value, equals(value));
+    eventIndex++;
   }
 
-  void expectEventEnd(_LoggingListener listener, int eventIndex) {
+  void end() {
     expect(eventIndex, equals(listener.events.length));
   }
+}
 
+void defineTests() {
   group('Json parser tests -', () {
     test('empty object', () {
       String contents = """
@@ -110,10 +126,11 @@ void defineTests() {
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_OBJECT, 1, 1, 2, 2);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
+      checker.event(_LoggingEvent.END_OBJECT, 1, 1, 2, 2);
+      checker.end();
     });
 
     test('empty array', () {
@@ -124,10 +141,11 @@ void defineTests() {
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_ARRAY, 1, 1, 1, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_ARRAY, 1, 1, 2, 2);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.BEGIN_ARRAY, 1, 1, 1, 1);
+      checker.event(_LoggingEvent.END_ARRAY, 1, 1, 2, 2);
+      checker.end();
     });
 
     test('single number', () {
@@ -137,9 +155,10 @@ void defineTests() {
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 1, 1, 1, 4, 123);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 1, 1, 1, 4, 123);
+      checker.end();
     });
 
     test('single string literal', () {
@@ -149,9 +168,10 @@ void defineTests() {
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 1, 1, 1, 6, "hhh");
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.STRING_VALUE, 1, 1, 1, 6, "hhh");
+      checker.end();
     });
 
     test('single "true" literal', () {
@@ -161,9 +181,10 @@ true
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.BOOL_VALUE, 1, 1, 1, 5, true);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.BOOL_VALUE, 1, 1, 1, 5, true);
+      checker.end();
     });
 
     test('single "false" literal', () {
@@ -173,9 +194,10 @@ false
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.BOOL_VALUE, 1, 1, 1, 5, false);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.BOOL_VALUE, 1, 1, 1, 5, false);
+      checker.end();
     });
 
     test('single "null" literal', () {
@@ -185,9 +207,10 @@ null
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.NULL_VALUE, 1, 1, 1, 5, null);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.NULL_VALUE, 1, 1, 1, 5, null);
+      checker.end();
     });
 
     test('object containing single property and value', () {
@@ -199,14 +222,15 @@ null
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 2, 3, 2, 8, "foo");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 2, 3, 2, 8);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 2, 10, 2, 11, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 2, 10, 2, 11);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_OBJECT, 1, 1, 3, 2);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
+      checker.event(_LoggingEvent.STRING_VALUE, 2, 3, 2, 8, "foo");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 2, 3, 2, 8);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 2, 10, 2, 11, 1);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 2, 10, 2, 11);
+      checker.event(_LoggingEvent.END_OBJECT, 1, 1, 3, 2);
+      checker.end();
     });
 
     test('object containing a property with a nested object', () {
@@ -218,23 +242,24 @@ null
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 2, 3, 2, 8, "foo");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 2, 3, 2, 8);
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_OBJECT, 2, 10, 2, 10);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 2, 12, 2, 15, "a");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 2, 12, 2, 15);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 2, 20, 2, 23, "b");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 2, 20, 2, 23);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 2, 29, 2, 32, "c");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 2, 29, 2, 32);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NULL_VALUE, 2, 39, 2, 43, null);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 2, 39, 2, 43);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_OBJECT, 2, 10, 2, 45);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 2, 10, 2, 45);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_OBJECT, 1, 1, 3, 2);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
+      checker.event(_LoggingEvent.STRING_VALUE, 2, 3, 2, 8, "foo");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 2, 3, 2, 8);
+      checker.event(_LoggingEvent.BEGIN_OBJECT, 2, 10, 2, 10);
+      checker.event(_LoggingEvent.STRING_VALUE, 2, 12, 2, 15, "a");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 2, 12, 2, 15);
+      checker.event(_LoggingEvent.STRING_VALUE, 2, 20, 2, 23, "b");
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 2, 20, 2, 23);
+      checker.event(_LoggingEvent.STRING_VALUE, 2, 29, 2, 32, "c");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 2, 29, 2, 32);
+      checker.event(_LoggingEvent.NULL_VALUE, 2, 39, 2, 43, null);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 2, 39, 2, 43);
+      checker.event(_LoggingEvent.END_OBJECT, 2, 10, 2, 45);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 2, 10, 2, 45);
+      checker.event(_LoggingEvent.END_OBJECT, 1, 1, 3, 2);
+      checker.end();
     });
 
     test('comprehensive json document', () {
@@ -249,55 +274,56 @@ null
       _LoggingListener listener = new _LoggingListener(contents);
       JsonParser parser = new JsonParser(contents, listener);
       parser.parse();
-      int eventIndex = 0;
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 2, 3, 2, 8, "foo");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 2, 3, 2, 8);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 2, 10, 2, 11, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 2, 10, 2, 11);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 3, 3, 3, 8, "bar");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 3, 3, 3, 8);
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_ARRAY, 3, 10, 3, 10);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 3, 11, 3, 12, 1);
-      expectEvent(listener, eventIndex++, _LoggingEvent.ARRAY_ELEMENT, 3, 11, 3, 12);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 3, 14, 3, 15, 2);
-      expectEvent(listener, eventIndex++, _LoggingEvent.ARRAY_ELEMENT, 3, 14, 3, 15);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 3, 17, 3, 18, 3);
-      expectEvent(listener, eventIndex++, _LoggingEvent.ARRAY_ELEMENT, 3, 17, 3, 18);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 3, 20, 3, 21, 4);
-      expectEvent(listener, eventIndex++, _LoggingEvent.ARRAY_ELEMENT, 3, 20, 3, 21);
-      expectEvent(listener, eventIndex++, _LoggingEvent.NUMBER_VALUE, 3, 23, 3, 24, 5);
-      expectEvent(listener, eventIndex++, _LoggingEvent.ARRAY_ELEMENT, 3, 23, 3, 24);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_ARRAY, 3, 10, 3, 25);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 3, 10, 3, 25);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 4, 3, 4, 9, "blah");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 4, 3, 4, 9);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 4, 11, 4, 16, "boo");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 4, 11, 4, 16);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 5, 3, 5, 8, "bob");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 5, 3, 5, 8);
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_ARRAY, 5, 10, 5, 10);
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_OBJECT, 5, 11, 5, 11);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 5, 13, 5, 18, "bar");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 5, 13, 5, 18);
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_OBJECT, 5, 20, 5, 20);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_OBJECT, 5, 20, 5, 22);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 5, 20, 5, 22);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 5, 24, 5, 30, "blah");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 5, 24, 5, 30);
-      expectEvent(listener, eventIndex++, _LoggingEvent.BEGIN_ARRAY, 5, 32, 5, 32);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_ARRAY, 5, 32, 5, 34);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 5, 32, 5, 34);
-      expectEvent(listener, eventIndex++, _LoggingEvent.STRING_VALUE, 5, 36, 5, 41, "bob");
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_NAME, 5, 36, 5, 41);
-      expectEvent(listener, eventIndex++, _LoggingEvent.BOOL_VALUE, 5, 43, 5, 47, true);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 5, 43, 5, 47);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_OBJECT, 5, 11, 5, 49);
-      expectEvent(listener, eventIndex++, _LoggingEvent.ARRAY_ELEMENT, 5, 11, 5, 49);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_ARRAY, 5, 10, 5, 50);
-      expectEvent(listener, eventIndex++, _LoggingEvent.PROPERTY_VALUE, 5, 10, 5, 50);
-      expectEvent(listener, eventIndex++, _LoggingEvent.END_OBJECT, 1, 1, 6, 2);
-      expectEventEnd(listener, eventIndex++);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(listener);
+      checker.event(_LoggingEvent.BEGIN_OBJECT, 1, 1, 1, 1);
+      checker.event(_LoggingEvent.STRING_VALUE, 2, 3, 2, 8, "foo");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 2, 3, 2, 8);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 2, 10, 2, 11, 1);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 2, 10, 2, 11);
+      checker.event(_LoggingEvent.STRING_VALUE, 3, 3, 3, 8, "bar");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 3, 3, 3, 8);
+      checker.event(_LoggingEvent.BEGIN_ARRAY, 3, 10, 3, 10);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 3, 11, 3, 12, 1);
+      checker.event(_LoggingEvent.ARRAY_ELEMENT, 3, 11, 3, 12);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 3, 14, 3, 15, 2);
+      checker.event(_LoggingEvent.ARRAY_ELEMENT, 3, 14, 3, 15);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 3, 17, 3, 18, 3);
+      checker.event(_LoggingEvent.ARRAY_ELEMENT, 3, 17, 3, 18);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 3, 20, 3, 21, 4);
+      checker.event(_LoggingEvent.ARRAY_ELEMENT, 3, 20, 3, 21);
+      checker.event(_LoggingEvent.NUMBER_VALUE, 3, 23, 3, 24, 5);
+      checker.event(_LoggingEvent.ARRAY_ELEMENT, 3, 23, 3, 24);
+      checker.event(_LoggingEvent.END_ARRAY, 3, 10, 3, 25);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 3, 10, 3, 25);
+      checker.event(_LoggingEvent.STRING_VALUE, 4, 3, 4, 9, "blah");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 4, 3, 4, 9);
+      checker.event(_LoggingEvent.STRING_VALUE, 4, 11, 4, 16, "boo");
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 4, 11, 4, 16);
+      checker.event(_LoggingEvent.STRING_VALUE, 5, 3, 5, 8, "bob");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 5, 3, 5, 8);
+      checker.event(_LoggingEvent.BEGIN_ARRAY, 5, 10, 5, 10);
+      checker.event(_LoggingEvent.BEGIN_OBJECT, 5, 11, 5, 11);
+      checker.event(_LoggingEvent.STRING_VALUE, 5, 13, 5, 18, "bar");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 5, 13, 5, 18);
+      checker.event(_LoggingEvent.BEGIN_OBJECT, 5, 20, 5, 20);
+      checker.event(_LoggingEvent.END_OBJECT, 5, 20, 5, 22);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 5, 20, 5, 22);
+      checker.event(_LoggingEvent.STRING_VALUE, 5, 24, 5, 30, "blah");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 5, 24, 5, 30);
+      checker.event(_LoggingEvent.BEGIN_ARRAY, 5, 32, 5, 32);
+      checker.event(_LoggingEvent.END_ARRAY, 5, 32, 5, 34);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 5, 32, 5, 34);
+      checker.event(_LoggingEvent.STRING_VALUE, 5, 36, 5, 41, "bob");
+      checker.event(_LoggingEvent.PROPERTY_NAME, 5, 36, 5, 41);
+      checker.event(_LoggingEvent.BOOL_VALUE, 5, 43, 5, 47, true);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 5, 43, 5, 47);
+      checker.event(_LoggingEvent.END_OBJECT, 5, 11, 5, 49);
+      checker.event(_LoggingEvent.ARRAY_ELEMENT, 5, 11, 5, 49);
+      checker.event(_LoggingEvent.END_ARRAY, 5, 10, 5, 50);
+      checker.event(_LoggingEvent.PROPERTY_VALUE, 5, 10, 5, 50);
+      checker.event(_LoggingEvent.END_OBJECT, 1, 1, 6, 2);
+      checker.end();
     });
   });
 }

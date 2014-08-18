@@ -9,7 +9,7 @@
 library spark.json_parser;
 
 /**
- * Straightfoward span representation.
+ * Straightforward span representation.
  */
 class Span {
   /// Start position (inclusive)
@@ -171,7 +171,6 @@ class JsonParser {
   static const int EMPTY = 0;
   static const int NON_EMPTY = 16;
   static const int EMPTY_MASK = 16; // Empty if zero.
-
 
   static const int VALUE_READ_BITS = NO_VALUES | NON_EMPTY;
 
