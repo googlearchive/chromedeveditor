@@ -20,6 +20,7 @@ import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
+import 'lib/apps/app_manifest_builder.dart';
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
 import 'lib/dependency.dart';
@@ -169,6 +170,7 @@ abstract class Spark
       addBuilder(new JavaScriptBuilder());
     }
     addBuilder(new JsonBuilder());
+    addBuilder(new AppManifestBuilder());
 
     return restoreWorkspace().then((_) {
       return restoreLocationManager().then((_) {
