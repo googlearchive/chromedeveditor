@@ -53,8 +53,7 @@ void defineTests() {
   files_test.defineTests();
   jobs_test.defineTests();
   jshint_test.defineTests();
-  //TODO(rpaquay): Disable until build break is figured out.
-  //json_parser_test.defineTests();
+  json_parser_test.defineTests();
   git_all_test.defineTests();
   navigation_test.defineTests();
   outline_test.defineTests();
