@@ -46,10 +46,11 @@ class StringLineOffsets {
 
     int lineIndex = _binarySearch(_lineOffsets, position);
     if (lineIndex < 0) {
-      // Note: we need "- 1" because the binary search returns the
-      // insertion index of [position], while we are interested
-      // in the line containing [position].
-      lineIndex = (~lineIndex) - 1;
+      // Note: we need "- 2" because 1) we adjust for the "+1" of the return
+      // value of the search (insertion position), and 2) we are interested
+      // in the line containing [position], not the insertion position of
+      // [position] in the array.
+      lineIndex = -lineIndex - 2;
     }
     assert(lineIndex >= 0 && lineIndex < _lineOffsets.length);
     return lineIndex;
@@ -57,8 +58,7 @@ class StringLineOffsets {
 
   /**
    * Returns the position of [item] in [items] if present.
-   * Returns the bitwise complement (~) of the insertion position if [item] is
-   * not found.
+   * Returns "-(insertion_position + 1)" if [item] is not found.
    */
   static int _binarySearch(List items, var item) {
    int min = 0;
@@ -73,7 +73,9 @@ class StringLineOffsets {
        return med;
      }
    }
-   return ~min;
+   // [min] is the insertion position in the range [0, max].
+   // Return a negative value in the range [-max - 1, -1].
+   return -(min + 1);
   }
 
   /**
