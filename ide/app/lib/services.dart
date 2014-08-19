@@ -177,7 +177,6 @@ class AnalyzerService extends Service {
   // our memory consumption.
   static final int MAX_CONTEXTS = 5;
 
-  Map<Project, ProjectAnalyzer> _contextMap = {};
   Map<Project, Completer> _contextCompleters = {};
 
   List<ProjectAnalyzer> _recentContexts = [];
@@ -231,7 +230,6 @@ class AnalyzerService extends Service {
       _contextCompleters.containsKey(project);
 
   Future<ProjectAnalyzer> getCreateProjectAnalyzer(Project project) {
-    ProjectAnalyzer context = _contextMap[project];
     Completer completer = _contextCompleters[project];
 
     if (completer == null) {
@@ -256,15 +254,10 @@ class AnalyzerService extends Service {
   }
 
   Future<ProjectAnalyzer> _createProjectAnalyzer(Project project) {
-    if (_contextMap[project] != null) {
-      return new Future.value(_contextMap[project]);
-    }
-
     _logger.info('creating analysis context [${project.name}]');
     Stopwatch timer = new Stopwatch()..start();
 
     ProjectAnalyzer context = new ProjectAnalyzer._(this, project);
-    _contextMap[project] = context;
     _recentContexts.insert(0, context);
 
     if (_recentContexts.length > MAX_CONTEXTS) {
@@ -287,21 +280,18 @@ class AnalyzerService extends Service {
   }
 
   Future disposeProjectAnalyzer(Project project) {
-    ProjectAnalyzer context = _contextMap.remove(project);
+    Completer completer = _contextCompleters[project];
 
-    Completer completer = _contextCompleters.remove(project);
-    if (!completer.isCompleted) {
-      completer.completeError('context deleted before construction finished');
-    }
-
-    if (context != null) {
+    return completer.future.then((ProjectAnalyzer context) {
       _logger.info('disposed analysis context [${project.name}]');
 
-      _recentContexts.remove(context);
-      return _sendAction('disposeContext', {'contextId': project.uuid});
-    } else {
-      return new Future.value();
-    }
+      if (_recentContexts.indexOf(context) >= MAX_CONTEXTS) {
+        _recentContexts.remove(context);
+        _contextCompleters.remove(completer);
+
+        return _sendAction('disposeContext', {'contextId': project.uuid});
+      }
+    });
   }
 
   PackageManager getPackageManager() => services._packageManager;
