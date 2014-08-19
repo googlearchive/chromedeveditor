@@ -2718,7 +2718,7 @@ class GitMergeAction extends SparkActionWithProgressDialog implements ContextAct
   GitMergeAction(Spark spark, Element dialog)
       : super(spark, "git-merge", "Merge Branch…", dialog) {
     _branchNameElement = _triggerOnReturn("#gitBranchName");
-    _selectElement = getElement("#gitRemoteBranches");
+    _selectElement = getElement("#gitBranches");
   }
 
   void _invoke([context]) {
@@ -2736,7 +2736,10 @@ class GitMergeAction extends SparkActionWithProgressDialog implements ContextAct
       branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
       for (String branch in branches) {
-        _selectElement.append(new OptionElement(data: branch, value: branch));
+        // Filter out current branch.
+        if (branch != _branchNameElement.value) {
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
       }
 
       gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
@@ -3443,12 +3446,9 @@ class _GitMergeJob extends Job {
       }
       return gitOperations.mergeBranch(_branchName, _sourceBranchName,
           username: username, password: password).then((_) {
-        //return gitOperations.checkoutBranch(_branchName).then((_) {
-          //spark.showSuccessMessage('Created ${_branchName}');
-        //});
       }).catchError((e) {
         e = SparkException.fromException(e);
-        spark.showErrorMessage('Error in merging branch ${_branchName}', exception : e);
+        spark.showErrorMessage('Error in Merging branch ${_branchName}', exception : e);
       });
     });
   }

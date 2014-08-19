@@ -91,13 +91,13 @@
                 spellcheck="false"
                 on-keydown="{{fileFilterKeydownHandler}}"
                 on-input="{{fileFilterInputHandler}}"/>
-  
+
             <spark-menu-button
                 id="moreSearchMenu"
                 valueAttr="action-id"
                 arrow="none"
                 on-activate="{{onMenuSelected}}">
-  
+
               <spark-button id="moreSearchButton"
                   menuButton padding="small" hoverStyle="foreground">
                 <svg width="24px" height="28px" viewBox="0 0 24 28">
@@ -105,7 +105,7 @@
                   <polygon points="6,21 11,26 16,21 "></polygon>
                 </svg>
               </spark-button>
-  
+
               <spark-menu-item id="showFilesView"
                   action-id="show-files-view"
                   label="Filter"
@@ -448,11 +448,11 @@
       <input id="gitBranchName" type="text" class="form-control"
           required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
       <div class="form-group">
-        <label for="gitRemoteBranches">Select branch to merge </label>
-        <select id="gitRemoteBranches" class="form-control"></select>
+        <label for="gitBranches">Select branch to merge </label>
+        <select id="gitBranches" class="form-control"></select>
       </div>
       <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
-      <spark-dialog-button id="gitBranch" submit>Merge Branch</spark-dialog-button>
+      <spark-dialog-button id="gitBranch" submit>Merge</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Checkout dialog -->
