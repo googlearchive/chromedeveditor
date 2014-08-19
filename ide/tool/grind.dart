@@ -103,7 +103,7 @@ void lint(GrinderContext context) {
 
   context.log('Running polymer linter on ${entryPoint}...');
   polymer.lint(
-      entryPoints: ['entryPoint'],
+      entryPoints: [entryPoint],
       options: polymer.parseOptions([]),
       currentPackage: 'spark'
   );
