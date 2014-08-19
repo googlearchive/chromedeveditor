@@ -108,7 +108,7 @@ class ObjectStore {
       return gitDir.getDirectory(OBJECT_FOLDER_PATH).then((objectsDir) {
 
         objectDir = objectsDir;
-        return objectsDir.getDirectory('pack').then((
+        return objectsDir.createDirectory('pack').then((
             chrome.DirectoryEntry packDir) {
           return FileOps.listFiles(packDir).then((List<chrome.Entry> entries) {
             Iterable<chrome.Entry> packEntries = entries.where((e)
@@ -126,7 +126,7 @@ class ObjectStore {
   }
 
   Future clearRemoteRefs() {
-    return root.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then(
+    return root.createDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then(
         (dir) => dir.removeRecursively()).catchError((e){});
   }
 
@@ -175,7 +175,7 @@ class ObjectStore {
   }
 
   Future<List<String>> getLocalHeads() {
-    return _rootDir.getDirectory(GIT_REFS_HEADS_PATH).then((dir) {
+    return _rootDir.createDirectory(GIT_REFS_HEADS_PATH).then((dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
         return entries.map((entry) => entry.name).toList();
       });
@@ -183,7 +183,7 @@ class ObjectStore {
   }
 
   Future<List<String>> getRemoteHeads() {
-    return _rootDir.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then((dir) {
+    return _rootDir.createDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then((dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
         return entries.map((entry) => entry.name).toList();
       });
@@ -192,7 +192,13 @@ class ObjectStore {
 
   Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFileText(_rootDir, gitPath + headRefName).then((content) {
-      return content.substring(0, 40);
+      return content.substring(0,40);
+    }, onError: (e) {
+      if (headRefName == HEAD_MASTER_REF_PATH) {
+        return new Future.value(HEAD_MASTER_SHA);
+      } else {
+        return new Future.error(e);
+      }
     });
   }
 
@@ -416,7 +422,6 @@ class ObjectStore {
     return new Future.value();
   }
 
-
   Future<CommitPushEntry> getCommitsForPush(List<GitRef> baseRefs,
       Map<String, String> remoteHeads) {
     // special case of empty remote.
@@ -459,36 +464,49 @@ class ObjectStore {
     });
   }
 
-  Future<CommitPushEntry> _getCommits(GitRef remoteRef,
-      Map<String, bool> remoteShas, String sha) {
-    List commits = [];
-    Future<CommitPushEntry> getNextCommit(String sha) {
-
+  Future<List<CommitObject>> _getParentCommits(List<String> shas) {
+    List<CommitObject> parents = [];
+    return Future.forEach(shas, (String sha) {
       return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((
           CommitObject commitObj) {
+        parents.add(commitObj);
+      }, onError: (e) => true);
+    }).then((_) {
+      return parents;
+    });
+  }
 
-        Completer completer = new Completer();
-        commits.add(commitObj);
-
-        if (commitObj.parents.length > 1) {
-          // this means a local merge commit.
-          _nonFastForwardPush();
-          completer.completeError("");
-        } else if (commitObj.parents.length == 0
-            || commitObj.parents.first == remoteRef.sha
-            || remoteShas[commitObj.parents[0]] == true) {
-          completer.complete(new CommitPushEntry(commits, remoteRef));
-        } else {
-          return getNextCommit(commitObj.parents.first);
-        }
-
-        return completer.future;
-
-      }, onError: (e) {
-        _nonFastForwardPush();
+  Future<CommitPushEntry> _getCommits(GitRef remoteRef,
+      Map<String, bool> knownShas, String sha) {
+    List commits = [];
+    knownShas[remoteRef.sha] = true;
+    Future<CommitPushEntry> getNextCommits(List shas, List remoteShas) {
+      return _getParentCommits(remoteShas).then((remoteCommits) {
+        List<String> nextLevelRemote = [];
+        remoteCommits.forEach((commit) {
+          knownShas[commit.sha] = true;
+          nextLevelRemote.addAll(commit.parents);
+        });
+        return _getParentCommits(shas).then((localCommits) {
+          List<String> nextLevelLocal = [];
+          localCommits.forEach((commit) {
+            if (knownShas[commit.sha] != true) {
+              commits.add(commit);
+              nextLevelLocal.addAll(commit.parents);
+            }
+          });
+          // All commits at this level are already knwon to the remote.
+          if (nextLevelLocal.isEmpty) {
+            List<CommitObject> localCommits = [];
+            commits = commits.where((CommitObject commit) => knownShas[commit.sha] != true);
+            return new CommitPushEntry(commits, remoteRef);
+          } else {
+            return getNextCommits(nextLevelLocal, nextLevelRemote);
+          }
+        });
       });
     }
-    return getNextCommit(sha);
+    return getNextCommits([sha], knownShas.keys);
   }
 
   Future<List<LooseObject>> retrieveObjectBlobsAsString(List<String> shas) {
@@ -513,17 +531,26 @@ class ObjectStore {
     });
   }
 
+  Future _createRemoteRefs() {
+    return _rootDir.createDirectory(gitPath + 'refs').then((dir) {
+      return dir.createDirectory('remotes').then((dir) {
+        return dir.createDirectory('origin');
+      });
+    });
+  }
+
   Future _init() {
     return FileOps.createDirectoryRecursive(_rootDir,
         gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
       this.objectDir = objectDir;
       return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
           GIT_HEAD_FILE_DEFAULT_CONTENT, 'Text').then((entry)  {
-            return _initHelper();
-          }, onError: (e) {
-            print(e);
-            throw e;
-          });
+        return _createRemoteRefs().then((_) {
+          return _initHelper();
+        });
+      }, onError: (e) {
+        throw e;
+      });
     }, onError: (e) {
       throw e;
     });

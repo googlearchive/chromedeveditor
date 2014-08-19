@@ -40,6 +40,15 @@ class AndroidRSA {
   static js.JsObject jsAndroidRSA = js.context['AndroidRSA'];
 
   /**
+   * Load the companion NaCl plugin.  This call isn't strictly required as
+   * we'll load the plugin the first time its needed.  You may call it
+   * separately if you want to pay the loading cost up front.
+   */
+  static void loadPlugin() {
+    jsAndroidRSA.callMethod('loadPlugin', []);
+  }
+
+  /**
    * This method will sign the given data using the given private key.
    * It will return the signature on success.
    */

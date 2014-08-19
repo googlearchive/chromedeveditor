@@ -29,10 +29,12 @@ import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
 import 'lib/exception.dart';
+import 'lib/filesystem.dart';
 import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
+import 'lib/mobile/android_rsa.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
@@ -54,6 +56,7 @@ import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
 import 'test/all.dart' as all_tests;
+import 'test/files_mock.dart';
 import 'lib/wam/wamfs.dart';
 
 import 'spark_flags.dart';
@@ -98,7 +101,6 @@ abstract class Spark
   EditorArea _editorArea;
   LaunchManager _launchManager;
   ActionManager _actionManager;
-  ProjectLocationManager _projectLocationManager;
   NavigationManager _navigationManager;
 
   EventBus _eventBus;
@@ -140,6 +142,7 @@ abstract class Spark
     initEditorManager();
     initEditorArea();
     initNavigationManager();
+    initAndroidRSA();
 
     createActions();
 
@@ -187,7 +190,7 @@ abstract class Spark
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+        return fileSystemAccess.getDisplayPath(entry).then((path) {
           getUIElement('#directoryLabel').text = path;
         });
       });
@@ -210,7 +213,6 @@ abstract class Spark
   BowerManager get bowerManager => dependencies[BowerManager];
   DecoratorManager get decoratorManager => dependencies[DecoratorManager];
   ActionManager get actionManager => _actionManager;
-  ProjectLocationManager get projectLocationManager => _projectLocationManager;
   NavigationManager get navigationManager => _navigationManager;
   EventBus get eventBus => _eventBus;
 
@@ -341,6 +343,10 @@ abstract class Spark
       }
     });
 
+  }
+
+  void initAndroidRSA() {
+    AndroidRSA.loadPlugin();
   }
 
   void _selectLocation(NavigationLocation location) {
@@ -553,9 +559,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(this).then((manager) {
-      _projectLocationManager = manager;
-    });
+    return restoreManager(this);
   }
 
   //
@@ -1016,185 +1020,6 @@ abstract class Spark
 }
 
 /**
- * Used to manage the default location to create new projects.
- *
- * This class also abstracts a bit other the differences between Chrome OS and
- * Windows/Mac/linux.
- */
-class ProjectLocationManager {
-  LocationResult _projectLocation;
-  final Spark _spark;
-
-  /**
-   * Create a ProjectLocationManager asynchronously, restoring the default
-   * project location from the given preferences.
-   */
-  static Future<ProjectLocationManager> restoreManager(Spark spark) {
-    //localPrefs, workspace
-    return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
-      if (folderToken == null) {
-        return new ProjectLocationManager._(spark);
-      }
-
-      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return _initFlagsFromProjectLocation(entry).then((_) {
-          return new ProjectLocationManager._(spark,
-              new LocationResult(entry, entry, false));
-        });
-      }).catchError((e) {
-        return new ProjectLocationManager._(spark);
-      });
-    });
-  }
-
-  /**
-   * Try to read and set the highest precedence developer flags from
-   * "<project_location>/.spark.json".
-   */
-  static Future _initFlagsFromProjectLocation(chrome.DirectoryEntry projDir) {
-    return projDir.getFile('.spark.json').then(
-        (chrome.ChromeFileEntry flagsFile) {
-      return SparkFlags.initFromFile(flagsFile.readText());
-    }).catchError((_) {
-      // Ignore missing file.
-      return new Future.value();
-    });
-  }
-
-  //this._prefs, this._workspace
-  ProjectLocationManager._(this._spark, [this._projectLocation]);
-
-  /**
-   * Returns the default location to create new projects in. For Chrome OS, this
-   * will be the sync filesystem. This method can return `null` if the user
-   * cancels the folder selection dialog.
-   */
-  Future<LocationResult> getProjectLocation() {
-    if (_projectLocation != null) {
-      // Check if the saved location exists. If so, return it. Otherwise, get a
-      // new location.
-      return _projectLocation.exists().then((bool value) {
-        if (value) {
-          return _projectLocation;
-        } else {
-          _projectLocation = null;
-          return getProjectLocation();
-        }
-      });
-    }
-
-    // On Chrome OS, use the sync filesystem.
-    // TODO(grv): Enable syncfs once the api is more stable.
-    /*if (PlatformInfo.isCros && _spark.workspace.syncFsIsAvailable) {
-      return chrome.syncFileSystem.requestFileSystem().then((fs) {
-        var entry = fs.root;
-        return new LocationResult(entry, entry, true);
-      });
-    }*/
-
-    // Show a dialog with explaination about what this folder is for.
-    return chooseNewProjectLocation(true);
-  }
-
-  /**
-   * Opens a pop up and asks the user to change the root directory. Internally,
-   * the stored value is changed here.
-   */
-  Future<LocationResult> chooseNewProjectLocation(bool showFileSystemDialog) {
-    // Show a dialog with explaination about what this folder is for.
-    if (showFileSystemDialog) {
-      return _showRequestFileSystemDialog().then((bool accepted) {
-        if (!accepted) {
-          return null;
-        }
-        return _selectFolderDialog();
-      });
-    } else {
-      return _selectFolderDialog();
-    }
-  }
-
-  Future<LocationResult> _selectFolderDialog() {
-    // Display a dialog asking the user to choose a default project folder.
-    return _selectFolder(suggestedName: 'projects').then((entry) {
-      if (entry == null) return null;
-
-      _projectLocation = new LocationResult(entry, entry, false);
-      _spark.localPrefs.setValue('projectFolder',
-          chrome.fileSystem.retainEntry(entry));
-      return _projectLocation;
-    });
-  }
-
-  Future<bool> _showRequestFileSystemDialog() {
-    return _spark.askUserOkCancel('Please choose a folder to store your Chrome Dev Editor projects.',
-        okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
-  }
-
-  /**
-   * This will create a new folder in default project location. It will attempt
-   * to use the given [defaultName], but will disambiguate it if necessary. For
-   * example, if `defaultName` already exists, the created folder might be named
-   * something like `defaultName-1` instead.
-   */
-  Future<LocationResult> createNewFolder(String defaultName) {
-    return getProjectLocation().then((LocationResult root) {
-      return root == null ? null : _create(root, defaultName, 1);
-    });
-  }
-
-  Future<LocationResult> _create(
-      LocationResult location, String baseName, int count) {
-    String name = count == 1 ? baseName : '${baseName}-${count}';
-
-    return location.parent.createDirectory(name, exclusive: true).then((dir) {
-      return new LocationResult(location.parent, dir, location.isSync);
-    }).catchError((_) {
-      if (count > 50) {
-        throw "Error creating project '${baseName}.'";
-      } else {
-        return _create(location, baseName, count + 1);
-      }
-    });
-  }
-}
-
-class LocationResult {
-  /**
-   * The parent Entry. This can be useful for persistng the info across
-   * sessions.
-   */
-  final chrome.DirectoryEntry parent;
-
-  /**
-   * The created location.
-   */
-  final chrome.DirectoryEntry entry;
-
-  /**
-   * Whether the entry was created in the sync filesystem.
-   */
-  final bool isSync;
-
-  LocationResult(this.parent, this.entry, this.isSync);
-
-  /**
-   * The name of the created entry.
-   */
-  String get name => entry.name;
-
-  Future<bool> exists() {
-    if (isSync) return new Future.value(true);
-
-    return entry.getMetadata().then((_) {
-      return true;
-    }).catchError((e) {
-      return false;
-    });
-  }
-}
-
-/**
  * Allows a user to select a folder on disk. Returns the selected folder
  * entry. Returns `null` in case the user cancels the action.
  */
@@ -1221,10 +1046,18 @@ abstract class SparkAction extends Action {
     // Send an action event with the 'main' event category.
     _analyticsTracker.sendEvent('main', id);
 
-    try {
+    if (SparkFlags.developerMode) {
       _invoke(context);
-    } catch (e) {
-      spark.showErrorMessage('Error Invoking ${name}', exception: e);
+    } else {
+      try {
+        _invoke(context);
+      } catch (e) {
+        // Throw the exception to the debugger if we're in developer mode.
+        if (SparkFlags.developerMode) {
+          throw e;
+        }
+        spark.showErrorMessage('Error Invoking ${name}', exception: e);
+      }
     }
   }
 
@@ -2291,8 +2124,8 @@ class NewProjectAction extends SparkActionWithDialog {
 
   void _invoke([context]) {
     _nameElt.value = '';
-    // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+    // Show folder picker if top-level folder is not set.
+    fileSystemAccess.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
       }
@@ -2306,20 +2139,14 @@ class NewProjectAction extends SparkActionWithDialog {
 
     if (name.isEmpty) return;
 
-    spark.projectLocationManager.createNewFolder(name)
-        .then((LocationResult location) {
+    fileSystemAccess.createNewFolder(name).then((LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
 
-      ws.WorkspaceRoot root;
-      final locationEntry = location.entry;
+      final DirectoryEntry locationEntry = location.entry;
 
-      if (location.isSync) {
-        root = new ws.SyncFolderRoot(locationEntry);
-      } else {
-        root = new ws.FolderChildRoot(location.parent, locationEntry);
-      }
+      ws.WorkspaceRoot root = fileSystemAccess.getRootFor(location);
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
@@ -2359,7 +2186,6 @@ class NewProjectAction extends SparkActionWithDialog {
         }
 
         return new ProjectBuilder(locationEntry, templates).build();
-
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
@@ -2580,7 +2406,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   }
 
   Future<String> _getLocation() {
-    return chrome.fileSystem.getDisplayPath(_selectedResource.entry)
+    return fileSystemAccess.getDisplayPath(_selectedResource.entry)
         .catchError((e) {
       // SyncFS from ChromeBook falls in here.
       return _selectedResource.entry.fullPath;
@@ -2637,7 +2463,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+    fileSystemAccess.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
         Timer.run(_copyClipboard);
@@ -3369,7 +3195,7 @@ class _GitCloneTask {
   }
 
   Future run() {
-    return spark.projectLocationManager.createNewFolder(_projectName).then(
+    return fileSystemAccess.createNewFolder(_projectName).then(
         (LocationResult location) {
       if (location == null) {
         return new Future.value();
@@ -3790,6 +3616,7 @@ class RunTestsAction extends SparkAction {
 
   _invoke([Object context]) {
     if (SparkFlags.developerMode) {
+
       _initTestDriver();
       testDriver.runTests();
     }
@@ -3797,7 +3624,7 @@ class RunTestsAction extends SparkAction {
 
   void _initTestDriver() {
     if (testDriver == null) {
-      testDriver = new TestDriver(all_tests.defineTests, spark,
+      testDriver = new TestDriver(all_tests.defineTests, spark, spark,
           connectToTestListener: true);
     }
   }

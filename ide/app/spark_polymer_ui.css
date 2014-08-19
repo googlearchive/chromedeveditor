@@ -47,15 +47,17 @@ spark-dialog {
   margin: 0;
 }
 
+#fileFilterGroup {
+  flex: 1;
+  display: flex;
+}
+
 #fileFilter {
-  background: #fff url(images/search.svg) 10px center no-repeat;
+  flex: 1;
+  height: 36px;
+  padding: 10px 10px 10px 44px;
   border: 1px solid #ddd;
   border-radius: 3px;
-  height: 36px;
-  flex: 1;
-  font: inherit;
-  margin: 2px;
-  padding: 10px 10px 10px 44px;
 }
 
 #fileFilter:focus {
@@ -76,6 +78,14 @@ spark-dialog {
   width: 0;
 }
 
+#moreSearchMenu {
+  position: absolute;
+  left: 52px;
+  top: 10px;
+  width: 32px;
+  height: 32px;
+}
+
 #fileNotFoundPlaceholder {
   color: #ccc;
   display: block;
@@ -90,12 +100,6 @@ spark-dialog {
   right: 0;
   width: 95px;
   z-index: 150;
-}
-
-#runButton > i,
-#leftNav > i,
-#rightNav > i {
-  font-size: 16px;
 }
 
 #sparkStatusContainer {
