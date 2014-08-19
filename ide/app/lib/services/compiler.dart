@@ -243,7 +243,9 @@ class _CompilerProvider {
         return new Future.error('file not found');
       }
     } else if (uri.scheme == 'file') {
-      return provider.getFileContents(uri.path);
+      // We use uri.pathSegments.join('/') instead of uri.path in order to get
+      // the unencoded path (we want spaces, not %20).
+      return provider.getFileContents(uri.pathSegments.join('/'));
     } else if (uri.scheme == 'package') {
       if (uuidInput == null) return new Future.error('file not found');
 

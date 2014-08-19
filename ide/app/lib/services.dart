@@ -160,6 +160,8 @@ class _ServicesUuidResolver extends UuidResolver {
   _ServicesUuidResolver(this.packageManager, [this.project]);
 
   File getResource(String uri) {
+    if (uri.isEmpty) return null;
+
     if (uri.startsWith('/')) uri = uri.substring(1);
 
     if (uri.startsWith('package:')) {
