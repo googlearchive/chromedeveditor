@@ -22,18 +22,18 @@ class AppManifestProperties {
   final int validationErrorMarkerSeverity = Marker.SEVERITY_WARNING;
 }
 
-final appManifestProperties = new AppManifestProperties();
+final AppManifestProperties appManifestProperties = new AppManifestProperties();
 
 /**
- * Implementation of [ErrorSink] for a [File] instance.
+ * Implementation of [ErrorCollector] for a [File] instance.
  */
-class FileErrorSink implements ErrorSink {
+class FileErrorCollector implements ErrorCollector {
   final File file;
+  final StringLineOffsets lineOffsets;
   final String markerType;
   final int markerSeverity;
-  final StringLineOffsets lineOffsets;
 
-  FileErrorSink(
+  FileErrorCollector(
       this.file,
       this.lineOffsets,
       this.markerType,
@@ -75,14 +75,13 @@ class AppManifestBuilder extends Builder {
     // TODO(rpaquay): The work below should be performed in a [Service] to
     // avoid blocking UI.
     return file.getContents().then((String contents) {
-      StringLineOffsets lineOffsets =
-          new StringLineOffsets(contents);
-      ErrorSink jsonErrorSink = new FileErrorSink(
+      StringLineOffsets lineOffsets = new StringLineOffsets(contents);
+      ErrorCollector jsonErrorCollector = new FileErrorCollector(
           file,
           lineOffsets,
           appManifestProperties.jsonErrorMarkerType,
           appManifestProperties.jsonErrorMarkerSeverity);
-      ErrorSink validationErrorSink = new FileErrorSink(
+      ErrorCollector validationErrorCollector = new FileErrorCollector(
           file,
           lineOffsets,
           appManifestProperties.validationErrorMarkerType,
@@ -92,7 +91,8 @@ class AppManifestBuilder extends Builder {
         // TODO(rpaquay): Should we report errors if the file is empty?
         if (contents.trim().isNotEmpty) {
           JsonValidatorListener listener = new JsonValidatorListener(
-              jsonErrorSink, new AppManifestValidator(validationErrorSink));
+              jsonErrorCollector,
+              new AppManifestValidator(validationErrorCollector));
           JsonParser parser = new JsonParser(contents, listener);
           parser.parse();
         }

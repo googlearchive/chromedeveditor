@@ -11,20 +11,20 @@ import '../json/json_validator.dart';
  */
 class AppManifestValidator extends NullValidator {
   static const String message = "Top level element must be an object";
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
 
-  AppManifestValidator(this.errorSink);
+  AppManifestValidator(this.errorCollector);
 
   JsonValidator enterObject() {
-    return new TopLevelValidator(errorSink);
+    return new TopLevelValidator(errorCollector);
   }
 
   void leaveArray(ArrayEntity entity) {
-    errorSink.emitMessage(entity.span, message);
+    errorCollector.emitMessage(entity.span, message);
   }
 
   void handleRootValue(ValueEntity entity) {
-    errorSink.emitMessage(entity.span, message);
+    errorCollector.emitMessage(entity.span, message);
   }
 }
 
@@ -33,7 +33,7 @@ class AppManifestValidator extends NullValidator {
 //
 
 /**
- * Validator for the top -level object a manifest.json
+ * Validator for the top level object of a "manifest.json" file.
  */
 class TopLevelValidator extends NullValidator {
   // from https://developer.chrome.com/extensions/manifest
@@ -132,22 +132,22 @@ class TopLevelValidator extends NullValidator {
   static final Set<String> allProperties =
       knownEventPageProperties.toSet().union(knownAppsProperties.toSet());
 
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
 
-  TopLevelValidator(this.errorSink);
+  TopLevelValidator(this.errorCollector);
 
   JsonValidator propertyName(StringEntity entity) {
     if (!allProperties.contains(entity.text)) {
       String message = "Property \"${entity.text}\" is not recognized.";
-      errorSink.emitMessage(entity.span, message);
+      errorCollector.emitMessage(entity.span, message);
     }
 
     switch(entity.text) {
       case "manifest_version":
-        return new ManifestVersionValidator(errorSink);
+        return new ManifestVersionValidator(errorCollector);
       case "app":
         return new ObjectPropertyValidator(
-            errorSink, entity.text, new AppValidator(errorSink));
+            errorCollector, entity.text, new AppValidator(errorCollector));
       default:
         return NullValidator.instance;
     }
@@ -160,22 +160,22 @@ class TopLevelValidator extends NullValidator {
 class ManifestVersionValidator extends NullValidator {
   static final String message =
       "Manifest version must be the integer value 1 or 2.";
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
 
-  ManifestVersionValidator(this.errorSink);
+  ManifestVersionValidator(this.errorCollector);
 
   void propertyValue(JsonEntity entity) {
     if (entity is! NumberEntity) {
-      errorSink.emitMessage(entity.span, message);
+      errorCollector.emitMessage(entity.span, message);
       return;
     }
     NumberEntity numEntity = entity as NumberEntity;
     if (numEntity.number is! int) {
-      errorSink.emitMessage(entity.span, message);
+      errorCollector.emitMessage(entity.span, message);
       return;
     }
     if (numEntity.number < 1 || numEntity.number > 2) {
-      errorSink.emitMessage(entity.span, message);
+      errorCollector.emitMessage(entity.span, message);
       return;
     }
   }
@@ -185,20 +185,22 @@ class ManifestVersionValidator extends NullValidator {
  * Validator for the "app" element
  */
 class AppValidator extends NullValidator {
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
 
-  AppValidator(this.errorSink);
+  AppValidator(this.errorCollector);
 
   JsonValidator propertyName(StringEntity entity) {
     switch(entity.text) {
       case "background":
         return new ObjectPropertyValidator(
-            errorSink, entity.text, new AppBackgroundValidator(errorSink));
+            errorCollector,
+            entity.text,
+            new AppBackgroundValidator(errorCollector));
       case "service_worker":
         return NullValidator.instance;
       default:
         String message = "Property \"${entity.text}\" is not recognized.";
-        errorSink.emitMessage(entity.span, message);
+        errorCollector.emitMessage(entity.span, message);
         return NullValidator.instance;
     }
   }
@@ -208,18 +210,20 @@ class AppValidator extends NullValidator {
  * Validator for the "app.background" element
  */
 class AppBackgroundValidator extends NullValidator {
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
 
-  AppBackgroundValidator(this.errorSink);
+  AppBackgroundValidator(this.errorCollector);
 
   JsonValidator propertyName(StringEntity entity) {
     switch(entity.text) {
       case "scripts":
         return new ArrayPropertyValidator(
-            errorSink, entity.text, new StringArrayValidator(errorSink));
+            errorCollector,
+            entity.text,
+            new StringArrayValidator(errorCollector));
       default:
         String message = "Property \"${entity.text}\" is not recognized.";
-        errorSink.emitMessage(entity.span, message);
+        errorCollector.emitMessage(entity.span, message);
         return NullValidator.instance;
     }
   }
@@ -229,13 +233,13 @@ class AppBackgroundValidator extends NullValidator {
  * Validate that every element of an array is a string value.
  */
 class StringArrayValidator extends NullValidator {
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
 
-  StringArrayValidator(this.errorSink);
+  StringArrayValidator(this.errorCollector);
 
   void arrayElement(JsonEntity entity) {
     if (entity is! StringEntity) {
-      errorSink.emitMessage(entity.span, "String value expected");
+      errorCollector.emitMessage(entity.span, "String value expected");
     }
   }
 }
@@ -245,17 +249,18 @@ class StringArrayValidator extends NullValidator {
  * validating the contents of the object.
  */
 class ObjectPropertyValidator extends NullValidator {
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
   final String name;
   final JsonValidator objectValidator;
 
-  ObjectPropertyValidator(this.errorSink, this.name, this.objectValidator);
+  ObjectPropertyValidator(
+      this.errorCollector, this.name, this.objectValidator);
 
   // This is called when we are done parsing the whole property value,
   // i.e. just before leaving this validator.
   void propertyValue(JsonEntity entity) {
     if (entity is! ObjectEntity) {
-      errorSink.emitMessage(
+      errorCollector.emitMessage(
           entity.span,
           "Property \"${name}\" is expected to be an object.");
     }
@@ -271,17 +276,17 @@ class ObjectPropertyValidator extends NullValidator {
  * validating the contents (i.e. elements) of the array.
  */
 class ArrayPropertyValidator extends NullValidator {
-  final ErrorSink errorSink;
+  final ErrorCollector errorCollector;
   final String name;
   final JsonValidator arrayValidator;
 
-  ArrayPropertyValidator(this.errorSink, this.name, this.arrayValidator);
+  ArrayPropertyValidator(this.errorCollector, this.name, this.arrayValidator);
 
   // This is called when we are done parsing the whole property value,
   // i.e. just before leaving this validator.
   void propertyValue(JsonEntity entity) {
     if (entity is! ArrayEntity) {
-      errorSink.emitMessage(
+      errorCollector.emitMessage(
           entity.span,
           "Property \"${name}\" is expected to be an array.");
     }
