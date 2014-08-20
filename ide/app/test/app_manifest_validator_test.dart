@@ -25,7 +25,7 @@ class _ErrorEvent {
  */
 class _LoggingErrorCollector implements ErrorCollector {
   final List<_ErrorEvent> events = new List<_ErrorEvent>();
-  void emitMessage(Span span, String message) {
+  void addMessage(Span span, String message) {
     _ErrorEvent event = new _ErrorEvent(span, message);
     events.add(event);
   }
