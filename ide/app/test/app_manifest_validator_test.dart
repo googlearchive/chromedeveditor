@@ -40,8 +40,9 @@ class _LoggingEventChecker {
   void error([String message]) {
     expect(errorIndex, lessThan(errorCollector.events.length));
     _ErrorEvent event = errorCollector.events[errorIndex];
-    if (message != null)
+    if (message != null) {
       expect(event.message, equals(message));
+    }
     errorIndex++;
   }
 
