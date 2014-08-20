@@ -6,11 +6,11 @@ library spark.app.manifest_builder;
 
 import 'dart:async';
 
+import '../builder.dart';
+import '../jobs.dart';
 import '../json/json_parser.dart';
 import '../json/json_validator.dart';
 import '../json/json_utils.dart';
-import '../builder.dart';
-import '../jobs.dart';
 import '../workspace.dart';
 import 'app_manifest_validator.dart';
 
@@ -19,7 +19,7 @@ class AppManifestProperties {
   final String jsonErrorMarkerType = "manifest_json.syntax";
   final int jsonErrorMarkerSeverity = Marker.SEVERITY_ERROR;
   final String validationErrorMarkerType = "manifest_json.semantics";
-  final int validatorErrorMarkerSeverity = Marker.SEVERITY_WARNING;
+  final int validationErrorMarkerSeverity = Marker.SEVERITY_WARNING;
 }
 
 final appManifestProperties = new AppManifestProperties();
@@ -35,10 +35,9 @@ class FileErrorSink implements ErrorSink {
 
   FileErrorSink(
       this.file,
-      String contents,
+      this.lineOffsets,
       this.markerType,
-      this.markerSeverity)
-      : this.lineOffsets = new StringLineOffsets(contents) {
+      this.markerSeverity) {
     file.clearMarkers(markerType);
   }
 
@@ -76,22 +75,24 @@ class AppManifestBuilder extends Builder {
     // TODO(rpaquay): The work below should be performed in a [Service] to
     // avoid blocking UI.
     return file.getContents().then((String contents) {
+      StringLineOffsets lineOffsets =
+          new StringLineOffsets(contents);
       ErrorSink jsonErrorSink = new FileErrorSink(
           file,
-          contents,
+          lineOffsets,
           appManifestProperties.jsonErrorMarkerType,
           appManifestProperties.jsonErrorMarkerSeverity);
-      ErrorSink manifestErrorSink = new FileErrorSink(
+      ErrorSink validationErrorSink = new FileErrorSink(
           file,
-          contents,
+          lineOffsets,
           appManifestProperties.validationErrorMarkerType,
-          appManifestProperties.validatorErrorMarkerSeverity);
+          appManifestProperties.validationErrorMarkerSeverity);
 
       try {
         // TODO(rpaquay): Should we report errors if the file is empty?
         if (contents.trim().isNotEmpty) {
           JsonValidatorListener listener = new JsonValidatorListener(
-              jsonErrorSink, new AppManifestValidator(manifestErrorSink));
+              jsonErrorSink, new AppManifestValidator(validationErrorSink));
           JsonParser parser = new JsonParser(contents, listener);
           parser.parse();
         }
