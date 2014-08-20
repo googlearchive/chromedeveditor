@@ -126,7 +126,8 @@ class PubManager extends PackageManager {
       monitor.worked(1);
     }
 
-    return tavern.getDependencies(container.entry, handleLog, isUpgrade).
+    var appDir = _getAppDir(container);
+    return tavern.getDependencies(appDir.entry, handleLog, isUpgrade).
         whenComplete(() {
       return container.project.refresh();
     }).catchError((e, st) {
@@ -138,6 +139,17 @@ class PubManager extends PackageManager {
       }
       return new Future.error(e, st);
     });
+  }
+
+  Folder _getAppDir(Folder resource) {
+    var container = resource;
+    while(container != null) {
+      if (pubProperties.isFolderWithPackages(container)) {
+        return container;
+      }
+      container = container.parent;
+    }
+    return resource;
   }
 }
 
