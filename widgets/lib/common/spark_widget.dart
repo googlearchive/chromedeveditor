@@ -75,8 +75,10 @@ class SparkWidget extends PolymerElement {
     // instantiates other widgets and passes some focusable nodes to them
     // via <content>. So for now just print a warning and return first element.
     if (elts.length > 1) {
-      print("WARNING: $runtimeType #$id has > 1 child with 'focused' attribute");
+      // TODO(devoncarew): Disabled as a false positive - needs investigation.
+      //print("WARNING: $runtimeType #$id has > 1 child with 'focused' attribute");
     }
+
     return elts.first;
   }
 
