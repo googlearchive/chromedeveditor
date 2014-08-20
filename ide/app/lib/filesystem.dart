@@ -8,11 +8,11 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import 'spark_flags.dart';
+import 'files_mock.dart';
 import 'preferences.dart';
+import 'spark_flags.dart';
 import 'utils.dart';
 import 'workspace.dart' as ws;
-import 'files_mock.dart';
 
 FileSystemAccess _fileSystemAccess;
 

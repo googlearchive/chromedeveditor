@@ -15,7 +15,6 @@ import 'package:spark_widgets/spark_splitter/spark_splitter.dart';
 
 import 'spark.dart';
 import 'spark_bootstrap.dart';
-import 'lib/spark_flags.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';
@@ -23,6 +22,7 @@ import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
 import 'lib/preferences.dart';
+import 'lib/spark_flags.dart';
 import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {

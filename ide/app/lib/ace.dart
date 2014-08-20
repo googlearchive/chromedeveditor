@@ -16,7 +16,6 @@ import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 
-import 'spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';
@@ -29,6 +28,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'workspace_utils.dart';
 import 'services.dart' as svc;
+import 'spark_flags.dart';
 import 'outline.dart';
 import 'ui/goto_line_view/goto_line_view.dart';
 import 'utils.dart';
