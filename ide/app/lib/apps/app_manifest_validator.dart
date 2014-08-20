@@ -20,11 +20,11 @@ class AppManifestValidator extends NullValidator {
   }
 
   void leaveArray(ArrayEntity entity) {
-    errorCollector.emitMessage(entity.span, message);
+    errorCollector.addMessage(entity.span, message);
   }
 
   void handleRootValue(ValueEntity entity) {
-    errorCollector.emitMessage(entity.span, message);
+    errorCollector.addMessage(entity.span, message);
   }
 }
 
@@ -139,7 +139,7 @@ class TopLevelValidator extends NullValidator {
   JsonValidator propertyName(StringEntity entity) {
     if (!allProperties.contains(entity.text)) {
       String message = "Property \"${entity.text}\" is not recognized.";
-      errorCollector.emitMessage(entity.span, message);
+      errorCollector.addMessage(entity.span, message);
     }
 
     switch(entity.text) {
@@ -166,16 +166,16 @@ class ManifestVersionValidator extends NullValidator {
 
   void propertyValue(JsonEntity entity) {
     if (entity is! NumberEntity) {
-      errorCollector.emitMessage(entity.span, message);
+      errorCollector.addMessage(entity.span, message);
       return;
     }
     NumberEntity numEntity = entity as NumberEntity;
     if (numEntity.number is! int) {
-      errorCollector.emitMessage(entity.span, message);
+      errorCollector.addMessage(entity.span, message);
       return;
     }
     if (numEntity.number < 1 || numEntity.number > 2) {
-      errorCollector.emitMessage(entity.span, message);
+      errorCollector.addMessage(entity.span, message);
       return;
     }
   }
@@ -200,7 +200,7 @@ class AppValidator extends NullValidator {
         return NullValidator.instance;
       default:
         String message = "Property \"${entity.text}\" is not recognized.";
-        errorCollector.emitMessage(entity.span, message);
+        errorCollector.addMessage(entity.span, message);
         return NullValidator.instance;
     }
   }
@@ -223,7 +223,7 @@ class AppBackgroundValidator extends NullValidator {
             new StringArrayValidator(errorCollector));
       default:
         String message = "Property \"${entity.text}\" is not recognized.";
-        errorCollector.emitMessage(entity.span, message);
+        errorCollector.addMessage(entity.span, message);
         return NullValidator.instance;
     }
   }
@@ -239,7 +239,7 @@ class StringArrayValidator extends NullValidator {
 
   void arrayElement(JsonEntity entity) {
     if (entity is! StringEntity) {
-      errorCollector.emitMessage(entity.span, "String value expected");
+      errorCollector.addMessage(entity.span, "String value expected");
     }
   }
 }
@@ -260,7 +260,7 @@ class ObjectPropertyValidator extends NullValidator {
   // i.e. just before leaving this validator.
   void propertyValue(JsonEntity entity) {
     if (entity is! ObjectEntity) {
-      errorCollector.emitMessage(
+      errorCollector.addMessage(
           entity.span,
           "Property \"${name}\" is expected to be an object.");
     }
@@ -286,7 +286,7 @@ class ArrayPropertyValidator extends NullValidator {
   // i.e. just before leaving this validator.
   void propertyValue(JsonEntity entity) {
     if (entity is! ArrayEntity) {
-      errorCollector.emitMessage(
+      errorCollector.addMessage(
           entity.span,
           "Property \"${name}\" is expected to be an array.");
     }

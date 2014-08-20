@@ -70,7 +70,7 @@ abstract class JsonValidator {
  * spans and messages for given source text.
  */
 abstract class ErrorCollector {
-  void emitMessage(Span span, String message);
+  void addMessage(Span span, String message);
 }
 
 /**
@@ -240,7 +240,7 @@ class JsonValidatorListener extends JsonListener {
   }
 
   void fail(String source, Span span, String message) {
-    _jsonErrorCollector.emitMessage(span, message);
+    _jsonErrorCollector.addMessage(span, message);
   }
 }
 

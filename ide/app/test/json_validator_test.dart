@@ -134,7 +134,7 @@ class _LoggingValidator extends _LoggingValidatorBase {
 
   void checkObjectPropertyName(StringEntity name) {
     if (errorPropertyNames.contains(name.text))
-      errorCollector.emitMessage(name.span, invalidPropertyNameMessage);
+      errorCollector.addMessage(name.span, invalidPropertyNameMessage);
   }
 }
 
@@ -176,7 +176,7 @@ class _ErrorEvent {
 class _LoggingErrorCollector implements ErrorCollector {
   final List<_ErrorEvent> events = new List<_ErrorEvent>();
 
-  void emitMessage(Span span, String message) {
+  void addMessage(Span span, String message) {
     _ErrorEvent event = new _ErrorEvent(span, message);
     events.add(event);
   }
