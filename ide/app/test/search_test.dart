@@ -7,10 +7,10 @@ library spark.search_test;
 import 'package:unittest/unittest.dart';
 import 'package:spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 
+import '../lib/files_mock.dart';
 import '../lib/search.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
-import 'files_mock.dart';
 
 defineTests() {
   group('SearchOracle', () {

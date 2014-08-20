@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:unittest/unittest.dart';
 
-import '../files_mock.dart';
+import '../../lib/files_mock.dart';
 import '../../lib/git/file_operations.dart';
 
 const String FILE_CONTENT = 'This is a test file content.';

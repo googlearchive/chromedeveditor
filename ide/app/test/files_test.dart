@@ -7,7 +7,7 @@ library spark.files_test;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
-import 'files_mock.dart';
+import '../lib/files_mock.dart';
 import '../lib/utils.dart';
 
 defineTests() {
