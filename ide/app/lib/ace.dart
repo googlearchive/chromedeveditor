@@ -16,7 +16,7 @@ import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 
-import '../spark_flags.dart';
+import 'spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';

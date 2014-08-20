@@ -15,7 +15,7 @@ import 'package:spark_widgets/spark_splitter/spark_splitter.dart';
 
 import 'spark.dart';
 import 'spark_bootstrap.dart';
-import 'spark_flags.dart';
+import 'lib/spark_flags.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';

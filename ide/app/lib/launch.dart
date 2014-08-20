@@ -28,8 +28,6 @@ import 'services.dart';
 import 'utils.dart';
 import 'workspace.dart';
 import 'workspace_utils.dart';
-// TODO(devoncarew): We don't want a dependency from here to spark.dart...
-import '../spark.dart';
 
 final Logger _logger = new Logger('spark.launch');
 
@@ -67,13 +65,13 @@ class LaunchManager {
   List<LaunchParticipant> launchParticipants = [];
 
   LaunchManager(this.workspace, this._services, this._pubManager,
-      this._bowerManager, this._notifier) {
+      this._bowerManager, this._notifier, LaunchController launchController) {
 
     applicationLocators.add(new ChromeAppLocator());
     applicationLocators.add(new WebAppLocator());
 
     launchTargetHandlers.add(new ChromeAppLocalLaunchHandler());
-    launchTargetHandlers.add(new ChromeAppRemoteLaunchHandler());
+    launchTargetHandlers.add(new ChromeAppRemoteLaunchHandler(launchController));
     WebAppLocalLaunchHandler localWebHandler = new WebAppLocalLaunchHandler(
         this, workspace, _services, _pubManager, _bowerManager, _notifier);
     launchTargetHandlers.add(localWebHandler);
@@ -172,6 +170,10 @@ class LaunchManager {
 
     return null;
   }
+}
+
+abstract class LaunchController {
+  void displayDeployToMobileDialog(Resource launchResource);
 }
 
 /**
@@ -510,7 +512,9 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
  * A launch target handler to launch chrome apps on mobile devices.
  */
 class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
-  ChromeAppRemoteLaunchHandler();
+  final LaunchController launchController;
+
+  ChromeAppRemoteLaunchHandler(this.launchController);
 
   String get name => 'Remote Chrome App';
 
@@ -520,8 +524,7 @@ class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
   }
 
   Future launch(Application application, LaunchTarget launchTarget) {
-    DeployToMobileDialog.deploy(application.primaryResource);
-
+    launchController.displayDeployToMobileDialog(application.primaryResource);
     return new Future.value();
   }
 

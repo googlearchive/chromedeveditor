@@ -21,7 +21,7 @@ import '../enum.dart';
 import '../jobs.dart';
 import '../scm.dart';
 import '../utils.dart' as util;
-import '../../spark_flags.dart';
+import '../spark_flags.dart';
 
 final Logger _logger = new Logger('spark.bower_fetcher');
 

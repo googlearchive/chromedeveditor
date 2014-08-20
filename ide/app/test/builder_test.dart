@@ -8,7 +8,7 @@ import 'dart:async';
 
 import 'package:unittest/unittest.dart';
 
-import 'files_mock.dart';
+import '../lib/files_mock.dart';
 import '../lib/builder.dart';
 import '../lib/jobs.dart';
 import '../lib/preferences.dart';

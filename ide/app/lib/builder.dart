@@ -13,7 +13,7 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
-import '../spark_flags.dart';
+import 'spark_flags.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_utils.dart';
 import 'workspace.dart';
