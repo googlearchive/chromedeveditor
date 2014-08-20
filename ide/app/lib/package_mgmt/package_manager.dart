@@ -18,7 +18,15 @@ abstract class PackageServiceProperties {
 
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
-           (resource is Folder && isFolderWithPackages(resource));
+           (resource is Folder && isFolderWithPackages(resource)) ||
+           _isPackagesFolder(resource) ||
+           _isPackagesFolder(resource.parent);
+  }
+
+  bool _isPackagesFolder(Resource resource) {
+    return resource is Folder &&
+           resource.name == packagesDirName &&
+           isFolderWithPackages(resource.parent);
   }
 
   bool isInPackagesFolder(Resource resource) {
