@@ -23,7 +23,7 @@ class _ErrorEvent {
 /**
  * Sink for json validation errors.
  */
-class _LoggingErrorSink implements ErrorSink {
+class _LoggingErrorCollector implements ErrorCollector {
   final List<_ErrorEvent> events = new List<_ErrorEvent>();
   void emitMessage(Span span, String message) {
     _ErrorEvent event = new _ErrorEvent(span, message);
@@ -32,33 +32,33 @@ class _LoggingErrorSink implements ErrorSink {
 }
 
 class _LoggingEventChecker {
-  final _LoggingErrorSink errorSink;
+  final _LoggingErrorCollector errorCollector;
   int errorIndex;
 
-  _LoggingEventChecker(this.errorSink): errorIndex = 0;
+  _LoggingEventChecker(this.errorCollector): errorIndex = 0;
 
   void error([String message]) {
-    expect(errorIndex, lessThan(errorSink.events.length));
-    _ErrorEvent event = errorSink.events[errorIndex];
+    expect(errorIndex, lessThan(errorCollector.events.length));
+    _ErrorEvent event = errorCollector.events[errorIndex];
     if (message != null)
       expect(event.message, equals(message));
     errorIndex++;
   }
 
   void end() {
-    expect(errorIndex, equals(errorSink.events.length));
+    expect(errorIndex, equals(errorCollector.events.length));
   }
 }
 
 void defineTests() {
-  _LoggingErrorSink validateDocument(String contents) {
-    _LoggingErrorSink errorSink = new _LoggingErrorSink();
-    AppManifestValidator validator = new AppManifestValidator(errorSink);
+  _LoggingErrorCollector validateDocument(String contents) {
+    _LoggingErrorCollector errorCollector = new _LoggingErrorCollector();
+    AppManifestValidator validator = new AppManifestValidator(errorCollector);
     JsonValidatorListener listener =
-        new JsonValidatorListener(errorSink, validator);
+        new JsonValidatorListener(errorCollector, validator);
     JsonParser parser = new JsonParser(contents, listener);
     parser.parse();
-    return errorSink;
+    return errorCollector;
   }
 
   group('manifest-json validator tests -', () {
@@ -67,18 +67,18 @@ void defineTests() {
 {
 }
 """;
-      _LoggingErrorSink errorSink = validateDocument(contents);
+      _LoggingErrorCollector errorCollector = validateDocument(contents);
 
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorSink);
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
       checker.end();
     });
     test('single value produces an error', () {
       String contents = """
 123
 """;
-      _LoggingErrorSink errorSink = validateDocument(contents);
+      _LoggingErrorCollector errorCollector = validateDocument(contents);
 
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorSink);
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
       checker.error();
       checker.end();
     });

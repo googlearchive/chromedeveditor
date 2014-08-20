@@ -110,13 +110,13 @@ abstract class _LoggingValidatorBase implements JsonValidator {
 class _LoggingValidator extends _LoggingValidatorBase {
   static const String invalidPropertyNameMessage = "Invalid property name";
   final String contents;
-  final _LoggingErrorSink errorSink;
+  final _LoggingErrorCollector errorCollector;
   final List<_ValidatorEvent> events = new List();
   final StringLineOffsets lineOffsets;
   final Set<String> errorPropertyNames = new Set<String>();
   int nextChildId;
 
-  _LoggingValidator(String contents, this.errorSink)
+  _LoggingValidator(String contents, this.errorCollector)
     : this.contents = contents,
       this.lineOffsets = new StringLineOffsets(contents) {
     nextChildId = 0;
@@ -134,7 +134,7 @@ class _LoggingValidator extends _LoggingValidatorBase {
 
   void checkObjectPropertyName(StringEntity name) {
     if (errorPropertyNames.contains(name.text))
-      errorSink.emitMessage(name.span, invalidPropertyNameMessage);
+      errorCollector.emitMessage(name.span, invalidPropertyNameMessage);
   }
 }
 
@@ -173,7 +173,7 @@ class _ErrorEvent {
 /**
  * Sink for json validation errors.
  */
-class _LoggingErrorSink implements ErrorSink {
+class _LoggingErrorCollector implements ErrorCollector {
   final List<_ErrorEvent> events = new List<_ErrorEvent>();
 
   void emitMessage(Span span, String message) {
@@ -229,14 +229,14 @@ class _LoggingEventChecker {
   }
 
   void error(String message) {
-    expect(errorIndex, lessThan(validator.errorSink.events.length));
-    _ErrorEvent event = validator.errorSink.events[errorIndex];
+    expect(errorIndex, lessThan(validator.errorCollector.events.length));
+    _ErrorEvent event = validator.errorCollector.events[errorIndex];
     expect(event.message, equals(message));
     errorIndex++;
   }
 
   void errorEnd() {
-    expect(errorIndex, equals(validator.errorSink.events.length));
+    expect(errorIndex, equals(validator.errorCollector.events.length));
   }
 }
 
@@ -244,13 +244,14 @@ void defineTests() {
   _LoggingValidator validateDocument(
       String contents,
       [void init(_LoggingValidator validator)]) {
-    _LoggingErrorSink errorSink = new _LoggingErrorSink();
-    _LoggingValidator validator = new _LoggingValidator(contents, errorSink);
+    _LoggingErrorCollector errorCollector = new _LoggingErrorCollector();
+    _LoggingValidator validator =
+        new _LoggingValidator(contents, errorCollector);
     if (init != null){
       init(validator);
     }
     JsonValidatorListener listener =
-        new JsonValidatorListener(errorSink, validator);
+        new JsonValidatorListener(errorCollector, validator);
     JsonParser parser = new JsonParser(contents, listener);
     parser.parse();
     return validator;

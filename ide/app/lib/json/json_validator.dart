@@ -69,7 +69,7 @@ abstract class JsonValidator {
  * Abstraction over an error reporting mechanism that understands error
  * spans and messages for given source text.
  */
-abstract class ErrorSink {
+abstract class ErrorCollector {
   void emitMessage(Span span, String message);
 }
 
@@ -81,7 +81,7 @@ abstract class ErrorSink {
  * events accordingly.
  */
 class JsonValidatorListener extends JsonListener {
-  final ErrorSink _syntaxErrorSink;
+  final ErrorCollector _jsonErrorCollector;
   final List<ContainerEntity> _containers = new List<ContainerEntity>();
   final List<StringEntity> _keys = new List<StringEntity>();
   final List<JsonValidator> _validators = new List<JsonValidator>();
@@ -91,11 +91,11 @@ class JsonValidatorListener extends JsonListener {
   JsonEntity _value;
 
   /**
-   * Creates a new listener given an [ErrorSink] used to report json
+   * Creates a new listener given an [ErrorCollector] used to report json
    * syntax errors and a [JsonValidator] used as the initial validator for
    * the root json elements.
    */
-  JsonValidatorListener(this._syntaxErrorSink, JsonValidator rootValidator)
+  JsonValidatorListener(this._jsonErrorCollector, JsonValidator rootValidator)
       : this._currentValidator = rootValidator;
 
   /** Pushes the currently active container (and key, if a [Map]). */
@@ -240,7 +240,7 @@ class JsonValidatorListener extends JsonListener {
   }
 
   void fail(String source, Span span, String message) {
-    _syntaxErrorSink.emitMessage(span, message);
+    _jsonErrorCollector.emitMessage(span, message);
   }
 }
 
