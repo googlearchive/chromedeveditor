@@ -280,7 +280,7 @@ abstract class JsonEntity {
  * Abstract base class for simple values.
  */
 abstract class ValueEntity extends JsonEntity {
-  get value;
+  dynamic get value;
 }
 
 /**
@@ -293,7 +293,7 @@ abstract class ContainerEntity extends JsonEntity {
  * Entity for string values.
  */
 class StringEntity extends ValueEntity {
-  String text;
+  final String text;
   StringEntity(Span span, this.text) {
     this.span = span;
   }
@@ -302,7 +302,7 @@ class StringEntity extends ValueEntity {
 }
 
 /**
- * Entity for "null" literal values.
+ * Entity for `null` literal values.
  */
 class NullEntity extends ValueEntity {
   NullEntity(Span span) {
@@ -316,7 +316,7 @@ class NullEntity extends ValueEntity {
  * Entity for numeric values.
  */
 class NumberEntity extends ValueEntity {
-  num number;
+  final num number;
   NumberEntity(Span span, this.number) {
     this.span = span;
   }
@@ -328,7 +328,7 @@ class NumberEntity extends ValueEntity {
  * Entity for "true" or "false" literal values.
  */
 class BoolEntity extends ValueEntity {
-  bool boolValue;
+  final bool boolValue;
   BoolEntity(Span span, this.boolValue) {
     this.span = span;
   }
