@@ -2185,7 +2185,7 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(locationEntry, templates).build();
+        return new ProjectBuilder(locationEntry, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');

@@ -14,6 +14,7 @@ import '../utils.dart' as utils;
 import '../workspace.dart';
 
 part 'addons/bower_deps/template.dart';
+part 'chrome/chrome_app_polymer_js/template.dart';
 part 'polymer/template.dart';
 part 'polymer/polymer_element_dart/template.dart';
 part 'polymer/polymer_element_js/template.dart';
@@ -41,15 +42,16 @@ class TemplateVar {
 class ProjectBuilder {
   DirectoryEntry _destRoot;
   List<ProjectTemplate> _templates = [];
+  utils.Notifier _notifier;
 
-  ProjectBuilder(this._destRoot, this._templates);
+  ProjectBuilder(this._destRoot, this._templates, this._notifier);
 
   /**
    * Build the sample project and complete the Future when finished.
    */
   Future build() {
     return Future.forEach(_templates, (ProjectTemplate template) {
-      return template.build(_destRoot);
+      return template.instantiate(_destRoot, _notifier);
     });
   }
 
@@ -105,6 +107,8 @@ class ProjectTemplate {
     switch (id) {
       case 'addons/bower_deps':
         return new BowerDepsTemplate(id, globalVars, localVars);
+      case 'chrome/chrome_app_polymer_js':
+        return new ChromeAppWithPolymerJSTemplate(id, globalVars, localVars);
       case 'polymer/polymer_element_js':
         return new PolymerJSTemplate(id, globalVars, localVars);
       case 'polymer/polymer_element_dart':
@@ -138,6 +142,9 @@ class ProjectTemplate {
     }
   }
 
+  Future instantiate(DirectoryEntry destRoot, utils.Notifier notifier) =>
+      build(destRoot).then((_) => showIntro(notifier));
+
   Future build(DirectoryEntry destRoot) {
     DirectoryEntry sourceRoot;
 
@@ -151,6 +158,10 @@ class ProjectTemplate {
       final Map m = JSON.decode(contents);
       return _traverseElement(destRoot, sourceRoot, _sourceUri, m);
     });
+  }
+
+  Future showIntro(utils.Notifier notifier) {
+    return new Future.value();
   }
 
   String _interpolateTemplateVars(String text) {
