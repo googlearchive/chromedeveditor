@@ -12,12 +12,12 @@ import '../json/json_validator.dart';
  */
 class AppManifestValidator extends RootObjectSchemaValidator {
   AppManifestValidator(ErrorCollector errorCollector)
-    : super(errorCollector, _AppManifestSchema);
+    : super(errorCollector, AppManifestSchema);
 }
 
 // from https://developer.chrome.com/extensions/manifest
 // and https://developer.chrome.com/apps/manifest
-Map _AppManifestSchema =
+Map AppManifestSchema =
 {
   "app": {
     "background": {
@@ -25,11 +25,19 @@ Map _AppManifestSchema =
     },
     "service_worker": "var"
   },
-  "author": "string",
+  "author": "var",
   "automation": "var",
-  "background": "var",
-  "background_page": "var",
-  "bluetooth": "var",
+  "background": {
+    "persistent": "boolean",
+    "page": "string",
+    "scripts": ["string"]
+  },
+  "background_page": "string",  // Legacy (manifest v1)
+  "bluetooth": {
+    "uuids": ["string"],
+    "socket": "boolean",
+    "low_energy": "boolean"
+  },
   "browser_action": "var",
   "chrome_settings_overrides": "var",
   "chrome_ui_overrides": "var",
