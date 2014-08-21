@@ -59,6 +59,6 @@
     </template>
   </section>
 
-  <script src="window.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>

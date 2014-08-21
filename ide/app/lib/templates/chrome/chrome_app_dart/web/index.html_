@@ -17,6 +17,6 @@
   </div>
 
   <script src="packages/chrome/bootstrap.js" defer></script>
-  <script src="window.dart" type="application/dart"></script>
+  <script src="main.dart" type="application/dart"></script>
 </body>
 </html>

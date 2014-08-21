@@ -13,7 +13,7 @@ greeting.innerText = "Hello, World!";
 var addToPage = document.querySelector('#addToPage');
 addToPage.onclick = function(e) {
   chrome.tabs.executeScript({
-    code: 
+    code:
       'var greeting = document.createElement("h1");' +
       'greeting.innerText = "Hello, World!";' +
       'document.body.insertBefore(greeting, document.body.firstChild);' +
