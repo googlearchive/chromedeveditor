@@ -943,10 +943,45 @@ class AceManager {
 
 class ThemeManager {
   static final LIGHT_THEMES = [
-      'textmate', 'tomorrow'
+      'textmate', 
+      'tomorrow',
+  ];
+  static final MORE_LIGHT_THEMES = [
+      'chrome',
+      'clouds',
+      'crimson_editor',
+      'dawn',
+      'dreamweaver',
+      'eclipse',
+      'github',
+      'katzenmilch',
+      'kuroir', 
+      'solarized_light',
+      'tomorrow',
+      'vibrant_ink',
+      'xcode',
   ];
   static final DARK_THEMES = [
-      'monokai', 'tomorrow_night', 'idle_fingers', 'pastel_on_dark'
+      'monokai', 
+      'idle_fingers', 
+      'tomorrow_night', 
+      'pastel_on_dark',
+  ];
+  static final MORE_DARK_THEMES = [
+      'ambiance',
+      'chaos',
+      'clouds_midnight',
+      'cobalt',
+      'kr_theme',
+      'merbivore', 
+      'merbivore_soft', 
+      'mono_industrial',
+      'solarized_dark',
+      'terminal',
+      'tomorrow_night_blue',
+      'tomorrow_night_bright',
+      'tomorrow_night_eighties',
+      'twilight',
   ];
 
   ace.Editor _aceEditor;
@@ -958,7 +993,9 @@ class ThemeManager {
       _aceEditor = aceManager._aceEditor {
     if (SparkFlags.useAceThemes) {
       if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.useMoreDarkAceThemes) _themes.addAll(MORE_DARK_THEMES);
       if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+      if (SparkFlags.useMoreLightAceThemes) _themes.addAll(MORE_LIGHT_THEMES);
 
       _prefs.getValue('aceTheme').then((String theme) {
         if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
