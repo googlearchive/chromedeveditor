@@ -10,6 +10,7 @@ import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import '../package_mgmt/bower_properties.dart';
 import '../utils.dart' as utils;
 import '../workspace.dart';
 
