@@ -51,37 +51,114 @@ class _LoggingEventChecker {
   }
 }
 
-void defineTests() {
-  _LoggingErrorCollector validateDocument(String contents) {
-    _LoggingErrorCollector errorCollector = new _LoggingErrorCollector();
-    AppManifestValidator validator = new AppManifestValidator(errorCollector);
-    JsonValidatorListener listener =
-        new JsonValidatorListener(errorCollector, validator);
-    JsonParser parser = new JsonParser(contents, listener);
-    parser.parse();
-    return errorCollector;
-  }
+_LoggingErrorCollector _validateDocument(String contents) {
+  _LoggingErrorCollector errorCollector = new _LoggingErrorCollector();
+  AppManifestValidator validator = new AppManifestValidator(errorCollector);
+  JsonValidatorListener listener =
+      new JsonValidatorListener(errorCollector, validator);
+  JsonParser parser = new JsonParser(contents, listener);
+  parser.parse();
+  return errorCollector;
+}
 
+void defineTests() {
   group('manifest-json validator tests -', () {
-    test('empty object', () {
+    test('manifest may be an empty object', () {
       String contents = """
 {
 }
 """;
-      _LoggingErrorCollector errorCollector = validateDocument(contents);
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
       checker.end();
     });
-    test('single value produces an error', () {
+
+    test('manifest cannot be a single value', () {
       String contents = """
 123
 """;
-      _LoggingErrorCollector errorCollector = validateDocument(contents);
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
       checker.error();
       checker.end();
     });
+
+    test('"manifest_version" cannot be a string', () {
+      String contents = """
+{
+  "manifest_version": "string value"
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.error();
+      checker.end();
+    });
+
+    test('"manifest_version" must be a number', () {
+      String contents = """
+{
+  "manifest_version": 2
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"scripts" may be an empty array', () {
+      String contents = """
+{
+  "app": { "background": { "scripts": [] } }
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"scripts" may be an array of strings', () {
+      String contents = """
+{
+  "app": { "background": { "scripts": [ "string-value" ] } }
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"scripts" cannot contain a number in the array', () {
+      String contents = """
+{
+  "app": { "background": { "scripts": [ "string-value", 1, "boo" ] } }
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.error();
+      checker.end();
+    });
+
+    test('"scripts" cannot be an object', () {
+      String contents = """
+{
+  "app": { "background": { "scripts": { "foo": "string-value" } } }
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.error();
+      checker.end();
+    });
+
   });
 }

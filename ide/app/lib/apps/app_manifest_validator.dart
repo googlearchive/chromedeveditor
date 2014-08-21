@@ -7,16 +7,130 @@ library spark.app.manifest_validator;
 import '../json/json_validator.dart';
 
 /**
+ *  Type :==
+ *    "var"
+ *    "int" |
+ *    "num" |
+ *    "string" |
+ *    '[' Type ']' |
+ *    '{' name ':' Type '}'
+ */
+
+// from https://developer.chrome.com/extensions/manifest
+// and https://developer.chrome.com/apps/manifest
+var app_manifest_schema =
+{
+  "app": {
+    "background": {
+      "scripts": ["string"],
+    },
+    "service_worker": "var"
+  },
+  "author": "string",
+  "automation": "var",
+  "background": "var",
+  "background_page": "var",
+  "bluetooth": "var",
+  "browser_action": "var",
+  "chrome_settings_overrides": "var",
+  "chrome_ui_overrides": "var",
+  "chrome_url_overrides": "var",
+  "commands": "var",
+  "content_pack": "var",
+  "content_scripts": "var",
+  "content_security_policy": "var",
+  "converted_from_user_script": "var",
+  "current_locale": "var",
+  "default_locale": "var",
+  "description": "string",
+  "devtools_page": "var",
+  "externally_connectable": "var",
+  "file_browser_handlers": "var",
+  "file_handlers": "var",
+  "homepage_url": "var",
+  "icons": "var",
+  "import": "var",
+  "incognito": "var",
+  "input_components": "var",
+  "key": "string",
+  "kiosk_enabled": "var",
+  "kiosk_only": "var",
+  "manifest_version": "int",
+  "minimum_chrome_version": "var",
+  "nacl_modules": "var",
+  "name": "string",
+  "oauth2": "var",
+  "offline_enabled": "var",
+  "omnibox": "var",
+  "optional_permissions": "var",
+  "options_page": "var",
+  "page_action": "var",
+  "page_actions": "var",
+  "permissions": "var",
+  "platforms": "var",
+  "plugins": "var",
+  "requirements": "var",
+  "sandbox": "var",
+  "script_badge": "var",
+  "short_name": "string",
+  "signature": "var",
+  "sockets": "var",
+  "spellcheck": "var",
+  "storage": "var",
+  "system_indicator": "var",
+  "tts_engine": "var",
+  "update_url": "string",
+  "web_accessible_resources": "var",
+  "url_handlers": "var",
+  "version": "var",
+  "webview": "var",
+};
+
+/**
  * Json validator for "manifest.json" contents.
  */
-class AppManifestValidator extends NullValidator {
-  static const String message = "Top level element must be an object";
-  final ErrorCollector errorCollector;
+class AppManifestValidator extends RootObjectSchemaValidator {
+  AppManifestValidator(ErrorCollector errorCollector)
+    : super(errorCollector, app_manifest_schema);
+}
 
-  AppManifestValidator(this.errorCollector);
+
+class SchemaValidator extends NullValidator {
+  static final SchemaValidator instance = new SchemaValidator();
+
+  void checkValue(JsonEntity entity, StringEntity propertyName) {}
+}
+
+SchemaValidator createSchemaValidator(dynamic schema, ErrorCollector errorCollector) {
+  if (schema is Map) {
+   return new ObjectPropertiesSchemaValidator(errorCollector, schema);
+  } else if (schema is List){
+   return new ArrayElementsSchemaValidator(errorCollector, schema);
+  } else if (schema is String){
+    switch(schema) {
+      case "var":
+        return SchemaValidator.instance;
+      case "string":
+        return new StringValueValidator(errorCollector, schema);
+      case "int":
+        return new IntValueValidator(errorCollector, schema);
+      case "num":
+        return new NumberValueValidator(errorCollector, schema);
+    }
+  }
+  throw new Exception("Element type \"${schema}\" is invalid.");
+}
+
+class RootObjectSchemaValidator extends SchemaValidator {
+  static const String message = "Top level element must be an object.";
+
+  final ErrorCollector errorCollector;
+  final Map schema;
+
+  RootObjectSchemaValidator(this.errorCollector, this.schema);
 
   JsonValidator enterObject() {
-    return new TopLevelValidator(errorCollector);
+    return new ObjectPropertiesSchemaValidator(errorCollector, schema);
   }
 
   void leaveArray(ArrayEntity entity) {
@@ -28,271 +142,150 @@ class AppManifestValidator extends NullValidator {
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// The code below should be auto-generated from a manifest schema definition.
-//
-
-/**
- * Validator for the top level object of a "manifest.json" file.
- */
-class TopLevelValidator extends NullValidator {
-  // from https://developer.chrome.com/extensions/manifest
-  static final List<String> knownEventPageProperties = [
-    "manifest_version",
-    "name",
-    "version",
-    "default_locale",
-    "description",
-    "icons",
-    "browser_action",
-    "page_action",
-    "author",
-    "automation",
-    "background",
-    "background_page",
-    "chrome_settings_overrides",
-    "chrome_ui_overrides",
-    "chrome_url_overrides",
-    "commands",
-    "content_pack",
-    "content_scripts",
-    "content_security_policy",
-    "converted_from_user_script",
-    "current_locale",
-    "devtools_page",
-    "externally_connectable",
-    "file_browser_handlers",
-    "homepage_url",
-    "import",
-    "incognito",
-    "input_components",
-    "key",
-    "minimum_chrome_version",
-    "nacl_modules",
-    "oauth2",
-    "offline_enabled",
-    "omnibox",
-    "optional_permissions",
-    "options_page",
-    "page_actions",
-    "permissions",
-    "platforms",
-    "plugins",
-    "requirements",
-    "sandbox",
-    "script_badge",
-    "short_name",
-    "signature",
-    "spellcheck",
-    "storage",
-    "system_indicator",
-    "tts_engine",
-    "update_url",
-    "web_accessible_resources",
-    ];
-
-  // from https://developer.chrome.com/apps/manifest
-  static final List<String> knownAppsProperties = [
-    "app",
-    "manifest_version",
-    "name",
-    "version",
-    "default_locale",
-    "description",
-    "icons",
-    "author",
-    "bluetooth",
-    "commands",
-    "current_locale",
-    "externally_connectable",
-    "file_handlers",
-    "import",
-    "key",
-    "kiosk_enabled",
-    "kiosk_only",
-    "minimum_chrome_version",
-    "nacl_modules",
-    "oauth2",
-    "offline_enabled",
-    "optional_permissions",
-    "permissions",
-    "platforms",
-    "requirements",
-    "sandbox",
-    "short_name",
-    "signature",
-    "sockets",
-    "storage",
-    "system_indicator",
-    "update_url",
-    "url_handlers",
-    "webview",
-    ];
-
-  static final Set<String> allProperties =
-      knownEventPageProperties.toSet().union(knownAppsProperties.toSet());
-
+class ObjectPropertiesSchemaValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
+  final Map schema;
 
-  TopLevelValidator(this.errorCollector);
+  ObjectPropertiesSchemaValidator(this.errorCollector, this.schema);
 
   JsonValidator propertyName(StringEntity entity) {
-    if (!allProperties.contains(entity.text)) {
+    var propertyType = schema[entity.text];
+    if (propertyType == null) {
       String message = "Property \"${entity.text}\" is not recognized.";
       errorCollector.addMessage(entity.span, message);
+      return NullValidator.instance;
     }
 
-    switch(entity.text) {
-      case "manifest_version":
-        return new ManifestVersionValidator(errorCollector);
-      case "app":
-        return new ObjectPropertyValidator(
-            errorCollector, entity.text, new AppValidator(errorCollector));
-      default:
-        return NullValidator.instance;
-    }
+    SchemaValidator valueValidator = createSchemaValidator(propertyType, errorCollector);
+    return new ObjectPropertyValueValidator(errorCollector, valueValidator, entity);
   }
 }
 
-/**
- * Validator for the "manifest_version" element
- */
-class ManifestVersionValidator extends NullValidator {
-  static final String message =
-      "Manifest version must be the integer value 1 or 2.";
+class ObjectPropertyValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
+  final SchemaValidator valueValidator;
+  final StringEntity propName;
 
-  ManifestVersionValidator(this.errorCollector);
+  ObjectPropertyValueValidator(this.errorCollector, this.valueValidator, this.propName);
 
   void propertyValue(JsonEntity entity) {
-    if (entity is! NumberEntity) {
-      errorCollector.addMessage(entity.span, message);
-      return;
-    }
-    NumberEntity numEntity = entity as NumberEntity;
-    if (numEntity.number is! int) {
-      errorCollector.addMessage(entity.span, message);
-      return;
-    }
-    if (numEntity.number < 1 || numEntity.number > 2) {
-      errorCollector.addMessage(entity.span, message);
-      return;
-    }
-  }
-}
-
-/**
- * Validator for the "app" element
- */
-class AppValidator extends NullValidator {
-  final ErrorCollector errorCollector;
-
-  AppValidator(this.errorCollector);
-
-  JsonValidator propertyName(StringEntity entity) {
-    switch(entity.text) {
-      case "background":
-        return new ObjectPropertyValidator(
-            errorCollector,
-            entity.text,
-            new AppBackgroundValidator(errorCollector));
-      case "service_worker":
-        return NullValidator.instance;
-      default:
-        String message = "Property \"${entity.text}\" is not recognized.";
-        errorCollector.addMessage(entity.span, message);
-        return NullValidator.instance;
-    }
-  }
-}
-
-/**
- * Validator for the "app.background" element
- */
-class AppBackgroundValidator extends NullValidator {
-  final ErrorCollector errorCollector;
-
-  AppBackgroundValidator(this.errorCollector);
-
-  JsonValidator propertyName(StringEntity entity) {
-    switch(entity.text) {
-      case "scripts":
-        return new ArrayPropertyValidator(
-            errorCollector,
-            entity.text,
-            new StringArrayValidator(errorCollector));
-      default:
-        String message = "Property \"${entity.text}\" is not recognized.";
-        errorCollector.addMessage(entity.span, message);
-        return NullValidator.instance;
-    }
-  }
-}
-
-/**
- * Validate that every element of an array is a string value.
- */
-class StringArrayValidator extends NullValidator {
-  final ErrorCollector errorCollector;
-
-  StringArrayValidator(this.errorCollector);
-
-  void arrayElement(JsonEntity entity) {
-    if (entity is! StringEntity) {
-      errorCollector.addMessage(entity.span, "String value expected");
-    }
-  }
-}
-
-/**
- * Validates a property value is an object, and use [objectValidator] for
- * validating the contents of the object.
- */
-class ObjectPropertyValidator extends NullValidator {
-  final ErrorCollector errorCollector;
-  final String name;
-  final JsonValidator objectValidator;
-
-  ObjectPropertyValidator(
-      this.errorCollector, this.name, this.objectValidator);
-
-  // This is called when we are done parsing the whole property value,
-  // i.e. just before leaving this validator.
-  void propertyValue(JsonEntity entity) {
-    if (entity is! ObjectEntity) {
-      errorCollector.addMessage(
-          entity.span,
-          "Property \"${name}\" is expected to be an object.");
-    }
+    valueValidator.checkValue(entity, propName);
   }
 
   JsonValidator enterObject() {
-    return this.objectValidator;
-  }
-}
-
-/**
- * Validates a property value is an array, and use [arrayValidator] for
- * validating the contents (i.e. elements) of the array.
- */
-class ArrayPropertyValidator extends NullValidator {
-  final ErrorCollector errorCollector;
-  final String name;
-  final JsonValidator arrayValidator;
-
-  ArrayPropertyValidator(this.errorCollector, this.name, this.arrayValidator);
-
-  // This is called when we are done parsing the whole property value,
-  // i.e. just before leaving this validator.
-  void propertyValue(JsonEntity entity) {
-    if (entity is! ArrayEntity) {
-      errorCollector.addMessage(
-          entity.span,
-          "Property \"${name}\" is expected to be an array.");
+    if (valueValidator is ObjectPropertiesSchemaValidator) {
+      return valueValidator;
     }
+    return super.enterObject();
   }
 
   JsonValidator enterArray() {
-    return this.arrayValidator;
+    if (valueValidator is ArrayElementsSchemaValidator) {
+      return valueValidator;
+    }
+    return super.enterArray();
+  }
+
+  void leaveObject(ObjectEntity entity) {
+    if (valueValidator is ArrayElementsSchemaValidator) {
+      errorCollector.addMessage(entity.span, "Array expected for property \"${propName.text}\".");
+    }
+  }
+
+  void leaveArray(ArrayEntity entity) {
+    if (valueValidator is ObjectPropertiesSchemaValidator) {
+      errorCollector.addMessage(entity.span, "Object expected for property \"${propName.text}\".");
+    }
+  }
+}
+
+class ArrayElementsSchemaValidator extends SchemaValidator {
+  final ErrorCollector errorCollector;
+  final SchemaValidator valueValidator;
+
+  ArrayElementsSchemaValidator(ErrorCollector errorCollector, List schema)
+    : this.errorCollector = errorCollector,
+      this.valueValidator = createSchemaValidator(schema[0], errorCollector);
+
+  void arrayElement(JsonEntity entity) {
+    valueValidator.checkValue(entity, null);
+  }
+
+  JsonValidator enterObject() {
+    if (valueValidator is ObjectPropertiesSchemaValidator) {
+      return valueValidator;
+    }
+    return super.enterObject();
+  }
+
+  JsonValidator enterArray() {
+    if (valueValidator is ArrayElementsSchemaValidator) {
+      return valueValidator;
+    }
+    return super.enterArray();
+  }
+
+  void leaveObject(ObjectEntity entity) {
+    if (valueValidator is ArrayElementsSchemaValidator) {
+      errorCollector.addMessage(entity.span, "Array expected.");
+    }
+  }
+
+  void leaveArray(ArrayEntity entity) {
+    if (valueValidator is ObjectPropertiesSchemaValidator) {
+      errorCollector.addMessage(entity.span, "Object expected.");
+    }
+  }
+}
+
+class StringValueValidator extends SchemaValidator {
+  final ErrorCollector errorCollector;
+  final String type;
+
+  StringValueValidator(this.errorCollector, this.type);
+
+  void checkValue(JsonEntity entity, StringEntity propertyName) {
+    if (entity is! StringEntity) {
+      if (propertyName == null) {
+        errorCollector.addMessage(entity.span, "String value expected");
+      } else {
+        errorCollector.addMessage(entity.span, "String value expected for property \"${propertyName.text}\".");
+      }
+    }
+  }
+}
+
+class NumberValueValidator extends SchemaValidator {
+  final ErrorCollector errorCollector;
+  final String type;
+
+  NumberValueValidator(this.errorCollector, this.type);
+
+  void checkValue(JsonEntity entity, StringEntity propertyName) {
+    if (entity is! NumberEntity) {
+      if (propertyName == null) {
+        errorCollector.addMessage(entity.span, "Numeric value expected");
+      } else {
+        errorCollector.addMessage(entity.span, "Numeric value expected for property \"${propertyName.text}\".");
+      }
+    }
+  }
+}
+
+class IntValueValidator extends SchemaValidator {
+  final ErrorCollector errorCollector;
+  final String type;
+
+  IntValueValidator(this.errorCollector, this.type);
+
+  void checkValue(JsonEntity entity, StringEntity propertyName) {
+    if (entity is NumberEntity && entity.number is int) {
+      return;
+    }
+    if (propertyName == null) {
+      errorCollector.addMessage(entity.span, "Integer value expected");
+    } else {
+      errorCollector.addMessage(entity.span, "Integer value expected for property \"${propertyName.text}\".");
+    }
   }
 }
