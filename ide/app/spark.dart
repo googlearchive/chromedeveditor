@@ -3996,11 +3996,11 @@ class _SparkLaunchController implements LaunchController {
 }
 
 class RunPythonAction extends SparkAction {
-  WAMFS _fs;
+  WamFS _fs;
   bool _connected;
 
   RunPythonAction(Spark spark) : super(spark, 'run-python', 'Run Python') {
-    _fs = new WAMFS();
+    _fs = new WamFS();
   }
 
   Future _connect() {
