@@ -58,9 +58,40 @@ SchemaValidator createSchemaValidator(dynamic schema, ErrorCollector errorCollec
         return new IntValueValidator(errorCollector, schema);
       case "num":
         return new NumberValueValidator(errorCollector, schema);
+      case "boolean":
+        return new NumberValueValidator(errorCollector, schema);
     }
   }
-  throw new Exception("Element type \"${schema}\" is invalid.");
+  throw new FormatException("Element type \"${schema}\" is invalid.");
+}
+
+void validateSchemaDefinition(String path, dynamic schema) {
+  if (schema is Map) {
+    schema.forEach((key, value) {
+      validateSchemaDefinition(path + ".${key}", value);
+    });
+    return;
+  }
+
+  if (schema is List){
+    if (schema.length != 1) {
+      throw new FormatException("${path}: array must contain only one element");
+    }
+    validateSchemaDefinition(path + "[0]", schema[0]);
+    return;
+  }
+
+  if (schema is String){
+    switch(schema) {
+      case "var":
+      case "string":
+      case "int":
+      case "num":
+      case "boolean":
+        return;
+    }
+  }
+  throw new FormatException("${path}: Element type \"${schema}\" is invalid.");
 }
 
 class ObjectPropertiesSchemaValidator extends SchemaValidator {
@@ -207,6 +238,24 @@ class IntValueValidator extends SchemaValidator {
       errorCollector.addMessage(entity.span, "Integer value expected");
     } else {
       errorCollector.addMessage(entity.span, "Integer value expected for property \"${propertyName.text}\".");
+    }
+  }
+}
+
+class BooleanValueValidator extends SchemaValidator {
+  final ErrorCollector errorCollector;
+  final String type;
+
+  BooleanValueValidator(this.errorCollector, this.type);
+
+  void checkValue(JsonEntity entity, StringEntity propertyName) {
+    if (entity is BoolEntity) {
+      return;
+    }
+    if (propertyName == null) {
+      errorCollector.addMessage(entity.span, "Boolean value expected");
+    } else {
+      errorCollector.addMessage(entity.span, "Boolean value expected for property \"${propertyName.text}\".");
     }
   }
 }

@@ -8,6 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/apps/app_manifest_validator.dart';
 import '../lib/json/json_parser.dart';
+import '../lib/json/json_schema_validator.dart';
 import '../lib/json/json_validator.dart';
 
 /**
@@ -63,6 +64,10 @@ _LoggingErrorCollector _validateDocument(String contents) {
 
 void defineTests() {
   group('manifest-json validator tests -', () {
+    test('Schema definition is correct.', () {
+      validateSchemaDefinition("manifest", AppManifestSchema);
+    });
+
     test('manifest may be an empty object', () {
       String contents = """
 {
