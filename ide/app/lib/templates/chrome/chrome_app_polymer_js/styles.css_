@@ -1,45 +1,58 @@
 body {
-  font-family: sans-serif;
-  font-size: 16px;
-  display: flex;
-  flex-flow: row;
-  align-items: center;
-  justify-content: center;
+  font-family: RobotoDraft, sans-serif;
+  color: #333;
+  margin: 0;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-touch-callout: none;
 }
 
-core-header-panel {
-  float: left;
-  width: 360px;
-  height: 400px;
-  margin: 5px;
+section {
+  margin: 20px;
 }
 
-core-header-panel::shadow #mainContainer {
-  margin: 0 10px;
-  box-shadow: 0 10px 40px 0 #aaa;
+a, a:hover {
+  text-decoration: none;
 }
 
-.core-header {
-  height: 60px;
-  line-height: 60px;
-  font-size: 18px;
-  padding: 0 10px;
-  background-color: #4F7DC9;
-  color: #FFF;
-  transition: height 0.2s;
+core-toolbar {
+  background-color: #455ede;
+  box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 1.5em;
 }
 
-.core-header.tall {
-  height: 180px;
-}
-    
-.core-header.medium-tall {
-  height: 120px;
+paper-button {
+  margin: 0.5em 1em 0.5em 0;
+  width: 10em;
 }
 
-.content {
-  height: auto;
-  color: black;
-  background: linear-gradient(rgb(214, 227, 231), lightblue);
-  text-align: center;
+paper-button[right] {
+  position: fixed;
+  right: 0;
+}
+
+paper-checkbox {
+  margin-left: 1em;
+}
+
+paper-fab {
+  position: absolute !important;
+  top: 35px;
+  right: 1em;
+  z-index: 1;
+}
+
+paper-tabs {
+  background-color: #5677fc;
+  color: #fff;
+}
+
+paper-tabs[noink][nobar] paper-tab.core-selected {
+  color: #ffff8d;
 }
