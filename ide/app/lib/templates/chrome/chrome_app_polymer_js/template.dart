@@ -11,14 +11,16 @@ class ChromeAppWithPolymerJSTemplate extends ProjectTemplate {
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
       : super._(id, globalVars, localVars);
 
+  // TODO(ussuri): Add option to "never show again".
   Future showIntro(utils.Notifier notifier) {
     notifier.showMessage(
         "Action required",
-        "This project template includes Polymer elements, which have "
+        "Your app will not run as is.\n\n"
+        "This project template uses Polymer elements, which have "
         "known incompatibilities with the Content Security Policy (CSP), "
-        "which is enforced by Chrome apps: your app will not run as is.\n\n"
-        "To fix, wait for the 'Getting Bower packages...' step to complete, "
-        "right-click '$_PACKAGES_DIR' under the project and select "
+        "which is enforced by Chrome apps.\n\n"
+        "To fix that: wait for the 'Getting Bower packages...' step to "
+        "complete, right-click '$_PACKAGES_DIR' under the project and select "
         "'Refactor for CSP'.");
     return new Future.value();
   }
