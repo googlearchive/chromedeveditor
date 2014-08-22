@@ -54,7 +54,8 @@ class SchemaValidator extends NullValidator {
   void checkValue(JsonEntity entity, StringEntity propertyName) {}
 }
 
-SchemaValidator createSchemaValidator(dynamic schema, ErrorCollector errorCollector) {
+SchemaValidator createSchemaValidator(
+    dynamic schema, ErrorCollector errorCollector) {
   if (schema is Map) {
    return new ObjectPropertiesSchemaValidator(errorCollector, schema);
   } else if (schema is List){
@@ -115,12 +116,15 @@ class ObjectPropertiesSchemaValidator extends SchemaValidator {
     var propertyType = schema[entity.text];
     if (propertyType == null) {
       String message = "Property \"${entity.text}\" is not recognized.";
-      errorCollector.addMessage(ErrorIds.UNKNOWN_PROPERTY_NAME,  entity.span, message);
+      errorCollector.addMessage(
+          ErrorIds.UNKNOWN_PROPERTY_NAME,  entity.span, message);
       return NullValidator.instance;
     }
 
-    SchemaValidator valueValidator = createSchemaValidator(propertyType, errorCollector);
-    return new ObjectPropertyValueValidator(errorCollector, valueValidator, entity);
+    SchemaValidator valueValidator =
+        createSchemaValidator(propertyType, errorCollector);
+    return new ObjectPropertyValueValidator(
+        errorCollector, valueValidator, entity);
   }
 }
 
@@ -129,7 +133,8 @@ class ObjectPropertyValueValidator extends SchemaValidator {
   final SchemaValidator valueValidator;
   final StringEntity propName;
 
-  ObjectPropertyValueValidator(this.errorCollector, this.valueValidator, this.propName);
+  ObjectPropertyValueValidator(
+      this.errorCollector, this.valueValidator, this.propName);
 
   void propertyValue(JsonEntity entity) {
     valueValidator.checkValue(entity, propName);
@@ -151,13 +156,19 @@ class ObjectPropertyValueValidator extends SchemaValidator {
 
   void leaveObject(ObjectEntity entity) {
     if (valueValidator is ArrayElementsSchemaValidator) {
-      errorCollector.addMessage(ErrorIds.ARRAY_EXPECTED, entity.span, "Array expected for property \"${propName.text}\".");
+      errorCollector.addMessage(
+          ErrorIds.ARRAY_EXPECTED,
+          entity.span,
+          "Array expected for property \"${propName.text}\".");
     }
   }
 
   void leaveArray(ArrayEntity entity) {
     if (valueValidator is ObjectPropertiesSchemaValidator) {
-      errorCollector.addMessage(ErrorIds.OBJECT_EXPECTED, entity.span, "Object expected for property \"${propName.text}\".");
+      errorCollector.addMessage(
+          ErrorIds.OBJECT_EXPECTED,
+          entity.span,
+          "Object expected for property \"${propName.text}\".");
     }
   }
 }
@@ -190,13 +201,15 @@ class ArrayElementsSchemaValidator extends SchemaValidator {
 
   void leaveObject(ObjectEntity entity) {
     if (valueValidator is ArrayElementsSchemaValidator) {
-      errorCollector.addMessage(ErrorIds.ARRAY_EXPECTED, entity.span, "Array expected.");
+      errorCollector.addMessage(
+          ErrorIds.ARRAY_EXPECTED, entity.span, "Array expected.");
     }
   }
 
   void leaveArray(ArrayEntity entity) {
     if (valueValidator is ObjectPropertiesSchemaValidator) {
-      errorCollector.addMessage(ErrorIds.OBJECT_EXPECTED, entity.span, "Object expected.");
+      errorCollector.addMessage(
+          ErrorIds.OBJECT_EXPECTED, entity.span, "Object expected.");
     }
   }
 }
@@ -210,9 +223,13 @@ class StringValueValidator extends SchemaValidator {
   void checkValue(JsonEntity entity, StringEntity propertyName) {
     if (entity is! StringEntity) {
       if (propertyName == null) {
-        errorCollector.addMessage(ErrorIds.STRING_EXPECTED, entity.span, "String value expected");
+        errorCollector.addMessage(
+            ErrorIds.STRING_EXPECTED, entity.span, "String value expected");
       } else {
-        errorCollector.addMessage(ErrorIds.STRING_EXPECTED, entity.span, "String value expected for property \"${propertyName.text}\".");
+        errorCollector.addMessage(
+            ErrorIds.STRING_EXPECTED,
+            entity.span,
+            "String value expected for property \"${propertyName.text}\".");
       }
     }
   }
@@ -227,9 +244,13 @@ class NumberValueValidator extends SchemaValidator {
   void checkValue(JsonEntity entity, StringEntity propertyName) {
     if (entity is! NumberEntity) {
       if (propertyName == null) {
-        errorCollector.addMessage(ErrorIds.NUMBER_EXPECTED, entity.span, "Numeric value expected");
+        errorCollector.addMessage(
+            ErrorIds.NUMBER_EXPECTED, entity.span, "Numeric value expected");
       } else {
-        errorCollector.addMessage(ErrorIds.NUMBER_EXPECTED, entity.span, "Numeric value expected for property \"${propertyName.text}\".");
+        errorCollector.addMessage(
+            ErrorIds.NUMBER_EXPECTED,
+            entity.span,
+            "Numeric value expected for property \"${propertyName.text}\".");
       }
     }
   }
@@ -246,9 +267,13 @@ class IntValueValidator extends SchemaValidator {
       return;
     }
     if (propertyName == null) {
-      errorCollector.addMessage(ErrorIds.INTEGER_EXPECTED, entity.span, "Integer value expected");
+      errorCollector.addMessage(
+          ErrorIds.INTEGER_EXPECTED, entity.span, "Integer value expected");
     } else {
-      errorCollector.addMessage(ErrorIds.INTEGER_EXPECTED, entity.span, "Integer value expected for property \"${propertyName.text}\".");
+      errorCollector.addMessage(
+          ErrorIds.INTEGER_EXPECTED,
+          entity.span,
+          "Integer value expected for property \"${propertyName.text}\".");
     }
   }
 }
@@ -264,9 +289,13 @@ class BooleanValueValidator extends SchemaValidator {
       return;
     }
     if (propertyName == null) {
-      errorCollector.addMessage(ErrorIds.BOOLEAN_EXPECTED, entity.span, "Boolean value expected");
+      errorCollector.addMessage(
+          ErrorIds.BOOLEAN_EXPECTED, entity.span, "Boolean value expected");
     } else {
-      errorCollector.addMessage(ErrorIds.BOOLEAN_EXPECTED, entity.span, "Boolean value expected for property \"${propertyName.text}\".");
+      errorCollector.addMessage(
+          ErrorIds.BOOLEAN_EXPECTED,
+          entity.span,
+          "Boolean value expected for property \"${propertyName.text}\".");
     }
   }
 }

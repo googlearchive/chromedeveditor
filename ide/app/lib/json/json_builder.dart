@@ -44,7 +44,8 @@ class JsonBuilder extends Builder {
       try {
         if (str.trim().isNotEmpty) {
           StringLineOffsets lineOffsets = new StringLineOffsets(str);
-          JsonParser parser = new JsonParser(str, new _JsonParserListener(file, lineOffsets));
+          JsonParser parser = new JsonParser(
+              str, new _JsonParserListener(file, lineOffsets));
           parser.parse();
         }
       } catch (e) {

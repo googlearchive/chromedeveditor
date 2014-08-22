@@ -66,7 +66,8 @@ _LoggingErrorCollector _validateDocument(String contents) {
 void defineTests() {
   group('manifest-json validator tests -', () {
     test('Schema definition is correct.', () {
-      json_schema_validator.validateSchemaDefinition("manifest", AppManifestSchema);
+      json_schema_validator.validateSchemaDefinition(
+          "manifest", AppManifestSchema);
     });
 
     test('manifest may be an empty object', () {
