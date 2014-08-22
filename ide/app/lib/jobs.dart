@@ -233,7 +233,6 @@ abstract class ProgressMonitor {
    * The final value of work once progress is complete.
    */
   num get maxWork => _maxWork;
-  set maxWork(num amount) => _maxWork = amount;
 
   /**
    * Returns `true` if progress cannot be determined ([maxWork] == 0).

@@ -52,8 +52,7 @@ class CspFixer {
   Future<SparkJobStatus> process() {
     _monitor.start(
         "Refactoring ${_resource.name} for CSP compatibility…",
-        maxWork: 1,
-        format: ProgressFormat.N_OUT_OF_M);
+        maxWork: 1);
 
     Iterable<ws.File> files;
     if (_resource is ws.File) {
@@ -63,17 +62,10 @@ class CspFixer {
           .traverse(includeDerived: true)
           .where((ws.Resource r) => r is ws.File);
     }
-
-    final Iterable<_CspFixerSingleFile> fixers =
+    final Iterable<Future> futures =
         files
             .where((ws.File f) => _CspFixerSingleFile.willProcess(f))
-            .map((ws.File f) => new _CspFixerSingleFile(f));
-
-    _monitor.maxWork = fixers.length;
-
-    final Iterable<Future> futures =
-        fixers.map((f) => f.process().then((_) => _monitor.worked(1)));
-
+            .map((ws.File f) => new _CspFixerSingleFile(f).process());
     // Process input files in parallel to maximize I/O and make failures
     // independent.
     return Future.wait(futures).then((_) {
@@ -95,6 +87,8 @@ class _CspFixerSingleFile {
 
   Future process() {
     if (!willProcess(_file)) return new Future.value();
+
+    _logger.info("Processing ${_file.path}...");
 
     return _file.getContents().then((final String htmlText) {
       try {
