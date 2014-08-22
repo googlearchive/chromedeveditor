@@ -13,6 +13,7 @@ library spark.preferences;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
@@ -75,11 +76,18 @@ class JsonPreferencesStore {
   StreamController<PreferenceEvent> _changeConroller = new StreamController();
 
   JsonPreferencesStore(this._persistentStore) {
-    whenLoaded = Future.wait([
-        _persistentStore.getValue("customJsonPrefs", _userMap),
-        _persistentStore.getValue("defaultJsonPrefs", _defaultMap)]).then((_) {
-          _loaded = true;
-        });
+    whenLoaded = Future.wait([_loadDefaultPrefs(), _loadUserPrefs()]).then((_) =>
+        _loaded = true);
+  }
+
+  Future _loadDefaultPrefs() {
+    return HttpRequest.getString(chrome.runtime.getURL('prefs.json'))
+        .then((String json) => _defaultMap = JSON.decode(json));
+  }
+
+  Future _loadUserPrefs() {
+    return _persistentStore.getValue("userJsonPrefs", "{}")
+        .then((String json) => _userMap = JSON.decode(json));
   }
 
   dynamic getValue(String id, [dynamic defaultValue]) {
@@ -89,21 +97,13 @@ class JsonPreferencesStore {
 
   Future setValue(String id, dynamic value) {
     _userMap[id] = value;
-    _changeConroller.add(new PreferenceEvent(_persistentStore, id, value));
-    String userJson = JSON.encode(_userMap);
-    return _persistentStore.setValue("customJsonPrefs", userJson);
-  }
-
-  Future clear() {
-    // TODO: implement clear
-  }
-
-  void flush() {
-    // TODO: implement flush
+    _changeConroller.add(new PreferenceEvent(_persistentStore, id, value.toString()));
+    return _persistentStore.setValue("userJsonPrefs", JSON.encode(_userMap));
   }
 
   Future removeValue(List<String> keys) {
-    // TODO: implement removeValue
+    keys.forEach((String key) => _userMap.remove(key));
+    return new Future.value();
   }
 }
 
