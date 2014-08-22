@@ -12,6 +12,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
+import 'filesystem.dart' as filesystem;
+import 'preferences.dart';
 import 'tcp.dart' as tcp;
 import 'utils.dart';
 
@@ -23,19 +25,20 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
+  Function _defineTestsFn;
   final Notifier _notifier;
+  final PreferenceStore _prefs;
 
   StreamSubscription _logListener;
   StreamController<unittest.TestCase> _onTestFinished =
       new StreamController.broadcast();
 
-  Function _defineTestsFn;
   Element _testDiv;
   Element _statusDiv;
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this._notifier,
+  TestDriver(this._defineTestsFn, this._notifier, this._prefs,
       {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 
@@ -48,6 +51,9 @@ class TestDriver {
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
+    filesystem.setMockFilesystemAccess();
+    filesystem.restoreManager(_notifier, _prefs);
+
     if (_logListener == null) {
       _createTestUI();
     }
@@ -119,7 +125,7 @@ class TestDriver {
     _testDiv.nodes.add(_statusDiv);
 
     _logger.onRecord.listen((LogRecord record) {
-      if (record.level > Level.INFO) {
+      if (record.level >= Level.SEVERE) {
         _statusDiv.style.background = 'red';
       }
       _statusDiv.text = record.toString();

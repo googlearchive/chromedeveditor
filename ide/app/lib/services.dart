@@ -160,6 +160,8 @@ class _ServicesUuidResolver extends UuidResolver {
   _ServicesUuidResolver(this.packageManager, [this.project]);
 
   File getResource(String uri) {
+    if (uri.isEmpty) return null;
+
     if (uri.startsWith('/')) uri = uri.substring(1);
 
     if (uri.startsWith('package:')) {
@@ -177,7 +179,8 @@ class AnalyzerService extends Service {
   // our memory consumption.
   static final int MAX_CONTEXTS = 5;
 
-  Map<Project, ProjectAnalyzer> _contextMap = {};
+  Map<Project, Completer> _contextCompleters = {};
+
   List<ProjectAnalyzer> _recentContexts = [];
 
   AnalyzerService(Services services, _IsolateHandler handler) :
@@ -225,36 +228,43 @@ class AnalyzerService extends Service {
     });
   }
 
-  Future<ProjectAnalyzer> prepareForLinking(Project project) {
-    ProjectAnalyzer context = getProjectAnalyzer(project);
+  bool hasProjectAnalyzer(Project project) =>
+      _contextCompleters.containsKey(project);
 
-    if (context == null) {
-      return createProjectAnalyzer(project);
+  Future<ProjectAnalyzer> getCreateProjectAnalyzer(Project project) {
+    Completer completer = _contextCompleters[project];
+
+    if (completer == null) {
+      completer = new Completer();
+      _contextCompleters[project] = completer;
+      return _createProjectAnalyzer(project).then((result) {
+        completer.complete(result);
+        return result;
+      }).catchError((e) {
+        completer.completeError(e);
+        throw e;
+      });
     } else {
-      return new Future.value(context);
+      return completer.future;
     }
   }
 
   Future<Declaration> getDeclarationFor(File file, int offset) {
-    return prepareForLinking(file.project).then((ProjectAnalyzer context){
+    return getCreateProjectAnalyzer(file.project).then((ProjectAnalyzer context){
       return context.getDeclarationFor(file, offset);
     });
   }
 
-  Future<ProjectAnalyzer> createProjectAnalyzer(Project project) {
-    if (_contextMap[project] != null) {
-      return new Future.value(_contextMap[project]);
-    }
-
+  Future<ProjectAnalyzer> _createProjectAnalyzer(Project project) {
     _logger.info('creating analysis context [${project.name}]');
+    Stopwatch timer = new Stopwatch()..start();
 
     ProjectAnalyzer context = new ProjectAnalyzer._(this, project);
-    _contextMap[project] = context;
     _recentContexts.insert(0, context);
 
     if (_recentContexts.length > MAX_CONTEXTS) {
       // Dispose of the oldest context.
-      disposeProjectAnalyzer(_recentContexts.last);
+      disposeProjectAnalyzer(_recentContexts.last.project);
     }
 
     return _sendAction('createContext', {'contextId': project.uuid}).then((_) {
@@ -264,24 +274,26 @@ class AnalyzerService extends Service {
       files.removeWhere(
           (file) => getPackageManager().properties.isSecondaryPackage(file));
 
-      return context.processChanges(files, [], []).then((_) => context);
+      return context.processChanges(files, [], []).then((_) {
+        _logger.info('context created in ${timer.elapsedMilliseconds}ms');
+        return context;
+      });
     });
   }
 
-  ProjectAnalyzer getProjectAnalyzer(Project project) => _contextMap[project];
+  Future disposeProjectAnalyzer(Project project) {
+    Completer completer = _contextCompleters[project];
 
-  Future disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
-    Project project = projectAnalyzer.project;
-    ProjectAnalyzer context = _contextMap.remove(project);
+    return completer.future.then((ProjectAnalyzer context) {
+      _logger.info('disposed analysis context [${project.name}]');
 
-    if (context != null) {
-      _logger.info('disposed analysis context [${projectAnalyzer.project.name}]');
+      if (_recentContexts.indexOf(context) >= MAX_CONTEXTS) {
+        _recentContexts.remove(context);
+        _contextCompleters.remove(completer);
 
-      _recentContexts.remove(context);
-      return _sendAction('disposeContext', {'contextId': project.uuid});
-    } else {
-      return new Future.value();
-    }
+        return _sendAction('disposeContext', {'contextId': project.uuid});
+      }
+    });
   }
 
   PackageManager getPackageManager() => services._packageManager;
@@ -347,7 +359,7 @@ class ProjectAnalyzer {
     });
   }
 
-  Future dispose() => analyzerService.disposeProjectAnalyzer(this);
+  Future dispose() => analyzerService.disposeProjectAnalyzer(project);
 
   void _handleAnalysisResult(Project project, AnalysisResult result) {
     project.workspace.pauseMarkerStream();

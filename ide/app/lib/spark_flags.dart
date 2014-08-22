@@ -19,11 +19,11 @@ class SparkFlags {
   // NOTE: '...== true' below are on purpose: missing flags default to false.
   static bool get developerMode => _flags['test-mode'] == true;
   static bool get useLightAceThemes => _flags['light-ace-themes'] == true;
+  static bool get useMoreLightAceThemes => _flags['more-light-ace-themes'] == true;
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
+  static bool get useMoreDarkAceThemes => _flags['more-dark-ace-themes'] == true;
   static bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
   static bool get showWipProjectTemplates => _flags['wip-project-templates'] == true;
-  static bool get showGitPull => _flags['show-git-pull'] == true;
-  static bool get showGitBranch => _flags['show-git-branch'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
   static bool get enableMultiSelect => _flags['enable-multiselect'] == true;
   static bool get searchInFiles => _flags['search-in-files'] == true;
@@ -34,6 +34,8 @@ class SparkFlags {
       _flags['bower-override-dependencies'];
   static List<String> get bowerIgnoredDeps =>
       _flags['bower-ignore-dependencies'];
+  static bool get bowerUseGitClone =>
+      _flags['bower-use-git-clone'] == true;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.

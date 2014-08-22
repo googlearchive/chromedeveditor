@@ -17,11 +17,11 @@ class SparkButton extends SparkWidget {
   @published bool raised;
   @published bool round;
   @published bool primary;
-  @published String padding;
+  @published_reflected String padding;
+  @published_reflected String hoverStyle;
   @published bool disabled;
   @published bool active;
   @published String tooltip;
-  @published bool highlight = true;
 
   SparkButton.created() : super.created();
 
@@ -41,6 +41,15 @@ class SparkButton extends SparkWidget {
       flat = true;
     }
 
+    if (padding == null) {
+      padding = 'medium';
+    }
+
+    if (hoverStyle == null) {
+      hoverStyle = 'background';
+    }
+
     assert(['none', 'small', 'medium', 'large', 'huge'].contains(padding));
+    assert(['background', 'foreground'].contains(hoverStyle));
   }
 }

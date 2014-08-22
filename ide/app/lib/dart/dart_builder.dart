@@ -36,10 +36,9 @@ class DartBuilder extends Builder {
       // If we get a project delete, it'll be the only thing that we have to
       // process.
       Project project = projectDeletes.first.resource;
-      ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
-      if (context != null) {
-        analyzer.disposeProjectAnalyzer(context);
+      if (analyzer.hasProjectAnalyzer(project)) {
+        analyzer.disposeProjectAnalyzer(project);
       }
 
       return new Future.value();
@@ -51,10 +50,8 @@ class DartBuilder extends Builder {
       // Guard against a `null` project.
       if (project == null) return new Future.value();
 
-      ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
-
-      if (context == null) {
-        return analyzer.createProjectAnalyzer(project);
+      if (!analyzer.hasProjectAnalyzer(project)) {
+        return analyzer.getCreateProjectAnalyzer(project);
       } else {
         List<File> addedFiles = changes.where(
             (c) => c.isAdd).map((c) => c.resource).toList();
@@ -71,15 +68,17 @@ class DartBuilder extends Builder {
           // new one.
           _logger.info('packages/ changes detected; bouncing analysis context');
 
-          return analyzer.disposeProjectAnalyzer(context).then((_) {
-            return analyzer.createProjectAnalyzer(project);
+          return analyzer.disposeProjectAnalyzer(project).then((_) {
+            return analyzer.getCreateProjectAnalyzer(project);
           });
         } else {
           _removeSecondaryPackages(addedFiles);
           _removeSecondaryPackages(changedFiles);
           _removeSecondaryPackages(deletedFiles);
 
-          return context.processChanges(addedFiles, changedFiles, deletedFiles);
+          return analyzer.getCreateProjectAnalyzer(project).then((context) {
+            return context.processChanges(addedFiles, changedFiles, deletedFiles);
+          });
         }
       }
     }

@@ -6,7 +6,7 @@ library spark.pub_test;
 
 import 'package:unittest/unittest.dart';
 
-import 'files_mock.dart';
+import '../lib/files_mock.dart';
 import '../lib/package_mgmt/package_manager.dart';
 import '../lib/package_mgmt/pub.dart';
 import '../lib/preferences.dart';

@@ -1,0 +1,17 @@
+{
+  "test-mode": false,
+  "light-ace-themes": false,
+  "more-light-ace-themes": false,
+  "dark-ace-themes": true,
+  "more-dark-ace-themes": true,
+  "wip-project-templates": false,
+  "analyze-javascript": false,
+  "enable-multiselect": false,
+  "search-in-files": false,
+  "bower-map-complex-ver-to-latest-stable": true,
+  "bower-ignore-dependencies": [
+  ],
+  "bower-override-dependencies": {
+  },
+  "bower-use-git-clone": false
+}

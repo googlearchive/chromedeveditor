@@ -28,8 +28,6 @@ import 'services.dart';
 import 'utils.dart';
 import 'workspace.dart';
 import 'workspace_utils.dart';
-// TODO(devoncarew): We don't want a dependency from here to spark.dart...
-import '../spark.dart';
 
 final Logger _logger = new Logger('spark.launch');
 
@@ -67,13 +65,13 @@ class LaunchManager {
   List<LaunchParticipant> launchParticipants = [];
 
   LaunchManager(this.workspace, this._services, this._pubManager,
-      this._bowerManager, this._notifier) {
+      this._bowerManager, this._notifier, LaunchController launchController) {
 
     applicationLocators.add(new ChromeAppLocator());
     applicationLocators.add(new WebAppLocator());
 
     launchTargetHandlers.add(new ChromeAppLocalLaunchHandler());
-    launchTargetHandlers.add(new ChromeAppRemoteLaunchHandler());
+    launchTargetHandlers.add(new ChromeAppRemoteLaunchHandler(launchController));
     WebAppLocalLaunchHandler localWebHandler = new WebAppLocalLaunchHandler(
         this, workspace, _services, _pubManager, _bowerManager, _notifier);
     launchTargetHandlers.add(localWebHandler);
@@ -172,6 +170,10 @@ class LaunchManager {
 
     return null;
   }
+}
+
+abstract class LaunchController {
+  void displayDeployToMobileDialog(Resource launchResource);
 }
 
 /**
@@ -404,6 +406,16 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
   }
 
   Future launch(Application application, LaunchTarget launchTarget) {
+    if (!management.available) {
+      return new Future.error(
+          'Unable to launch; the chrome.management API is not available.');
+    }
+
+    if (!developerPrivate.available) {
+      return new Future.error(
+          'Unable to launch; the chrome.developerPrivate API is not available.');
+    }
+
     Container container = application.primaryResource;
 
     String idToLaunch;
@@ -418,7 +430,12 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
       return new Future.delayed(new Duration(milliseconds: 100));
     }).then((_) {
       if (idToLaunch != null) return idToLaunch;
-      return _getAppId(container.name);
+      // TODO(grv): This assumes that the loaded extension is directly loaded
+      // from its location. This will not work with syncfs projects as they are
+      // copied into apps_target directory. Remove this hack once the api returns
+      // the appID on loading. The issue is tracked here
+      // https://github.com/dart-lang/chromedeveditor/issues/3054
+      return _getAppId(container.path);
     }).then((String launchId) {
       _launchId(launchId);
     });
@@ -440,10 +457,10 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
    * TODO(grv): This is a temporary function until loadDirectory returns the
    * app_id.
    */
-  Future<String> _getAppId(String name) {
+  Future<String> _getAppId(String path) {
     return developerPrivate.getItemsInfo(false, false).then((List<ItemInfo> items) {
       for (ItemInfo item in items) {
-        if (item.is_unpacked && item.path.endsWith(name)) {
+        if (item.is_unpacked && item.path.endsWith(path)) {
           return item.id;
         }
       };
@@ -495,7 +512,9 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
  * A launch target handler to launch chrome apps on mobile devices.
  */
 class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
-  ChromeAppRemoteLaunchHandler();
+  final LaunchController launchController;
+
+  ChromeAppRemoteLaunchHandler(this.launchController);
 
   String get name => 'Remote Chrome App';
 
@@ -505,8 +524,7 @@ class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
   }
 
   Future launch(Application application, LaunchTarget launchTarget) {
-    DeployToMobileDialog.deploy(application.primaryResource);
-
+    launchController.displayDeployToMobileDialog(application.primaryResource);
     return new Future.value();
   }
 
@@ -755,7 +773,7 @@ class DartChromeAppParticipant extends LaunchParticipant {
           if (!result.getSuccess()) throw new SparkException('${result}');
 
           String newFileName = '${file.name}.precompiled.js';
-          return getCreateFile(file.parent, newFileName);
+          return file.parent.getOrCreateFile(newFileName, true);
         }).then((File newFile) {
           return newFile.setContents(result.output);
         }).whenComplete(() => completer.complete());
@@ -1068,8 +1086,9 @@ String _createTextForError(File file, CompileResult result) {
   buf.write('Error compiling ${file.path}:<br><br>');
 
   for (CompileError problem in result.problems) {
-    buf.write('[${problem.kind}] ${problem.message} '
-        '(${problem.file.path}:${problem.line})<br>');
+    String path = problem.file == null ? '' : problem.file.path;
+    buf.write(
+        '[${problem.kind}] ${problem.message} (${path}:${problem.line})<br>');
   }
 
   return buf.toString();

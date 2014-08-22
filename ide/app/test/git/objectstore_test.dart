@@ -9,11 +9,11 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
-import '../../lib/utils.dart';
+import '../../lib/files_mock.dart';
 import '../../lib/git/file_operations.dart';
 //import '../../lib/git/object.dart';
 import '../../lib/git/objectstore.dart';
-import '../files_mock.dart';
+import '../../lib/utils.dart';
 
 final String GIT_ROOT_DIRECTORY_PATH = 'test/data/git';
 

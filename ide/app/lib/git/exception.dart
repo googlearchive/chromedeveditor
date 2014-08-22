@@ -52,6 +52,8 @@ class GitErrorConstants {
   static const String GIT_PUSH_NO_COMMITS = "git.push_no_commits";
   static const String GIT_PUSH_NON_FAST_FORWARD = "git.push_non_fast_forward";
 
+  static const String GIT_PULL_NON_FAST_FORWARD = "git.pull_non_fast_forward";
+
   static const String GIT_OBJECT_STORE_CORRUPTED = "git.object_store_corrupted";
 
   static const String GIT_COMMIT_NO_CHANGES = "git.commit_no_changes";

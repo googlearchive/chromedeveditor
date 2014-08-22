@@ -6,12 +6,14 @@ library spark.json_builder;
 
 import 'dart:async';
 
-import 'package:json/json.dart';
 
+import '../apps/app_manifest_builder.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 import '../package_mgmt/bower_properties.dart';
+import 'json_parser.dart';
+import 'json_utils.dart';
 
 /**
  * A [Builder] implementation to add validation warnings to JSON files.
@@ -30,6 +32,7 @@ class JsonBuilder extends Builder {
   bool _shouldProcessFile(File file) {
     // There's a more specific builder for bower.
     if (file.name == bowerProperties.packageSpecFileName) return false;
+    if (file.name == appManifestProperties.packageSpecFileName) return false;
 
     return file.name.endsWith('.json') && !file.isDerived();
   }
@@ -40,7 +43,8 @@ class JsonBuilder extends Builder {
 
       try {
         if (str.trim().isNotEmpty) {
-          JsonParser parser = new JsonParser(str, new _JsonParserListener(file));
+          StringLineOffsets lineOffsets = new StringLineOffsets(str);
+          JsonParser parser = new JsonParser(str, new _JsonParserListener(file, lineOffsets));
           parser.parse();
         }
       } catch (e) {
@@ -52,25 +56,12 @@ class JsonBuilder extends Builder {
 
 class _JsonParserListener extends JsonListener {
   final File file;
+  final StringLineOffsets lineOffsets;
 
-  _JsonParserListener(this.file);
+  _JsonParserListener(this.file, this.lineOffsets);
 
-  void fail(String source, int position, String message) {
-    int lineNum = _calcLineNumber(source, position);
-    file.createMarker('json', Marker.SEVERITY_ERROR, message, lineNum, position);
-  }
-
-  /**
-   * Count the newlines between 0 and position.
-   */
-  int _calcLineNumber(String source, int position) {
-    int lineCount = 0;
-
-    for (int index = 0; index < source.length; index++) {
-      if (source[index] == '\n') lineCount++;
-      if (index == position) return lineCount + 1;
-    }
-
-    return lineCount;
+  void fail(String source, Span span, String message) {
+    int lineNum = lineOffsets.getLineColumn(span.start).line;
+    file.createMarker('json', Marker.SEVERITY_ERROR, message, lineNum, span.start, span.end);
   }
 }

@@ -16,7 +16,6 @@ import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 
-import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';
@@ -29,6 +28,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'workspace_utils.dart';
 import 'services.dart' as svc;
+import 'spark_flags.dart';
 import 'outline.dart';
 import 'ui/goto_line_view/goto_line_view.dart';
 import 'utils.dart';
@@ -284,11 +284,14 @@ class DartEditor extends TextEditor {
   void activate() {
     super.activate();
 
-    if (_session != null) {
-      _outline.build(file.name, _session.value);
-    }
+    // Outline will be built in reconcile().
+    //_outline.build(file.name, _session.value);
 
     _outline.scrollPosition = outlineScrollPosition;
+
+    if (file.project != null) {
+      aceManager._analysisService.getCreateProjectAnalyzer(file.project);
+    }
   }
 
   @override
@@ -561,6 +564,8 @@ class AceManager {
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
+    ace.Mode.extensionMap['gyp'] = ace.Mode.PYTHON;
+    ace.Mode.extensionMap['gypi'] = ace.Mode.PYTHON;
     ace.Mode.extensionMap['idl'] = ace.Mode.C_CPP;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
@@ -637,11 +642,6 @@ class AceManager {
       _markerSession = currentSession;
       _linkingMarkerId = _markerSession.addMarker(markerRange,
           "ace_link_marker", type: ace.Marker.TEXT);
-
-      // If we are hovering, we can assume that the mouse is over the identifier.
-      contentElement.style.cursor = "pointer";
-    } else {
-      contentElement.style.cursor = null;
     }
   }
 
@@ -855,6 +855,7 @@ class AceManager {
     if (session == null) {
       _currentSession = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.session = _currentSession;
+      currentFile = null;
     } else {
       _currentSession = session;
       _aceEditor.session = _currentSession;
@@ -939,18 +940,49 @@ class AceManager {
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
   }
-
-  Future prepareForLinking(workspace.Project project) {
-    return _analysisService.prepareForLinking(project);
-  }
 }
 
 class ThemeManager {
   static final LIGHT_THEMES = [
-      'textmate', 'tomorrow'
+      'textmate', 
+      'tomorrow',
+  ];
+  static final MORE_LIGHT_THEMES = [
+      'chrome',
+      'clouds',
+      'crimson_editor',
+      'dawn',
+      'dreamweaver',
+      'eclipse',
+      'github',
+      'katzenmilch',
+      'kuroir', 
+      'solarized_light',
+      'tomorrow',
+      'vibrant_ink',
+      'xcode',
   ];
   static final DARK_THEMES = [
-      'monokai', 'tomorrow_night', 'idle_fingers', 'pastel_on_dark'
+      'monokai', 
+      'idle_fingers', 
+      'tomorrow_night', 
+      'pastel_on_dark',
+  ];
+  static final MORE_DARK_THEMES = [
+      'ambiance',
+      'chaos',
+      'clouds_midnight',
+      'cobalt',
+      'kr_theme',
+      'merbivore', 
+      'merbivore_soft', 
+      'mono_industrial',
+      'solarized_dark',
+      'terminal',
+      'tomorrow_night_blue',
+      'tomorrow_night_bright',
+      'tomorrow_night_eighties',
+      'twilight',
   ];
 
   ace.Editor _aceEditor;
@@ -962,7 +994,9 @@ class ThemeManager {
       _aceEditor = aceManager._aceEditor {
     if (SparkFlags.useAceThemes) {
       if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.useMoreDarkAceThemes) _themes.addAll(MORE_DARK_THEMES);
       if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+      if (SparkFlags.useMoreLightAceThemes) _themes.addAll(MORE_LIGHT_THEMES);
 
       _prefs.getValue('aceTheme').then((String theme) {
         if (theme == null || theme.isEmpty || !_themes.contains(theme)) {

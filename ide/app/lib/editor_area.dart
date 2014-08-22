@@ -11,10 +11,9 @@ library spark.editor_area;
 import 'dart:async';
 import 'dart:html' hide File;
 
-import 'package:chrome/chrome_app.dart' as chrome;
-
 import 'ace.dart' as ace;
 import 'editors.dart';
+import 'filesystem.dart';
 import 'ui/widgets/tabview.dart';
 import 'ui/widgets/imageviewer.dart';
 import 'workspace.dart';
@@ -118,8 +117,7 @@ class EditorArea extends TabView {
 
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
       // TODO(dvh): reflect name change instead of closing the file.
-      event =
-          new ResourceChangeEvent.fromList(event.changes, filterRename: true);
+      event = new ResourceChangeEvent.fromList(event.changes, filterRename: true);
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete && delta.resource.isFile) {
           closeFile(delta.resource);
@@ -248,18 +246,18 @@ class EditorArea extends TabView {
   /// Closes the tab.
   void closeFile(File file) {
     EditorTab tab = _tabOfFile[file];
+
     if (tab != null) {
       remove(tab);
       tab.close();
       editorProvider.close(file);
       _nameController.add(selectedTab == null ? null : selectedTab.label);
+      _savePersistedTabs();
     }
-
-    _savePersistedTabs();
   }
 
-  // Replaces the file loaded in a tab with a renamed version of the file
-  // The new tab is not selected.
+  // Replaces the file loaded in a tab with a renamed version of the file. The
+  // new tab is not selected.
   void renameFile(Resource file) {
     if (_tabOfFile.containsKey(file)) {
       EditorTab tab = _tabOfFile[file];
@@ -282,5 +280,5 @@ class EditorArea extends TabView {
 Future<String> _calculateTooltip(File file) {
   if (file.entry == null) return new Future.value(file.path);
 
-  return chrome.fileSystem.getDisplayPath(file.entry);
+  return fileSystemAccess.getDisplayPath(file.entry);
 }

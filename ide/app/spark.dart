@@ -20,6 +20,7 @@ import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
+import 'lib/apps/app_manifest_builder.dart';
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
 import 'lib/dependency.dart';
@@ -29,34 +30,36 @@ import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
 import 'lib/exception.dart';
+import 'lib/files_mock.dart';
+import 'lib/filesystem.dart' as filesystem;
 import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
+import 'lib/mobile/android_rsa.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
 import 'lib/platform_info.dart';
 import 'lib/preferences.dart' as preferences;
+import 'lib/refactor/csp_fixer.dart';
 import 'lib/services.dart';
 import 'lib/scm.dart';
+import 'lib/spark_flags.dart';
 import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/search_view_controller.dart';
-import 'lib/ui/widgets/tabview.dart';
 import 'lib/utils.dart' as utils;
+import 'lib/wam/wamfs.dart';
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
-import 'test/all.dart' as all_tests;
-
-import 'spark_flags.dart';
 import 'spark_model.dart';
-import 'lib/workspace.dart';
+import 'test/all.dart' as all_tests;
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -96,7 +99,6 @@ abstract class Spark
   EditorArea _editorArea;
   LaunchManager _launchManager;
   ActionManager _actionManager;
-  ProjectLocationManager _projectLocationManager;
   NavigationManager _navigationManager;
 
   EventBus _eventBus;
@@ -138,6 +140,7 @@ abstract class Spark
     initEditorManager();
     initEditorArea();
     initNavigationManager();
+    initAndroidRSA();
 
     createActions();
 
@@ -164,6 +167,7 @@ abstract class Spark
       addBuilder(new JavaScriptBuilder());
     }
     addBuilder(new JsonBuilder());
+    addBuilder(new AppManifestBuilder());
 
     return restoreWorkspace().then((_) {
       return restoreLocationManager().then((_) {
@@ -185,7 +189,7 @@ abstract class Spark
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+        return filesystem.fileSystemAccess.getDisplayPath(entry).then((path) {
           getUIElement('#directoryLabel').text = path;
         });
       });
@@ -208,7 +212,6 @@ abstract class Spark
   BowerManager get bowerManager => dependencies[BowerManager];
   DecoratorManager get decoratorManager => dependencies[DecoratorManager];
   ActionManager get actionManager => _actionManager;
-  ProjectLocationManager get projectLocationManager => _projectLocationManager;
   NavigationManager get navigationManager => _navigationManager;
   EventBus get eventBus => _eventBus;
 
@@ -317,7 +320,7 @@ abstract class Spark
   void initLaunchManager() {
     // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
     _launchManager = new LaunchManager(_workspace, services,
-        pubManager, bowerManager, this);
+        pubManager, bowerManager, this, new _SparkLaunchController());
   }
 
   void initNavigationManager() {
@@ -339,6 +342,10 @@ abstract class Spark
       }
     });
 
+  }
+
+  void initAndroidRSA() {
+    AndroidRSA.loadPlugin();
   }
 
   void _selectLocation(NavigationLocation location) {
@@ -394,17 +401,14 @@ abstract class Spark
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
-        editorArea.onSelected.listen((Tab tab) {
-          if (tab is AceEditorTab && tab.file != null) {
-            Future declarationFuture =
-                aceManager.prepareForLinking(tab.file.project);
-          }
-        });
+
         if (fileUuid == null) {
           editorArea.tabs[0].select();
           return;
         }
+
         ws.Resource resource = workspace.restoreResource(fileUuid);
+
         if (resource == null) {
           editorArea.tabs[0].select();
           return;
@@ -447,6 +451,10 @@ abstract class Spark
         .listen((FilesControllerPersistTabEvent event) {
       editorArea.persistTab(event.file);
     });
+    querySelector('#showFileViewButton').onClick.listen((_) {
+      Action action = actionManager.getAction('show-files-view');
+      action.invoke();
+    });
   }
 
   void initSearchController() {
@@ -479,14 +487,14 @@ abstract class Spark
     actionManager.registerAction(new PubUpgradeAction(this));
     actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new BowerUpgradeAction(this));
+    actionManager.registerAction(new CspFixAction(this));
     actionManager.registerAction(new ApplicationRunAction.run(this));
     actionManager.registerAction(new ApplicationRunAction.deploy(this));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
-    if (SparkFlags.showGitPull) {
-      actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
-    }
+    actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitMergeAction(this, getDialogElement("#gitMergeDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitResolveConflictsAction(this));
@@ -523,6 +531,7 @@ abstract class Spark
     actionManager.registerAction(new SendFeedbackAction(this));
     actionManager.registerAction(new ShowSearchView(this));
     actionManager.registerAction(new ShowFilesView(this));
+    actionManager.registerAction(new RunPythonAction(this));
 
     actionManager.registerKeyListener();
 
@@ -547,9 +556,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(this).then((manager) {
-      _projectLocationManager = manager;
-    });
+    return filesystem.restoreManager(this, localPrefs);
   }
 
   //
@@ -591,11 +598,27 @@ abstract class Spark
         ws.Folder folder = resources.first;
         folder.importFileEntry(entry);
       }
+    }).catchError((e) {
+      if (!_isCancelledException(e)) throw e;
     });
   }
 
-  Future<SparkJobStatus> importFolder(
-      [List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
+  Future<SparkJobStatus> importFolder([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        return _startImportFolderJob(resources, entry);
+      }
+    }).catchError((e) {
+      if (!_isCancelledException(e)) throw e;
+    });
+  }
+
+  bool _isCancelledException(e) => e == "User cancelled";
+
+  Future<SparkJobStatus> _startImportFolderJob([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
     ws.Folder folder = resources.first;
     return folder.importDirectoryEntry(entry).then((_) {
       return new SparkJobStatus(
@@ -933,6 +956,7 @@ abstract class Spark
     resources.forEach((ws.Resource r) => r.refresh());
   }
 
+  // TODO(ussuri): Polymerize.
   void setSearchViewVisible(bool visible) {
     InputElement searchField = getUIElement('#fileFilter');
     querySelector('#searchViewArea').classes.toggle('hidden', !visible);
@@ -956,176 +980,39 @@ abstract class Spark
   void searchViewControllerNavigate(SearchViewController controller, NavigationLocation location) {
     navigationManager.gotoLocation(location);
   }
-}
-
-/**
- * Used to manage the default location to create new projects.
- *
- * This class also abstracts a bit other the differences between Chrome OS and
- * Windows/Mac/linux.
- */
-class ProjectLocationManager {
-  LocationResult _projectLocation;
-  final Spark _spark;
 
   /**
-   * Create a ProjectLocationManager asynchronously, restoring the default
-   * project location from the given preferences.
+   * Check if this project uses Bower, and if so automatically run a
+   * `bower install`.
    */
-  static Future<ProjectLocationManager> restoreManager(Spark spark) {
-    //localPrefs, workspace
-    return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
-      if (folderToken == null) {
-        return new ProjectLocationManager._(spark);
-      }
-
-      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return _initFlagsFromProjectLocation(entry).then((_) {
-          return new ProjectLocationManager._(spark,
-              new LocationResult(entry, entry, false));
-        });
-      }).catchError((e) {
-        return new ProjectLocationManager._(spark);
-      });
-    });
-  }
-
-  /**
-   * Try to read and set the highest precedence developer flags from
-   * "<project_location>/.spark.json".
-   */
-  static Future _initFlagsFromProjectLocation(chrome.DirectoryEntry projDir) {
-    return projDir.getFile('.spark.json').then(
-        (chrome.ChromeFileEntry flagsFile) {
-      return SparkFlags.initFromFile(flagsFile.readText());
-    }).catchError((_) {
-      // Ignore missing file.
-      return new Future.value();
-    });
-  }
-
-  //this._prefs, this._workspace
-  ProjectLocationManager._(this._spark, [this._projectLocation]);
-
-  /**
-   * Returns the default location to create new projects in. For Chrome OS, this
-   * will be the sync filesystem. This method can return `null` if the user
-   * cancels the folder selection dialog.
-   */
-  Future<LocationResult> getProjectLocation() {
-    if (_projectLocation != null) {
-      // Check if the saved location exists. If so, return it. Otherwise, get a
-      // new location.
-      return _projectLocation.exists().then((bool value) {
-        if (value) {
-          return _projectLocation;
-        } else {
-          _projectLocation = null;
-          return getProjectLocation();
-        }
-      });
+  void _checkAutoRunBower(ws.Container container) {
+    if (bowerManager.properties.isFolderWithPackages(container)) {
+      jobManager.schedule(new BowerGetJob(this, container));
     }
-
-    // On Chrome OS, use the sync filesystem.
-    // TODO(grv): Enable syncfs once the api is more stable.
-    /*if (PlatformInfo.isCros && _spark.workspace.syncFsIsAvailable) {
-      return chrome.syncFileSystem.requestFileSystem().then((fs) {
-        var entry = fs.root;
-        return new LocationResult(entry, entry, true);
-      });
-    }*/
-
-    // Show a dialog with explaination about what this folder is for.
-    return chooseNewProjectLocation();
   }
 
   /**
-   * Opens a pop up and asks the user to change the root directory. Internally,
-   * the stored value is changed here.
+   * Check if this project uses Pub, and if so automatically run a `pub install`.
    */
-  Future<LocationResult> chooseNewProjectLocation() {
-    // Show a dialog with explaination about what this folder is for.
-    return _showRequestFileSystemDialog().then((bool accepted) {
-      if (!accepted) {
-        return null;
-      }
-      // Display a dialog asking the user to choose a default project folder.
-      return _selectFolder(suggestedName: 'projects').then((entry) {
-        if (entry == null) return null;
-
-        _projectLocation = new LocationResult(entry, entry, false);
-        _spark.localPrefs.setValue('projectFolder',
-            chrome.fileSystem.retainEntry(entry));
-        return _projectLocation;
-      });
-    });
-  }
-
-  Future<bool> _showRequestFileSystemDialog() {
-    return _spark.askUserOkCancel('Please choose a folder to store your Chrome Dev Editor projects.',
-        okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
-  }
-
-  /**
-   * This will create a new folder in default project location. It will attempt
-   * to use the given [defaultName], but will disambiguate it if necessary. For
-   * example, if `defaultName` already exists, the created folder might be named
-   * something like `defaultName-1` instead.
-   */
-  Future<LocationResult> createNewFolder(String defaultName) {
-    return getProjectLocation().then((LocationResult root) {
-      return root == null ? null : _create(root, defaultName, 1);
-    });
-  }
-
-  Future<LocationResult> _create(
-      LocationResult location, String baseName, int count) {
-    String name = count == 1 ? baseName : '${baseName}-${count}';
-
-    return location.parent.createDirectory(name, exclusive: true).then((dir) {
-      return new LocationResult(location.parent, dir, location.isSync);
-    }).catchError((_) {
-      if (count > 50) {
-        throw "Error creating project '${baseName}.'";
+  void _checkAutoRunPub(ws.Container container) {
+    if (pubManager.canRunPub(container)) {
+      // Don't run pub on Windows (#2743).
+      if (PlatformInfo.isWin) {
+        showMessage(
+            'Run Pub Get',
+            "This Dart project uses pub packages. Currently, we can't run pub "
+            "from the Chrome Dev Editor due to an issue with Windows junction "
+            "points. In order to run this project, please install Dart's "
+            "command-line tools (available at www.dartlang.org), and run "
+            "'pub get'.");
       } else {
-        return _create(location, baseName, count + 1);
+        // There is issue with the workspace sending duplicate events.
+        // TODO(grv): Revisit workspace events.
+        Timer.run(() {
+          jobManager.schedule(new PubGetJob(this, container));
+        });
       }
-    });
-  }
-}
-
-class LocationResult {
-  /**
-   * The parent Entry. This can be useful for persistng the info across
-   * sessions.
-   */
-  final chrome.DirectoryEntry parent;
-
-  /**
-   * The created location.
-   */
-  final chrome.DirectoryEntry entry;
-
-  /**
-   * Whether the entry was created in the sync filesystem.
-   */
-  final bool isSync;
-
-  LocationResult(this.parent, this.entry, this.isSync);
-
-  /**
-   * The name of the created entry.
-   */
-  String get name => entry.name;
-
-  Future<bool> exists() {
-    if (isSync) return new Future.value(true);
-
-    return entry.getMetadata().then((_) {
-      return true;
-    }).catchError((e) {
-      return false;
-    });
+    }
   }
 }
 
@@ -1156,10 +1043,18 @@ abstract class SparkAction extends Action {
     // Send an action event with the 'main' event category.
     _analyticsTracker.sendEvent('main', id);
 
-    try {
+    if (SparkFlags.developerMode) {
       _invoke(context);
-    } catch (e) {
-      spark.showErrorMessage('Error Invoking ${name}', exception: e);
+    } else {
+      try {
+        _invoke(context);
+      } catch (e) {
+        // Throw the exception to the debugger if we're in developer mode.
+        if (SparkFlags.developerMode) {
+          throw e;
+        }
+        spark.showErrorMessage('Error Invoking ${name}', exception: e);
+      }
     }
   }
 
@@ -1857,7 +1752,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 abstract class PackageManagementAction
     extends SparkAction implements ContextAction {
   PackageManagementAction(Spark spark, String id, String name) :
-    super(spark, id, name);
+      super(spark, id, name);
 
   void _invoke([context]) {
     if (!_canRunAction()) {
@@ -1945,12 +1840,34 @@ class BowerUpgradeAction extends BowerAction {
   Job _createJob(ws.Folder container) => new BowerUpgradeJob(spark, container);
 }
 
+class CspFixAction extends SparkAction implements ContextAction {
+  CspFixAction(Spark spark) :
+      super(spark, "csp-fix", "Refactor for CSP");
+
+  void _invoke([List context]) {
+    if (context == null) {
+      context = [spark.focusManager.currentResource];
+    }
+    context.forEach((ws.Resource resource) {
+      spark.jobManager.schedule(new CspFixJob(spark, resource))
+        .then((status) {
+        // TODO(ussuri): Take action on the returned status.
+      });
+    });
+  }
+
+  String get category => 'refactor';
+
+  bool appliesTo(List list) => CspFixer.mightProcess(list);
+}
+
 /**
  * A context menu item to compile a Dart file to JavaScript. Currently this is
  * only available for Dart files in a chrome app.
  */
 class CompileDartAction extends SparkAction implements ContextAction {
-  CompileDartAction(Spark spark) : super(spark, "dart-compile", "Compile to JavaScript");
+  CompileDartAction(Spark spark) :
+      super(spark, "dart-compile", "Compile to JavaScript");
 
   void _invoke([context]) {
     ws.Resource resource;
@@ -2192,7 +2109,8 @@ class NewProjectAction extends SparkActionWithDialog {
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
-      'core-elements': 'Polymer/core-elements#master'
+      'core-elements': 'Polymer/core-elements#master',
+      'paper-elements': 'Polymer/paper-elements#master'
   };
   // Matches: "proj-template", "proj-template;polymer,core-elements".
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
@@ -2204,8 +2122,9 @@ class NewProjectAction extends SparkActionWithDialog {
 
   void _invoke([context]) {
     _nameElt.value = '';
-    // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+    // Show folder picker if top-level folder is not set.
+    filesystem.fileSystemAccess.getProjectLocation().then(
+        (filesystem.LocationResult r) {
       if (r != null) {
         _show();
       }
@@ -2219,20 +2138,15 @@ class NewProjectAction extends SparkActionWithDialog {
 
     if (name.isEmpty) return;
 
-    spark.projectLocationManager.createNewFolder(name)
-        .then((LocationResult location) {
+    filesystem.fileSystemAccess.createNewFolder(name).then(
+        (filesystem.LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
 
-      ws.WorkspaceRoot root;
-      final locationEntry = location.entry;
+      final DirectoryEntry locationEntry = location.entry;
 
-      if (location.isSync) {
-        root = new ws.SyncFolderRoot(locationEntry);
-      } else {
-        root = new ws.FolderChildRoot(location.parent, locationEntry);
-      }
+      ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
@@ -2271,8 +2185,7 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(locationEntry, templates).build();
-
+        return new ProjectBuilder(locationEntry, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
@@ -2280,14 +2193,10 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file
-            if (spark.pubManager.canRunPub(project)) {
-              spark.jobManager.schedule(new PubGetJob(spark, project));
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
           });
         });
       });
@@ -2403,6 +2312,8 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
 
     _monitor.runCancellableFuture(f).then((_) {
       _hide();
+      ws_utils.setDeploymentTime(deployContainer,
+          (new DateTime.now()).millisecondsSinceEpoch);
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
       if (e is! UserCancelledException) {
@@ -2495,7 +2406,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   }
 
   Future<String> _getLocation() {
-    return chrome.fileSystem.getDisplayPath(_selectedResource.entry)
+    return filesystem.fileSystemAccess.getDisplayPath(_selectedResource.entry)
         .catchError((e) {
       // SyncFS from ChromeBook falls in here.
       return _selectedResource.entry.fullPath;
@@ -2552,7 +2463,8 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+    filesystem.fileSystemAccess.getProjectLocation().then(
+        (filesystem.LocationResult r) {
       if (r != null) {
         _show();
         Timer.run(_copyClipboard);
@@ -2772,6 +2684,97 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     branchButton.deliverChanges();
 
     _GitBranchJob job = new _GitBranchJob(
+        gitOperations, _branchNameElement.value, branchName, spark);
+    spark.jobManager.schedule(job).then((_) {
+      _restoreDialog();
+      _hide();
+    }).catchError((e) {
+      spark.showErrorMessage(
+          'Error creating branch ${_branchNameElement.value}', exception: e);
+    });
+    _branchNameElement.disabled = false;
+  }
+
+  void _restoreDialog() {
+    SparkDialogButton commitButton = getElement('#gitBranch');
+    commitButton.disabled = false;
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = false;
+    _toggleProgressVisible(false);
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isScmProject(context);
+}
+
+class GitMergeAction extends SparkActionWithProgressDialog implements ContextAction {
+  ws.Project project;
+  GitScmProjectOperations gitOperations;
+  InputElement _branchNameElement;
+  SelectElement _selectElement;
+
+  GitMergeAction(Spark spark, Element dialog)
+      : super(spark, "git-merge", "Merge Branch…", dialog) {
+    _branchNameElement = _triggerOnReturn("#gitBranchName");
+    _selectElement = getElement("#gitBranches");
+  }
+
+  void _invoke([context]) {
+    project = context.first;
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
+
+    // Clear out the old select options.
+    // TODO (ussuri) : Polymerize.
+    _selectElement.length = 0;
+    _branchNameElement.value = gitOperations.getBranchName();
+    _branchNameElement.disabled = true;
+
+    gitOperations.getLocalBranchNames().then((Iterable<String> localBranches) {
+      List branches = localBranches.toList();
+      branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+      for (String branch in branches) {
+        // Filter out current branch.
+        if (branch != _branchNameElement.value) {
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+      }
+
+      gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
+        List branches = remoteBranches.toList();
+        branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+        for (String branch in branches) {
+          branch = 'origin/${branch}';
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+        _selectElement.selectedIndex = 0;
+      }).then((_) {
+        _show();
+      });
+    });
+  }
+
+  void _commit() {
+    String branchName = "";
+    int selectIndex = _selectElement.selectedIndex;
+    branchName = (_selectElement.children[selectIndex]
+        as OptionElement).value;
+
+    _setProgressMessage("Creating branch ${_branchNameElement.value}…");
+    _toggleProgressVisible(true);
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = true;
+    closeButton.deliverChanges();
+
+    SparkDialogButton branchButton = getElement('#gitBranch');
+    branchButton.disabled = true;
+    branchButton.deliverChanges();
+
+    _GitMergeJob job = new _GitMergeJob(
         gitOperations, _branchNameElement.value, branchName, spark);
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
@@ -3284,8 +3287,8 @@ class _GitCloneTask {
   }
 
   Future run() {
-    return spark.projectLocationManager.createNewFolder(_projectName).then(
-        (LocationResult location) {
+    return filesystem.fileSystemAccess.createNewFolder(_projectName).then(
+        (filesystem.LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
@@ -3320,18 +3323,10 @@ class _GitCloneTask {
             });
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.canRunPub(project)) {
-              // There is issue with workspace sending duplicate events.
-              // TODO(grv): revisit workspace events.
-              Timer.run(() {
-                spark.jobManager.schedule(new PubGetJob(spark, project));
-              });
-            }
+            spark._checkAutoRunPub(project);
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-              spark.jobManager.schedule(new BowerGetJob(spark, project));
-            }
+            spark._checkAutoRunBower(project);
 
             spark.workspace.save();
           });
@@ -3426,6 +3421,39 @@ class _GitBranchJob extends Job {
   }
 }
 
+class _GitMergeJob extends Job {
+  GitScmProjectOperations gitOperations;
+  String _branchName;
+  String _sourceBranchName;
+  String url;
+  Spark spark;
+
+  _GitMergeJob(this.gitOperations, String branchName, this._sourceBranchName,
+      this.spark) : super("Creating ${branchName}…") {
+    _branchName = branchName;
+  }
+
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
+    monitor.start(name, maxWork: 1);
+
+    return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      String username;
+      String password;
+      if (value != null) {
+        Map<String, String> info = JSON.decode(value);
+        username = info['username'];
+        password = info['password'];
+      }
+      return gitOperations.mergeBranch(_branchName, _sourceBranchName,
+          username: username, password: password).then((_) {
+      }).catchError((e) {
+        e = SparkException.fromException(e);
+        spark.showErrorMessage('Error in Merging branch ${_branchName}', exception : e);
+      });
+    });
+  }
+}
+
 class _GitCommitJob extends Job {
   GitScmProjectOperations gitOperations;
   String _commitMessage;
@@ -3481,14 +3509,10 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.canRunPub(resource)) {
-        spark.jobManager.schedule(new PubGetJob(spark, resource));
-      }
+      spark._checkAutoRunPub(resource as Container);
 
       // Run Bower if the folder has a bower.json file.
-      if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
-        spark.jobManager.schedule(new BowerGetJob(spark, resource));
-      }
+      spark._checkAutoRunBower(resource as Container);
     }).then((_) {
       return new SparkJobStatus(message: 'Opened folder ${_entry.fullPath}');
     }).catchError((e) {
@@ -3523,6 +3547,7 @@ abstract class PackageManagementJob extends Job {
 
     return _run(monitor).then((_) {
       _spark.showSuccessMessage("Successfully ran $_commandName");
+      // TODO(ussuri): Once there is confidence in CspFixer, perhaps run it here.
     }).catchError((e) {
       _spark.showErrorMessage("Error while running $_commandName", exception: e);
     });
@@ -3563,6 +3588,26 @@ class BowerUpgradeJob extends PackageManagementJob {
       _spark.bowerManager.upgradePackages(_container, monitor);
 }
 
+class CspFixJob extends Job {
+  final Spark _spark;
+  final ws.Resource _resource;
+
+  CspFixJob(this._spark, ws.Resource resource) :
+      _resource = resource,
+      super('Refactoring ${resource.name} for CSP compatibility…');
+
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
+    return new CspFixer(_resource, monitor).process()
+        .then((_) {
+      _spark.showSuccessMessage(
+        "Successfully refactored ${_resource.name} for CSP");
+    }).catchError((e) {
+      _spark.showErrorMessage(
+        "Error while refactoring ${_resource.name} for CSP", exception: e);
+    });
+  }
+}
+
 class CompileDartJob extends Job {
   final Spark spark;
   final ws.File file;
@@ -3581,7 +3626,7 @@ class CompileDartJob extends Job {
       }
 
       String newFileName = '${file.name}.precompiled.js';
-      return ws_utils.getCreateFile(file.parent, newFileName).then((ws.File file) {
+      return file.parent.getOrCreateFile(newFileName, true).then((ws.File file) {
         return file.setContents(result.output);
       });
     });
@@ -3696,6 +3741,7 @@ class RunTestsAction extends SparkAction {
 
   _invoke([Object context]) {
     if (SparkFlags.developerMode) {
+
       _initTestDriver();
       testDriver.runTests();
     }
@@ -3704,7 +3750,7 @@ class RunTestsAction extends SparkAction {
   void _initTestDriver() {
     if (testDriver == null) {
       testDriver = new TestDriver(all_tests.defineTests, spark,
-          connectToTestListener: true);
+          spark.localPrefs, connectToTestListener: true);
     }
   }
 }
@@ -3890,14 +3936,14 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
       : super(spark, "folder-import", "Import Folder…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        Future<SparkJobStatus> f = spark.importFolder(resources, entry);
+    Future<SparkJobStatus> f;
+    f = spark.importFolder(resources).then((SparkJobStatus jobStatus) {
+      if (jobStatus != null) {
         _waitForJob(name, 'Importing folder…', f);
       }
+      return jobStatus;
+    }).catchError((e) {
+      spark.showErrorMessage('Error while importing file', exception: e);
     });
   }
 
@@ -3942,6 +3988,52 @@ class ShowFilesView extends SparkAction {
   void _invoke([context]) {
     spark.setSearchViewVisible(false);
   }
+}
+
+class _SparkLaunchController implements LaunchController {
+  void displayDeployToMobileDialog(Resource launchResource) {
+    DeployToMobileDialog.deploy(launchResource);
+  }
+}
+
+class RunPythonAction extends SparkAction {
+  WamFS _fs;
+  bool _connected;
+
+  RunPythonAction(Spark spark) : super(spark, 'run-python', 'Run Python') {
+    _fs = new WamFS();
+  }
+
+  Future _connect() {
+    if (_connected) return new Future.value();
+    return _fs.connect('bjffolomlcjmflonfneaijabbpnflija', '/saltpig').then((_) {
+      _connected = true;
+    });
+  }
+
+  void _invoke([context]) {
+    List<ws.Resource> selection = spark._getSelection();
+    if (selection.length == 0) return;
+    ws.File file = selection.first;
+    if (!file.name.endsWith('.py')) {
+      spark.showErrorMessage('Not a python script',
+          message: 'Please select a python script to run.');
+      return;
+    }
+    file.getContents().then((content) {
+      return _connect().then((_) {
+        return _fs.writeStringToFile('/saltpig/domfs/foo.py', content).then((_) {
+          _fs.executeCommand('/saltpig/exe/python', ['/mnt/html5/foo.py'],
+              (String string) {
+                print('stdout: ${string}');
+              }, (String string) {
+                print('stderr: ${string}');
+              });
+        });
+      });
+    });
+  }
+
 }
 
 // Analytics code.

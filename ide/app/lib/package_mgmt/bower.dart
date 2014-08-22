@@ -23,7 +23,6 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.bower');
 
 class BowerManager extends PackageManager {
-
   /**
    * Create a new [BowerManager] instance. This is a heavy-weight object; it
    * creates a new [Builder].
@@ -48,7 +47,8 @@ class BowerManager extends PackageManager {
       _installOrUpgradePackages(container.project, FetchMode.UPGRADE, monitor);
 
   // TODO(keertip): implement for bower
-  Future<dynamic> arePackagesInstalled(Folder container) => new Future.value(true);
+  Future<dynamic> arePackagesInstalled(Folder container) =>
+      new Future.value(true);
 
   //
   // - end PackageManager abstract interface.

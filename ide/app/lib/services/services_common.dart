@@ -6,9 +6,13 @@ library spark.services_common;
 
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+
 import '../workspace.dart';
 import '../package_mgmt/package_manager.dart';
 import '../package_mgmt/pub.dart';
+
+final Logger _logger = new Logger('spark.services_common');
 
 /**
  * Defines a received action event.
@@ -156,7 +160,11 @@ class CompileResult {
     // Find all files.
     problems.forEach((CompileError error) {
       error.file = resolver.getResource(error._uri);
-      if (error.file != null) retriever.addFile(error.file);
+      if (error.file != null) {
+        retriever.addFile(error.file);
+      } else {
+        _logger.warning('no file associated with ${error}');
+      }
     });
 
     // Get content.

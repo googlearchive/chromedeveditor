@@ -39,42 +39,6 @@
             horizontal
             justify="spaced"
             spacing="small">
-          <input type="fileFilter"
-              id="fileFilter"
-              placeholder="Filter"
-              spellcheck="false"
-              on-keydown="{{fileFilterKeydownHandler}}"
-              on-input="{{fileFilterInputHandler}}"
-              tabindex="0"/>
-          <spark-menu-button
-              id="moreSearch"
-              valueAttr="action-id"
-              arrow="none"
-              on-activate="{{onMenuSelected}}">
-
-            <spark-button highlight="false" style="width: 35px; height: 35px;">
-              <svg id="moreSearchArrow" width="18px" height="18px" viewBox="0 0 24 24">
-                <g><polygon points="7,10 12,15 17,10 "></polygon></g>
-              </svg>
-            </spark-button>
-
-            <spark-menu-item id="showFilesView"
-                             action-id="show-files-view"
-                             label="Filter"
-                             checkmark="true">
-            </spark-menu-item>
-            <spark-menu-item id="showSearchView"
-                             action-id="show-search-view"
-                             label="Search in files">
-            </spark-menu-item>
-          </spark-menu-button>
-
-          <spark-button id="runButton" flat round tooltip="Run">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          </spark-button>
-
           <spark-menu-button
               id="mainMenu"
               valueAttr="action-id"
@@ -83,7 +47,7 @@
 
             <spark-button menuButton flat round>
               <svg width="24px" height="24px" viewBox="0 0 24 24">
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                <path d="M3,18h18v-2H3V18z M3,13h18v-2H3V13z M3,6v2h18V6H3z"></path>
               </svg>
             </spark-button>
 
@@ -108,6 +72,8 @@
               <spark-menu-separator></spark-menu-separator>
               <spark-menu-item action-id="run-tests" label="Run Tests">
               </spark-menu-item>
+              <spark-menu-item action-id="run-python" label="Run Python">
+              </spark-menu-item>
             </template>
 
             <spark-menu-separator></spark-menu-separator>
@@ -116,8 +82,47 @@
             </spark-menu-item>
             <spark-menu-item action-id="help-about" label="About Chrome Dev Editor">
             </spark-menu-item>
-
           </spark-menu-button>
+
+          <spark-button id="runButton" flat round tooltip="Run">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </spark-button>
+
+          <div id="fileFilterGroup">
+            <input id="fileFilter"
+                type="text"
+                placeholder="Filter"
+                spellcheck="false"
+                on-keydown="{{fileFilterKeydownHandler}}"
+                on-input="{{fileFilterInputHandler}}"/>
+
+            <spark-menu-button
+                id="moreSearchMenu"
+                valueAttr="action-id"
+                arrow="none"
+                on-activate="{{onMenuSelected}}">
+
+              <spark-button id="moreSearchButton"
+                  menuButton padding="small" hoverStyle="foreground">
+                <svg width="24px" height="28px" viewBox="0 0 24 28">
+                  <path d="M15.5,14h-0.8l-0.3-0.3c1-1.1,1.6-2.6,1.6-4.2C16,5.9,13.1,3,9.5,3C5.9,3,3,5.9,3,9.5S5.9,16,9.5,16c1.6,0,3.1-0.6,4.2-1.6l0.3,0.3v0.8l5,5l1.5-1.5L15.5,14z M9.5,14C7,14,5,12,5,9.5S7,5,9.5,5C12,5,14,7,14,9.5S12,14,9.5,14z"></path>
+                  <polygon points="6,21 11,26 16,21 "></polygon>
+                </svg>
+              </spark-button>
+
+              <spark-menu-item id="showFilesView"
+                  action-id="show-files-view"
+                  label="Filter"
+                  checkmark="true">
+              </spark-menu-item>
+              <spark-menu-item id="showSearchView"
+                  action-id="show-search-view"
+                  label="Search in files">
+              </spark-menu-item>
+            </spark-menu-button>
+          </div>
         </spark-toolbar>
 
         <content select="#leftPanel"></content>
@@ -240,6 +245,9 @@
               <option value="web/web_app_dart">
                 Dart web app
               </option>
+              <option value="web/web_app_dart_polymer">
+                Dart web app (using Polymer paper elements)
+              </option>
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
@@ -247,7 +255,7 @@
                 JavaScript web app (using Polymer paper elements)
               </option>
               <option value="web/web_starter_kit">
-                Web Starter Kit
+                Web Starter Kit (boilerplate & tooling for multi-device development)
               </option>
             </optgroup>
             <optgroup label="Chrome Apps">
@@ -257,10 +265,8 @@
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome App
               </option>
-              <!-- This one currently can't possibly work due to Polymer
-                   JS breaking the CSP. BUG #1933. -->
-              <option value="chrome/chrome_app_polymer_js;polymer,core-elements">
-                JavaScript Chrome App using Polymer
+              <option value="chrome/chrome_app_polymer_js;polymer,paper-elements">
+                JavaScript Chrome App (using Polymer paper elements)
               </option>
               <!-- This one works when installed in Chrome manually, but
                    launching via the 'Run' button is broken. BUG #1935. -->
@@ -295,6 +301,9 @@
               <option value="web/web_app_dart">
                 Dart web app
               </option>
+              <option value="web/web_app_dart_polymer">
+                Dart web app (using Polymer paper elements)
+              </option>
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
@@ -302,7 +311,7 @@
                 JavaScript web app (using Polymer paper elements)
               </option>
               <option value="web/web_starter_kit">
-                Web Starter Kit
+                Web Starter Kit (boilerplate & tooling for multi-device development)
               </option>
             </optgroup>
             <optgroup label="Chrome apps">
@@ -311,6 +320,9 @@
               </option>
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome App
+              </option>
+              <option value="chrome/chrome_app_polymer_js;polymer,paper-elements">
+                JavaScript Chrome App (using Polymer paper elements)
               </option>
             </optgroup>
             <optgroup label="Polymer elements">
@@ -431,6 +443,19 @@
       <spark-dialog-button id="gitBranch" submit>Create Branch</spark-dialog-button>
     </spark-dialog>
 
+    <!-- Git Merge dialog -->
+    <spark-dialog id="gitMergeDialog" headerTitle="Merge Branch">
+      <label for="gitBranchName">Current branch</label>
+      <input id="gitBranchName" type="text" class="form-control"
+          required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
+      <div class="form-group">
+        <label for="gitBranches">Select branch to merge </label>
+        <select id="gitBranches" class="form-control"></select>
+      </div>
+      <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="gitBranch" submit>Merge</spark-dialog-button>
+    </spark-dialog>
+
     <!-- Git Checkout dialog -->
     <spark-dialog id="gitCheckoutDialog" headerTitle="Git Checkout">
       <div class="form-group">
@@ -503,14 +528,14 @@
               horizontal justify="spaced" spacing="small">
             <label class="settings-label">Editor theme:</label>
             <span class="settings-value"></span>
-            <spark-button id="themeMinus" class="plus-minus-button"
+            <spark-button id="themeMinus" class="change-setting-button"
                 flat round padding="none" on-click="{{onThemeMinus}}">
               <!--TODO(ussuri): Use SVG <use> directives instead here and below.-->
               <svg viewBox="0 0 24 24" width="24" height="24">
                 <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
               </svg>
             </spark-button>
-            <spark-button id="themePlus" class="plus-minus-button"
+            <spark-button id="themePlus" class="change-setting-button"
                 flat round padding="none" on-click="{{onThemePlus}}">
               <svg viewBox="0 0 24 24" width="24" height="24">
                 <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
@@ -525,13 +550,13 @@
             horizontal justify="spaced" spacing="small">
           <label class="settings-label">Editor font:</label>
           <span class="settings-value"></span>
-          <spark-button id="fontMinus" class="plus-minus-button"
+          <spark-button id="fontMinus" class="change-setting-button"
               flat round padding="none" on-click="{{onFontSmaller}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M19,13H5v-2h14V13z"></path>
             </svg>
           </spark-button>
-          <spark-button id="fontPlus" class="plus-minus-button"
+          <spark-button id="fontPlus" class="change-setting-button"
               flat round padding="none" on-click="{{onFontLarger}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>
@@ -545,13 +570,13 @@
             horizontal justify="spaced" spacing="small">
           <label class="settings-label">Key bindings:</label>
           <span class="settings-value"></span>
-          <spark-button id="keysMinus" class="plus-minus-button"
+          <spark-button id="keysMinus" class="change-setting-button"
               flat round padding="none" on-click="{{onKeysMinus}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
             </svg>
           </spark-button>
-          <spark-button id="keysPlus" class="plus-minus-button"
+          <spark-button id="keysPlus" class="change-setting-button"
               flat round padding="none" on-click="{{onKeysPlus}}">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
@@ -568,8 +593,11 @@
               horizontal justify="spaced" spacing="small">
             <label class="settings-label">Root directory:</label>
             <span id="directoryLabel" class="settings-value"></span>
-            <spark-button id="chooseDirectory" on-click="{{onClickRootDirectory}}"
-            class="choose-directory-button">...
+            <spark-button id="chooseDirectory" class="change-setting-button"
+                flat round padding="medium" on-click="{{onClickRootDirectory}}">
+              <svg viewBox="0 0 24 24" width="24" height="24">
+                <path d="M10,4H4C2.9,4,2,4.9,2,6l0,12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"></path>
+              </svg>
             </spark-button>
           </spark-toolbar>
         </div>

@@ -38,6 +38,7 @@ class Status {
         status.type = FileStatusType.COMMITTED;
       }
     }
+
     return status;
   }
 
@@ -47,6 +48,7 @@ class Status {
   static Future<FileStatus> updateAndGetStatus(ObjectStore store,
       chrome.Entry entry) {
     FileStatus status;
+
     return entry.getMetadata().then((chrome.Metadata data) {
       status = getStatusForEntry(store, entry);
 

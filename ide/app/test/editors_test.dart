@@ -9,10 +9,10 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 
 import 'ace_test.dart';
-import 'files_mock.dart';
 import '../lib/ace.dart';
 import '../lib/editors.dart';
 import '../lib/event_bus.dart';
+import '../lib/files_mock.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 

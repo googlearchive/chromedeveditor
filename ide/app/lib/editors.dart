@@ -396,6 +396,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
       editor = new ImageViewer(file);
     } else {
       editor = new ace.TextEditor(_aceContainer, file, _prefs);
+      editor.resize();
     }
 
     _editorMap[file] = editor;

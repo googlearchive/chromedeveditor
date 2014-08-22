@@ -6,7 +6,7 @@ homepage: https://github.com/dart-lang/spark/
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  ace: '>=0.5.0 <0.6.0'
+  ace: '>=0.5.4 <0.6.0'
   analyzer: '>=0.15.6 <0.16.0'
   archive: '>=1.0.16 <1.1.0'
   barback: any
@@ -18,6 +18,7 @@ dependencies:
   compiler_unsupported: 0.7.2
   crypto: any
   diff: '>=0.1.0 <0.2.0'
+  html5lib: any
   intl: any
   json: any
   logging: any
@@ -28,8 +29,8 @@ dependencies:
   spark_widgets:
     path: ../widgets
   tavern:
-    git: https://github.com/tapted/tavern.git
-    version: '>=0.0.6'
+   git: https://github.com/tapted/tavern.git
+   version: '>=0.0.8'
   unittest: '>=0.11.0 <0.12.0'
   uuid: '>=0.3.0 <0.4.0'
   yaml: '>=1.1.0 <1.2.0'
@@ -39,4 +40,4 @@ dev_dependencies:
 transformers:
 - polymer:
     entry_points: web/spark_polymer.html
-    csp: 'true'
+    csp: true
