@@ -233,7 +233,6 @@ abstract class ProgressMonitor {
    * The final value of work once progress is complete.
    */
   num get maxWork => _maxWork;
-  set maxWork(num amount) => _maxWork = amount;
 
   /**
    * Returns `true` if progress cannot be determined ([maxWork] == 0).
@@ -258,6 +257,13 @@ abstract class ProgressMonitor {
         return '$_work of $_maxWork';
     }
     return '';
+  }
+
+  /**
+   * Add [amount] more work to the previously specified value.
+   */
+  void addWork(num amount) {
+    _maxWork += amount;
   }
 
   /**

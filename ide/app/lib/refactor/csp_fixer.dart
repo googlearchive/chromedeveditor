@@ -52,7 +52,7 @@ class CspFixer {
   Future<SparkJobStatus> process() {
     _monitor.start(
         "Refactoring ${_resource.name} for CSP compatibility…",
-        maxWork: 1,
+        maxWork: 0,
         format: ProgressFormat.N_OUT_OF_M);
 
     Iterable<ws.File> files;
@@ -69,7 +69,7 @@ class CspFixer {
             .where((ws.File f) => _CspFixerSingleFile.willProcess(f))
             .map((ws.File f) => new _CspFixerSingleFile(f));
 
-    _monitor.maxWork = fixers.length;
+    _monitor.addWork(fixers.length);
 
     final Iterable<Future> futures =
         fixers.map((f) => f.process().then((_) => _monitor.worked(1)));
