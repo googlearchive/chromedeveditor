@@ -7,12 +7,73 @@ library spark.app.manifest_validator;
 import '../json/json_schema_validator.dart';
 import '../json/json_validator.dart';
 
+class ErrorIds {
+  static final String INVALID_MANIFEST_VERSION = "INVALID_MANIFEST_VERSION";
+  static final String OBSOLETE_MANIFEST_VERSION = "OBSOLETE_MANIFEST_VERSION";
+}
+
 /**
  * Json validator for "manifest.json" contents.
  */
 class AppManifestValidator extends RootObjectSchemaValidator {
-  AppManifestValidator(ErrorCollector errorCollector)
-    : super(errorCollector, AppManifestSchema);
+  factory AppManifestValidator(ErrorCollector errorCollector)
+  {
+    var factory = new AppManifestValidatorFactory(errorCollector);
+    var core_factory = new CoreSchemaValidatorFactory(factory, errorCollector);
+    return new AppManifestValidator._internal(core_factory, errorCollector);
+  }
+
+  AppManifestValidator._internal(
+      SchemaValidatorFactory factory, ErrorCollector errorCollector)
+    : super(factory, errorCollector, AppManifestSchema);
+}
+
+class AppManifestValidatorFactory implements SchemaValidatorFactory {
+  final ErrorCollector errorCollector;
+
+  AppManifestValidatorFactory(this.errorCollector);
+
+  SchemaValidator createValidator(dynamic schema) {
+    if (schema == "manifest_version") {
+      return new ManifestVersionValueValidator(errorCollector);
+    }
+    return null;
+  }
+
+  bool validateSchemaForTesting(dynamic schema) {
+    if (schema == "manifest_version") {
+      return true;
+    }
+    return false;
+  }
+
+  SchemaValidatorFactory get parentFactory => null;
+}
+
+class ManifestVersionValueValidator extends IntValueValidator {
+  ManifestVersionValueValidator(ErrorCollector errorCollector)
+    : super(errorCollector);
+
+  void checkValue(JsonEntity entity, StringEntity propertyName) {
+    assert(propertyName != null);
+
+    if (entity is NumberEntity && entity.number is int) {
+      if (entity.number == 1) {
+        errorCollector.addMessage(
+            ErrorIds.OBSOLETE_MANIFEST_VERSION,
+            entity.span,
+            "Value 1 is obsolete for property \"${propertyName.text}\".");
+      } else if (entity.number != 2) {
+        errorCollector.addMessage(
+            ErrorIds.INVALID_MANIFEST_VERSION,
+            entity.span,
+            "Value 1 or 2 is expected for property \"${propertyName.text}\".");
+      }
+      return;
+    }
+
+    super.checkValue(entity, propertyName);
+  }
 }
 
 // from https://developer.chrome.com/extensions/manifest
@@ -70,7 +131,7 @@ Map AppManifestSchema =
   "key": "string",
   "kiosk_enabled": "var",
   "kiosk_only": "var",
-  "manifest_version": "int",
+  "manifest_version": "manifest_version",
   "minimum_chrome_version": "var",
   "nacl_modules": "var",
   "name": "string",

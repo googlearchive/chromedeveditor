@@ -9,7 +9,7 @@ import 'package:unittest/unittest.dart';
 import '../lib/apps/app_manifest_validator.dart';
 import '../lib/json/json_parser.dart';
 import '../lib/json/json_schema_validator.dart' as json_schema_validator;
-import '../lib/json/json_validator.dart';
+import '../lib/json/json_validator.dart' as json_validator;
 
 /**
  * Event data collected for each validation error.
@@ -25,7 +25,7 @@ class _ErrorEvent {
 /**
  * Sink for json validation errors.
  */
-class _LoggingErrorCollector implements ErrorCollector {
+class _LoggingErrorCollector implements json_validator.ErrorCollector {
   final List<_ErrorEvent> events = new List<_ErrorEvent>();
 
   void addMessage(String messageId, Span span, String message) {
@@ -56,8 +56,8 @@ class _LoggingEventChecker {
 _LoggingErrorCollector _validateDocument(String contents) {
   _LoggingErrorCollector errorCollector = new _LoggingErrorCollector();
   AppManifestValidator validator = new AppManifestValidator(errorCollector);
-  JsonValidatorListener listener =
-      new JsonValidatorListener(errorCollector, validator);
+  json_validator.JsonValidatorListener listener =
+      new json_validator.JsonValidatorListener(errorCollector, validator);
   JsonParser parser = new JsonParser(contents, listener);
   parser.parse();
   return errorCollector;
@@ -66,15 +66,13 @@ _LoggingErrorCollector _validateDocument(String contents) {
 void defineTests() {
   group('manifest-json validator tests -', () {
     test('Schema definition is correct.', () {
-      json_schema_validator.validateSchemaDefinition(
-          "manifest", AppManifestSchema);
+      var errorCollector = new _LoggingErrorCollector();
+      var validator = new AppManifestValidator(errorCollector);
+      expect(validator.factory.validateSchemaForTesting(AppManifestSchema), isTrue);
     });
 
     test('manifest may be an empty object', () {
-      String contents = """
-{
-}
-""";
+      String contents = """{}""";
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
@@ -82,9 +80,7 @@ void defineTests() {
     });
 
     test('manifest cannot be a single value', () {
-      String contents = """
-123
-""";
+      String contents = """123""";
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
@@ -93,11 +89,7 @@ void defineTests() {
     });
 
     test('"manifest_version" cannot be a string', () {
-      String contents = """
-{
-  "manifest_version": "string value"
-}
-""";
+      String contents = """{ "manifest_version": "string value" } """;
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
@@ -105,12 +97,17 @@ void defineTests() {
       checker.end();
     });
 
+    test('"manifest_version" value 1 is obsolete', () {
+      String contents = """{ "manifest_version": 1 } """;
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.error(ErrorIds.OBSOLETE_MANIFEST_VERSION);
+      checker.end();
+    });
+
     test('"manifest_version" must be a number', () {
-      String contents = """
-{
-  "manifest_version": 2
-}
-""";
+      String contents = """{ "manifest_version": 2 }""";
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
@@ -118,11 +115,7 @@ void defineTests() {
     });
 
     test('"scripts" may be an empty array', () {
-      String contents = """
-{
-  "app": { "background": { "scripts": [] } }
-}
-""";
+      String contents = """{"app": {"background": {"scripts": []}}} """;
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
@@ -130,11 +123,7 @@ void defineTests() {
     });
 
     test('"scripts" may be an array of strings', () {
-      String contents = """
-{
-  "app": { "background": { "scripts": [ "string-value" ] } }
-}
-""";
+      String contents = """{"app": {"background": {"scripts": ["s"]}}}""";
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
@@ -142,11 +131,7 @@ void defineTests() {
     });
 
     test('"scripts" cannot contain a number in the array', () {
-      String contents = """
-{
-  "app": { "background": { "scripts": [ "string-value", 1, "boo" ] } }
-}
-""";
+      String contents = """{"app": {"background": {"scripts": ["s", 1]}}}""";
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
@@ -155,15 +140,11 @@ void defineTests() {
     });
 
     test('"scripts" cannot be an object', () {
-      String contents = """
-{
-  "app": { "background": { "scripts": { "foo": "string-value" } } }
-}
-""";
+      String contents = """{"app": {"background": {"scripts": {"f": "s"}}}}""";
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(json_schema_validator.ErrorIds.STRING_EXPECTED);
+      checker.error(json_schema_validator.ErrorIds.ARRAY_EXPECTED);
       checker.end();
     });
 

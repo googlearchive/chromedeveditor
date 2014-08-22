@@ -7,36 +7,119 @@ library spark.json.schema_validator;
 import '../json/json_validator.dart';
 
 class ErrorIds {
-  static final String TOP_LEVEL_OBJECT = "";
-  static final String UNKNOWN_PROPERTY_NAME = "";
-  static final String ARRAY_EXPECTED = "";
-  static final String OBJECT_EXPECTED = "";
-  static final String STRING_EXPECTED = "";
-  static final String NUMBER_EXPECTED = "";
-  static final String INTEGER_EXPECTED = "";
-  static final String BOOLEAN_EXPECTED = "";
+  static final String TOP_LEVEL_OBJECT = "TOP_LEVEL_OBJECT";
+  static final String UNKNOWN_PROPERTY_NAME = "UNKNOWN_PROPERTY_NAME";
+  static final String ARRAY_EXPECTED = "ARRAY_EXPECTED";
+  static final String OBJECT_EXPECTED = "OBJECT_EXPECTED";
+  static final String STRING_EXPECTED = "STRING_EXPECTED";
+  static final String NUMBER_EXPECTED = "NUMBER_EXPECTED";
+  static final String INTEGER_EXPECTED = "INTEGER_EXPECTED";
+  static final String BOOLEAN_EXPECTED = "BOOLEAN_EXPECTED";
+}
+
+abstract class SchemaValidatorFactory {
+  SchemaValidator createValidator(dynamic schema);
+  bool validateSchemaForTesting(dynamic schema);
+  SchemaValidatorFactory get parentFactory;
 }
 
 /**
- *  Type :==
+ * The core factory understands the following schema:
+ *
+ * SchemaType :==
  *    "var"
  *    "int" |
  *    "num" |
  *    "string" |
- *    '[' Type ']' |
- *    '{' name ':' Type '}'
+ *    List<SchemaType> |
+ *    Map<String, SchemaType>
  */
+class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
+  final SchemaValidatorFactory parentFactory;
+  final ErrorCollector errorCollector;
+
+  CoreSchemaValidatorFactory(this.parentFactory, this.errorCollector);
+
+  SchemaValidator createValidator(dynamic schema) {
+    if (parentFactory != null) {
+      var result = parentFactory.createValidator(schema);
+      if (result != null) {
+        return result;
+      }
+    }
+
+    if (schema is Map) {
+      return new ObjectPropertiesSchemaValidator(this, errorCollector, schema);
+    } else if (schema is List) {
+      return new ArrayElementsSchemaValidator(this, errorCollector, schema);
+    } else if (schema is String) {
+      switch(schema) {
+        case "var":
+          return SchemaValidator.instance;
+        case "string":
+          return new StringValueValidator(errorCollector);
+        case "int":
+          return new IntValueValidator(errorCollector);
+        case "num":
+          return new NumberValueValidator(errorCollector);
+        case "boolean":
+          return new BooleanValueValidator(errorCollector);
+      }
+    }
+    throw new FormatException("Element type \"${schema}\" is invalid.");
+  }
+
+  bool validateSchemaForTesting(dynamic schema) {
+    if (parentFactory != null) {
+      var result = parentFactory.validateSchemaForTesting(schema);
+      if (result)
+        return true;
+    }
+
+    if (schema is Map) {
+      var result = true;
+      schema.forEach((propertyName, propertySchema) {
+        if (!validateSchemaForTesting(propertySchema)) {
+          result = false;
+        }
+      });
+      return result;
+    }
+
+    if (schema is List){
+      if (schema.length != 1) {
+        return false;
+      }
+      return validateSchemaForTesting(schema[0]);
+    }
+
+    if (schema is String){
+      switch(schema) {
+        case "var":
+        case "string":
+        case "int":
+        case "num":
+        case "boolean":
+          return true;
+      }
+    }
+
+    return false;
+  }
+
+}
 
 class RootObjectSchemaValidator extends SchemaValidator {
   static const String message = "Top level element must be an object.";
 
+  final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
   final Map schema;
 
-  RootObjectSchemaValidator(this.errorCollector, this.schema);
+  RootObjectSchemaValidator(this.factory, this.errorCollector, this.schema);
 
   JsonValidator enterObject() {
-    return new ObjectPropertiesSchemaValidator(errorCollector, schema);
+    return new ObjectPropertiesSchemaValidator(factory, errorCollector, schema);
   }
 
   void leaveArray(ArrayEntity entity) {
@@ -54,63 +137,13 @@ class SchemaValidator extends NullValidator {
   void checkValue(JsonEntity entity, StringEntity propertyName) {}
 }
 
-SchemaValidator createSchemaValidator(
-    dynamic schema, ErrorCollector errorCollector) {
-  if (schema is Map) {
-   return new ObjectPropertiesSchemaValidator(errorCollector, schema);
-  } else if (schema is List){
-   return new ArrayElementsSchemaValidator(errorCollector, schema);
-  } else if (schema is String){
-    switch(schema) {
-      case "var":
-        return SchemaValidator.instance;
-      case "string":
-        return new StringValueValidator(errorCollector, schema);
-      case "int":
-        return new IntValueValidator(errorCollector, schema);
-      case "num":
-        return new NumberValueValidator(errorCollector, schema);
-      case "boolean":
-        return new NumberValueValidator(errorCollector, schema);
-    }
-  }
-  throw new FormatException("Element type \"${schema}\" is invalid.");
-}
-
-void validateSchemaDefinition(String path, dynamic schema) {
-  if (schema is Map) {
-    schema.forEach((key, value) {
-      validateSchemaDefinition(path + ".${key}", value);
-    });
-    return;
-  }
-
-  if (schema is List){
-    if (schema.length != 1) {
-      throw new FormatException("${path}: array must contain only one element");
-    }
-    validateSchemaDefinition(path + "[0]", schema[0]);
-    return;
-  }
-
-  if (schema is String){
-    switch(schema) {
-      case "var":
-      case "string":
-      case "int":
-      case "num":
-      case "boolean":
-        return;
-    }
-  }
-  throw new FormatException("${path}: Element type \"${schema}\" is invalid.");
-}
-
 class ObjectPropertiesSchemaValidator extends SchemaValidator {
+  final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
   final Map schema;
 
-  ObjectPropertiesSchemaValidator(this.errorCollector, this.schema);
+  ObjectPropertiesSchemaValidator(
+      this.factory, this.errorCollector, this.schema);
 
   JsonValidator propertyName(StringEntity entity) {
     var propertyType = schema[entity.text];
@@ -121,8 +154,7 @@ class ObjectPropertiesSchemaValidator extends SchemaValidator {
       return NullValidator.instance;
     }
 
-    SchemaValidator valueValidator =
-        createSchemaValidator(propertyType, errorCollector);
+    SchemaValidator valueValidator = factory.createValidator(propertyType);
     return new ObjectPropertyValueValidator(
         errorCollector, valueValidator, entity);
   }
@@ -174,12 +206,17 @@ class ObjectPropertyValueValidator extends SchemaValidator {
 }
 
 class ArrayElementsSchemaValidator extends SchemaValidator {
+  final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
   final SchemaValidator valueValidator;
 
-  ArrayElementsSchemaValidator(ErrorCollector errorCollector, List schema)
-    : this.errorCollector = errorCollector,
-      this.valueValidator = createSchemaValidator(schema[0], errorCollector);
+  ArrayElementsSchemaValidator(
+      SchemaValidatorFactory factory,
+      ErrorCollector errorCollector,
+      List schema)
+    : this.factory = factory,
+      this.errorCollector = errorCollector,
+      this.valueValidator = factory.createValidator(schema[0]);
 
   void arrayElement(JsonEntity entity) {
     valueValidator.checkValue(entity, null);
@@ -216,9 +253,8 @@ class ArrayElementsSchemaValidator extends SchemaValidator {
 
 class StringValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
-  final String type;
 
-  StringValueValidator(this.errorCollector, this.type);
+  StringValueValidator(this.errorCollector);
 
   void checkValue(JsonEntity entity, StringEntity propertyName) {
     if (entity is! StringEntity) {
@@ -237,9 +273,8 @@ class StringValueValidator extends SchemaValidator {
 
 class NumberValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
-  final String type;
 
-  NumberValueValidator(this.errorCollector, this.type);
+  NumberValueValidator(this.errorCollector);
 
   void checkValue(JsonEntity entity, StringEntity propertyName) {
     if (entity is! NumberEntity) {
@@ -258,9 +293,8 @@ class NumberValueValidator extends SchemaValidator {
 
 class IntValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
-  final String type;
 
-  IntValueValidator(this.errorCollector, this.type);
+  IntValueValidator(this.errorCollector);
 
   void checkValue(JsonEntity entity, StringEntity propertyName) {
     if (entity is NumberEntity && entity.number is int) {
@@ -280,9 +314,8 @@ class IntValueValidator extends SchemaValidator {
 
 class BooleanValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
-  final String type;
 
-  BooleanValueValidator(this.errorCollector, this.type);
+  BooleanValueValidator(this.errorCollector);
 
   void checkValue(JsonEntity entity, StringEntity propertyName) {
     if (entity is BoolEntity) {
