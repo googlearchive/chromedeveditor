@@ -586,7 +586,7 @@ class AceManager {
   }
 
   void setupOutline(html.Element parentElement) {
-    outline = new Outline(_analysisService, parentElement, _prefs.prefStore);
+    outline = new Outline(_analysisService, parentElement, _prefs.prefsStore);
     outline.visible = false;
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =

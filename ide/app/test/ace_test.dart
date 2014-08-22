@@ -82,7 +82,7 @@ class MockAceEditor implements TextEditor {
   void deactivate() { }
   void reconcile() { }
 
-  BoolCachedPreference get stripWhitespace => null;
+  JsonPreference<bool> get stripWhitespace => null;
   bool get dirty => false;
 
   set dirty(bool value) { }

@@ -12,6 +12,7 @@
 library spark.preferences;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
@@ -34,27 +35,68 @@ PreferenceStore syncStore = new _ChromePreferenceStore(
  * Preferences specific to Spark.
  */
 class SparkPreferences {
-  final PreferenceStore prefStore;
+  PreferenceStore _prefsStore;
+  PreferenceStore get prefsStore => _prefsStore;
 
   Future onPreferencesReady;
+  JsonPreferencesStore _jsonStore;
 
   // [CachedPreference] subclass instance for each preference:
-  BoolCachedPreference _stripWhitespaceOnSave;
+  JsonPreference<bool> _stripWhitespaceOnSave;
 
-  SparkPreferences(this.prefStore) {
+  SparkPreferences(this._prefsStore) {
+    _jsonStore = new JsonPreferencesStore(_prefsStore);
     // Initialize each preference:
-    List<CachedPreference> allPreferences = [
-        _stripWhitespaceOnSave = new BoolCachedPreference(
-            prefStore, "stripWhitespaceOnSave"),
-        ];
+    _stripWhitespaceOnSave = new JsonPreference<bool>(_jsonStore,
+        "stripWhitespaceOnSave");
 
-    onPreferencesReady = Future.wait(allPreferences.map((p) => p.whenLoaded));
+    onPreferencesReady = _jsonStore.whenLoaded;
   }
 
   // Getters and setters for the value of each preference:
-  bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.value;
+  bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.getValue();
   set stripWhitespaceOnSave(bool value) {
-    _stripWhitespaceOnSave.value = value;
+    _stripWhitespaceOnSave.setValue(value);
+  }
+}
+
+class JsonPreferencesStore {
+  Map _jsonMap;
+  PreferenceStore _persistentStore;
+  Future whenLoaded;
+
+  // TODO: implement isDirty
+  bool get isDirty => null;
+
+  Stream<PreferenceEvent> get onPreferenceChange => _changeConroller.stream;
+  StreamController<PreferenceEvent> _changeConroller = new StreamController();
+
+  JsonPreferencesStore(this._persistentStore) {
+    whenLoaded = _persistentStore.getValue("jsonPreferences", _jsonMap);
+  }
+
+  dynamic getValue(String id, [dynamic defaultValue]) {
+    if (_jsonMap == null) throw "JSON preferences are not finished loading";
+    return _jsonMap[id];
+  }
+
+  Future setValue(String id, dynamic value) {
+    _jsonMap[id] = value;
+    _changeConroller.add(new PreferenceEvent(_persistentStore, id, value));
+    String json = JSON.encode(_jsonMap);
+    return _persistentStore.setValue("jsonPreferences", json);
+  }
+
+  Future clear() {
+    // TODO: implement clear
+  }
+
+  void flush() {
+    // TODO: implement flush
+  }
+
+  Future removeValue(List<String> keys) {
+    // TODO: implement removeValue
   }
 }
 
@@ -63,71 +105,18 @@ class SparkPreferences {
  * getting and setting (automatically saving as well as caching) the preference
  * `value`.
  */
-abstract class CachedPreference<T> {
-  Future<CachedPreference> whenLoaded;
-
-  Completer _whenLoadedCompleter = new Completer<CachedPreference>();
-  final PreferenceStore _prefStore;
-  T _currentValue;
-  String _preferenceId;
+class JsonPreference<T> {
+  String _id;
+  JsonPreferencesStore _store;
 
   /**
-   * [prefStore] is the PreferenceStore to use and [preferenceId] is the id of
+   * [_prefsMap] is the Map of prefrence values to use and [_id] is the id of
    * the stored preference.
    */
-  CachedPreference(this._prefStore, this._preferenceId) {
-    whenLoaded = _whenLoadedCompleter.future;
-    _retrieveValue().then((_) {
-      // If already loaded (preference has been saved before the load has
-      // finished), don't complete.
-      if (!_whenLoadedCompleter.isCompleted) {
-        _whenLoadedCompleter.complete(this);
-      }
-    });
-  }
+  JsonPreference(this._store, this._id);
 
-  T adaptFromString(String value);
-  String adaptToString(T value);
-
-  /**
-   * The value of the preference, if loaded. If not loaded, throws an error.
-   */
-  T get value {
-    if (!_whenLoadedCompleter.isCompleted) {
-      throw "CachedPreference value read before it was loaded";
-    }
-    return _currentValue;
-  }
-
-  /**
-   * Sets and caches the value of the preference.
-   */
-  void set value(T newValue) {
-    _currentValue = newValue;
-    _prefStore.setValue(_preferenceId, adaptToString(newValue));
-
-    // If a load has not happened by this point, consider us loaded.
-    if (!_whenLoadedCompleter.isCompleted) {
-      _whenLoadedCompleter.complete(this);
-    }
-  }
-
-  Future _retrieveValue() => _prefStore.getValue(_preferenceId)
-      .then((String value) => _currentValue = adaptFromString(value));
-}
-
-/**
- * Defines a cached [bool] preference access object. Automatically saves and
- * caches for performance.
- */
-class BoolCachedPreference extends CachedPreference<bool> {
-  BoolCachedPreference(PreferenceStore prefs, String id) : super(prefs, id);
-
-  @override
-  bool adaptFromString(String value) => value == 'true';
-
-  @override
-  String adaptToString(bool value) => value ? 'true' : 'false';
+  T getValue() => _store.getValue(_id);
+  Future setValue(T newValue) => _store.setValue(_id, newValue);
 }
 
 /**
@@ -142,13 +131,13 @@ abstract class PreferenceStore {
   /**
    * Get the value for the given key. The value is returned as a [Future].
    */
-  Future<String> getValue(String key, [String defaultVal]);
+  Future<String> getValue(String key, [dynamic defaultVal]);
 
   /**
    * Set the value for the given key. The returned [Future] has the same value
    * as [value] on success.
    */
-  Future<String> setValue(String key, String value);
+  Future setValue(String key, dynamic value);
 
   /**
    * Removes list of items from this [PreferenceStore].
@@ -178,12 +167,12 @@ class MapPreferencesStore implements PreferenceStore {
 
   bool get isDirty => _dirty;
 
-  Future<String> getValue(String key, [String defaultVal]) {
+  Future getValue(String key, [String defaultVal]) {
     final String val = _map[key];
     return new Future.value(val != null ? val : defaultVal);
   }
 
-  Future<String> setValue(String key, String value) {
+  Future setValue(String key, String value) {
     _dirty = true;
     _map[key] = value;
     _controller.add(new PreferenceEvent(this, key, value));
