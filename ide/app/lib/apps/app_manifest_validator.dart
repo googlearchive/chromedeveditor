@@ -38,7 +38,15 @@ Map AppManifestSchema =
     "socket": "boolean",
     "low_energy": "boolean"
   },
-  "browser_action": "var",
+  "browser_action": {
+    "icons": ["string"],
+    "id": "string",
+    "default_icon": "var",  // Dictionary("string", "string") || "string"
+    "default_title": "string",
+    "name": "string",
+    "popup": "string",
+    "default_popup": "string",
+  },
   "chrome_settings_overrides": "var",
   "chrome_ui_overrides": "var",
   "chrome_url_overrides": "var",
