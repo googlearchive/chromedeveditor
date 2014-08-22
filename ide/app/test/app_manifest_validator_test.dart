@@ -8,17 +8,18 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/apps/app_manifest_validator.dart';
 import '../lib/json/json_parser.dart';
-import '../lib/json/json_schema_validator.dart';
+import '../lib/json/json_schema_validator.dart' as json_schema_validator;
 import '../lib/json/json_validator.dart';
 
 /**
  * Event data collected for each validation error.
  */
 class _ErrorEvent {
+  final String messageId;
   final Span span;
   final String message;
 
-  _ErrorEvent(this.span, this.message);
+  _ErrorEvent(this.messageId, this.span, this.message);
 }
 
 /**
@@ -26,8 +27,9 @@ class _ErrorEvent {
  */
 class _LoggingErrorCollector implements ErrorCollector {
   final List<_ErrorEvent> events = new List<_ErrorEvent>();
-  void addMessage(Span span, String message) {
-    _ErrorEvent event = new _ErrorEvent(span, message);
+
+  void addMessage(String messageId, Span span, String message) {
+    _ErrorEvent event = new _ErrorEvent(messageId, span, message);
     events.add(event);
   }
 }
@@ -38,11 +40,10 @@ class _LoggingEventChecker {
 
   _LoggingEventChecker(this.errorCollector): errorIndex = 0;
 
-  void error([String message]) {
+  void error(String messageId) {
     expect(errorIndex, lessThan(errorCollector.events.length));
     _ErrorEvent event = errorCollector.events[errorIndex];
-    if (message != null) {
-      expect(event.message, equals(message));
+    expect(event.messageId, equals(messageId));
     }
     errorIndex++;
   }
@@ -65,7 +66,7 @@ _LoggingErrorCollector _validateDocument(String contents) {
 void defineTests() {
   group('manifest-json validator tests -', () {
     test('Schema definition is correct.', () {
-      validateSchemaDefinition("manifest", AppManifestSchema);
+      json_schema_validator.validateSchemaDefinition("manifest", AppManifestSchema);
     });
 
     test('manifest may be an empty object', () {
@@ -86,7 +87,7 @@ void defineTests() {
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error();
+      checker.error(json_schema_validator.ErrorIds.TOP_LEVEL_OBJECT);
       checker.end();
     });
 
@@ -99,7 +100,7 @@ void defineTests() {
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error();
+      checker.error(json_schema_validator.ErrorIds.INTEGER_EXPECTED);
       checker.end();
     });
 
@@ -148,7 +149,7 @@ void defineTests() {
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error();
+      checker.error(json_schema_validator.ErrorIds.STRING_EXPECTED);
       checker.end();
     });
 
@@ -161,7 +162,7 @@ void defineTests() {
       _LoggingErrorCollector errorCollector = _validateDocument(contents);
 
       _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error();
+      checker.error(json_schema_validator.ErrorIds.STRING_EXPECTED);
       checker.end();
     });
 

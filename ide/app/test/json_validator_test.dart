@@ -134,7 +134,7 @@ class _LoggingValidator extends _LoggingValidatorBase {
 
   void checkObjectPropertyName(StringEntity name) {
     if (errorPropertyNames.contains(name.text)) {
-      errorCollector.addMessage(name.span, invalidPropertyNameMessage);
+      errorCollector.addMessage(invalidPropertyNameMessage, name.span, invalidPropertyNameMessage);
     }
   }
 }
@@ -165,10 +165,11 @@ class _ChildLoggingValidator extends _LoggingValidatorBase {
  * Event data collected for each validation error.
  */
 class _ErrorEvent {
+  final messageId;
   final Span span;
   final String message;
 
-  _ErrorEvent(this.span, this.message);
+  _ErrorEvent(this.messageId, this.span, this.message);
 }
 
 /**
@@ -177,8 +178,8 @@ class _ErrorEvent {
 class _LoggingErrorCollector implements ErrorCollector {
   final List<_ErrorEvent> events = new List<_ErrorEvent>();
 
-  void addMessage(Span span, String message) {
-    _ErrorEvent event = new _ErrorEvent(span, message);
+  void addMessage(String messageId, Span span, String message) {
+    _ErrorEvent event = new _ErrorEvent(messageId, span, message);
     events.add(event);
   }
 }
@@ -229,10 +230,10 @@ class _LoggingEventChecker {
     expect(eventIndex, equals(validator.events.length));
   }
 
-  void error(String message) {
+  void error(String messageId) {
     expect(errorIndex, lessThan(validator.errorCollector.events.length));
     _ErrorEvent event = validator.errorCollector.events[errorIndex];
-    expect(event.message, equals(message));
+    expect(event.messageId, equals(messageId));
     errorIndex++;
   }
 
