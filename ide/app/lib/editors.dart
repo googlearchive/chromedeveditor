@@ -128,7 +128,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     });
   }
 
-  PreferenceStore get _prefStore => _prefs.prefStore;
+  PreferenceStore get _prefStore => _prefs.prefsStore;
 
   File get currentFile => _currentState != null ? _currentState.file : null;
 

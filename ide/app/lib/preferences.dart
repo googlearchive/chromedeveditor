@@ -61,9 +61,12 @@ class SparkPreferences {
 }
 
 class JsonPreferencesStore {
-  Map _jsonMap;
+  Map _defaultMap;
+  Map _userMap;
+
   PreferenceStore _persistentStore;
   Future whenLoaded;
+  bool _loaded = false;
 
   // TODO: implement isDirty
   bool get isDirty => null;
@@ -72,19 +75,23 @@ class JsonPreferencesStore {
   StreamController<PreferenceEvent> _changeConroller = new StreamController();
 
   JsonPreferencesStore(this._persistentStore) {
-    whenLoaded = _persistentStore.getValue("jsonPreferences", _jsonMap);
+    whenLoaded = Future.wait([
+        _persistentStore.getValue("customJsonPrefs", _userMap),
+        _persistentStore.getValue("defaultJsonPrefs", _defaultMap)]).then((_) {
+          _loaded = true;
+        });
   }
 
   dynamic getValue(String id, [dynamic defaultValue]) {
-    if (_jsonMap == null) throw "JSON preferences are not finished loading";
-    return _jsonMap[id];
+    if (!_loaded) throw "JSON preferences are not finished loading";
+    return _userMap.containsKey(id) ? _userMap[id] : _defaultMap[id];
   }
 
   Future setValue(String id, dynamic value) {
-    _jsonMap[id] = value;
+    _userMap[id] = value;
     _changeConroller.add(new PreferenceEvent(_persistentStore, id, value));
-    String json = JSON.encode(_jsonMap);
-    return _persistentStore.setValue("jsonPreferences", json);
+    String userJson = JSON.encode(_userMap);
+    return _persistentStore.setValue("customJsonPrefs", userJson);
   }
 
   Future clear() {
