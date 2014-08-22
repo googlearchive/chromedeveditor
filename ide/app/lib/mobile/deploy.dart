@@ -120,8 +120,8 @@ class MobileDeploy {
 
 abstract class AbstractDeployer {
   static const int DEPLOY_PORT = 2424;
-  static const int REGULAR_REQUEST_TIMEOUT = 2;
-  static const int PUSH_REQUEST_TIMEOUT = 60;
+  static Duration REGULAR_REQUEST_TIMEOUT = new Duration(seconds: 2);
+  static Duration PUSH_REQUEST_TIMEOUT = new Duration(seconds: 60);
 
   final Container appContainer;
   final PreferenceStore _prefs;
@@ -248,7 +248,7 @@ abstract class AbstractDeployer {
 
   /// This method sends the command to the device and it's
   /// implementation depends on the deployment choice
-  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, int timeout);
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, Duration timeout);
 
   /// Get the deployment target URL
   String _getTarget();
@@ -360,7 +360,7 @@ class USBDeployer extends AbstractDeployer {
     });
   }
 
-  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, int timeout) {
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, Duration timeout) {
     return _device.sendHttpRequest(httpRequest, DEPLOY_PORT, timeout);
   }
 
@@ -380,11 +380,11 @@ class HttpDeployer extends AbstractDeployer {
   HttpDeployer(Container appContainer, PreferenceStore _prefs, this._target)
      : super(appContainer, _prefs);
 
-  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, int timeout) {
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, Duration timeout) {
     TcpClient client;
     return TcpClient.createClient(_target, DEPLOY_PORT).then((TcpClient client) {
       client.write(httpRequest);
-      Stream st = client.stream.timeout(new Duration(seconds: timeout));
+      Stream st = client.stream.timeout(timeout);
       List<int> response = new List<int>();
       return st.forEach((List<int> data) {
         response.addAll(data);
