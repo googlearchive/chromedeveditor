@@ -133,8 +133,9 @@ class _LoggingValidator extends _LoggingValidatorBase {
   }
 
   void checkObjectPropertyName(StringEntity name) {
-    if (errorPropertyNames.contains(name.text))
+    if (errorPropertyNames.contains(name.text)) {
       errorCollector.addMessage(name.span, invalidPropertyNameMessage);
+    }
   }
 }
 
