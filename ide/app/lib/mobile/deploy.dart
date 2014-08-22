@@ -248,7 +248,7 @@ abstract class AbstractDeployer {
 
   /// This method sends the command to the device and it's
   /// implementation depends on the deployment choice
-  Future<List<int>> _pushRequestToDevice(String, int);
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, int timeout);
 
   /// Get the deployment target URL
   String _getTarget();
