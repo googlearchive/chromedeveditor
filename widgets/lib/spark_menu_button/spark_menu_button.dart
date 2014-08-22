@@ -4,7 +4,6 @@
 
 library spark_widgets.menu_button;
 
-import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -30,9 +29,6 @@ class SparkMenuButton extends SparkWidget {
   SparkOverlay _overlay;
   SparkMenu _menu;
 
-  final List<bool> _toggleQueue = [];
-  Timer _toggleTimer;
-
   SparkMenuButton.created(): super.created();
 
   @override
@@ -53,34 +49,13 @@ class SparkMenuButton extends SparkWidget {
     _button = buttonCont.getDistributedNodes().first;
     _button
         ..onClick.listen(clickHandler)
-        ..onFocus.listen(focusHandler)
         ..onBlur.listen(blurHandler);
   }
 
   /**
-   * Schedule a toggle of the opened state of the dropdown. Don't toggle right
-   * away, as there can be multiple events coming in a quick succession
-   * following a user gesture (e.g. a click on the button can trigger
-   * blur->click->focus, and possibly on-closed as well). Instead,
-   * aggregate arriving events for a short while after the first one,
-   * then compute their net effect and commit.
+   * Update 'opened' state.
    */
-  void _toggle(bool inOpened) {
-    _toggleQueue.add(inOpened);
-    if (_toggleTimer == null) {
-      _toggleTimer = new Timer(
-          const Duration(milliseconds: 200), _completeToggle);
-    }
-  }
-
-  /**
-   * Complete the toggling process, see [_toggle].
-   */
-  void _completeToggle() {
-    // Most likely, all aggregated events for a single gesture will have the
-    // same value (either 'close' or 'open'), but we don't count on that and
-    // formally && all the values just in case.
-    final bool newOpened = _toggleQueue.reduce((a, b) => a && b);
+  void _toggle(bool newOpened) {
     if (newOpened != opened) {
       opened = newOpened;
       // TODO(ussuri): A hack to make #overlay and #button see
@@ -95,29 +70,13 @@ class SparkMenuButton extends SparkWidget {
         _menu.resetState();
       }
     }
-    _toggleQueue.clear();
-    _toggleTimer.cancel();
-    _toggleTimer = null;
   }
 
   void clickHandler(Event e) => _toggle(!opened);
 
-  void focusHandler(Event e) => _toggle(true);
-
   void blurHandler(FocusEvent e) {
     var target = e.relatedTarget;
     if (target != null && !contains(target)) {
-      _toggle(false);
-    }
-  }
-
-  /**
-   * Handle the on-opened event from the dropdown. It will be fired e.g. when
-   * mouse is clicked outside the dropdown (with autoClosedDisabled == false).
-   */
-  void overlayOpenedHandler(CustomEvent e) {
-    // Autoclosing is the only event we're interested in.
-    if (e.detail == false) {
       _toggle(false);
     }
   }
