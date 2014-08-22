@@ -104,7 +104,12 @@ class SparkMenuButton extends SparkWidget {
 
   void focusHandler(Event e) => _toggle(true);
 
-  void blurHandler(Event e) => _toggle(false);
+  void blurHandler(FocusEvent e) {
+    var target = e.relatedTarget;
+    if (target != null && !contains(target)) {
+      _toggle(false);
+    }
+  }
 
   /**
    * Handle the on-opened event from the dropdown. It will be fired e.g. when
