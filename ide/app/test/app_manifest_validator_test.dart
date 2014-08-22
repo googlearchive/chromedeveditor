@@ -167,5 +167,42 @@ void defineTests() {
       checker.end();
     });
 
+    test('"sockets" may contain 3 known top level properties', () {
+      String contents = """
+{
+  "sockets": { "udp": {}, "tcp": {}, "tcpServer": {} }
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"sockets" host pattern may be a single value or an array', () {
+      String contents = """
+{
+  "sockets": { "udp": { "send": "*.*", "bind": ["*:80", "*:8080"] } }
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"sockets" may not contain a unknown property', () {
+      String contents = """
+{
+  "sockets": { "foo": {} }
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.error(json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME);
+      checker.end();
+    });
+
   });
 }

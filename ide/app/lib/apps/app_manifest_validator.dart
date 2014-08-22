@@ -89,7 +89,19 @@ Map AppManifestSchema =
   "script_badge": "var",
   "short_name": "string",
   "signature": "var",
-  "sockets": "var",
+  "sockets": {
+    "udp": {
+      "bind": "var",
+      "send": "var",
+      "multicastMembership": "var"
+    },
+    "tcp": {
+      "connect": "var"
+    },
+    "tcpServer": {
+      "listen": "var"
+    }
+  },
   "spellcheck": "var",
   "storage": "var",
   "system_indicator": "var",
