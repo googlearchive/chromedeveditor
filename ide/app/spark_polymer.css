@@ -519,9 +519,11 @@ button.ace_searchbtn.prev:hover {
 }
 
 .outlineItem {
+  display: flex;
+  align-items: center;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas',
       'source-code-pro', monospace;
-  /*font-size: 12px;*/
+  /* font-size is dynamically set by Outline itself */
   overflow: hidden;
   text-overflow: ellipsis;
 }
