@@ -42,7 +42,7 @@ class _ScrollDirection extends Enum<html.ScrollAlignment> {
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
-  static const ITEM_CSS_CLASS = 'outlineItem';
+  static const _ITEM_CSS_CLASS = 'outlineItem';
 
   List<OutlineItem> _outlineItems;
   OutlineItem _selectedItem;
@@ -52,6 +52,8 @@ class Outline {
   html.DivElement _rootListDiv;
   html.UListElement _rootList;
   html.Element _outlineButton;
+
+  final List<html.CssStyleRule> _outlineItemCssRules = [];
 
   final PreferenceStore _prefs;
   bool _visible = true;
@@ -73,6 +75,15 @@ class Outline {
         _outlineDiv.classes.add('collapsed');
       }
     });
+
+    html.document.styleSheets.forEach((sheet) {
+      final Iterable<html.CssStyleRule> rules = sheet.cssRules.where((rule) {
+        return rule is html.CssStyleRule &&
+               rule.selectorText == '.${_ITEM_CSS_CLASS}';
+      });
+      _outlineItemCssRules.addAll(rules);
+    });
+
   }
 
   Stream<OutlineItem> get onChildSelected => _childSelectedController.stream;
@@ -98,15 +109,10 @@ class Outline {
   bool get showing => _visible && !_outlineDiv.classes.contains('collapsed');
 
   void setFontSize(num size) {
-    List ss = html.document.styleSheets;
-    ss.forEach((s) {
-      s.cssRules.forEach((r) {
-        if (r is html.CssStyleRule && r.selectorText == '.${ITEM_CSS_CLASS}') {
-          r.style.height = '${size + 2}px';
-        }
-      });
-    });
     _rootList.style.fontSize = '${size}px';
+    // Outline items are created dynamically, so we can't just modify element's
+    // style: we have to modify the CSS rule that applies to all items.
+    _outlineItemCssRules.forEach((rule) => rule.style.height = '${size}px');
   }
 
   /**
@@ -307,7 +313,7 @@ abstract class OutlineItem {
       _element.append(_typeSpan);
     }
 
-    _element.classes.add("${Outline.ITEM_CSS_CLASS} ${cssClassName}");
+    _element.classes.add("${Outline._ITEM_CSS_CLASS} ${cssClassName}");
   }
 
   String get displayName => _data.name;
