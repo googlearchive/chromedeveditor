@@ -412,8 +412,12 @@ class ChromeServiceImpl extends Service {
           return new Future.delayed(duration).then((_) => _sendResponse(event));
         case "getAppContents":
           String path = event.data['path'];
+          _logger.info("getAppContents('${path}')");
+          PrintProfiler timer = new PrintProfiler('getAppContents()');
           return getAppContentsBinary(path).then((List<int> contents) {
-            return _sendResponse(event, {"contents": contents});
+            _logger.info(timer.finishCurrentTask('get contents'));
+            _sendResponse(event, {"contents": contents});
+            _logger.info(timer.finishCurrentTask('send contents'));
           });
         case "getFileContents":
           String uuid = event.data['uuid'];
@@ -525,7 +529,9 @@ class _IsolateHandler {
       }
     });
 
-    return Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
+    return new Future.delayed(new Duration(seconds: 3)).then((_) {
+      return Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
+    });
   }
 
   Future<String> ping() {

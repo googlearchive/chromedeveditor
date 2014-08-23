@@ -1,0 +1,11 @@
+name: chrome_testing
+version: 0.0.1-dev
+author: CDE Team
+description: TODO.
+homepage: https://github.com/dart-lang/chromedeveditor/
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  chrome: any
+dev_dependencies:
+  unittest: any
