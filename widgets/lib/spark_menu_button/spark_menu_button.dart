@@ -4,7 +4,6 @@
 
 library spark_widgets.menu_button;
 
-import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
