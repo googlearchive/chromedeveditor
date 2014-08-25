@@ -50,12 +50,13 @@ abstract class SchemaValidatorFactory {
  * The factory supports the following type definition:
  *
  * SchemaType :==
- *    "var"
- *    "int" |
- *    "num" |
- *    "string" |
- *    List<SchemaType> |
- *    Map<String, SchemaType>
+ *    "boolean" |    // true and false literals only
+ *    "int" |        // integer values only
+ *    "num" |        // numeric values only
+ *    "string" |     // string literals only
+ *    "var"          // anything is valid
+ *    List<SchemaType> |       // Array of types
+ *    Map<String, SchemaType>  // Map of (property name, type)
  */
 class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
   final SchemaValidatorFactory parentFactory;
@@ -77,16 +78,16 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
       return new ArraySchemaValidator(this, errorCollector, schema);
     } else if (schema is String) {
       switch(schema) {
-        case "var":
-          return SchemaValidator.instance;
-        case "string":
-          return new StringValueValidator(errorCollector);
+        case "boolean":
+          return new BooleanValueValidator(errorCollector);
         case "int":
           return new IntegerValueValidator(errorCollector);
         case "num":
           return new NumberValueValidator(errorCollector);
-        case "boolean":
-          return new BooleanValueValidator(errorCollector);
+        case "string":
+          return new StringValueValidator(errorCollector);
+        case "var":
+          return SchemaValidator.instance;
       }
     }
     throw new FormatException("Element type \"${schema}\" is invalid.");
@@ -114,11 +115,11 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
       return validateSchemaForTesting(schema[0]);
     } else if (schema is String){
       switch(schema) {
-        case "var":
-        case "string":
+        case "boolean":
         case "int":
         case "num":
-        case "boolean":
+        case "string":
+        case "var":
           return true;
         default:
           return false;
@@ -127,7 +128,6 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
       return false;
     }
   }
-
 }
 
 /**
