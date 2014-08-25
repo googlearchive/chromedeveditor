@@ -10,6 +10,9 @@ import '../json/json_validator.dart';
 class ErrorIds {
   static final String INVALID_MANIFEST_VERSION = "INVALID_MANIFEST_VERSION";
   static final String OBSOLETE_MANIFEST_VERSION = "OBSOLETE_MANIFEST_VERSION";
+  static final String INVALID_PERMISSION = "INVALID_PERMISSION";
+  static final String OBSOLETE_ENTRY = "OBSOLETE_ENTRY";
+  static final String STRING_OR_OBJECT_EXPECTED = "STRING_OR_OBJECT_EXPECTED";
 }
 
 /**
@@ -28,6 +31,10 @@ class AppManifestValidator extends RootObjectSchemaValidator {
     : super(factory, errorCollector, AppManifestSchema);
 }
 
+/**
+ * Custom schema factory implementing schema types specific to the
+ * "manifest.json" schema.
+ */
 class AppManifestValidatorFactory implements SchemaValidatorFactory {
   final ErrorCollector errorCollector;
 
@@ -36,12 +43,18 @@ class AppManifestValidatorFactory implements SchemaValidatorFactory {
   SchemaValidator createValidator(dynamic schema) {
     if (schema == "manifest_version") {
       return new ManifestVersionValueValidator(errorCollector);
+    } else if (schema == "permission") {
+      return new PermissionValueValidator(errorCollector);
+    } else if (schema == "socket_host_pattern") {
+      return new SocketHostPatternValueValidator(errorCollector);
     }
     return null;
   }
 
   bool validateSchemaForTesting(dynamic schema) {
-    if (schema == "manifest_version") {
+    if (schema == "manifest_version" ||
+        schema == "permission" ||
+        schema == "socket_host_pattern") {
       return true;
     }
     return false;
@@ -50,11 +63,14 @@ class AppManifestValidatorFactory implements SchemaValidatorFactory {
   SchemaValidatorFactory get parentFactory => null;
 }
 
-class ManifestVersionValueValidator extends IntValueValidator {
+/**
+ * Validator for the "manifest_version" property value.
+ */
+class ManifestVersionValueValidator extends IntegerValueValidator {
   ManifestVersionValueValidator(ErrorCollector errorCollector)
     : super(errorCollector);
 
-  void checkValue(JsonEntity entity, StringEntity propertyName) {
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     assert(propertyName != null);
 
     if (entity is NumberEntity && entity.number is int) {
@@ -76,8 +92,182 @@ class ManifestVersionValueValidator extends IntValueValidator {
   }
 }
 
-// from https://developer.chrome.com/extensions/manifest
-// and https://developer.chrome.com/apps/manifest
+/**
+ * Validator for the "permission" type.
+ */
+class PermissionValueValidator extends SchemaValidator {
+  static final List<String> _permissionNames = [
+      // From https://developer.chrome.com/apps/declare_permissions
+      "alarms",
+      "audio",
+      "audioCapture",
+      "browser",
+      "clipboardRead",
+      "clipboardWrite",
+      "contextMenus",
+      "copresence",
+      "desktopCapture",
+      "diagnostics",
+      "dns",
+      "experimental",
+      "fileBrowserHandler",
+      "fileSystem",
+      "fileSystemProvider",
+      "gcm",
+      "geolocation",
+      "hid",
+      "identity",
+      "idle",
+      "infobars",
+      "location",
+      "mediaGalleries",
+      "nativeMessaging",
+      "notificationProvider",
+      "notifications",
+      "pointerLock",
+      "power",
+      "pushMessaging",
+      "serial",
+      "signedInDevices",
+      "socket",
+      "storage",
+      "syncFileSystem",
+      "system.cpu",
+      "system.display",
+      "system.memory",
+      "system.network",
+      "system.storage",
+      "tts",
+      "unlimitedStorage",
+      "usb",
+      "usbDevices",
+      "videoCapture",
+      "wallpaper",
+      "webview",
+      // From https,//developer.chrome.com/extensions/declare_permissions
+      "activeTab",
+      "background",
+      "bookmarks",
+      "browsingData",
+      "contentSettings",
+      "cookies",
+      "debugger",
+      "declarativeContent",
+      "declarativeWebRequest",
+      "downloads",
+      "enterprise.platformKeys",
+      "fontSettings",
+      "history",
+      "management",
+      "pageCapture",
+      "privacy",
+      "processes",
+      "proxy",
+      "sessions",
+      "tabCapture",
+      "tabs",
+      "topSites",
+      "ttsEngines",
+      "webNavigation",
+      "webRequest",
+      "webRequestBlocking",
+  ];
+  static final List<String> _obsoletePermissions = ["socket"];
+
+  final ErrorCollector errorCollector;
+  bool inObject = false;
+  bool validObject = false;
+
+  PermissionValueValidator(this.errorCollector);
+
+  JsonValidator enterObject() {
+    if (!inObject) {
+      inObject = true;
+      validObject = false;
+      return this;
+    }
+    return NullValidator.instance;
+  }
+
+  JsonValidator propertyName(StringEntity propertyName) {
+    assert(inObject);
+
+    switch(propertyName.text)
+    {
+      case "socket":
+        errorCollector.addMessage(
+             ErrorIds.OBSOLETE_ENTRY,
+             propertyName.span,
+             "Permission value \"${propertyName.text}\" is obsolete. " +
+             "Use the \"sockets\" manifest key instead.");
+        validObject = true;
+        return NullValidator.instance;
+
+      case "usbDevices":
+        validObject = true;
+        return new UsbDevicesValidator();
+
+      default:
+        return NullValidator.instance;
+    }
+  }
+
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    if (entity is StringEntity) {
+      if (_obsoletePermissions.contains(entity.text)) {
+        errorCollector.addMessage(
+             ErrorIds.OBSOLETE_ENTRY,
+             entity.span,
+             "Permission value \"${entity.text}\" is obsolete.");
+      }
+      else if (!_permissionNames.contains(entity.text)) {
+          errorCollector.addMessage(
+              ErrorIds.INVALID_PERMISSION,
+              entity.span,
+              "Permission value \"${entity.text}\" is not recognized.");
+      }
+      return;
+    }
+
+    if (entity is ObjectEntity) {
+      inObject = false;
+      if (!validObject) {
+        _addError(entity);
+      }
+      return;
+    }
+
+    _addError(entity);
+  }
+
+  void _addError(JsonEntity entity) {
+    errorCollector.addMessage(
+        ErrorIds.STRING_OR_OBJECT_EXPECTED,
+        entity.span,
+        "String or object expected for permission entries.");
+  }
+}
+
+/**
+ * TODO(rpaquay): Validator for the "usbDevices" permission.
+ */
+class UsbDevicesValidator extends SchemaValidator {
+
+}
+
+/**
+ * TODO(rpaquay): Validator for the "socket_host_pattern" property value.
+ */
+class SocketHostPatternValueValidator extends SchemaValidator {
+  final ErrorCollector errorCollector;
+
+  SocketHostPatternValueValidator(this.errorCollector);
+}
+
+/**
+ * From https://developer.chrome.com/extensions/manifest
+ * and https://developer.chrome.com/apps/manifest
+ */
 Map AppManifestSchema =
 {
   "app": {
@@ -138,11 +328,11 @@ Map AppManifestSchema =
   "oauth2": "var",
   "offline_enabled": "var",
   "omnibox": "var",
-  "optional_permissions": "var",
+  "optional_permissions": ["permission"],
   "options_page": "var",
   "page_action": "var",
   "page_actions": "var",
-  "permissions": "var",
+  "permissions": ["permission"],
   "platforms": "var",
   "plugins": "var",
   "requirements": "var",
@@ -152,15 +342,15 @@ Map AppManifestSchema =
   "signature": "var",
   "sockets": {
     "udp": {
-      "bind": "var",
-      "send": "var",
-      "multicastMembership": "var"
+      "bind": "socket_host_pattern",
+      "send": "socket_host_pattern",
+      "multicastMembership": "socket_host_pattern"
     },
     "tcp": {
-      "connect": "var"
+      "connect": "socket_host_pattern"
     },
     "tcpServer": {
-      "listen": "var"
+      "listen": "socket_host_pattern"
     }
   },
   "spellcheck": "var",
