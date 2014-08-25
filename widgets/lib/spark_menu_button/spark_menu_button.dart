@@ -4,6 +4,7 @@
 
 library spark_widgets.menu_button;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -49,6 +50,7 @@ class SparkMenuButton extends SparkWidget {
     _button = buttonCont.getDistributedNodes().first;
     _button
         ..onClick.listen(clickHandler)
+        ..onFocus.listen(focusHandler)
         ..onBlur.listen(blurHandler);
   }
 
@@ -72,7 +74,18 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void clickHandler(Event e) => _toggle(!opened);
+  void clickHandler(Event e) {
+    print('clickHandler');
+    _toggle(!opened);
+  }
+
+  void focusHandler(Event e) {
+    print('focusHandler');
+    _toggle(true);
+    scheduleMicrotask(() {
+      print('scheduleMicrotask');
+    });
+  }
 
   void blurHandler(FocusEvent e) {
     var target = e.relatedTarget;
