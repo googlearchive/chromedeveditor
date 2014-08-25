@@ -222,6 +222,32 @@ void defineTests() {
       checker.end();
     });
 
+    test('"permissions" may contain <all_urls> url pattern', () {
+      String contents = """
+{
+  "permissions": ["<all_urls>"]
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"permissions" may contain url patterns', () {
+      String contents = """
+{
+  "permissions": ["*://mail.google.com/*", "http://127.0.0.1/*", "file:///foo*",
+                  "http://example.org/foo/bar.html", "http://*/*",
+                  "https://*.google.com/foo*bar", "http://*/foo*"]
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
     test('"usbDevices" permission may be an object', () {
       String contents = """
 {
@@ -238,6 +264,30 @@ void defineTests() {
       String contents = """
 {
   "permissions": ["usbDevices"]
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"fileSystem" permission may be an object', () {
+      String contents = """
+{
+  "permissions": [{"fileSystem": []}]
+}
+""";
+      _LoggingErrorCollector errorCollector = _validateDocument(contents);
+
+      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+      checker.end();
+    });
+
+    test('"fileSystem" permission may be a string', () {
+      String contents = """
+{
+  "permissions": ["fileSystem"]
 }
 """;
       _LoggingErrorCollector errorCollector = _validateDocument(contents);

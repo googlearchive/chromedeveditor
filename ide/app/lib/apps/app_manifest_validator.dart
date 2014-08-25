@@ -32,6 +32,107 @@ class AppManifestValidator extends RootObjectSchemaValidator {
 }
 
 /**
+ * From https://developer.chrome.com/extensions/manifest
+ * and https://developer.chrome.com/apps/manifest
+ */
+Map AppManifestSchema =
+{
+  "app": {
+    "background": {
+      "scripts": ["string"],
+      "persistent": "boolean",
+    },
+    "service_worker": "var"
+  },
+  "author": "var",
+  "automation": "var",
+  "background": {
+    "persistent": "boolean",
+    "page": "string",
+    "scripts": ["string"]
+  },
+  "background_page": "string",  // Legacy (manifest v1)
+  "bluetooth": {
+    "uuids": ["string"],
+    "socket": "boolean",
+    "low_energy": "boolean"
+  },
+  "browser_action": {
+    "icons": ["string"],
+    "id": "string",
+    "default_icon": "var",  // Dictionary("string", "string") || "string"
+    "default_title": "string",
+    "name": "string",
+    "popup": "string",
+    "default_popup": "string",
+  },
+  "chrome_settings_overrides": "var",
+  "chrome_ui_overrides": "var",
+  "chrome_url_overrides": "var",
+  "commands": "var",
+  "content_pack": "var",
+  "content_scripts": "var",
+  "content_security_policy": "var",
+  "converted_from_user_script": "var",
+  "current_locale": "var",
+  "default_locale": "var",
+  "description": "string",
+  "devtools_page": "var",
+  "externally_connectable": "var",
+  "file_browser_handlers": "var",
+  "file_handlers": "var",
+  "homepage_url": "var",
+  "icons": "var",
+  "import": "var",
+  "incognito": "var",
+  "input_components": "var",
+  "key": "string",
+  "kiosk_enabled": "var",
+  "kiosk_only": "var",
+  "manifest_version": "manifest_version",
+  "minimum_chrome_version": "var",
+  "nacl_modules": "var",
+  "name": "string",
+  "oauth2": "var",
+  "offline_enabled": "var",
+  "omnibox": "var",
+  "optional_permissions": ["permission"],
+  "options_page": "var",
+  "page_action": "var",
+  "page_actions": "var",
+  "permissions": ["permission"],
+  "platforms": "var",
+  "plugins": "var",
+  "requirements": "var",
+  "sandbox": "var",
+  "script_badge": "var",
+  "short_name": "string",
+  "signature": "var",
+  "sockets": {
+    "udp": {
+      "bind": "socket_host_pattern",
+      "send": "socket_host_pattern",
+      "multicastMembership": "socket_host_pattern"
+    },
+    "tcp": {
+      "connect": "socket_host_pattern"
+    },
+    "tcpServer": {
+      "listen": "socket_host_pattern"
+    }
+  },
+  "spellcheck": "var",
+  "storage": "var",
+  "system_indicator": "var",
+  "tts_engine": "var",
+  "update_url": "string",
+  "web_accessible_resources": "var",
+  "url_handlers": "var",
+  "version": "var",
+  "webview": "var",
+};
+
+/**
  * Custom schema factory implementing schema types specific to the
  * "manifest.json" schema.
  */
@@ -171,45 +272,18 @@ class PermissionValueValidator extends SchemaValidator {
       "webNavigation",
       "webRequest",
       "webRequestBlocking",
+
+      // Others
+      "developerPrivate"
   ];
   static final List<String> _obsoletePermissions = ["socket"];
 
   final ErrorCollector errorCollector;
-  bool inObject = false;
-  bool validObject = false;
 
   PermissionValueValidator(this.errorCollector);
 
   JsonValidator enterObject() {
-    if (!inObject) {
-      inObject = true;
-      validObject = false;
-      return this;
-    }
-    return NullValidator.instance;
-  }
-
-  JsonValidator propertyName(StringEntity propertyName) {
-    assert(inObject);
-
-    switch(propertyName.text)
-    {
-      case "socket":
-        errorCollector.addMessage(
-             ErrorIds.OBSOLETE_ENTRY,
-             propertyName.span,
-             "Permission value \"${propertyName.text}\" is obsolete. " +
-             "Use the \"sockets\" manifest key instead.");
-        validObject = true;
-        return NullValidator.instance;
-
-      case "usbDevices":
-        validObject = true;
-        return new UsbDevicesValidator();
-
-      default:
-        return NullValidator.instance;
-    }
+    return new PermissionObjectValueValidator(errorCollector);
   }
 
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
@@ -220,31 +294,73 @@ class PermissionValueValidator extends SchemaValidator {
              entity.span,
              "Permission value \"${entity.text}\" is obsolete.");
       }
-      else if (!_permissionNames.contains(entity.text)) {
-          errorCollector.addMessage(
-              ErrorIds.INVALID_PERMISSION,
-              entity.span,
-              "Permission value \"${entity.text}\" is not recognized.");
+      else if (!_permissionNames.contains(entity.text) &&
+          !_isMatchPattern(entity.text)) {
+        errorCollector.addMessage(
+            ErrorIds.INVALID_PERMISSION,
+            entity.span,
+            "Permission value \"${entity.text}\" is not recognized.");
       }
-      return;
+    } else if (entity is ObjectEntity){
+      // Validation has been performed by validator from "enterObject".
+    } else {
+      errorCollector.addMessage(
+          ErrorIds.STRING_OR_OBJECT_EXPECTED,
+          entity.span,
+          "String or object expected for permission entries.");
     }
-
-    if (entity is ObjectEntity) {
-      inObject = false;
-      if (!validObject) {
-        _addError(entity);
-      }
-      return;
-    }
-
-    _addError(entity);
   }
 
-  void _addError(JsonEntity entity) {
-    errorCollector.addMessage(
-        ErrorIds.STRING_OR_OBJECT_EXPECTED,
-        entity.span,
-        "String or object expected for permission entries.");
+  bool _isMatchPattern(String text) {
+    // See https://developer.chrome.com/apps/match_patterns
+    // <url-pattern> := <scheme>://<host><path>
+    // <scheme> := '*' | 'http' | 'https' | 'file' | 'ftp'
+    // <host> := '*' | '*.' <any char except '/' and '*'>+
+    // <path> := '/' <any chars>
+    //
+    // TODO(rpaquay): The syntax for URL patterns is quite complex and
+    // incompatible with dart.core.Uri (because of the wildcard character),
+    // so we implement a simple heuristic.
+    if (text == "<all_urls>") {
+      return true;
+    }
+    int index = text.indexOf("://");
+    return (index > 0 && index < text.length - 4);
+  }
+}
+
+/**
+ * A few permissions can be expressed as a dictionary with a single key
+ * containing a permission name.
+ */
+class PermissionObjectValueValidator extends SchemaValidator {
+  final ErrorCollector errorCollector;
+
+  PermissionObjectValueValidator(this.errorCollector);
+
+  JsonValidator propertyName(StringEntity propertyName) {
+    switch(propertyName.text)
+    {
+      case "socket":
+        errorCollector.addMessage(
+             ErrorIds.OBSOLETE_ENTRY,
+             propertyName.span,
+             "Permission value \"${propertyName.text}\" is obsolete. " +
+             "Use the \"sockets\" manifest key instead.");
+        return NullValidator.instance;
+
+      // TODO(rpaquay): Implement validators for the permissions below.
+      case "usbDevices":
+      case "fileSystem":
+        return NullValidator.instance;
+
+      default:
+        errorCollector.addMessage(
+            ErrorIds.INVALID_PERMISSION,
+            propertyName.span,
+            "Permission value \"${propertyName.text}\" is not recognized.");
+        return NullValidator.instance;
+    }
   }
 }
 
@@ -263,103 +379,3 @@ class SocketHostPatternValueValidator extends SchemaValidator {
 
   SocketHostPatternValueValidator(this.errorCollector);
 }
-
-/**
- * From https://developer.chrome.com/extensions/manifest
- * and https://developer.chrome.com/apps/manifest
- */
-Map AppManifestSchema =
-{
-  "app": {
-    "background": {
-      "scripts": ["string"],
-    },
-    "service_worker": "var"
-  },
-  "author": "var",
-  "automation": "var",
-  "background": {
-    "persistent": "boolean",
-    "page": "string",
-    "scripts": ["string"]
-  },
-  "background_page": "string",  // Legacy (manifest v1)
-  "bluetooth": {
-    "uuids": ["string"],
-    "socket": "boolean",
-    "low_energy": "boolean"
-  },
-  "browser_action": {
-    "icons": ["string"],
-    "id": "string",
-    "default_icon": "var",  // Dictionary("string", "string") || "string"
-    "default_title": "string",
-    "name": "string",
-    "popup": "string",
-    "default_popup": "string",
-  },
-  "chrome_settings_overrides": "var",
-  "chrome_ui_overrides": "var",
-  "chrome_url_overrides": "var",
-  "commands": "var",
-  "content_pack": "var",
-  "content_scripts": "var",
-  "content_security_policy": "var",
-  "converted_from_user_script": "var",
-  "current_locale": "var",
-  "default_locale": "var",
-  "description": "string",
-  "devtools_page": "var",
-  "externally_connectable": "var",
-  "file_browser_handlers": "var",
-  "file_handlers": "var",
-  "homepage_url": "var",
-  "icons": "var",
-  "import": "var",
-  "incognito": "var",
-  "input_components": "var",
-  "key": "string",
-  "kiosk_enabled": "var",
-  "kiosk_only": "var",
-  "manifest_version": "manifest_version",
-  "minimum_chrome_version": "var",
-  "nacl_modules": "var",
-  "name": "string",
-  "oauth2": "var",
-  "offline_enabled": "var",
-  "omnibox": "var",
-  "optional_permissions": ["permission"],
-  "options_page": "var",
-  "page_action": "var",
-  "page_actions": "var",
-  "permissions": ["permission"],
-  "platforms": "var",
-  "plugins": "var",
-  "requirements": "var",
-  "sandbox": "var",
-  "script_badge": "var",
-  "short_name": "string",
-  "signature": "var",
-  "sockets": {
-    "udp": {
-      "bind": "socket_host_pattern",
-      "send": "socket_host_pattern",
-      "multicastMembership": "socket_host_pattern"
-    },
-    "tcp": {
-      "connect": "socket_host_pattern"
-    },
-    "tcpServer": {
-      "listen": "socket_host_pattern"
-    }
-  },
-  "spellcheck": "var",
-  "storage": "var",
-  "system_indicator": "var",
-  "tts_engine": "var",
-  "update_url": "string",
-  "web_accessible_resources": "var",
-  "url_handlers": "var",
-  "version": "var",
-  "webview": "var",
-};
