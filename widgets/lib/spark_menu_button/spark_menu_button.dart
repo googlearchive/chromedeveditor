@@ -28,6 +28,10 @@ class SparkMenuButton extends SparkWidget {
   SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
+
+  /**
+   * The state of the menu on `mouseDown`.
+   */
   bool _mouseDownOpened;
 
   SparkMenuButton.created(): super.created();
@@ -49,7 +53,7 @@ class SparkMenuButton extends SparkWidget {
     assert(buttonCont.getDistributedNodes().isNotEmpty);
     _button = buttonCont.getDistributedNodes().first;
     _button
-        ..onMouseDown.listen(_mouseDownHandler)
+        ..onMouseDown.listen(mouseDownHandler)
         ..onClick.listen(clickHandler)
         ..onFocus.listen(focusHandler)
         ..onBlur.listen(blurHandler);
@@ -75,10 +79,20 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void _mouseDownHandler(Event e) {
+  /**
+   * The menu state should be toggle on click.
+   * Hovewer what is a single click the from user's perspective is a sequence
+   * of DOM events: mouseDown, focus, mouseUp, click.
+   * We force the menu open on `focus`, so we need to remember the [opened]
+   * state on `mouseDown` into [_mouseDownOpened] and use in [clickHandler].
+   */
+  void mouseDownHandler(Event e) {
     _mouseDownOpened = opened;
   }
 
+  /**
+   * Toggles [opened] state depending on [_mouseDownOpened].
+   */
   void clickHandler(Event e) => _toggle(!_mouseDownOpened);
 
   void focusHandler(Event e) => _toggle(true);
