@@ -510,9 +510,8 @@ class AceManager {
                            'enableLinking': true});
 
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
-      if (!DartEditor.isDartFile(currentFile)) {
-        return;
-      }
+      if (currentFile == null) return;
+      if (!DartEditor.isDartFile(currentFile)) return;
 
       ace.Token token = event.token;
 
@@ -943,7 +942,7 @@ class AceManager {
 
 class ThemeManager {
   static final LIGHT_THEMES = [
-      'textmate', 
+      'textmate',
       'tomorrow',
   ];
   static final MORE_LIGHT_THEMES = [
@@ -955,14 +954,14 @@ class ThemeManager {
       'eclipse',
       'github',
       'katzenmilch',
-      'kuroir', 
+      'kuroir',
       'solarized_light',
       'xcode',
   ];
   static final DARK_THEMES = [
-      'monokai', 
-      'idle_fingers', 
-      'tomorrow_night', 
+      'monokai',
+      'idle_fingers',
+      'tomorrow_night',
       'pastel_on_dark',
   ];
   static final MORE_DARK_THEMES = [
@@ -971,8 +970,8 @@ class ThemeManager {
       'clouds_midnight',
       'cobalt',
       'kr_theme',
-      'merbivore', 
-      'merbivore_soft', 
+      'merbivore',
+      'merbivore_soft',
       'mono_industrial',
       'solarized_dark',
       'terminal',
