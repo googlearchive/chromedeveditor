@@ -29,6 +29,7 @@ class SparkMenuButton extends SparkWidget {
   SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
+  bool _mouseDownOpened;
 
   SparkMenuButton.created(): super.created();
 
@@ -49,6 +50,7 @@ class SparkMenuButton extends SparkWidget {
     assert(buttonCont.getDistributedNodes().isNotEmpty);
     _button = buttonCont.getDistributedNodes().first;
     _button
+        ..onMouseDown.listen(_mouseDownHandler)
         ..onClick.listen(clickHandler)
         ..onFocus.listen(focusHandler)
         ..onBlur.listen(blurHandler);
@@ -74,18 +76,13 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void clickHandler(Event e) {
-    print('clickHandler');
-    _toggle(!opened);
+  void _mouseDownHandler(Event e) {
+    _mouseDownOpened = opened;
   }
 
-  void focusHandler(Event e) {
-    print('focusHandler');
-    _toggle(true);
-    scheduleMicrotask(() {
-      print('scheduleMicrotask');
-    });
-  }
+  void clickHandler(Event e) => _toggle(!_mouseDownOpened);
+
+  void focusHandler(Event e) => _toggle(true);
 
   void blurHandler(FocusEvent e) {
     var target = e.relatedTarget;
