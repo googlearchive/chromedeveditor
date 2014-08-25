@@ -506,8 +506,8 @@ class AceManager {
     //_aceEditor.setOption('enableSnippets', true);
 
     ace.require('ace/ext/linking');
-    _aceEditor.setOptions({'enableMultiselect' : false,
-                           'enableLinking' : true});
+    _aceEditor.setOptions({'enableMultiselect': false,
+                           'enableLinking': true});
 
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
       if (!DartEditor.isDartFile(currentFile)) {
@@ -958,8 +958,6 @@ class ThemeManager {
       'katzenmilch',
       'kuroir', 
       'solarized_light',
-      'tomorrow',
-      'vibrant_ink',
       'xcode',
   ];
   static final DARK_THEMES = [
@@ -983,6 +981,7 @@ class ThemeManager {
       'tomorrow_night_bright',
       'tomorrow_night_eighties',
       'twilight',
+      'vibrant_ink',
   ];
 
   ace.Editor _aceEditor;
