@@ -42,24 +42,46 @@ class SparkPreferences {
   Future onPreferencesReady;
   JsonPreferencesStore _jsonStore;
 
-  // [CachedPreference] subclass instance for each preference:
-  JsonPreference<bool> _stripWhitespaceOnSave;
+  // [JsonPreference] subclass instance for each preference:
+  JsonPreference<bool> stripWhitespaceOnSave;
+  JsonPreference<String> editorTheme;
+  JsonPreference<num> editorFontSize;
+  JsonPreference<String> keyBindings;
+
   JsonPreference<IndentationPreference> indentation;
 
   SparkPreferences(this._prefsStore) {
     _jsonStore = new JsonPreferencesStore(_prefsStore);
     // Initialize each preference:
-    _stripWhitespaceOnSave = new JsonPreference<bool>(_jsonStore,
+    stripWhitespaceOnSave = new JsonPreference<bool>(_jsonStore,
         "stripWhitespaceOnSave");
+    editorTheme = new JsonPreference<String>(_jsonStore, "editorTheme");
+    editorFontSize = new JsonPreference<num>(_jsonStore, "editorFontSize");
+    keyBindings = new JsonPreference<String>(_jsonStore, "keyBindings");
 
     onPreferencesReady = _jsonStore.whenLoaded;
   }
 
   // Getters and setters for the value of each preference:
-  bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.getValue();
-  set stripWhitespaceOnSave(bool value) {
-    _stripWhitespaceOnSave.setValue(value);
-  }
+//  bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.getValue();
+//  set stripWhitespaceOnSave(bool value) {
+//    _stripWhitespaceOnSave.setValue(value);
+//  }
+//
+//  String get editorTheme => _editorTheme.getValue();
+//  set editorTheme(String value) {
+//    _editorTheme.setValue(value);
+//  }
+//
+//  num get editorFontSize => _editorFontSize.getValue();
+//  set editorFontSize(num value) {
+//    _editorFontSize.setValue(value);
+//  }
+//
+//  String get keyBindings => _keyBindings.getValue();
+//  set keyBindings(String value) {
+//    _keyBindings.setValue(value);
+//  }
 }
 
 class IndentationPreferences {
@@ -104,7 +126,9 @@ class JsonPreferencesStore {
 
   Future _loadUserPrefs() {
     return _persistentStore.getValue("userJsonPrefs", "{}")
-        .then((String json) => _userMap = JSON.decode(json));
+        .then((String json) {
+      _userMap = JSON.decode(json);
+    });
   }
 
   dynamic getValue(String id, [dynamic defaultValue]) {
@@ -115,7 +139,8 @@ class JsonPreferencesStore {
   Future setValue(String id, dynamic value) {
     _userMap[id] = value;
     _changeConroller.add(new PreferenceEvent(_persistentStore, id, value.toString()));
-    return _persistentStore.setValue("userJsonPrefs", JSON.encode(_userMap));
+    String jsonString = JSON.encode(_userMap);
+    return _persistentStore.setValue("userJsonPrefs", jsonString);
   }
 
   Future removeValue(List<String> keys) {

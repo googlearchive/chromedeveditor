@@ -184,7 +184,7 @@ class TextEditor extends Editor {
       String text = _session.value;
 
       // Remove the trailing whitespace if asked to do so.
-      if (_prefs.stripWhitespaceOnSave) {
+      if (_prefs.stripWhitespaceOnSave.getValue()) {
         text = text.replaceAll(whitespaceRegEx, '');
       }
 
@@ -950,7 +950,7 @@ class ThemeManager {
   ];
 
   ace.Editor _aceEditor;
-  PreferenceStore _prefs;
+  SparkPreferences _prefs;
   html.Element _label;
   List<String> _themes = [];
 
@@ -960,12 +960,11 @@ class ThemeManager {
       if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
       if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
-      _prefs.getValue('aceTheme').then((String theme) {
-        if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
-          theme = _themes[0];
-        }
-        _updateTheme(theme);
-      });
+      String theme = _prefs.editorTheme.getValue();
+      if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
+        theme = _themes[0];
+      }
+      _updateTheme(theme);
     } else {
       _themes.add(DARK_THEMES[0]);
       _updateTheme(_themes[0]);
@@ -991,7 +990,7 @@ class ThemeManager {
 
   void _updateTheme(String theme) {
     if (SparkFlags.useAceThemes) {
-      _prefs.setValue('aceTheme', theme);
+      _prefs.editorTheme.setValue(theme);
     }
     _aceEditor.theme = new ace.Theme.named(theme);
     if (_label != null) {
@@ -1002,16 +1001,15 @@ class ThemeManager {
 
 class KeyBindingManager {
   AceManager aceManager;
-  PreferenceStore prefs;
+  SparkPreferences prefs;
   html.Element _label;
 
   KeyBindingManager(this.aceManager, this.prefs, this._label) {
-    prefs.getValue('keyBindings').then((String value) {
-      if (value != null) {
-        aceManager.setKeyBinding(value);
-      }
-      _updateName(value);
-    });
+    String value = prefs.keyBindings.getValue();
+    if (value != null) {
+      aceManager.setKeyBinding(value);
+    }
+    _updateName(value);
   }
 
   void inc(html.Event e) {
@@ -1029,7 +1027,7 @@ class KeyBindingManager {
       int index = math.max(AceManager.KEY_BINDINGS.indexOf(name), 0);
       index = (index + direction) % AceManager.KEY_BINDINGS.length;
       String newBinding = AceManager.KEY_BINDINGS[index];
-      prefs.setValue('keyBindings', newBinding);
+      prefs.keyBindings.setValue(newBinding);
       _updateName(newBinding);
       aceManager.setKeyBinding(newBinding);
     });
@@ -1042,7 +1040,7 @@ class KeyBindingManager {
 
 class AceFontManager {
   AceManager aceManager;
-  PreferenceStore prefs;
+  SparkPreferences prefs;
   html.Element _label;
   num _value;
 
@@ -1050,17 +1048,13 @@ class AceFontManager {
     _value = aceManager.getFontSize();
     _updateLabel(_value);
 
-    prefs.getValue('fontSize').then((String pref) {
-      try {
-        if (pref != null) {
-          _value = num.parse(pref);
-          aceManager.setFontSize(_value);
-          _updateLabel(_value);
-        }
-      } catch (e) {
+    try {
+      _value = prefs.editorFontSize.getValue();
+      aceManager.setFontSize(_value);
+      _updateLabel(_value);
+    } catch (e) {
 
-      }
-    });
+    }
   }
 
   void dec() => _adjustSize(_value - 2);
@@ -1072,7 +1066,7 @@ class AceFontManager {
     _value = newValue.clamp(6, 36);
     aceManager.setFontSize(_value);
     _updateLabel(_value);
-    prefs.setValue('fontSize', _value.toString());
+    prefs.editorFontSize.setValue(_value);
   }
 
   void _updateLabel(num size) {

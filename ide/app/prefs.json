@@ -1,5 +1,8 @@
 {
   "stripWhitespaceOnSave": true,
+  "editorFontSize": 12,
+  "editorTheme": null,
+  "keyBindings": null,
   "indentation":{
     "default":{
       "useSpaces": true,
