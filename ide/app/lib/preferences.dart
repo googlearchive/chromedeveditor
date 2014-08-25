@@ -44,6 +44,7 @@ class SparkPreferences {
 
   // [CachedPreference] subclass instance for each preference:
   JsonPreference<bool> _stripWhitespaceOnSave;
+  JsonPreference<IndentationPreference> indentation;
 
   SparkPreferences(this._prefsStore) {
     _jsonStore = new JsonPreferencesStore(_prefsStore);
@@ -59,6 +60,22 @@ class SparkPreferences {
   set stripWhitespaceOnSave(bool value) {
     _stripWhitespaceOnSave.setValue(value);
   }
+}
+
+class IndentationPreferences {
+  Map<String, IndentationPreference> preferences;
+
+  String toJson() => preferences.keys.fold("", (String prev, String key) =>
+      JSON.encode({prev:preferences[key].toJson()}));
+}
+
+class IndentationPreference {
+  bool useSpaces;
+  int tabWidth;
+
+  IndentationPreferences() {}
+
+  String toJson() => JSON.encode({"spaces":useSpaces, "tabWidth":tabWidth});
 }
 
 class JsonPreferencesStore {

@@ -1,3 +1,13 @@
 {
-  "stripWhitespaceOnSave": true
+  "stripWhitespaceOnSave": true,
+  "indentation":{
+    "default":{
+      "useSpaces": true,
+      "tabWidth": 2
+    },
+    "dart":{
+      "useSpaces": true,
+      "tabWidth": 2
+    }
+  }
 }
