@@ -136,7 +136,6 @@ class _LoggingValidator extends _LoggingValidatorBase {
     if (errorPropertyNames.contains(name.text)) {
       errorCollector.addMessage(errorId, name.span, "Invalid property name");
     }
-    }
   }
 }
 

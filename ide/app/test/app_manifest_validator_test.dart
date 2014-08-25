@@ -44,7 +44,6 @@ class _LoggingEventChecker {
     expect(errorIndex, lessThan(errorCollector.events.length));
     _ErrorEvent event = errorCollector.events[errorIndex];
     expect(event.messageId, equals(messageId));
-    }
     errorIndex++;
   }
 
