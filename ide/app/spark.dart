@@ -3700,9 +3700,6 @@ class SettingsAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-//    /*%TRACE3*/ print("(4> 8/25/14): _invoke!"); // TRACE%
-//    spark.editorArea.selectFile(file);
-//    return;
     spark.setGitSettingsResetDoneVisible(false);
 
     InputElement whitespaceCheckbox = getElement('#stripWhitespace');

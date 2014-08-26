@@ -76,27 +76,6 @@ class SparkPreferences {
       if (value != null) _jsonStore.setValue(newKey, value);
     });
   }
-
-  // Getters and setters for the value of each preference:
-//  bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.getValue();
-//  set stripWhitespaceOnSave(bool value) {
-//    _stripWhitespaceOnSave.setValue(value);
-//  }
-//
-//  String get editorTheme => _editorTheme.getValue();
-//  set editorTheme(String value) {
-//    _editorTheme.setValue(value);
-//  }
-//
-//  num get editorFontSize => _editorFontSize.getValue();
-//  set editorFontSize(num value) {
-//    _editorFontSize.setValue(value);
-//  }
-//
-//  String get keyBindings => _keyBindings.getValue();
-//  set keyBindings(String value) {
-//    _keyBindings.setValue(value);
-//  }
 }
 
 class IndentationPreferences {
