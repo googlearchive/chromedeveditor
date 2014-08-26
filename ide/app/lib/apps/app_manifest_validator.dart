@@ -23,10 +23,10 @@ class AppManifestValidator extends RootObjectSchemaValidator {
   {
     var factory = new AppManifestValidatorFactory(errorCollector);
     var core_factory = new CoreSchemaValidatorFactory(factory, errorCollector);
-    return new AppManifestValidator._internal(core_factory, errorCollector);
+    return new AppManifestValidator._(core_factory, errorCollector);
   }
 
-  AppManifestValidator._internal(
+  AppManifestValidator._(
       SchemaValidatorFactory factory, ErrorCollector errorCollector)
     : super(factory, errorCollector, AppManifestSchema);
 }
@@ -129,7 +129,7 @@ Map AppManifestSchema =
   "web_accessible_resources": "var",
   "url_handlers": "var",
   "version": "var",
-  "webview": "var",
+  "webview": "var"
 };
 
 /**
@@ -301,7 +301,7 @@ class PermissionValueValidator extends SchemaValidator {
             entity.span,
             "Permission value \"${entity.text}\" is not recognized.");
       }
-    } else if (entity is ObjectEntity){
+    } else if (entity is ObjectEntity) {
       // Validation has been performed by validator from "enterObject".
     } else {
       errorCollector.addMessage(
@@ -339,8 +339,7 @@ class PermissionObjectValueValidator extends SchemaValidator {
   PermissionObjectValueValidator(this.errorCollector);
 
   JsonValidator propertyName(StringEntity propertyName) {
-    switch(propertyName.text)
-    {
+    switch(propertyName.text) {
       case "socket":
         errorCollector.addMessage(
              ErrorIds.OBSOLETE_ENTRY,

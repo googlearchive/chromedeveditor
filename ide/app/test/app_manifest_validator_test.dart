@@ -62,264 +62,148 @@ _LoggingErrorCollector _validateDocument(String contents) {
   return errorCollector;
 }
 
+void _validate(String contents, List<String> errorIds) {
+  _LoggingErrorCollector errorCollector = _validateDocument(contents);
+  _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+  errorIds.forEach((id) => checker.error(id));
+  checker.end();
+}
+
 void defineTests() {
   group('manifest-json validator tests -', () {
     test('Schema definition is correct.', () {
       var errorCollector = new _LoggingErrorCollector();
       var validator = new AppManifestValidator(errorCollector);
-      expect(validator.factory.validateSchemaForTesting(AppManifestSchema), isTrue);
+      expect(
+          validator.factory.validateSchemaForTesting(AppManifestSchema),
+          isTrue);
     });
 
     test('manifest may be an empty object', () {
       String contents = """{}""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      _validate(contents, []);
     });
 
     test('manifest cannot be a single value', () {
       String contents = """123""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(json_schema_validator.ErrorIds.TOP_LEVEL_OBJECT);
-      checker.end();
+      _validate(contents, [json_schema_validator.ErrorIds.TOP_LEVEL_OBJECT]);
     });
 
     test('"manifest_version" cannot be a string', () {
       String contents = """{ "manifest_version": "string value" } """;
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(json_schema_validator.ErrorIds.INTEGER_EXPECTED);
-      checker.end();
+      _validate(contents, [json_schema_validator.ErrorIds.INTEGER_EXPECTED]);
     });
 
     test('"manifest_version" value 1 is obsolete', () {
       String contents = """{ "manifest_version": 1 } """;
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(ErrorIds.OBSOLETE_MANIFEST_VERSION);
-      checker.end();
+      _validate(contents, [ErrorIds.OBSOLETE_MANIFEST_VERSION]);
     });
 
     test('"manifest_version" must be a number', () {
       String contents = """{ "manifest_version": 2 }""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      _validate(contents, []);
     });
 
     test('"scripts" may be an empty array', () {
       String contents = """{"app": {"background": {"scripts": []}}} """;
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      _validate(contents, []);
     });
 
     test('"scripts" may be an array of strings', () {
       String contents = """{"app": {"background": {"scripts": ["s"]}}}""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      _validate(contents, []);
     });
 
     test('"scripts" cannot contain a number in the array', () {
       String contents = """{"app": {"background": {"scripts": ["s", 1]}}}""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(json_schema_validator.ErrorIds.STRING_EXPECTED);
-      checker.end();
+      _validate(contents, [json_schema_validator.ErrorIds.STRING_EXPECTED]);
     });
 
     test('"scripts" cannot be an object', () {
       String contents = """{"app": {"background": {"scripts": {"f": "s"}}}}""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(json_schema_validator.ErrorIds.ARRAY_EXPECTED);
-      checker.end();
+      _validate(contents, [json_schema_validator.ErrorIds.ARRAY_EXPECTED]);
     });
 
     test('"sockets" may contain 3 known top level properties', () {
-      String contents = """
-{
+      String contents = """{
   "sockets": { "udp": {}, "tcp": {}, "tcpServer": {} }
 }
 """;
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      _validate(contents, []);
     });
 
     test('"sockets" host pattern may be a single value or an array', () {
-      String contents = """
-{
+      String contents = """{
   "sockets": { "udp": { "send": "*.*", "bind": ["*:80", "*:8080"] } }
 }
 """;
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      _validate(contents, []);
     });
 
     test('"sockets" cannot contain a unknown property', () {
-      String contents = """
-{
-  "sockets": { "foo": {} }
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME);
-      checker.end();
+      String contents = """{ "sockets": { "foo": {} } }""";
+      _validate(
+          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
     });
 
     test('"permissions" cannot be a dictionary', () {
-      String contents = """
-{
-  "permissions": {"foo": "bar"}
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(json_schema_validator.ErrorIds.ARRAY_EXPECTED);
-      checker.end();
+      String contents = """{ "permissions": {"foo": "bar"} }""";
+      _validate(contents, [json_schema_validator.ErrorIds.ARRAY_EXPECTED]);
     });
 
     test('"permissions" cannot contain an unknown permission', () {
-      String contents = """
-{
-  "permissions": ["foo"]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(ErrorIds.INVALID_PERMISSION);
-      checker.end();
+      String contents = """{ "permissions": ["foo"] }""";
+      _validate(contents, [ErrorIds.INVALID_PERMISSION]);
     });
 
     test('"permissions" may contain known permissions', () {
-      String contents = """
-{
-  "permissions": ["usb", "tabs", "bookmarks"]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      String contents = """{ "permissions": ["usb", "tabs", "bookmarks"] }""";
+      _validate(contents, []);
     });
 
     test('"permissions" may contain <all_urls> url pattern', () {
-      String contents = """
-{
-  "permissions": ["<all_urls>"]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      String contents = """{ "permissions": ["<all_urls>"] }""";
+      _validate(contents, []);
     });
 
     test('"permissions" may contain url patterns', () {
-      String contents = """
-{
+      String contents = """{
   "permissions": ["*://mail.google.com/*", "http://127.0.0.1/*", "file:///foo*",
                   "http://example.org/foo/bar.html", "http://*/*",
                   "https://*.google.com/foo*bar", "http://*/foo*"]
 }
 """;
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      _validate(contents, []);
     });
 
     test('"usbDevices" permission may be an object', () {
-      String contents = """
-{
-  "permissions": [{"usbDevices": []}]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      String contents = """{ "permissions": [{"usbDevices": []}] }""";
+      _validate(contents, []);
     });
 
     test('"usbDevices" permission may be a string', () {
-      String contents = """
-{
-  "permissions": ["usbDevices"]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      String contents = """{ "permissions": ["usbDevices"] }""";
+      _validate(contents, []);
     });
 
     test('"fileSystem" permission may be an object', () {
-      String contents = """
-{
-  "permissions": [{"fileSystem": []}]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      String contents = """{ "permissions": [{"fileSystem": []}] }""";
+      _validate(contents, []);
     });
 
     test('"fileSystem" permission may be a string', () {
-      String contents = """
-{
-  "permissions": ["fileSystem"]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.end();
+      String contents = """{ "permissions": ["fileSystem"] }""";
+      _validate(contents, []);
     });
 
     test('"socket" permission is obsolete', () {
-      String contents = """
-{
-  "permissions": ["socket"]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(ErrorIds.OBSOLETE_ENTRY);
-      checker.end();
+      String contents = """{ "permissions": ["socket"] }""";
+      _validate(contents, [ErrorIds.OBSOLETE_ENTRY]);
     });
 
     test('"socket" permission as dictionary is obsolete', () {
-      String contents = """
-{
-  "permissions": [{"socket": {}}]
-}
-""";
-      _LoggingErrorCollector errorCollector = _validateDocument(contents);
-
-      _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
-      checker.error(ErrorIds.OBSOLETE_ENTRY);
-      checker.end();
+      String contents = """{ "permissions": [{"socket": {}}] }""";
+      _validate(contents, [ErrorIds.OBSOLETE_ENTRY]);
     });
 
   });
