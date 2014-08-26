@@ -42,8 +42,6 @@ class _ScrollDirection extends Enum<html.ScrollAlignment> {
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
-  static const _ITEM_CSS_CLASS = 'outlineItem';
-
   List<OutlineItem> _outlineItems;
   OutlineItem _selectedItem;
   OffsetRange _lastScrolledOffsetRange = new OffsetRange();
@@ -299,7 +297,7 @@ abstract class OutlineItem {
       _element.append(_typeSpan);
     }
 
-    _element.classes.add("${Outline._ITEM_CSS_CLASS} ${cssClassName}");
+    _element.classes.add("outlineItem ${cssClassName}");
   }
 
   String get displayName => _data.name;
