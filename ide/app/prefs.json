@@ -5,12 +5,12 @@
   "keyBindings": null,
   "indentation":{
     "default":{
-      "useSpaces": true,
-      "tabWidth": 2
+      "useTabs": false,
+      "width": 2
     },
     "dart":{
-      "useSpaces": true,
-      "tabWidth": 2
+      "useTabs": false,
+      "width": 2
     }
   }
 }

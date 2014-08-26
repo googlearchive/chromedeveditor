@@ -86,12 +86,12 @@ class IndentationPreferences {
 }
 
 class IndentationPreference {
-  bool useSpaces;
-  int tabWidth;
+  bool useTabs;
+  int width;
 
   IndentationPreferences() {}
 
-  String toJson() => JSON.encode({"spaces":useSpaces, "tabWidth":tabWidth});
+  String toJson() => JSON.encode({"useTabs":useTabs, "width":width});
 }
 
 class JsonPreferencesStore {
