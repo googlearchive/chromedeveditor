@@ -555,7 +555,7 @@ class AndroidDevice {
   // response, headers and all. In case of an error, rejects the Future with an
   // error message.
   // Technically this will work for sending any TCP request/response pair.
-  Future<List<int>> sendHttpRequest(List<int> httpRequest, int port) {
+  Future<List<int>> sendHttpRequest(List<int> httpRequest, int port, Duration timeout) {
     int localID = 4; // Arbitrary choice.
     int remoteID;
     Queue<ByteData> responseChunks;
@@ -605,7 +605,7 @@ class AndroidDevice {
       responseChunks = new Queue<ByteData>();
 
       Future readChunk() {
-        return receive().timeout(new Duration(milliseconds: 5000)).then((msg) {
+        return receive().timeout(timeout).then((msg) {
           if (msg.command == AdbUtil.A_WRTE) {
             responseChunks.add(msg.dataBuffer);
             return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,

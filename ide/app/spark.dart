@@ -2046,7 +2046,7 @@ class GotoDeclarationAction extends SparkAction {
       editor.navigateToDeclaration(new Duration(milliseconds: 500)).then(
           (Declaration declaration) {
         if (declaration == null) spark.showSuccessMessage(NOT_FOUND_ERROR);
-      }).catchError((TimeoutException e) {
+      }).catchError((e) {
         spark.showSuccessMessage(TIMEOUT_ERROR);
       });
     }
@@ -2109,7 +2109,8 @@ class NewProjectAction extends SparkActionWithDialog {
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
-      'core-elements': 'Polymer/core-elements#master'
+      'core-elements': 'Polymer/core-elements#master',
+      'paper-elements': 'Polymer/paper-elements#master'
   };
   // Matches: "proj-template", "proj-template;polymer,core-elements".
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
@@ -2184,7 +2185,7 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(locationEntry, templates).build();
+        return new ProjectBuilder(locationEntry, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
@@ -3999,11 +4000,11 @@ class _SparkLaunchController implements LaunchController {
 }
 
 class RunPythonAction extends SparkAction {
-  WAMFS _fs;
+  WamFS _fs;
   bool _connected;
 
   RunPythonAction(Spark spark) : super(spark, 'run-python', 'Run Python') {
-    _fs = new WAMFS();
+    _fs = new WamFS();
   }
 
   Future _connect() {

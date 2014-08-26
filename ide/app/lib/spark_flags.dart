@@ -18,13 +18,22 @@ class SparkFlags {
    */
   // NOTE: '...== true' below are on purpose: missing flags default to false.
   static bool get developerMode => _flags['test-mode'] == true;
+
+  // Editor:
   static bool get useLightAceThemes => _flags['light-ace-themes'] == true;
+  static bool get useMoreLightAceThemes => _flags['more-light-ace-themes'] == true;
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
-  static bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
+  static bool get useMoreDarkAceThemes => _flags['more-dark-ace-themes'] == true;
+  static bool get useAceThemes {
+      return useLightAceThemes || useMoreLightAceThemes || 
+             useDarkAceThemes || useMoreDarkAceThemes;
+  }
+  static bool get enableMultiSelect => _flags['enable-multiselect'] == true;
+
   static bool get showWipProjectTemplates => _flags['wip-project-templates'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
-  static bool get enableMultiSelect => _flags['enable-multiselect'] == true;
   static bool get searchInFiles => _flags['search-in-files'] == true;
+
   // Bower:
   static bool get bowerMapComplexVerToLatestStable =>
       _flags['bower-map-complex-ver-to-latest-stable'] == true;

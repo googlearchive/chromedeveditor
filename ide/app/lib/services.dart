@@ -287,12 +287,10 @@ class AnalyzerService extends Service {
     return completer.future.then((ProjectAnalyzer context) {
       _logger.info('disposed analysis context [${project.name}]');
 
-      if (_recentContexts.indexOf(context) >= MAX_CONTEXTS) {
-        _recentContexts.remove(context);
-        _contextCompleters.remove(completer);
+      _recentContexts.remove(context);
+      _contextCompleters.remove(project);
 
-        return _sendAction('disposeContext', {'contextId': project.uuid});
-      }
+      return _sendAction('disposeContext', {'contextId': project.uuid});
     });
   }
 

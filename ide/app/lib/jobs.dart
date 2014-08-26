@@ -260,6 +260,13 @@ abstract class ProgressMonitor {
   }
 
   /**
+   * Add [amount] more work to the previously specified value.
+   */
+  void addWork(num amount) {
+    _maxWork += amount;
+  }
+
+  /**
    * Adds [amount] to [work] completed (but no greater than maxWork).
    */
   void worked(num amount) {

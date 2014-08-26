@@ -41,7 +41,7 @@ class FileErrorCollector implements ErrorCollector {
     file.clearMarkers(markerType);
   }
 
-  void addMessage(Span span, String message) {
+  void addMessage(String messageId, Span span, String message) {
     file.createMarker(
         markerType,
         markerSeverity,

@@ -12,7 +12,7 @@
   <div>
     <button id="addToPage">Add to page</button>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html>

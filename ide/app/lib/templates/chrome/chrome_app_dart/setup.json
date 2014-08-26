@@ -6,7 +6,7 @@
         { "source": "icon_128.png_", "dest": "icon_128.png"},
         { "source": "icon_16.png_", "dest": "icon_16.png"},
         { "source": "index.html_", "dest": "index.html" },
-        { "source": "main.dart_", "dest": "main.dart"},
+        { "source": "main.dart_", "dest": "main.dart" },
         { "source": "manifest.json_", "dest": "manifest.json" },
         { "source": "styles.css_", "dest": "styles.css"}
       ]

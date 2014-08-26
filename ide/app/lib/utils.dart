@@ -248,7 +248,8 @@ class NullNotifier implements Notifier {
     Logger.root.info('${title}:${message}');
   }
 
-  Future showMessageAndWait(String title, String message) => new Future.value("Not implemented");
+  Future showMessageAndWait(String title, String message) => 
+      new Future.value("Not implemented");
 
   void showSuccessMessage(String message) { }
 
