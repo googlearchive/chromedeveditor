@@ -53,8 +53,6 @@ class Outline {
   html.UListElement _rootList;
   html.Element _outlineButton;
 
-  final List<html.CssStyleRule> _outlineItemCssRules = [];
-
   final PreferenceStore _prefs;
   bool _visible = true;
 
@@ -75,15 +73,6 @@ class Outline {
         _outlineDiv.classes.add('collapsed');
       }
     });
-
-    html.document.styleSheets.forEach((sheet) {
-      final Iterable<html.CssStyleRule> rules = sheet.cssRules.where((rule) {
-        return rule is html.CssStyleRule &&
-               rule.selectorText == '.${_ITEM_CSS_CLASS}';
-      });
-      _outlineItemCssRules.addAll(rules);
-    });
-
   }
 
   Stream<OutlineItem> get onChildSelected => _childSelectedController.stream;
@@ -110,9 +99,6 @@ class Outline {
 
   void setFontSize(num size) {
     _rootList.style.fontSize = '${size}px';
-    // Outline items are created dynamically, so we can't just modify element's
-    // style: we have to modify the CSS rule that applies to all items.
-    _outlineItemCssRules.forEach((rule) => rule.style.height = '${size}px');
   }
 
   /**
