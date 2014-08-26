@@ -206,5 +206,147 @@ void defineTests() {
       _validate(contents, [ErrorIds.OBSOLETE_ENTRY]);
     });
 
+    for(String key in ["version", "minimum_chrome_version"]) {
+      test('"$key" can contain 1 integer', () {
+        String contents = """{ "$key": "1" }""";
+        _validate(contents, []);
+      });
+
+      test('"$key" can contain 2 integers', () {
+        String contents = """{ "$key": "1.0" }""";
+        _validate(contents, []);
+      });
+
+      test('"$key" can contain 3 integers', () {
+        String contents = """{ "$key": "1.0.1" }""";
+        _validate(contents, []);
+      });
+
+      test('"$key" can contain 4 integers', () {
+        String contents = """{ "$key": "1.0.0.12" }""";
+        _validate(contents, []);
+      });
+
+      test('"$key" can contain more than 4 integers', () {
+        String contents = """{ "$key": "1.0.0.12.13" }""";
+        _validate(contents, [ErrorIds.VERSION_STRING_EXPECTED]);
+      });
+
+      test('"$key" can contain more negative integers', () {
+        String contents = """{ "$key": "1.-1.0.12" }""";
+        _validate(contents, [ErrorIds.VERSION_STRING_EXPECTED]);
+      });
+
+      test('"$key" can contain intergers greater than 65535', () {
+        String contents = """{ "$key": "1.65536" }""";
+        _validate(contents, [ErrorIds.VERSION_STRING_EXPECTED]);
+      });
+
+      test('"$key" cannot be an integer', () {
+        String contents = """{ "$key": 0 }""";
+        _validate(contents, [ErrorIds.VERSION_STRING_EXPECTED]);
+      });
+
+      test('"$key" cannot be an object', () {
+        String contents = """{ "$key": {} }""";
+        _validate(contents, [ErrorIds.VERSION_STRING_EXPECTED]);
+      });
+
+      test('"$key" cannot be an array', () {
+        String contents = """{ "$key": [0] }""";
+        _validate(contents, [ErrorIds.VERSION_STRING_EXPECTED]);
+      });
+    }
+
+    for(String key in ["kiosk_enabled", "kiosk_only"]) {
+      test('"$key" cannot be an integer', () {
+        String contents = """{ "$key": 0 }""";
+        _validate(contents, [json_schema_validator.ErrorIds.BOOLEAN_EXPECTED]);
+      });
+
+      test('"$key" may be true', () {
+        String contents = """{ "$key": true }""";
+        _validate(contents, []);
+      });
+
+      test('"$key" may be false', () {
+        String contents = """{ "$key": false }""";
+        _validate(contents, []);
+      });
+    }
+
+    test('"webview" may be a dictionary of partitions', () {
+      String contents = """{
+  "webview": {
+    "partitions": [{
+        "name": "any name",
+        "accessible_resources": ["foo.bar"]
+      }, {
+        "name": "any-name-2",
+        "accessible_resources": ["blah.baz"]
+      }
+    ]
+  }
+}""";
+      _validate(contents, []);
+    });
+
+    test('"webview" cannot contain any other key than "partitions"', () {
+      String contents = """{
+  "webview": {
+    "partitions2": [{
+        "name": "any name",
+        "accessible_resources": ["foo.bar"]
+      }, {
+        "name": "any-name-2",
+        "accessible_resources": ["blah.baz"]
+      }
+    ]
+  }
+}""";
+      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"webview.partitions" cannot contain any other key than "name" and "accessible_resources"', () {
+      String contents = """{
+  "webview": {
+    "partitions": [{
+      "name2": "any name",
+      "accessible_resources": ["foo.bar"]
+    }]
+  }
+}""";
+      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"webview.partitions" cannot contain any other key than "name" and "accessible_resources"', () {
+      String contents = """{
+  "webview": {
+    "partitions": [{
+      "name": "any name",
+      "accessible_resources2": ["foo.bar"]
+    }]
+  }
+}""";
+      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"webview.partitions.accessible_resources" cannot be a sinle string value"', () {
+      String contents = """{
+  "webview": {
+    "partitions": [{
+      "name": "any name",
+      "accessible_resources": "foo.bar"
+    }]
+  }
+}""";
+      _validate(contents, [json_schema_validator.ErrorIds.ARRAY_EXPECTED]);
+    });
+
+    test('"webview" cannot be an array', () {
+      String contents = """{ "webview": [] }""";
+      _validate(contents, [json_schema_validator.ErrorIds.OBJECT_EXPECTED]);
+    });
+
   });
 }

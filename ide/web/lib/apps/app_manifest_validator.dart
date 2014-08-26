@@ -13,6 +13,7 @@ class ErrorIds {
   static final String INVALID_PERMISSION = "INVALID_PERMISSION";
   static final String OBSOLETE_ENTRY = "OBSOLETE_ENTRY";
   static final String STRING_OR_OBJECT_EXPECTED = "STRING_OR_OBJECT_EXPECTED";
+  static final String VERSION_STRING_EXPECTED = "VERSION_STRING_EXPECTED";
 }
 
 /**
@@ -87,10 +88,10 @@ Map AppManifestSchema =
   "incognito": "var",
   "input_components": "var",
   "key": "string",
-  "kiosk_enabled": "var",
-  "kiosk_only": "var",
+  "kiosk_enabled": "boolean",
+  "kiosk_only": "boolean",
   "manifest_version": "manifest_version",
-  "minimum_chrome_version": "var",
+  "minimum_chrome_version": "version",
   "nacl_modules": "var",
   "name": "string",
   "oauth2": "var",
@@ -128,8 +129,13 @@ Map AppManifestSchema =
   "update_url": "string",
   "web_accessible_resources": "var",
   "url_handlers": "var",
-  "version": "var",
-  "webview": "var"
+  "version": "version",
+  "webview": {
+    "partitions": [{
+      "name": "string",
+      "accessible_resources": ["string"]
+    }]
+  }
 };
 
 /**
@@ -148,6 +154,8 @@ class AppManifestValidatorFactory implements SchemaValidatorFactory {
       return new PermissionValueValidator(errorCollector);
     } else if (schema == "socket_host_pattern") {
       return new SocketHostPatternValueValidator(errorCollector);
+    } else if (schema == "version") {
+      return new VersionValueValidator(errorCollector);
     }
     return null;
   }
@@ -155,7 +163,8 @@ class AppManifestValidatorFactory implements SchemaValidatorFactory {
   bool validateSchemaForTesting(dynamic schema) {
     if (schema == "manifest_version" ||
         schema == "permission" ||
-        schema == "socket_host_pattern") {
+        schema == "socket_host_pattern" ||
+        schema == "version") {
       return true;
     }
     return false;
@@ -377,4 +386,44 @@ class SocketHostPatternValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
 
   SocketHostPatternValueValidator(this.errorCollector);
+}
+
+/**
+ * Validator for "version" values.
+ * See https://developer.chrome.com/extensions/manifest/version.
+ */
+class VersionValueValidator extends LiteralValueSchemaValidator {
+  final ErrorCollector errorCollector;
+
+  VersionValueValidator(this.errorCollector);
+
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    if (entity is StringEntity) {
+      // See https://developer.chrome.com/extensions/manifest/version.
+      List<String> numbers = entity.text.trim().split(".");
+      if (numbers.length >= 1 && numbers.length <= 4) {
+        if (numbers.every((x) => _isPositiveInteger(x))) {
+          return;
+        }
+      }
+    }
+
+    if (propertyName == null) {
+      errorCollector.addMessage(
+          ErrorIds.VERSION_STRING_EXPECTED,
+          entity.span,
+          "A string containing 1 to 4 integer separated by a \".\" is expected.");
+    } else {
+      errorCollector.addMessage(
+          ErrorIds.VERSION_STRING_EXPECTED,
+          entity.span,
+          "A string containing 1 to 4 integer separated by a \".\" is " +
+          "expected for property \"${propertyName.text}\".");
+    }
+  }
+
+  bool _isPositiveInteger(String x) {
+    int result = int.parse(x, onError: (x) => -1);
+    return result >= 0 && result <= 65535;
+  }
 }
