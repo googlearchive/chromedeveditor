@@ -14,6 +14,8 @@ class ErrorIds {
   static final String OBSOLETE_ENTRY = "OBSOLETE_ENTRY";
   static final String STRING_OR_OBJECT_EXPECTED = "STRING_OR_OBJECT_EXPECTED";
   static final String VERSION_STRING_EXPECTED = "VERSION_STRING_EXPECTED";
+  static final String REQUIRMENT_3D_FEATURE_EXPECTED = "REQUIRMENT_3D_FEATURE_EXPECTED";
+  static final String INVALID_LOCALE = "INVALID_LOCALE";
 }
 
 /**
@@ -75,8 +77,8 @@ Map AppManifestSchema =
   "content_scripts": "var",
   "content_security_policy": "var",
   "converted_from_user_script": "var",
-  "current_locale": "var",
-  "default_locale": "var",
+  "current_locale": "locale",
+  "default_locale": "locale",
   "description": "string",
   "devtools_page": "var",
   "externally_connectable": "var",
@@ -104,7 +106,17 @@ Map AppManifestSchema =
   "permissions": ["permission"],
   "platforms": "var",
   "plugins": "var",
-  "requirements": "var",
+  "requirements": {
+    "3D": {
+      "features": ["3d_feature"] // "webgl" or "css3d"
+    },
+    "plugins": {
+      "npapi": "boolean"
+    },
+    "window": {
+      "shape": "boolean"
+    }
+  },
   "sandbox": "var",
   "script_badge": "var",
   "short_name": "string",
@@ -138,39 +150,37 @@ Map AppManifestSchema =
   }
 };
 
+typedef SchemaValidator SchemaValidatorCreator(ErrorCollector errorCollector);
+
 /**
  * Custom schema factory implementing schema types specific to the
  * "manifest.json" schema.
  */
 class AppManifestValidatorFactory implements SchemaValidatorFactory {
+  static final Map<String, SchemaValidatorCreator> _custom_types = {
+    "3d_feature": (errorCollector) => new Requirement3dFeatureValueValidator(errorCollector),
+    "locale": (errorCollector) => new LocaleValueValidator(errorCollector),
+    "manifest_version": (errorCollector) => new ManifestVersionValueValidator(errorCollector),
+    "permission": (errorCollector) => new PermissionValueValidator(errorCollector),
+    "socket_host_pattern": (errorCollector) => new SocketHostPatternValueValidator(errorCollector),
+    "version": (errorCollector) => new VersionValueValidator(errorCollector)
+  };
   final ErrorCollector errorCollector;
 
   AppManifestValidatorFactory(this.errorCollector);
 
   SchemaValidator createValidator(dynamic schema) {
-    if (schema == "manifest_version") {
-      return new ManifestVersionValueValidator(errorCollector);
-    } else if (schema == "permission") {
-      return new PermissionValueValidator(errorCollector);
-    } else if (schema == "socket_host_pattern") {
-      return new SocketHostPatternValueValidator(errorCollector);
-    } else if (schema == "version") {
-      return new VersionValueValidator(errorCollector);
+    SchemaValidatorCreator function = _custom_types[schema];
+    if (function == null) {
+      return null;
     }
-    return null;
+
+    return function(errorCollector);
   }
 
   bool validateSchemaForTesting(dynamic schema) {
-    if (schema == "manifest_version" ||
-        schema == "permission" ||
-        schema == "socket_host_pattern" ||
-        schema == "version") {
-      return true;
-    }
-    return false;
+    return _custom_types.containsKey(schema);
   }
-
-  SchemaValidatorFactory get parentFactory => null;
 }
 
 /**
@@ -425,5 +435,122 @@ class VersionValueValidator extends LiteralValueSchemaValidator {
   bool _isPositiveInteger(String x) {
     int result = int.parse(x, onError: (x) => -1);
     return result >= 0 && result <= 65535;
+  }
+}
+
+/**
+ * Validator for "requirements.3D.features" values.
+ * See https://developer.chrome.com/apps/manifest/requirements.
+ */
+class Requirement3dFeatureValueValidator extends LiteralValueSchemaValidator {
+  final ErrorCollector errorCollector;
+
+  Requirement3dFeatureValueValidator(this.errorCollector);
+
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    if (entity is StringEntity) {
+      if (entity.text == "webgl" || entity.text == "css3d") {
+        return;
+      }
+    }
+
+    if (propertyName == null) {
+      errorCollector.addMessage(
+          ErrorIds.REQUIRMENT_3D_FEATURE_EXPECTED,
+          entity.span,
+          "3D feature must be \"webgl\" or \"css3d\".");
+    } else {
+      errorCollector.addMessage(
+          ErrorIds.REQUIRMENT_3D_FEATURE_EXPECTED,
+          entity.span,
+          "3D feature must be \"webgl\" or \"css3d\" for property " +
+          "\"${propertyName.text}\".");
+    }
+  }
+}
+
+/**
+ * Validator for "locale" values.
+ * See https://developer.chrome.com/webstore/i18n?csw=1#localeTable.
+ */
+class LocaleValueValidator extends LiteralValueSchemaValidator {
+  static final Map<String, String> _validLocales = {
+    "ar": "Arabic",
+    "am": "Amharic",
+    "bg": "Bulgarian",
+    "bn": "Bengali",
+    "ca": "Catalan",
+    "cs": "Czech",
+    "da": "Danish",
+    "de": "German",
+    "el": "Greek",
+    "en": "English",
+    "en_GB": "English (Great Britain)",
+    "en_US": "English (USA)",
+    "es": "Spanish",
+    "es_419": "Spanish (Latin America and Caribbean)",
+    "et": "Estonian",
+    "fa": "Persian",
+    "fi": "Finnish",
+    "fil": "Filipino",
+    "fr": "French",
+    "gu": "Gujarati",
+    "he": "Hebrew",
+    "hi": "Hindi",
+    "hr": "Croatian",
+    "hu": "Hungarian",
+    "id": "Indonesian",
+    "it": "Italian",
+    "ja": "Japanese",
+    "kn": "Kannada",
+    "ko": "Korean",
+    "lt": "Lithuanian",
+    "lv": "Latvian",
+    "ml": "Malayalam",
+    "mr": "Marathi",
+    "ms": "Malay",
+    "nl": "Dutch",
+    "no": "Norwegian",
+    "pl": "Polish",
+    "pt_BR": "Portuguese (Brazil)",
+    "pt_PT": "Portuguese (Portugal)",
+    "ro": "Romanian",
+    "ru": "Russian",
+    "sk": "Slovak",
+    "sl": "Slovenian",
+    "sr": "Serbian",
+    "sv": "Swedish",
+    "sw": "Swahili",
+    "ta": "Tamil",
+    "te": "Telugu",
+    "th": "Thai",
+    "tr": "Turkish",
+    "uk": "Ukrainian",
+    "vi": "Vietnamese",
+    "zh_CN": "Chinese (China)",
+    "zh_TW": "Chinese (Taiwan)",
+  };
+  final ErrorCollector errorCollector;
+
+  LocaleValueValidator(this.errorCollector);
+
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    if (entity is StringEntity) {
+      if (_validLocales.containsKey(entity.text)) {
+        return;
+      }
+    }
+
+    if (propertyName == null) {
+      errorCollector.addMessage(
+          ErrorIds.INVALID_LOCALE,
+          entity.span,
+          "Locale is invalid.");
+    } else {
+      errorCollector.addMessage(
+          ErrorIds.INVALID_LOCALE,
+          entity.span,
+          "Locale is invalid for property \"${propertyName.text}\".");
+    }
   }
 }

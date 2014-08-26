@@ -104,6 +104,21 @@ void defineTests() {
       _validate(contents, []);
     });
 
+    test('"default_locale" may be a string', () {
+      String contents = """{ "default_locale": "en" } """;
+      _validate(contents, []);
+    });
+
+    test('"default_locale" cannot be an arbitrary string', () {
+      String contents = """{ "default_locale": "foo" } """;
+      _validate(contents, [ErrorIds.INVALID_LOCALE]);
+    });
+
+    test('"default_locale" cannot be an integer', () {
+      String contents = """{ "default_locale": 0 } """;
+      _validate(contents, [ErrorIds.INVALID_LOCALE]);
+    });
+
     test('"scripts" may be an empty array', () {
       String contents = """{"app": {"background": {"scripts": []}}} """;
       _validate(contents, []);
@@ -346,6 +361,64 @@ void defineTests() {
     test('"webview" cannot be an array', () {
       String contents = """{ "webview": [] }""";
       _validate(contents, [json_schema_validator.ErrorIds.OBJECT_EXPECTED]);
+    });
+
+    test('"requirements" may be a dictionary', () {
+      String contents = """{
+  "requirements": {
+    "3D": {
+      "features": ["webgl", "css3d"]
+    },
+    "plugins": {
+      "npapi": true
+    },
+    "window": {
+      "shape": false
+    }
+  }
+}
+""";
+      _validate(contents, []);
+    });
+
+    test('"requirements" cannot be a dictionary with arbitrary keys', () {
+      String contents = """{
+  "requirements": {
+    "test": {
+      "features": ["webgl", "css3d"]
+    },
+    "bad-plugins": {
+      "npapi": true
+    },
+    "bad-window": {
+      "shape": false
+    }
+  }
+}
+""";
+      _validate(
+          contents,
+          [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME,
+           json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME,
+           json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"requirements.3d.features" cannot be arbitrary strings', () {
+      String contents = """{
+  "requirements": {
+    "3D": {
+      "features": ["foo"]
+    },
+    "plugins": {
+      "npapi": true
+    },
+    "window": {
+      "shape": false
+    }
+  }
+}
+""";
+      _validate(contents, [ErrorIds.REQUIRMENT_3D_FEATURE_EXPECTED]);
     });
 
   });
