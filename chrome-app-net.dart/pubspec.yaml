@@ -9,5 +9,7 @@ dependencies:
   chrome: any
   intl: any
   mime: any
+  chrome_testing:
+    path: ../chrome-app-testing.dart
 dev_dependencies:
   unittest: any

@@ -2,19 +2,17 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library all_tests;
+import 'package:chrome_testing/testing_app.dart';
 
 import 'tests/server_test.dart' as server_test;
 import 'tests/tcp_test.dart' as tcp_test;
 
-// TODO: get these tests running
+void main() {
+  TestDriver testDriver = new TestDriver(
+      defineTests, connectToTestListener: true);
+}
 
-// TODO: add a chrome app test app here
-
-/**
- * Place all new tests here.
- */
-void defineTests() {
+defineTests() {
   server_test.defineTests();
   tcp_test.defineTests();
 }

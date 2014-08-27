@@ -13,6 +13,7 @@ import 'dart:html' show window;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome/gen/management.dart';
+import 'package:chrome_net/server.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
@@ -23,7 +24,6 @@ import 'exception.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
-import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
 import 'workspace.dart';

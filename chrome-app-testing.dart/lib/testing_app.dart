@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.tests;
+library chrome_testing.app;
 
 import 'dart:async';
 import 'dart:convert';
@@ -13,21 +13,15 @@ import 'package:chrome_net/tcp.dart' as tcp;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import 'filesystem.dart' as filesystem;
-import 'preferences.dart';
-import 'utils.dart';
-
 const int _DEFAULT_TESTPORT = 5120;
 
-Logger _logger = new Logger('spark.tests');
+Logger _logger = new Logger('tests');
 
 /**
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
   Function _defineTestsFn;
-  final Notifier _notifier;
-  final PreferenceStore _prefs;
 
   StreamSubscription _logListener;
   StreamController<unittest.TestCase> _onTestFinished =
@@ -38,9 +32,8 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this._notifier, this._prefs,
-      {bool connectToTestListener: false}) {
-    unittest.unittestConfiguration = new _SparkTestConfiguration(this);
+  TestDriver(this._defineTestsFn, {bool connectToTestListener: false}) {
+    unittest.unittestConfiguration = new _TestConfiguration(this);
 
     if (connectToTestListener) {
       _connectToListener();
@@ -51,9 +44,6 @@ class TestDriver {
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
-    filesystem.setMockFilesystemAccess();
-    filesystem.restoreManager(_notifier, _prefs);
-
     if (_logListener == null) {
       _createTestUI();
     }
@@ -69,7 +59,6 @@ class TestDriver {
       _defineTestsFn = null;
     }
 
-    _notifier.showSuccessMessage('Running tests...');
     unittest.runTests();
 
     return _testCompleter.future;
@@ -84,15 +73,12 @@ class TestDriver {
   void _connectToListener() {
     // Try to connect to a pre-defined port.
     _TestListenerClient.connect().then((_TestListenerClient testClient) {
-      if (testClient == null) {
-        return;
-      }
+      if (testClient == null) return;
 
       print('Connected to test listener on port ${testClient.port}');
 
       Logger.root.onRecord.listen((LogRecord r) {
-        testClient.log(
-            '[${r.level.name}] ${_fixed(r.loggerName, 11)}: ${r.message}');
+        testClient.log('[${r}');
       });
 
       _logger.info('Running tests on ${window.navigator.appCodeName} '
@@ -113,15 +99,16 @@ class TestDriver {
     _testDiv = new DivElement();
     _testDiv.style.zIndex = '100';
     _testDiv.style.position = 'fixed';
-    _testDiv.style.bottom = '0px';
-    _testDiv.style.padding = '0.5em';
-    _testDiv.style.width = '100%';
+    _testDiv.style.bottom = '8px';
+    _testDiv.style.left = '8px';
+    _testDiv.style.right = '8px';
     _testDiv.style.display = 'none';
 
     _statusDiv = new DivElement();
-    _statusDiv.style.padding = '0 0.5em';
+    _statusDiv.style.padding = '2px';
     _statusDiv.style.background = 'rgb(84, 180, 84)';
     _statusDiv.style.borderRadius = '2px';
+    _statusDiv.style.fontFamily = 'monospace';
     _testDiv.nodes.add(_statusDiv);
 
     _logger.onRecord.listen((LogRecord record) {
@@ -151,8 +138,7 @@ class _TestListenerClient {
    * instance of [TestListenerClient] on success.
    */
   static Future<_TestListenerClient> connect([int port = _DEFAULT_TESTPORT]) {
-    Future f = tcp.TcpClient.createClient(
-        tcp.LOCAL_HOST, port, throwOnError: false);
+    Future f = tcp.TcpClient.createClient(tcp.LOCAL_HOST, port, throwOnError: false);
     return f.then((tcp.TcpClient client) {
       return client == null ? null : new _TestListenerClient._(port, client);
     });
@@ -166,10 +152,10 @@ class _TestListenerClient {
   void log(String str) => _tcpClient.write(UTF8.encode('${str}\n'));
 }
 
-class _SparkTestConfiguration extends unittest.Configuration {
+class _TestConfiguration extends unittest.Configuration {
   TestDriver testDriver;
 
-  _SparkTestConfiguration(this.testDriver): super.blank();
+  _TestConfiguration(this.testDriver): super.blank();
 
   bool get autoStart => false;
 
@@ -232,8 +218,8 @@ class _SparkTestConfiguration extends unittest.Configuration {
         _logger.severe('Top-level uncaught error: $uncaughtError');
       }
 
-      _logger.warning(
-          '$passed tests passed, $failed failed, and $errors errored.');
+      _logger.warning('$passed tests passed, $failed failed, and $errors '
+          'errored.');
     }
   }
 

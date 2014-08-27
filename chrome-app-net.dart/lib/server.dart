@@ -3,9 +3,9 @@
 // license that can be found in the LICENSE file.
 
 /**
- * An embedded http server. This is used when launching web apps from Spark.
+ * An embedded http server.
  */
-library spark.server;
+library chrome_net.server;
 
 import 'dart:async';
 import 'dart:convert';
@@ -35,8 +35,8 @@ final intl.DateFormat RFC_1123_DATE_FORMAT =
 class PicoServer {
   tcp.TcpServer _server;
   List<PicoServlet> _servlets = [];
-  Logger _logger;
-  
+  ServerLogger _logger = new _NullLogger();
+
   /**
    * Create an instance of an http server, bound to the given port. If [port] is
    * `0`, this will bind to any available port.
@@ -51,8 +51,8 @@ class PicoServer {
     _server.onAccept.listen(_serveClient);
   }
 
-  void setLogger(Logger logger) {
-    _logger = logger;
+  void setLogger(ServerLogger logger) {
+    _logger = logger == null ? new _NullLogger() : logger;
   }
 
   int get port => _server.port;
@@ -101,7 +101,7 @@ class PicoServer {
   }
 }
 
-abstract class Logger {
+abstract class ServerLogger {
   void log(String message);
 }
 
@@ -1196,4 +1196,8 @@ class BytesBuilder {
    * Clear the contents of the builder.
    */
   void clear() => _buffer.clear();
+}
+
+class _NullLogger extends ServerLogger {
+  void log(String message) { }
 }
