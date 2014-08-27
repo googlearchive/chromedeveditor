@@ -172,6 +172,7 @@ class AppManifestValidatorFactory implements SchemaValidatorFactory {
 
   AppManifestValidatorFactory(this.errorCollector);
 
+  @override
   SchemaValidator createValidator(dynamic schema) {
     SchemaValidatorCreator creator = _customTypes[schema];
     if (creator == null) {
@@ -181,6 +182,7 @@ class AppManifestValidatorFactory implements SchemaValidatorFactory {
     return creator(errorCollector);
   }
 
+  @override
   bool validateSchemaForTesting(dynamic schema) {
     return _customTypes.containsKey(schema);
   }
@@ -193,6 +195,7 @@ class ManifestVersionValueValidator extends IntegerValueValidator {
   ManifestVersionValueValidator(ErrorCollector errorCollector)
     : super(errorCollector);
 
+  @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     // The "manifest_version" type is always directly associted to an
     // object key.
@@ -309,10 +312,12 @@ class PermissionValueValidator extends SchemaValidator {
 
   PermissionValueValidator(this.errorCollector);
 
+  @override
   JsonValidator enterObject() {
     return new PermissionObjectValueValidator(errorCollector);
   }
 
+  @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     if (entity is StringEntity) {
       if (_obsoletePermissions.contains(entity.text)) {
@@ -365,6 +370,7 @@ class PermissionObjectValueValidator extends SchemaValidator {
 
   PermissionObjectValueValidator(this.errorCollector);
 
+  @override
   JsonValidator propertyName(StringEntity propertyName) {
     switch(propertyName.text) {
       case "socket":
@@ -407,11 +413,13 @@ class SocketHostPatternValueValidator extends SchemaValidator {
 
   SocketHostPatternValueValidator(this.errorCollector);
 
+  @override
   JsonValidator enterArray() {
     arrayDepth++;
     return this;
   }
 
+  @override
   void leaveArray(ArrayEntity entity) {
     arrayDepth--;
     if (arrayDepth > 0 && objectDepth == 0) {
@@ -419,11 +427,13 @@ class SocketHostPatternValueValidator extends SchemaValidator {
     }
   }
 
+  @override
   JsonValidator enterObject() {
     objectDepth++;
     return this;
   }
 
+  @override
   void leaveObject(ObjectEntity entity) {
     objectDepth--;
     if (arrayDepth == 0 && objectDepth == 0) {
@@ -431,10 +441,12 @@ class SocketHostPatternValueValidator extends SchemaValidator {
     }
   }
 
+  @override
   void arrayElement(JsonEntity entity) {
     checkValue(entity);
   }
 
+  @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     // If we are too deep in an array/object, don't validate.
     if (arrayDepth > 1 || objectDepth > 0) {
@@ -449,6 +461,7 @@ class SocketHostPatternValueValidator extends SchemaValidator {
     }
   }
 
+  @override
   void addError(JsonEntity entity) {
     errorCollector.addMessage(
         ErrorIds.INVALID_SOCKET_HOST_PATTERN,
@@ -503,6 +516,7 @@ class VersionValueValidator extends SchemaValidator {
 
   VersionValueValidator(this.errorCollector);
 
+  @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     if (entity is StringEntity) {
       // See https://developer.chrome.com/extensions/manifest/version.
@@ -543,6 +557,7 @@ class Requirement3dFeatureValueValidator extends SchemaValidator {
 
   Requirement3dFeatureValueValidator(this.errorCollector);
 
+  @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     if (entity is StringEntity) {
       if (entity.text == "webgl" || entity.text == "css3d") {
@@ -630,6 +645,7 @@ class LocaleValueValidator extends SchemaValidator {
 
   LocaleValueValidator(this.errorCollector);
 
+  @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     if (entity is StringEntity) {
       if (_validLocales.containsKey(entity.text)) {
