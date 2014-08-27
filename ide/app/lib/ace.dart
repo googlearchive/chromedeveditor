@@ -572,6 +572,16 @@ class AceManager {
     ace.Mode.extensionMap['webapp'] = ace.Mode.JSON;
     ace.Mode.extensionMap['gsp'] = ace.Mode.HTML;
     ace.Mode.extensionMap['jsp'] = ace.Mode.HTML;
+    // The extensions used in Spark's own internal templates.
+    ace.Mode.extensionMap['html_'] = ace.Mode.HTML;
+    ace.Mode.extensionMap['css_'] = ace.Mode.CSS;
+    ace.Mode.extensionMap['js_'] = ace.Mode.JAVASCRIPT;
+    ace.Mode.extensionMap['dart_'] = ace.Mode.DART;
+    ace.Mode.extensionMap['json_'] = ace.Mode.JSON;
+    ace.Mode.extensionMap['yaml_'] = ace.Mode.YAML;
+    // The extension that "Refactor for CSP" feature assigns to originals of
+    // refactored HTMLs.
+    ace.Mode.extensionMap['html.pre_csp'] = ace.Mode.HTML;
 
     _setupGotoLine();
 
