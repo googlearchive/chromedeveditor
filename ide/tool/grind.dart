@@ -439,18 +439,21 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
 }
 
 void _changeMode({bool useTestMode: true}) {
-  File file = joinFile(Directory.current, ['app', 'app.json']);
-  file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
+  _changeModeImpl(
+      useTestMode, joinFile(Directory.current, ['app', 'app.json']));
+  _changeModeImpl(
+      useTestMode, joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']));
+  _changeModeImpl(
+      useTestMode, joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']));
+}
 
-  file = joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']);
-  if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
-  }
+void _changeModeImpl(bool useTestMode, File file) {
+  if (!file.parent.existsSync()) return;
 
-  file = joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']);
-  if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
-  }
+  String content = file.readAsStringSync();
+  var dict = JSON.decode(content);
+  dict['test-mode'] = useTestMode;
+  file.writeAsStringSync(new JsonPrinter().print(dict));
 }
 
 // Returns the URL of the git repository.

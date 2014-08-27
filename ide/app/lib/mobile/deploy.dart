@@ -120,6 +120,8 @@ class MobileDeploy {
 
 abstract class AbstractDeployer {
   static const int DEPLOY_PORT = 2424;
+  static Duration REGULAR_REQUEST_TIMEOUT = new Duration(seconds: 2);
+  static Duration PUSH_REQUEST_TIMEOUT = new Duration(seconds: 60);
 
   final Container appContainer;
   final PreferenceStore _prefs;
@@ -246,14 +248,14 @@ abstract class AbstractDeployer {
 
   /// This method sends the command to the device and it's
   /// implementation depends on the deployment choice
-  Future<List<int>> _pushRequestToDevice(String);
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, Duration timeout);
 
   /// Get the deployment target URL
   String _getTarget();
 
   Future _setTimeout(Future httpPushFuture) {
-    return httpPushFuture.timeout(new Duration(seconds: 30), onTimeout: () {
-      return new Future.error('Push timed out: Total time exceeds 30 seconds');
+    return httpPushFuture.timeout(new Duration(seconds: 60), onTimeout: () {
+      return new Future.error('Push timed out: Total time exceeds 60 seconds');
     });
   }
 
@@ -291,7 +293,7 @@ abstract class AbstractDeployer {
         toDeleteMap["paths"] = fileToDelete;
         String command = JSON.encode(toDeleteMap);
         List<int> httpRequest = _buildDeleteRequest(_getTarget(), command.codeUnits);
-        return _setTimeout(_pushRequestToDevice(httpRequest));
+        return _setTimeout(_pushRequestToDevice(httpRequest, REGULAR_REQUEST_TIMEOUT));
       }
       return new Future.value();
     } else {
@@ -308,7 +310,7 @@ abstract class AbstractDeployer {
     List<int> httpRequest;
 
     httpRequest = _buildAssetManifestRequest(_getTarget());
-    return _setTimeout(_pushRequestToDevice(httpRequest))
+    return _setTimeout(_pushRequestToDevice(httpRequest, REGULAR_REQUEST_TIMEOUT))
       .then((msg) {
         return _expectHttpOkResponse(msg);
     }).then((String result) {
@@ -323,7 +325,7 @@ abstract class AbstractDeployer {
         .then((List<int> archivedData) {
           monitor.worked(3);
           httpRequest = _buildPushRequest(_getTarget(), archivedData);
-          return _setTimeout(_pushRequestToDevice(httpRequest));
+          return _setTimeout(_pushRequestToDevice(httpRequest, PUSH_REQUEST_TIMEOUT));
      }).then((msg) {
          monitor.worked(6);
          return _expectHttpOkResponse(msg);
@@ -331,7 +333,7 @@ abstract class AbstractDeployer {
       _updateContainerEtag(response);
       monitor.worked(7);
       httpRequest = _buildLaunchRequest(_getTarget());
-      return _setTimeout(_pushRequestToDevice(httpRequest));
+      return _setTimeout(_pushRequestToDevice(httpRequest, REGULAR_REQUEST_TIMEOUT));
     }).then((msg) {
       monitor.worked(8);
       return _expectHttpOkResponse(msg);
@@ -358,8 +360,8 @@ class USBDeployer extends AbstractDeployer {
     });
   }
 
-  Future<List<int>> _pushRequestToDevice(List<int> httpRequest) {
-    return _device.sendHttpRequest(httpRequest, DEPLOY_PORT);
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, Duration timeout) {
+    return _device.sendHttpRequest(httpRequest, DEPLOY_PORT, timeout);
   }
 
   String _getTarget() {
@@ -378,11 +380,11 @@ class HttpDeployer extends AbstractDeployer {
   HttpDeployer(Container appContainer, PreferenceStore _prefs, this._target)
      : super(appContainer, _prefs);
 
-  Future<List<int>> _pushRequestToDevice(List<int> httpRequest) {
+  Future<List<int>> _pushRequestToDevice(List<int> httpRequest, Duration timeout) {
     TcpClient client;
     return TcpClient.createClient(_target, DEPLOY_PORT).then((TcpClient client) {
       client.write(httpRequest);
-      Stream st = client.stream.timeout(new Duration(minutes: 1));
+      Stream st = client.stream.timeout(timeout);
       List<int> response = new List<int>();
       return st.forEach((List<int> data) {
         response.addAll(data);

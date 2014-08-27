@@ -6,6 +6,10 @@ library spark.json.validator;
 
 import 'json_parser.dart';
 
+class ErrorIds {
+  static final String JSON_ERROR = "JSON_ERROR";
+}
+
 /**
  * Event based interface of a json validator. A json validator is similar to
  * a [JsonListener], except that events expose [JsonEntity] instances and that
@@ -70,7 +74,7 @@ abstract class JsonValidator {
  * spans and messages for given source text.
  */
 abstract class ErrorCollector {
-  void addMessage(Span span, String message);
+  void addMessage(String messageId, Span span, String message);
 }
 
 /**
@@ -240,7 +244,7 @@ class JsonValidatorListener extends JsonListener {
   }
 
   void fail(String source, Span span, String message) {
-    _jsonErrorCollector.addMessage(span, message);
+    _jsonErrorCollector.addMessage(ErrorIds.JSON_ERROR, span, message);
   }
 }
 

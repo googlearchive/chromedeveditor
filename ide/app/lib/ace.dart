@@ -426,7 +426,7 @@ class GoEditor extends TextEditor {
     // Go files use hard tabs for indentation.
     session.useSoftTabs = false;
 
-    // The number of spaces to use it not specified by Go.
+    // The number of spaces to use is not specified by Go.
     session.tabSize = 4;
   }
 }
@@ -506,13 +506,12 @@ class AceManager {
     //_aceEditor.setOption('enableSnippets', true);
 
     ace.require('ace/ext/linking');
-    _aceEditor.setOptions({'enableMultiselect' : false,
-                           'enableLinking' : true});
+    _aceEditor.setOptions({'enableMultiselect': false,
+                           'enableLinking': true});
 
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
-      if (!DartEditor.isDartFile(currentFile)) {
-        return;
-      }
+      if (currentFile == null) return;
+      if (!DartEditor.isDartFile(currentFile)) return;
 
       ace.Token token = event.token;
 
@@ -585,8 +584,8 @@ class AceManager {
     }
   }
 
-  void setupOutline(html.Element parentElement) {
-    outline = new Outline(_analysisService, parentElement, _prefs.prefStore);
+  void setupOutline(html.Element outlineContainer) {
+    outline = new Outline(_analysisService, outlineContainer, _prefs.prefStore);
     outline.visible = false;
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
@@ -820,6 +819,7 @@ class AceManager {
 
   void setFontSize(num size) {
     _aceEditor.fontSize = size;
+    outline.setFontSize(size);
   }
 
   void focus() => _aceEditor.focus();
@@ -943,10 +943,44 @@ class AceManager {
 
 class ThemeManager {
   static final LIGHT_THEMES = [
-      'textmate', 'tomorrow'
+      'textmate',
+      'tomorrow',
+  ];
+  static final MORE_LIGHT_THEMES = [
+      'chrome',
+      'clouds',
+      'crimson_editor',
+      'dawn',
+      'dreamweaver',
+      'eclipse',
+      'github',
+      'katzenmilch',
+      'kuroir',
+      'solarized_light',
+      'xcode',
   ];
   static final DARK_THEMES = [
-      'monokai', 'tomorrow_night', 'idle_fingers', 'pastel_on_dark'
+      'monokai',
+      'idle_fingers',
+      'tomorrow_night',
+      'pastel_on_dark',
+  ];
+  static final MORE_DARK_THEMES = [
+      'ambiance',
+      'chaos',
+      'clouds_midnight',
+      'cobalt',
+      'kr_theme',
+      'merbivore',
+      'merbivore_soft',
+      'mono_industrial',
+      'solarized_dark',
+      'terminal',
+      'tomorrow_night_blue',
+      'tomorrow_night_bright',
+      'tomorrow_night_eighties',
+      'twilight',
+      'vibrant_ink',
   ];
 
   ace.Editor _aceEditor;
@@ -958,7 +992,9 @@ class ThemeManager {
       _aceEditor = aceManager._aceEditor {
     if (SparkFlags.useAceThemes) {
       if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.useMoreDarkAceThemes) _themes.addAll(MORE_DARK_THEMES);
       if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+      if (SparkFlags.useMoreLightAceThemes) _themes.addAll(MORE_LIGHT_THEMES);
 
       _prefs.getValue('aceTheme').then((String theme) {
         if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
@@ -1063,9 +1099,9 @@ class AceFontManager {
     });
   }
 
-  void dec() => _adjustSize(_value - 2);
+  void dec() => _adjustSize(_value - 1);
 
-  void inc() => _adjustSize(_value + 2);
+  void inc() => _adjustSize(_value + 1);
 
   void _adjustSize(num newValue) {
     // Clamp to between 6pt and 36pt.

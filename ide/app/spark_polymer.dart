@@ -54,15 +54,12 @@ final _logger = new _TimeLogger();
 void main() {
   registerWidgetsWithPolymer();
 
-  // app.json stores global per-app flags and is overwritten by the build
-  // process (`grind deploy`).
+  // app.json stores the default app configuration.
   // user.json can be manually added to override some of the flags from app.json
-  // or add new flags that will survive the build process.
-  // bower_config.json is used to define mappings for certain external Bower
-  // packages transitively imported by Polymer JS project templates.
+  // or add other supported flags; the benefit of adding user.dart as opposed
+  // to modifying app.json is that user.json is ignored by git.
   final List<Future<String>> flagsReaders = [
       HttpRequest.getString(chrome.runtime.getURL('app.json')),
-      HttpRequest.getString(chrome.runtime.getURL('bower_config.json')),
       HttpRequest.getString(chrome.runtime.getURL('user.json'))
   ];
   SparkFlags.initFromFiles(flagsReaders).then((_) {
