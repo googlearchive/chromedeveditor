@@ -76,8 +76,7 @@ class Clone {
     return fetcher.isValidRepoUrl().then((isValid) {
       if (isValid) {
         return startClone(fetcher).catchError((e) {
-          _cleanup();
-          throw e;
+          return _cleanup().whenComplete(() => throw e);
         });
       } else if (!_options.repoUrl.endsWith('.git')) {
         _options.repoUrl += '.git';
