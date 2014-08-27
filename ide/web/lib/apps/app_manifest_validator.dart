@@ -408,60 +408,31 @@ class UsbDevicesValidator extends SchemaValidator {
  */
 class SocketHostPatternValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
-  int arrayDepth = 0;
-  int objectDepth = 0;
+  final bool arrayAllowed;
 
-  SocketHostPatternValueValidator(this.errorCollector);
+  SocketHostPatternValueValidator(
+      this.errorCollector, [this.arrayAllowed = true]);
 
   @override
   JsonValidator enterArray() {
-    arrayDepth++;
-    return this;
-  }
-
-  @override
-  void leaveArray(ArrayEntity entity) {
-    arrayDepth--;
-    if (arrayDepth > 0 && objectDepth == 0) {
-      _addError(entity);
+    if (arrayAllowed) {
+      SchemaValidator validator =
+          new SocketHostPatternValueValidator(errorCollector, false);
+      return new ArrayElementsSchemaValidator(validator);
     }
-  }
-
-  @override
-  JsonValidator enterObject() {
-    objectDepth++;
-    return this;
-  }
-
-  @override
-  void leaveObject(ObjectEntity entity) {
-    objectDepth--;
-    if (arrayDepth == 0 && objectDepth == 0) {
-      _addError(entity);
-    }
-  }
-
-  @override
-  void arrayElement(JsonEntity entity) {
-    checkValue(entity);
+    return NullValidator.instance;
   }
 
   @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
-    // If we are too deep in an array/object, don't validate.
-    if (arrayDepth > 1 || objectDepth > 0) {
-      return;
-    }
-
     if (entity is StringEntity) {
       if (_isValidPattern(entity.text)) {
         return;
       }
-      _addError(entity);
+    } else if (entity is ArrayEntity) {
+      if (arrayAllowed)
+        return;
     }
-  }
-
-  void _addError(JsonEntity entity) {
     errorCollector.addMessage(
         ErrorIds.INVALID_SOCKET_HOST_PATTERN,
         entity.span,
