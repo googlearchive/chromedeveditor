@@ -233,8 +233,16 @@ class ObjectPropertyValueValidator extends SchemaValidator {
     return valueValidator.enterObject();
   }
 
+  void leaveObject(ObjectEntity entity) {
+    valueValidator.leaveObject(entity);
+  }
+
   JsonValidator enterArray() {
     return valueValidator.enterArray();
+  }
+
+  void leaveArray(ArrayEntity entity) {
+    valueValidator.leaveArray(entity);
   }
 }
 
@@ -293,8 +301,16 @@ class ArrayElementsSchemaValidator extends SchemaValidator {
     return valueValidator.enterObject();
   }
 
+  void leaveObject(ObjectEntity entity) {
+    valueValidator.leaveObject(entity);
+  }
+
   JsonValidator enterArray() {
     return valueValidator.enterArray();
+  }
+
+  void leaveArray(ArrayEntity entity) {
+    valueValidator.leaveArray(entity);
   }
 }
 
@@ -303,11 +319,11 @@ class ArrayElementsSchemaValidator extends SchemaValidator {
  */
 abstract class LiteralValueSchemaValidator extends SchemaValidator {
   void leaveObject(ObjectEntity entity) {
-    checkValue(entity);
+    //checkValue(entity);
   }
 
   void leaveArray(ArrayEntity entity) {
-    checkValue(entity);
+    //checkValue(entity);
   }
 
   void checkValue(JsonEntity entity, [StringEntity propertyName]);

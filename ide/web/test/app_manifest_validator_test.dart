@@ -161,6 +161,38 @@ void defineTests() {
           contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
     });
 
+    test('"sockets" host pattern may be an empty string or contain wildcards', () {
+      String contents = """{
+  "sockets": { "udp": { "send": ["", "*", "*:", "*:*", ":*"] } }
+}
+""";
+      _validate(contents, []);
+    });
+
+    test('"sockets" host pattern may only contain host:port', () {
+      String contents = """{
+  "sockets": { "udp": { "send": ["foo:123:"] } }
+}
+""";
+      _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
+    });
+
+    test('"sockets" post cannot be >= 65536', () {
+      String contents = """{
+  "sockets": { "udp": { "send": "foo:65536" } }
+}
+""";
+      _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
+    });
+
+    test('"sockets" host pattern cannot be an object', () {
+      String contents = """{
+  "sockets": { "udp": { "send": {"foo": "*.*"} } }
+}
+""";
+      _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
+    });
+
     test('"permissions" cannot be a dictionary', () {
       String contents = """{ "permissions": {"foo": "bar"} }""";
       _validate(contents, [json_schema_validator.ErrorIds.ARRAY_EXPECTED]);

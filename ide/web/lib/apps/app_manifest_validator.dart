@@ -16,6 +16,7 @@ class ErrorIds {
   static final String VERSION_STRING_EXPECTED = "VERSION_STRING_EXPECTED";
   static final String REQUIRMENT_3D_FEATURE_EXPECTED = "REQUIRMENT_3D_FEATURE_EXPECTED";
   static final String INVALID_LOCALE = "INVALID_LOCALE";
+  static final String INVALID_SOCKET_HOST_PATTERN = "INVALID_SOCKET_HOST_PATTERN";
 }
 
 /**
@@ -390,12 +391,100 @@ class UsbDevicesValidator extends SchemaValidator {
 }
 
 /**
- * TODO(rpaquay): Validator for the "socket_host_pattern" property value.
+ * Validator for the "socket_host_pattern" property value.
  */
 class SocketHostPatternValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
+  int arrayDepth = 0;
+  int objectDepth = 0;
 
   SocketHostPatternValueValidator(this.errorCollector);
+
+  @override
+  JsonValidator enterArray() {
+    arrayDepth++;
+    return this;
+  }
+
+  @override
+  void leaveArray(ArrayEntity entity) {
+    arrayDepth--;
+    if (arrayDepth > 0) {
+      addError(entity);
+    }
+  }
+
+  @override
+  JsonValidator enterObject() {
+    objectDepth++;
+    return this;
+  }
+
+  @override
+  void leaveObject(ObjectEntity entity) {
+    objectDepth--;
+    if (arrayDepth == 0 && objectDepth == 0) {
+      addError(entity);
+    }
+  }
+
+  @override
+  void arrayElement(JsonEntity entity) {
+    checkValue(entity);
+  }
+
+  @override
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    // If we are too deep in an array, don't validate now.
+    if (arrayDepth > 1 || objectDepth > 0) {
+      return;
+    }
+
+    if (entity is StringEntity) {
+      if (_isValidPattern(entity.text)) {
+        return;
+      }
+      addError(entity);
+    }
+  }
+
+  void addError(JsonEntity entity) {
+    errorCollector.addMessage(
+        ErrorIds.INVALID_SOCKET_HOST_PATTERN,
+        entity.span,
+        "Invalid socket host:port pattern. " +
+        "Values accepted are: \"\" or \"[host|*]:[port|*]\".");
+  }
+
+  /**
+   * See https://developer.chrome.com/apps/app_network
+   *
+   * <host-pattern> := <host> | ':' <port> | <host> ':' <port>
+   * <host> := '*' | '*.' <anychar except '/' and '*'>+
+   * <port> := '*' | <port number between 1 and 65535>)
+   */
+  static bool _isValidPattern(String value) {
+    if (value == "") {
+      return true;
+    }
+    List<String> values = value.split(":");
+
+    return (values.length == 1 && _isValidHost(values[0])) ||
+        (values.length == 2 && _isValidHost(values[0]) && _isValidPort(values[1]));
+  }
+
+  static bool _isValidHost(String x) {
+    // Leave "host" part as free form.
+    return true;
+  }
+
+  static bool _isValidPort(String x) {
+    if (x == "" || x == "*") {
+      return true;
+    }
+    int result = int.parse(x, onError: (x) => -1);
+    return result >= 0 && result <= 65535;
+  }
 }
 
 /**
