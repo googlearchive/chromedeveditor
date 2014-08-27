@@ -1,6 +1,6 @@
 # chrome_testing
 
-This package contains a test harness for testing chrome apps. Specifically, it
+This package contains a test harness for testing Chrome Apps. Specifically, it
 contains a command line tool and an in-process library for chrome apps.
 
 The command line tool (`bin/chrome_testing.dart`) starts a test listener on port

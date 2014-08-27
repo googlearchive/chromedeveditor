@@ -12,7 +12,7 @@ void main() {
       defineTests, connectToTestListener: true);
 }
 
-defineTests() {
+void defineTests() {
   server_test.defineTests();
   tcp_test.defineTests();
 }

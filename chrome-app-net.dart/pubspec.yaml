@@ -7,9 +7,9 @@ environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
   chrome: any
-  intl: any
-  mime: any
   chrome_testing:
     path: ../chrome-app-testing.dart
+  intl: any
+  mime: any
 dev_dependencies:
   unittest: any

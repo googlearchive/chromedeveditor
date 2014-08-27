@@ -14,16 +14,3 @@ body {
 h1, p {
   color: #333;
 }
-
-#container_id {
-  height: 400px;
-  position: relative;
-  border: 1px solid #ccc;
-  background-color: #fff;
-}
-
-#text_id {
-  font-size: 24pt;
-  text-align: center;
-  margin-top: 140px;
-}

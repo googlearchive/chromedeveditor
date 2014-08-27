@@ -1,4 +1,4 @@
 # chrome_net
 
-TODO:
+TCP client and server libraries for Dart based Chrome Apps.
 

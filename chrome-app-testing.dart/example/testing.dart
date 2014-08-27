@@ -17,7 +17,7 @@ void display(String str) {
   querySelector('#display').text = str;
 }
 
-defineTests() {
+void defineTests() {
   group('test group 1', () {
     test('test 1', () {
       return new Future.delayed(new Duration(seconds: 1));
