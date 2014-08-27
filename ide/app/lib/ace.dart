@@ -426,7 +426,7 @@ class GoEditor extends TextEditor {
     // Go files use hard tabs for indentation.
     session.useSoftTabs = false;
 
-    // The number of spaces to use if not specified by Go.
+    // The number of spaces to use is not specified by Go.
     session.tabSize = 4;
   }
 }
