@@ -58,22 +58,7 @@ class SparkPreferences {
     editorFontSize = new JsonPreference<num>(_jsonStore, "editorFontSize");
     keyBindings = new JsonPreference<String>(_jsonStore, "keyBindings");
 
-    // Check to see if we need to migrate any old store preferences to JSON.
-    onPreferencesReady = _jsonStore.whenLoaded.then((_) {
-      if (_jsonStore.firstRun) {
-        return Future.wait([_migrateFromStore("aceTheme", "editorTheme"),
-            _migrateFromStore("fontSize", "editorFontSize"),
-            _migrateFromStore("keyBindings", "keyBindings"),
-
-        ]);
-      }
-    });
-  }
-
-  Future _migrateFromStore(String oldKey, String newKey) {
-    return prefsStore.getValue(oldKey, null).then((String value) {
-      if (value != null) _jsonStore.setValue(newKey, value);
-    });
+    onPreferencesReady = _jsonStore.whenLoaded;
   }
 }
 
@@ -98,14 +83,11 @@ class JsonPreferencesStore {
   Map _userMap;
 
   PreferenceStore _persistentStore;
-  Future<bool> whenLoaded;
+  Future whenLoaded;
   bool _loaded = false;
 
   // TODO: implement isDirty
   bool get isDirty => null;
-
-  bool _firstRun = false;
-  bool get firstRun => _firstRun;
 
   Stream<PreferenceEvent> get onPreferenceChange => _changeConroller.stream;
   StreamController<PreferenceEvent> _changeConroller = new StreamController();
@@ -121,12 +103,8 @@ class JsonPreferencesStore {
   }
 
   Future _loadUserPrefs() {
-    return _persistentStore.getValue("userJsonPrefs", "")
+    return _persistentStore.getValue("userJsonPrefs", "{}")
         .then((String json) {
-      if (json == "") {
-        _firstRun = true;
-        json = "{}";
-      }
       _userMap = JSON.decode(json);
     });
   }
