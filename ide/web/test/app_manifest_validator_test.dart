@@ -157,7 +157,52 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"sockets" host pattern may be a single value or an array', () {
+    test('"sockets" cannot contain a unknown property', () {
+      String contents = """{ "sockets": { "foo": {} } }""";
+      _validate(
+          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"sockets.udp" may contain 3 known top level properties', () {
+      String contents = """{
+  "sockets": { "udp": { "bind": "", "send": "", "multicastMembership": ""} }
+}
+""";
+      _validate(contents, []);
+    });
+
+    test('"sockets.udp" cannot contain a unknown property', () {
+      String contents = """{ "sockets": { "udp": { "foo": "" } } }""";
+      _validate(
+          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"sockets.tcp" may contain 1 known top level properties', () {
+      String contents = """{
+  "sockets": { "tcp": { "connect": ""} }
+}
+""";
+      _validate(contents, []);
+    });
+
+    test('"sockets.tcp" cannot contain a unknown property', () {
+      String contents = """{ "sockets": { "tcp": { "foo": "" } } }""";
+      _validate(
+          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"sockets.tcpServer" may contain 1 known top level properties', () {
+      String contents = """{"sockets": { "tcpServer": { "listen": ""} }}""";
+      _validate(contents, []);
+    });
+
+    test('"sockets.tcpServer" cannot contain a unknown property', () {
+      String contents = """{ "sockets": { "tcpServer": { "foo": "" } } }""";
+      _validate(
+          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+    });
+
+    test('"socket_host_pattern" may be a single value or an array', () {
       String contents = """{
   "sockets": { "udp": { "send": "*.*", "bind": ["*:80", "*:8080"] } }
 }
@@ -165,13 +210,7 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"sockets" cannot contain a unknown property', () {
-      String contents = """{ "sockets": { "foo": {} } }""";
-      _validate(
-          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
-    });
-
-    test('"sockets" host pattern may be an empty string or contain wildcards', () {
+    test('"socket_host_pattern" may be an empty string or contain wildcards', () {
       String contents = """{
   "sockets": { "udp": { "send": ["", "*", "*:", "*:*", ":*"] } }
 }
@@ -179,7 +218,7 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"sockets" host pattern may only contain host:port', () {
+    test('socket_host_pattern may only contain host:port', () {
       String contents = """{
   "sockets": { "udp": { "send": ["foo:123:"] } }
 }
@@ -187,7 +226,7 @@ void defineTests() {
       _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
     });
 
-    test('"sockets" post cannot be >= 65536', () {
+    test('"socket_host_pattern" port cannot be >= 65536', () {
       String contents = """{
   "sockets": { "udp": { "send": "foo:65536" } }
 }
@@ -195,9 +234,25 @@ void defineTests() {
       _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
     });
 
-    test('"sockets" host pattern cannot be an object', () {
+    test('"socket_host_pattern" cannot be an object', () {
       String contents = """{
-  "sockets": { "udp": { "send": {"foo": "*.*"} } }
+  "sockets": { "udp": { "send": {"foo": 0} } }
+}
+""";
+      _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
+    });
+
+    test('"socket_host_pattern" cannot be a nested object', () {
+      String contents = """{
+  "sockets": { "udp": { "send": {"bar":{"foo": 0}} } }
+}
+""";
+      _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
+    });
+
+    test('"socket_host_pattern" cannot be a nested array', () {
+      String contents = """{
+  "sockets": { "udp": { "send": [[""]] } }
 }
 """;
       _validate(contents, [ErrorIds.INVALID_SOCKET_HOST_PATTERN]);
