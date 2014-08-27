@@ -423,7 +423,7 @@ class SocketHostPatternValueValidator extends SchemaValidator {
   void leaveArray(ArrayEntity entity) {
     arrayDepth--;
     if (arrayDepth > 0 && objectDepth == 0) {
-      addError(entity);
+      _addError(entity);
     }
   }
 
@@ -437,7 +437,7 @@ class SocketHostPatternValueValidator extends SchemaValidator {
   void leaveObject(ObjectEntity entity) {
     objectDepth--;
     if (arrayDepth == 0 && objectDepth == 0) {
-      addError(entity);
+      _addError(entity);
     }
   }
 
@@ -457,12 +457,11 @@ class SocketHostPatternValueValidator extends SchemaValidator {
       if (_isValidPattern(entity.text)) {
         return;
       }
-      addError(entity);
+      _addError(entity);
     }
   }
 
-  @override
-  void addError(JsonEntity entity) {
+  void _addError(JsonEntity entity) {
     errorCollector.addMessage(
         ErrorIds.INVALID_SOCKET_HOST_PATTERN,
         entity.span,
