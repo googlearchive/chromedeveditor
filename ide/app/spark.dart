@@ -382,11 +382,11 @@ abstract class Spark
 
   void initAceManagers() {
     _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme .settings-value'));
+        aceManager, prefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys .settings-value'));
+        aceManager, prefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, syncPrefs, getUIElement('#changeFont .settings-value'));
+        aceManager, prefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -3708,7 +3708,7 @@ class SettingsAction extends SparkActionWithDialog {
     // showing the dialog:
     Future.wait([
       spark.prefs.onPreferencesReady.then((_) {
-        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave;
+        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave.getValue();
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (PlatformInfo.isCros) {
@@ -3720,7 +3720,7 @@ class SettingsAction extends SparkActionWithDialog {
     ]).then((_) {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
-        spark.prefs.stripWhitespaceOnSave = whitespaceCheckbox.checked;
+        spark.prefs.stripWhitespaceOnSave.setValue(whitespaceCheckbox.checked);
       });
     });
   }
