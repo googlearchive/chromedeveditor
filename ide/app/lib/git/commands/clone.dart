@@ -59,9 +59,16 @@ class Clone {
     return _clone();
   }
 
+  bool isBitBucketUrl(String url) =>
+      url.contains('@bitbucket.org') || url.startsWith('https://bitbucket.org');
+
   Future _clone() {
     HttpFetcher fetcher = getHttpFetcher(_options.store, "origin",
         _options.repoUrl, _options.username, _options.password);
+
+    if (isBitBucketUrl(_options.repoUrl)) {
+      throw new GitException(GitErrorConstants.GIT_BITBUCKET_REPO_NOT_SUPPORTED);
+    }
 
     return fetcher.isValidRepoUrl().then((isValid) {
       if (isValid) {

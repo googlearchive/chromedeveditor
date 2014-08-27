@@ -726,7 +726,7 @@ abstract class Spark
     List<String> lines = message.split('\n');
     for (String line in lines) {
       Element lineElement = new Element.p();
-      lineElement.text = line;
+      lineElement.innerHtml = line;
       container.children.add(lineElement);
     }
   }
