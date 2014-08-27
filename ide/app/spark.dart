@@ -421,7 +421,7 @@ abstract class Spark
   void initEditorArea() {
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         workspace, allowsLabelBar: true);
-    editorManager.setupOutline(querySelector('.tabview-workspace'));
+    editorManager.setupOutline(querySelector('#outlineContainer'));
 
     _editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected

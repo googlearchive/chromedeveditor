@@ -412,8 +412,8 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   NavigationLocation get navigationLocation => _aceContainer.navigationLocation;
 
-  void setupOutline(html.Element parentElement) {
-    _aceContainer.setupOutline(parentElement);
+  void setupOutline(html.Element outlineContainer) {
+    _aceContainer.setupOutline(outlineContainer);
   }
 }
 
