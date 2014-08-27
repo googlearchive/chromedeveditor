@@ -14,8 +14,8 @@ class ErrorIds {
   static final String OBSOLETE_ENTRY = "OBSOLETE_ENTRY";
   static final String STRING_OR_OBJECT_EXPECTED = "STRING_OR_OBJECT_EXPECTED";
   static final String VERSION_STRING_EXPECTED = "VERSION_STRING_EXPECTED";
-  static final String REQUIRMENT_3D_FEATURE_EXPECTED =
-      "REQUIRMENT_3D_FEATURE_EXPECTED";
+  static final String REQUIREMENT_3D_FEATURE_EXPECTED =
+      "REQUIREMENT_3D_FEATURE_EXPECTED";
   static final String INVALID_LOCALE = "INVALID_LOCALE";
   static final String INVALID_SOCKET_HOST_PATTERN =
       "INVALID_SOCKET_HOST_PATTERN";
@@ -48,7 +48,7 @@ Map AppManifestSchema =
       "scripts": ["string"],
       "persistent": "boolean",  // Undocumented (ignored), but sometimes used
     },
-    "service_worker": "var"  // Prototype
+    "service_worker": "var"  // Undocumented (prototype feature)
   },
   "author": "var",  // Undocumented
   "automation": "var",
@@ -552,12 +552,12 @@ class Requirement3dFeatureValueValidator extends SchemaValidator {
 
     if (propertyName == null) {
       errorCollector.addMessage(
-          ErrorIds.REQUIRMENT_3D_FEATURE_EXPECTED,
+          ErrorIds.REQUIREMENT_3D_FEATURE_EXPECTED,
           entity.span,
           "3D feature must be \"webgl\" or \"css3d\".");
     } else {
       errorCollector.addMessage(
-          ErrorIds.REQUIRMENT_3D_FEATURE_EXPECTED,
+          ErrorIds.REQUIREMENT_3D_FEATURE_EXPECTED,
           entity.span,
           "3D feature must be \"webgl\" or \"css3d\" for property " +
           "\"${propertyName.text}\".");

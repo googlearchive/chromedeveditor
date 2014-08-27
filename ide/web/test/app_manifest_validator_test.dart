@@ -515,7 +515,7 @@ void defineTests() {
   }
 }
 """;
-      _validate(contents, [ErrorIds.REQUIRMENT_3D_FEATURE_EXPECTED]);
+      _validate(contents, [ErrorIds.REQUIREMENT_3D_FEATURE_EXPECTED]);
     });
 
   });
