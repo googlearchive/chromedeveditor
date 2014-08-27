@@ -24,7 +24,11 @@ class ErrorIds {
 class SchemaValidator extends NullValidator {
   static final SchemaValidator instance = new SchemaValidator();
 
-  /** Called when a value has been parsed and needs to be validated. */
+  /**
+   * Called when a value [entity] has been parsed and needs validation.
+   * [entity] is either a simple literal, an array element or a object
+   * property value, in which case the [propertyName] is passed in.
+   */
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {}
 }
 
@@ -55,7 +59,7 @@ abstract class SchemaValidatorFactory {
  *    "num" |        // numeric values only
  *    "string" |     // string literals only
  *    "var"          // anything is valid
- *    List<SchemaType> |       // Array of types
+ *    List<SchemaType> |       // Array of types (1 element only)
  *    Map<String, SchemaType>  // Map of (property name, type)
  */
 class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
@@ -315,24 +319,9 @@ class ArrayElementsSchemaValidator extends SchemaValidator {
 }
 
 /**
- * Base class to literal value schema validator.
- */
-abstract class LiteralValueSchemaValidator extends SchemaValidator {
-  void leaveObject(ObjectEntity entity) {
-    //checkValue(entity);
-  }
-
-  void leaveArray(ArrayEntity entity) {
-    //checkValue(entity);
-  }
-
-  void checkValue(JsonEntity entity, [StringEntity propertyName]);
-}
-
-/**
  * Schema validator for string values.
  */
-class StringValueValidator extends LiteralValueSchemaValidator {
+class StringValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
 
   StringValueValidator(this.errorCollector);
@@ -355,7 +344,7 @@ class StringValueValidator extends LiteralValueSchemaValidator {
 /**
  * Schema validator for numeric values.
  */
-class NumberValueValidator extends LiteralValueSchemaValidator {
+class NumberValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
 
   NumberValueValidator(this.errorCollector);
@@ -378,7 +367,7 @@ class NumberValueValidator extends LiteralValueSchemaValidator {
 /**
  * Schema validator for integer values.
  */
-class IntegerValueValidator extends LiteralValueSchemaValidator {
+class IntegerValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
 
   IntegerValueValidator(this.errorCollector);
@@ -402,7 +391,7 @@ class IntegerValueValidator extends LiteralValueSchemaValidator {
 /**
  * Schema validator for boolean values.
  */
-class BooleanValueValidator extends LiteralValueSchemaValidator {
+class BooleanValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
 
   BooleanValueValidator(this.errorCollector);

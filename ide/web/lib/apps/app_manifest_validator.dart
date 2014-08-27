@@ -14,9 +14,11 @@ class ErrorIds {
   static final String OBSOLETE_ENTRY = "OBSOLETE_ENTRY";
   static final String STRING_OR_OBJECT_EXPECTED = "STRING_OR_OBJECT_EXPECTED";
   static final String VERSION_STRING_EXPECTED = "VERSION_STRING_EXPECTED";
-  static final String REQUIRMENT_3D_FEATURE_EXPECTED = "REQUIRMENT_3D_FEATURE_EXPECTED";
+  static final String REQUIRMENT_3D_FEATURE_EXPECTED =
+      "REQUIRMENT_3D_FEATURE_EXPECTED";
   static final String INVALID_LOCALE = "INVALID_LOCALE";
-  static final String INVALID_SOCKET_HOST_PATTERN = "INVALID_SOCKET_HOST_PATTERN";
+  static final String INVALID_SOCKET_HOST_PATTERN =
+      "INVALID_SOCKET_HOST_PATTERN";
 }
 
 /**
@@ -44,11 +46,11 @@ Map AppManifestSchema =
   "app": {
     "background": {
       "scripts": ["string"],
-      "persistent": "boolean",
+      "persistent": "boolean",  // Undocumented (ignored), but sometimes used
     },
-    "service_worker": "var"
+    "service_worker": "var"  // Prototype
   },
-  "author": "var",
+  "author": "var",  // Undocumented
   "automation": "var",
   "background": {
     "persistent": "boolean",
@@ -158,29 +160,29 @@ typedef SchemaValidator SchemaValidatorCreator(ErrorCollector errorCollector);
  * "manifest.json" schema.
  */
 class AppManifestValidatorFactory implements SchemaValidatorFactory {
-  static final Map<String, SchemaValidatorCreator> _custom_types = {
-    "3d_feature": (errorCollector) => new Requirement3dFeatureValueValidator(errorCollector),
-    "locale": (errorCollector) => new LocaleValueValidator(errorCollector),
-    "manifest_version": (errorCollector) => new ManifestVersionValueValidator(errorCollector),
-    "permission": (errorCollector) => new PermissionValueValidator(errorCollector),
-    "socket_host_pattern": (errorCollector) => new SocketHostPatternValueValidator(errorCollector),
-    "version": (errorCollector) => new VersionValueValidator(errorCollector)
+  static final Map<String, SchemaValidatorCreator> _customTypes = {
+    "3d_feature": (x) => new Requirement3dFeatureValueValidator(x),
+    "locale": (x) => new LocaleValueValidator(x),
+    "manifest_version": (x) => new ManifestVersionValueValidator(x),
+    "permission": (x) => new PermissionValueValidator(x),
+    "socket_host_pattern": (x) => new SocketHostPatternValueValidator(x),
+    "version": (x) => new VersionValueValidator(x)
   };
   final ErrorCollector errorCollector;
 
   AppManifestValidatorFactory(this.errorCollector);
 
   SchemaValidator createValidator(dynamic schema) {
-    SchemaValidatorCreator function = _custom_types[schema];
-    if (function == null) {
+    SchemaValidatorCreator creator = _customTypes[schema];
+    if (creator == null) {
       return null;
     }
 
-    return function(errorCollector);
+    return creator(errorCollector);
   }
 
   bool validateSchemaForTesting(dynamic schema) {
-    return _custom_types.containsKey(schema);
+    return _customTypes.containsKey(schema);
   }
 }
 
@@ -192,6 +194,8 @@ class ManifestVersionValueValidator extends IntegerValueValidator {
     : super(errorCollector);
 
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    // The "manifest_version" type is always directly associted to an
+    // object key.
     assert(propertyName != null);
 
     if (entity is NumberEntity && entity.number is int) {
@@ -333,6 +337,9 @@ class PermissionValueValidator extends SchemaValidator {
 
   bool _isMatchPattern(String text) {
     // See https://developer.chrome.com/apps/match_patterns
+    if (text == "<all_urls>") {
+      return true;
+    }
     // <url-pattern> := <scheme>://<host><path>
     // <scheme> := '*' | 'http' | 'https' | 'file' | 'ftp'
     // <host> := '*' | '*.' <any char except '/' and '*'>+
@@ -341,9 +348,6 @@ class PermissionValueValidator extends SchemaValidator {
     // TODO(rpaquay): The syntax for URL patterns is quite complex and
     // incompatible with dart.core.Uri (because of the wildcard character),
     // so we implement a simple heuristic.
-    if (text == "<all_urls>") {
-      return true;
-    }
     int index = text.indexOf("://");
     return (index > 0 && index < text.length - 4);
   }
@@ -400,27 +404,23 @@ class SocketHostPatternValueValidator extends SchemaValidator {
 
   SocketHostPatternValueValidator(this.errorCollector);
 
-  @override
   JsonValidator enterArray() {
     arrayDepth++;
     return this;
   }
 
-  @override
   void leaveArray(ArrayEntity entity) {
     arrayDepth--;
-    if (arrayDepth > 0) {
+    if (arrayDepth > 0 && objectDepth == 0) {
       addError(entity);
     }
   }
 
-  @override
   JsonValidator enterObject() {
     objectDepth++;
     return this;
   }
 
-  @override
   void leaveObject(ObjectEntity entity) {
     objectDepth--;
     if (arrayDepth == 0 && objectDepth == 0) {
@@ -428,14 +428,12 @@ class SocketHostPatternValueValidator extends SchemaValidator {
     }
   }
 
-  @override
   void arrayElement(JsonEntity entity) {
     checkValue(entity);
   }
 
-  @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
-    // If we are too deep in an array, don't validate now.
+    // If we are too deep in an array/object, don't validate.
     if (arrayDepth > 1 || objectDepth > 0) {
       return;
     }
@@ -468,9 +466,15 @@ class SocketHostPatternValueValidator extends SchemaValidator {
       return true;
     }
     List<String> values = value.split(":");
-
-    return (values.length == 1 && _isValidHost(values[0])) ||
-        (values.length == 2 && _isValidHost(values[0]) && _isValidPort(values[1]));
+    if (values.length == 1 && _isValidHost(values[0])) {
+      return true;
+    }
+    if (values.length == 2 &&
+        _isValidHost(values[0]) &&
+        _isValidPort(values[1])) {
+      return true;
+    }
+    return false;
   }
 
   static bool _isValidHost(String x) {
@@ -491,7 +495,7 @@ class SocketHostPatternValueValidator extends SchemaValidator {
  * Validator for "version" values.
  * See https://developer.chrome.com/extensions/manifest/version.
  */
-class VersionValueValidator extends LiteralValueSchemaValidator {
+class VersionValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
 
   VersionValueValidator(this.errorCollector);
@@ -531,7 +535,7 @@ class VersionValueValidator extends LiteralValueSchemaValidator {
  * Validator for "requirements.3D.features" values.
  * See https://developer.chrome.com/apps/manifest/requirements.
  */
-class Requirement3dFeatureValueValidator extends LiteralValueSchemaValidator {
+class Requirement3dFeatureValueValidator extends SchemaValidator {
   final ErrorCollector errorCollector;
 
   Requirement3dFeatureValueValidator(this.errorCollector);
@@ -562,7 +566,7 @@ class Requirement3dFeatureValueValidator extends LiteralValueSchemaValidator {
  * Validator for "locale" values.
  * See https://developer.chrome.com/webstore/i18n?csw=1#localeTable.
  */
-class LocaleValueValidator extends LiteralValueSchemaValidator {
+class LocaleValueValidator extends SchemaValidator {
   static final Map<String, String> _validLocales = {
     "ar": "Arabic",
     "am": "Amharic",

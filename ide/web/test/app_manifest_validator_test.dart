@@ -104,7 +104,7 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"default_locale" may be a string', () {
+    test('"default_locale" may be a valid locale string', () {
       String contents = """{ "default_locale": "en" } """;
       _validate(contents, []);
     });
@@ -116,6 +116,16 @@ void defineTests() {
 
     test('"default_locale" cannot be an integer', () {
       String contents = """{ "default_locale": 0 } """;
+      _validate(contents, [ErrorIds.INVALID_LOCALE]);
+    });
+
+    test('"default_locale" cannot be an array', () {
+      String contents = """{ "default_locale": [0] } """;
+      _validate(contents, [ErrorIds.INVALID_LOCALE]);
+    });
+
+    test('"default_locale" cannot be an object', () {
+      String contents = """{ "default_locale": {} } """;
       _validate(contents, [ErrorIds.INVALID_LOCALE]);
     });
 
