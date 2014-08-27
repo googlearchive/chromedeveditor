@@ -426,7 +426,7 @@ class GoEditor extends TextEditor {
     // Go files use hard tabs for indentation.
     session.useSoftTabs = false;
 
-    // The number of spaces to use it not specified by Go.
+    // The number of spaces to use is not specified by Go.
     session.tabSize = 4;
   }
 }
@@ -584,8 +584,8 @@ class AceManager {
     }
   }
 
-  void setupOutline(html.Element parentElement) {
-    outline = new Outline(_analysisService, parentElement, _prefs.prefsStore);
+  void setupOutline(html.Element outlineContainer) {
+    outline = new Outline(_analysisService, outlineContainer, _prefs.prefsStore);
     outline.visible = false;
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
@@ -819,6 +819,7 @@ class AceManager {
 
   void setFontSize(num size) {
     _aceEditor.fontSize = size;
+    outline.setFontSize(size);
   }
 
   void focus() => _aceEditor.focus();
@@ -1092,9 +1093,9 @@ class AceFontManager {
     }
   }
 
-  void dec() => _adjustSize(_value - 2);
+  void dec() => _adjustSize(_value - 1);
 
-  void inc() => _adjustSize(_value + 2);
+  void inc() => _adjustSize(_value + 1);
 
   void _adjustSize(num newValue) {
     // Clamp to between 6pt and 36pt.

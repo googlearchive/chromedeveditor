@@ -519,9 +519,6 @@ button.ace_searchbtn.prev:hover {
 }
 
 .outlineItem {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas',
-      'source-code-pro', monospace;
-  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -635,6 +632,9 @@ button.ace_searchbtn.prev:hover {
   top: 63px;
   transition: opacity 250ms;
   z-index: 100;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas',
+      'source-code-pro', monospace;
+  /* font-size is set programmatically */
 }
 
 #outlineContainer.collapsed {
