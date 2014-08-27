@@ -36,8 +36,7 @@ PreferenceStore syncStore = new _ChromePreferenceStore(
  * Preferences specific to Spark.
  */
 class SparkPreferences {
-  PreferenceStore _prefsStore;
-  PreferenceStore get prefsStore => _prefsStore;
+  final PreferenceStore prefsStore;
 
   Future onPreferencesReady;
   JsonPreferencesStore _jsonStore;
@@ -50,8 +49,8 @@ class SparkPreferences {
 
   JsonPreference<IndentationPreference> indentation;
 
-  SparkPreferences(this._prefsStore) {
-    _jsonStore = new JsonPreferencesStore(_prefsStore);
+  SparkPreferences(this.prefsStore) {
+    _jsonStore = new JsonPreferencesStore(prefsStore);
     // Initialize each preference:
     stripWhitespaceOnSave = new JsonPreference<bool>(_jsonStore,
         "stripWhitespaceOnSave");
@@ -72,7 +71,7 @@ class SparkPreferences {
   }
 
   Future _migrateFromStore(String oldKey, String newKey) {
-    return _prefsStore.getValue(oldKey, null).then((String value) {
+    return prefsStore.getValue(oldKey, null).then((String value) {
       if (value != null) _jsonStore.setValue(newKey, value);
     });
   }
