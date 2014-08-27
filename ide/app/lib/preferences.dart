@@ -133,8 +133,10 @@ class JsonPreferencesStore {
  * `value`.
  */
 class JsonPreference<T> {
-  String _id;
-  JsonPreferencesStore _store;
+  final String _id;
+  final JsonPreferencesStore _store;
+  final StreamController<T> _updateController = new StreamController.broadcast();
+  Stream get onUpdate => _updateController.stream;
 
   /**
    * [_prefsMap] is the Map of prefrence values to use and [_id] is the id of
@@ -142,8 +144,12 @@ class JsonPreference<T> {
    */
   JsonPreference(this._store, this._id);
 
-  T getValue() => _store.getValue(_id);
-  Future setValue(T newValue) => _store.setValue(_id, newValue);
+  T get value => _store.getValue(_id);
+
+  void set value(T newValue) {
+    _store.setValue(_id, newValue);
+    _updateController.add(newValue);
+  }
 }
 
 /**
