@@ -135,7 +135,7 @@ class SparkErrorConstants {
   static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
   static const String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
   static const String GIT_BITBUCKET_REPO_NOT_SUPPORTED =
-      "git.bitbucket_repo_not_supported.";
+      "git.bitbucket_repo_not_supported";
 
   static const String GIT_PUSH_NON_FAST_FORWARD =
       "git.push_non_fast_forward";
