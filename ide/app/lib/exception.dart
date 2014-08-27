@@ -187,7 +187,7 @@ class SparkErrorMessages {
 
   static const String GIT_BITBUCKET_REPO_NOT_SUPPORTED_MSG =
       "Repositories hosted on bitbucket.org are not supported due to "
-      "https://bitbucket.org/site/master/issue/6666/detect-git-requests-by-content-type-header";
+      "https://bitbucket.org/site/master/issue/6666/detect-git-requests-by-content-type-header.";
 
   static const String GIT_PULL_NON_FAST_FORWARD_MSG =
       "Merge conflicts detected. Chrome Dev Editor does not currently support "
