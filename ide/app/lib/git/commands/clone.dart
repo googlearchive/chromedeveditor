@@ -63,12 +63,15 @@ class Clone {
       url.contains('@bitbucket.org') || url.startsWith('https://bitbucket.org');
 
   Future _clone() {
-    HttpFetcher fetcher = getHttpFetcher(_options.store, "origin",
-        _options.repoUrl, _options.username, _options.password);
 
+    // Repositories hosted on bitbucket are not supported due to issue on their side.
+    // Related bug https://bitbucket.org/site/master/issue/6666/detect-git-requests-by-content-type-header
     if (isBitBucketUrl(_options.repoUrl)) {
       throw new GitException(GitErrorConstants.GIT_BITBUCKET_REPO_NOT_SUPPORTED);
     }
+
+    HttpFetcher fetcher = getHttpFetcher(_options.store, "origin",
+        _options.repoUrl, _options.username, _options.password);
 
     return fetcher.isValidRepoUrl().then((isValid) {
       if (isValid) {
