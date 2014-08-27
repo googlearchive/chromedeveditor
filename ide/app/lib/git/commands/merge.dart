@@ -28,6 +28,74 @@ class MergeItem {
   MergeItem(this.ours, this.base, this.theirs, [this.isConflict = false]);
 }
 
+class MergeEntryType {
+  static const String ADD = "ADD";
+  static const String REMOVE = "REMOVE";
+  static const String MODIFIED = "MODIFIED";
+  static const String UNMERGED = "UNMERGED";
+}
+
+class MergeTreeEntry {
+  TreeEntry entry;
+  String path;
+  String type;
+  String content;
+  String message;
+  bool conflict = false;
+
+  get sha => entry.sha;
+
+  get name => entry.name;
+
+  get isBlob => entry.isBlob;
+
+  MergeTreeEntry(this.entry, this.path, this.type, {this.content, this.message,
+    this.conflict});
+
+}
+
+class MergeTreeDiff {
+  List<MergeTreeEntry> entries = [];
+
+  List<MergeTreeEntry> getConflicts() {
+    return entries.where((entry) => entry.conflict);
+  }
+
+  bool isCleanMerge() => getConflicts().isEmpty;
+
+  void expand(ObjectStore store) {
+    dynamic root = store.root;
+    Future.forEach(entries, (MergeTreeEntry entry) {
+      if (entry.conflict != null) {
+        return FileOps.createFileWithContent(
+            root, entry.path, entry.content, 'Text');
+      }
+      // The entry is deleted.
+      if (entry.sha == null) {
+        return root.getFile(entry.path).then((fileEntry) => fileEntry.remove());
+      }
+
+      return store.retrieveObject(entry.sha, ObjectTypes.BLOB_STR).then(
+          (BlobObject blob) {
+        return FileOps.createFileWithContent(root, entry.path,
+            entry.content, 'Text');
+      });
+    });
+  }
+
+  List<MergeTreeEntry> adds() => entries.where((entry) =>
+      entry.type == MergeEntryType.ADD);
+
+  List<MergeTreeEntry> removes() => entries.where((entry) =>
+      entry.type == MergeEntryType.REMOVE);
+
+  List<MergeTreeEntry> modified() => entries.where((entry) =>
+      entry.type == MergeEntryType.MODIFIED);
+
+  List<MergeTreeEntry> unmerged() => entries.where((entry) =>
+      entry.type == MergeEntryType.UNMERGED);
+}
+
 /**
  * Implements tree diffs and merging of git trees.
  */
@@ -44,9 +112,9 @@ class Merge {
     return new Uint8List(0);
   }
 
-  static Future<String> mergeTrees(ObjectStore store, TreeObject ourTree,
-      TreeObject baseTree, TreeObject theirTree) {
-    List<TreeEntry> finalTree = [];
+  static Future<MergeTreeDiff> mergeTrees(ObjectStore store, TreeObject ourTree,
+      TreeObject baseTree, TreeObject theirTree, String rootPath) {
+    MergeTreeDiff finalTree = new MergeTreeDiff();
     List merges = [];
     List indices = [0,0,0];
     List<MergeItem> conflicts = [];
@@ -91,6 +159,7 @@ class Merge {
                 // The file does not exist in the  baseEntry. Create a dummy entry.
                 baseEntry = TreeEntry.dummyEntry(false);
                 if (next.isBlob) {
+                  // TODO conflict not supported.
                   conflicts.add( new MergeItem(next, null, theirEntry, true));
                   break;
                 }
@@ -98,27 +167,29 @@ class Merge {
               if (next.isBlob == theirEntry.isBlob && (baseEntry.isBlob
                   == next.isBlob)) {
                 if (shasEqual(next.shaBytes, baseEntry.shaBytes)) {
-                  finalTree.add(theirEntry);
+                  finalTree.entries.add(new MergeTreeEntry(
+                      theirEntry, rootPath +'/' +  theirEntry.name, MergeEntryType.MODIFIED));
                 } else if (shasEqual(baseEntry.shaBytes, theirEntry.shaBytes)){
-                  finalTree.add(next);
                 } else {
                   merges.add(new MergeItem(next, baseEntry, theirEntry));
                 }
               } else {
+                // TODO conflict not supported.
                 conflicts.add(new MergeItem(next, baseEntry, theirEntry,
                     true));
               }
-            } else {
-              finalTree.add(next);
             }
           } else if(baseEntry.name == next.name) {
             if (!shasEqual(baseEntry.shaBytes, next.shaBytes)) {
               // deleted from theirs but changed in ours. Delete/modfify
               // conflict.
-              conflicts.add(new MergeItem(next, baseEntry, null, true));
+              finalTree.entries.add(new MergeTreeEntry(
+                  next, rootPath +'/' +  next.name, MergeEntryType.UNMERGED, conflict: true));
+              ///conflicts.add(new MergeItem(next, baseEntry, null, true));
+            } else {
+              finalTree.entries.add(new MergeTreeEntry(next, rootPath +'/' +  next.name,
+                  MergeEntryType.REMOVE, conflict: true));
             }
-          } else {
-            finalTree.add(next);
           }
           break;
 
@@ -127,12 +198,16 @@ class Merge {
           if (next.name == theirEntry.name && !shasEqual(next.shaBytes,
               theirEntry.shaBytes)) {
             // deleted from ours but changed in theirs. Delete/modify conflict.
-            conflicts.add(new MergeItem(null, next, theirEntry, true));
+           // conflicts.add(new MergeItem(null, next, theirEntry, true));
+            finalTree.entries.add(new MergeTreeEntry(theirEntry,
+                rootPath +'/' + theirEntry.name, MergeEntryType.UNMERGED, conflict: true));
           }
           break;
 
         case 2:
-          finalTree.add(next);
+
+          finalTree.entries.add(new MergeTreeEntry(next, rootPath +'/' +  next.name,
+              MergeEntryType.ADD));
           break;
       }
 
@@ -157,39 +232,32 @@ class Merge {
               (List<LooseObject> blobs) {
             Diff3Result diffResult = Diff3.diff(blobs[0].data,
                 blobs[1].data, blobs[2].data);
-            if (diffResult.conflict) {
-              item.conflictText = diffResult.text;
-              conflicts.add(item);
-              return conflicts;
-            } else {
-              return store.writeRawObject('blob', diffResult.text).then(
-                  (String sha) {
-                item.ours.shaBytes = shaToBytes(sha);
-                finalTree.add(item.ours);
-                return [];
-              });
-            }
+            return store.writeRawObject('blob', diffResult.text).then(
+                             (String sha) {
+              item.ours.shaBytes = shaToBytes(sha);
+              if (diffResult.conflict) {
+                finalTree.entries.add(
+                    new MergeTreeEntry(item.ours, rootPath + '/' + item.ours.name,
+                        MergeEntryType.UNMERGED, conflict: true));
+              } else {
+                finalTree.entries.add(
+                    new MergeTreeEntry(item.ours, rootPath + '/' + item.ours.name,
+                        MergeEntryType.MODIFIED));
+              }
+              return;
+            });
           });
         } else {
           return store.retrieveObjectList(shas, ObjectTypes.TREE_STR).then(
               (List<TreeObject> trees) {
-            return mergeTrees(store, trees[0], trees[1], trees[2]).then(
-                (String mergedSha) {
-              item.ours.shaBytes = shaToBytes(mergedSha);
-              finalTree.add(item.ours);
-              return null;
-            }, onError: (List<MergeItem> newConflicts) {
-              conflicts.addAll(newConflicts);
-              return [];
+            return mergeTrees(store, trees[0], trees[1], trees[2],
+                rootPath + '/' + item.ours.name).then((MergeTreeDiff mergedTree) {
+              finalTree.entries.addAll(mergedTree.entries);
             });
           });
         }
     }).then((_) {
-      if (conflicts.isEmpty) {
-        return store.writeTree(finalTree);
-      } else {
-        return new Future.error(conflicts);
-      }
+      return finalTree;
     });
   }
 
@@ -254,23 +322,23 @@ class Merge {
     List shas = [localSha, commonSha, sourceSha];
     return store.getHeadRef().then((String headRefName) {
       return store.getTreesFromCommits(shas).then((trees) {
-        return Merge.mergeTrees(store, trees[0], trees[1], trees[2]).then(
-            (String finalTreeSha) {
+        return Merge.mergeTrees(store, trees[0], trees[1], trees[2],
+            store.root.fullPath).then((MergeTreeDiff mergedTree) {
 
           return store.getCurrentBranch().then((branch) {
             options.branchName = branch;
             options.commitMessage = commitMsg;
             // Create a merge commit by default.
 
-            return Commit.createCommit(options, [sourceSha, localSha], finalTreeSha,
-                headRefName).then((commitSha) {
-              return Checkout.checkout(options, commitSha).then((_) {
-                return FileOps.createFileWithContent(options.root,
-                    '.git/${headRefName}', commitSha + '\n', 'Text').then((_) {
-                  return store.writeConfig().then((_) => commitSha);
-                });
+            if (mergedTree.isCleanMerge()) {
+              return _checkoutMergedTree(store, mergedTree).then((_) {
+                return Commit.createCommitFromWorkingTree(options, [sourceSha, localSha],
+                    headRefName);
               });
-            });
+            } else {
+              return new Future.error(
+                  new GitException(GitErrorConstants.GIT_MERGE_ERROR));
+            }
           });
         }).catchError((e) {
           return new Future.error(
@@ -278,5 +346,25 @@ class Merge {
         });
       });
     });
+  }
+
+  static Future _checkoutEntry(ObjectStore store, MergeTreeDiff tree) {
+
+
+  }
+
+  static Future _checkoutMergedTree(ObjectStore store, MergeTreeDiff tree) {
+    Future.forEach(tree.adds(), (MergeTreeEntry entry) {
+    }).then((_) {
+      Future.forEach(tree.removes(), (MergeTreeEntry entry) {
+        return store.root.getFile(entry.path).then((fileEntry) =>
+            fileEntry.remove());
+      }).then((_) {
+        Future.forEach(tree.modified(), (MergeTreeEntry entry) {
+        }).then((_) {
+        });
+      });
+    });
+    return new Future.value();
   }
 }
