@@ -16,6 +16,8 @@ import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 
+
+import 'apps/app_utils.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';
@@ -28,11 +30,16 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'workspace_utils.dart';
 import 'services.dart' as svc;
+import 'preferences.dart' as preferences;
+import 'workspace.dart' as ws;
 import 'spark_flags.dart';
 import 'outline.dart';
 import 'ui/goto_line_view/goto_line_view.dart';
 import 'utils.dart';
+import 'jobs.dart';
+import 'mobile/deploy.dart';
 
+import 'workspace_utils.dart' as ws_utils;
 export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
@@ -176,6 +183,29 @@ class TextEditor extends Editor {
     }
   }
 
+  preferences.PreferenceStore get localPrefs => preferences.localStore;
+
+  Future _testDeploy(ws.Container deployContainer) {
+    ProgressMonitorImplN _monitor = new ProgressMonitorImplN();
+    MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
+
+    // Invoke the deployer methods in Futures in order to capture exceptions.
+    Future f = new Future(() {
+      return deployer.pushAdb(_monitor);
+    });
+
+    return _monitor.runCancellableFuture(f).then((_) {
+      ws_utils.setDeploymentTime(deployContainer,
+          (new DateTime.now()).millisecondsSinceEpoch);
+      print("succesfull push");
+    }).catchError((e) {
+      print("push failure");
+    }).whenComplete(() {
+      _monitor = null;
+    });
+  }
+
+
   Future save() {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
@@ -193,6 +223,8 @@ class TextEditor extends Editor {
       return file.setContents(text).then((_) {
         dirty = false;
         _invokeReconcile();
+        //if(localPrefs.getValue("live-deploy"))
+        return _testDeploy(getAppContainerFor(file));
       });
     } else {
       return new Future.value();
@@ -261,6 +293,17 @@ class TextEditor extends Editor {
     } else {
       return new Future.value();
     }
+  }
+}
+
+class ProgressMonitorImplN extends ProgressMonitor {
+
+  ProgressMonitorImplN();
+
+  void start(String title,
+             {num maxWork: 0,
+              ProgressFormat format: ProgressFormat.NONE}) {
+    super.start(title, maxWork: maxWork, format: format);
   }
 }
 
