@@ -25,7 +25,7 @@ class SparkFlags {
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
   static bool get useMoreDarkAceThemes => _flags['more-dark-ace-themes'] == true;
   static bool get useAceThemes {
-      return useLightAceThemes || useMoreLightAceThemes || 
+      return useLightAceThemes || useMoreLightAceThemes ||
              useDarkAceThemes || useMoreDarkAceThemes;
   }
   static bool get enableMultiSelect => _flags['enable-multiselect'] == true;
@@ -43,6 +43,8 @@ class SparkFlags {
       _flags['bower-ignore-dependencies'];
   static bool get bowerUseGitClone =>
       _flags['bower-use-git-clone'] == true;
+  static bool get gitPull =>
+       _flags['git-pull'] == true;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.

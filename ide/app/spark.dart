@@ -492,9 +492,11 @@ abstract class Spark
     actionManager.registerAction(new ApplicationRunAction.deploy(this));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
-    actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
+    if (SparkFlags.gitPull) {
+      actionManager.registerAction(new GitMergeAction(this, getDialogElement("#gitMergeDialog")));
+      actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
+    }
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
-    actionManager.registerAction(new GitMergeAction(this, getDialogElement("#gitMergeDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitResolveConflictsAction(this));
