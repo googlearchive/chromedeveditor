@@ -420,7 +420,9 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
     Container container = application.primaryResource;
 
     Pattern pattern = '/special/drive-';
-    if (PlatformInfo.isCros && container.entry.fullPath.startsWith(pattern)) {
+    //TODO(grv): remove after chrome 38 is stable.
+    if (PlatformInfo.chromeVersion < 38 && PlatformInfo.isCros &&
+        container.entry.fullPath.startsWith(pattern)) {
       return new Future.error(
           'Unable to launch; Running a app from Google drive is not supported yet.');
     }
