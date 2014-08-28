@@ -128,7 +128,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     });
   }
 
-  PreferenceStore get _prefStore => _prefs.prefStore;
+  PreferenceStore get _prefStore => _prefs.prefsStore;
 
   File get currentFile => _currentState != null ? _currentState.file : null;
 
@@ -396,6 +396,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
       editor = new ImageViewer(file);
     } else {
       editor = new ace.TextEditor(_aceContainer, file, _prefs);
+      editor.resize();
     }
 
     _editorMap[file] = editor;
@@ -411,8 +412,8 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   NavigationLocation get navigationLocation => _aceContainer.navigationLocation;
 
-  void setupOutline(html.Element parentElement) {
-    _aceContainer.setupOutline(parentElement);
+  void setupOutline(html.Element outlineContainer) {
+    _aceContainer.setupOutline(outlineContainer);
   }
 }
 

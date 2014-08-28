@@ -4,18 +4,61 @@
 <head>
   <title>``projectName``</title>
 
-  <link rel="stylesheet" href="styles.css">
-
   <script src="bower_components/platform/platform.js"></script>
-  <link rel="import" href="bower_components/core-header-panel/core-header-panel.html">
+
+  <link rel="import" href="bower_components/core-icons/core-icons.html">
+  <link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
+  <link rel="import" href="bower_components/font-roboto/roboto.html">
+  <link rel="import" href="bower_components/paper-button/paper-button.html">
+  <link rel="import" href="bower_components/paper-checkbox/paper-checkbox.html">
+  <link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
+  <link rel="import" href="bower_components/paper-fab/paper-fab.html">
+  <link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
+  <link rel="import" href="bower_components/paper-toast/paper-toast.html">
+
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body unresolved>
-  <core-header-panel>
-    <div class="core-header">I'm ``projectName``, a Chrome App with Polymer!</div>
-    <div class="content"></div>
-  </core-header-panel>
-    
+  <core-toolbar>
+    <paper-icon-button icon="menu"></paper-icon-button>
+    <span flex>wjap toolbar</span>
+    <paper-fab icon="add"></paper-fab>
+  </core-toolbar>
+
+  <section>
+    <p>A simple Polymer
+      <a href="http://www.polymer-project.org/docs/elements/paper-elements.html">
+      paper elements</a> example that demonstrates using <code>&lt;core-toolbar&gt;,
+      &lt;paper-button&gt;, &lt;paper-checkbox&gt;, &lt;paper-icon-button&gt;,
+      &lt;paper-fab&gt;, &lt;paper-tabs&gt;</code>, and <code>&lt;paper-toast&gt;</code>.
+    </p>
+    <paper-checkbox label="Got it!"></paper-checkbox>
+  </section>
+
+  <section>
+    <paper-tabs selected="0">
+      <paper-tab>Tab one</paper-tab>
+      <paper-tab>Tab two</paper-tab>
+      <paper-tab>Tab three</paper-tab>
+    </paper-tabs>
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+      consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+      cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+      non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </p>
+  </section>
+
+  <section>
+    <template id="toastGroup" is="auto-binding">
+      <paper-button raisedButton right label="Show Toast" on-click="{{showToast}}">
+      </paper-button>
+      <paper-toast id="toast" text="Sample toast here."></paper-toast>
+    </template>
+  </section>
+
   <script src="main.js"></script>
 </body>
 </html>

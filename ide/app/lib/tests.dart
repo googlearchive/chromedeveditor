@@ -12,8 +12,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import '../spark.dart';
-import 'filesystem.dart';
+import 'filesystem.dart' as filesystem;
+import 'preferences.dart';
 import 'tcp.dart' as tcp;
 import 'utils.dart';
 
@@ -25,22 +25,20 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
+  Function _defineTestsFn;
   final Notifier _notifier;
+  final PreferenceStore _prefs;
 
-  Spark _spark;
   StreamSubscription _logListener;
   StreamController<unittest.TestCase> _onTestFinished =
       new StreamController.broadcast();
 
-  Function _defineTestsFn;
   Element _testDiv;
   Element _statusDiv;
 
   Completer<bool> _testCompleter;
 
-  // TODO(ericarnold): Spark gets passed here twice (once as a Notifier and once
-  //                   as spark), but maybe this is okay?
-  TestDriver(this._defineTestsFn, this._notifier, this._spark,
+  TestDriver(this._defineTestsFn, this._notifier, this._prefs,
       {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 
@@ -53,8 +51,8 @@ class TestDriver {
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
-    setMockFilesystemAccess();
-    restoreManager(_spark);
+    filesystem.setMockFilesystemAccess();
+    filesystem.restoreManager(_notifier, _prefs);
 
     if (_logListener == null) {
       _createTestUI();
@@ -127,7 +125,7 @@ class TestDriver {
     _testDiv.nodes.add(_statusDiv);
 
     _logger.onRecord.listen((LogRecord record) {
-      if (record.level > Level.INFO) {
+      if (record.level >= Level.SEVERE) {
         _statusDiv.style.background = 'red';
       }
       _statusDiv.text = record.toString();

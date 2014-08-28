@@ -9,7 +9,7 @@ import 'package:unittest/unittest.dart';
 import 'dart:async';
 
 import 'mock_http_request.dart';
-import '../../files_mock.dart';
+import '../../../lib/files_mock.dart';
 import '../../../lib/git/commands/clone.dart';
 import '../../../lib/git/exception.dart';
 import '../../../lib/git/http_fetcher.dart';

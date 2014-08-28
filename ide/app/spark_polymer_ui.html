@@ -45,7 +45,7 @@
               arrow="none"
               on-activate="{{onMenuSelected}}">
 
-            <spark-button menuButton flat round>
+            <spark-button menuButton flat round focused>
               <svg width="24px" height="24px" viewBox="0 0 24 24">
                 <path d="M3,18h18v-2H3V18z M3,13h18v-2H3V13z M3,6v2h18V6H3z"></path>
               </svg>
@@ -84,6 +84,12 @@
             </spark-menu-item>
           </spark-menu-button>
 
+          <spark-button id="runButton" flat round tooltip="Run">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </spark-button>
+
           <div id="fileFilterGroup">
             <input id="fileFilter"
                 type="text"
@@ -117,12 +123,6 @@
               </spark-menu-item>
             </spark-menu-button>
           </div>
-
-          <spark-button id="runButton" flat round tooltip="Run">
-            <svg width="24px" height="24px" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          </spark-button>
         </spark-toolbar>
 
         <content select="#leftPanel"></content>
@@ -265,10 +265,8 @@
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome App
               </option>
-              <!-- This one currently can't possibly work due to Polymer
-                   JS breaking the CSP. BUG #1933. -->
-              <option value="chrome/chrome_app_polymer_js;polymer,core-elements">
-                JavaScript Chrome App using Polymer
+              <option value="chrome/chrome_app_polymer_js;polymer,paper-elements">
+                JavaScript Chrome App (using Polymer paper elements)
               </option>
               <!-- This one works when installed in Chrome manually, but
                    launching via the 'Run' button is broken. BUG #1935. -->
@@ -322,6 +320,9 @@
               </option>
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome App
+              </option>
+              <option value="chrome/chrome_app_polymer_js;polymer,paper-elements">
+                JavaScript Chrome App (using Polymer paper elements)
               </option>
             </optgroup>
             <optgroup label="Polymer elements">
@@ -440,6 +441,19 @@
       </div>
       <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="gitBranch" submit>Create Branch</spark-dialog-button>
+    </spark-dialog>
+
+    <!-- Git Merge dialog -->
+    <spark-dialog id="gitMergeDialog" headerTitle="Merge Branch">
+      <label for="gitBranchName">Current branch</label>
+      <input id="gitBranchName" type="text" class="form-control"
+          required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
+      <div class="form-group">
+        <label for="gitBranches">Select branch to merge </label>
+        <select id="gitBranches" class="form-control"></select>
+      </div>
+      <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="gitBranch" submit>Merge</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Checkout dialog -->

@@ -35,6 +35,7 @@ import 'git/commands/diff.dart';
 import 'git/commands/fetch.dart';
 import 'git/commands/ignore.dart';
 import 'git/commands/index.dart';
+import 'git/commands/merge.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
@@ -192,6 +193,8 @@ abstract class ScmProjectOperations {
   Future createBranch(String branchName, String sourceBranchName);
 
   Future checkoutBranch(String branchName);
+
+  Future mergeBranch(String branchName, String sourceBranchName);
 
   Future diff();
 
@@ -411,6 +414,20 @@ class GitScmProjectOperations extends ScmProjectOperations {
                                           password: password);
 
       return Branch.branch(options, sourceBranchName).catchError(
+          (e) => throw SparkException.fromException(e));
+    });
+  }
+
+  Future mergeBranch(String branchName, String sourceBranchName,
+                     {String username, String password}) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry,
+                                          branchName: branchName,
+                                          store: store,
+                                          username: username,
+                                          password: password);
+
+      return Merge.merge(options, sourceBranchName).catchError(
           (e) => throw SparkException.fromException(e));
     });
   }

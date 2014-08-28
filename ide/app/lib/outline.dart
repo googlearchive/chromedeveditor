@@ -46,7 +46,6 @@ class Outline {
   OutlineItem _selectedItem;
   OffsetRange _lastScrolledOffsetRange = new OffsetRange();
 
-  html.Element _container;
   html.DivElement _outlineDiv;
   html.DivElement _rootListDiv;
   html.UListElement _rootList;
@@ -59,8 +58,7 @@ class Outline {
 
   StreamController<OutlineItem> _childSelectedController = new StreamController();
 
-  Outline(this._analyzer, this._container, this._prefs) {
-    _outlineDiv = html.querySelector('#outlineContainer');
+  Outline(this._analyzer, this._outlineDiv, this._prefs) {
     _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
         event.stopPropagation());
     _rootListDiv = _outlineDiv.querySelector('#outline');
@@ -96,6 +94,10 @@ class Outline {
   }
 
   bool get showing => _visible && !_outlineDiv.classes.contains('collapsed');
+
+  void setFontSize(num size) {
+    _rootList.style.fontSize = '${size}px';
+  }
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.

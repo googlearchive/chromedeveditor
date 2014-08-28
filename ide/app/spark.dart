@@ -20,6 +20,7 @@ import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
+import 'lib/apps/app_manifest_builder.dart';
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
 import 'lib/dependency.dart';
@@ -29,7 +30,8 @@ import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
 import 'lib/exception.dart';
-import 'lib/filesystem.dart';
+import 'lib/files_mock.dart';
+import 'lib/filesystem.dart' as filesystem;
 import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
@@ -44,24 +46,20 @@ import 'lib/preferences.dart' as preferences;
 import 'lib/refactor/csp_fixer.dart';
 import 'lib/services.dart';
 import 'lib/scm.dart';
+import 'lib/spark_flags.dart';
 import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/search_view_controller.dart';
-import 'lib/ui/widgets/tabview.dart';
 import 'lib/utils.dart' as utils;
+import 'lib/wam/wamfs.dart';
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
-import 'test/all.dart' as all_tests;
-import 'test/files_mock.dart';
-import 'lib/wam/wamfs.dart';
-
-import 'spark_flags.dart';
 import 'spark_model.dart';
-import 'lib/workspace.dart';
+import 'test/all.dart' as all_tests;
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -169,6 +167,7 @@ abstract class Spark
       addBuilder(new JavaScriptBuilder());
     }
     addBuilder(new JsonBuilder());
+    addBuilder(new AppManifestBuilder());
 
     return restoreWorkspace().then((_) {
       return restoreLocationManager().then((_) {
@@ -190,7 +189,7 @@ abstract class Spark
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return fileSystemAccess.getDisplayPath(entry).then((path) {
+        return filesystem.fileSystemAccess.getDisplayPath(entry).then((path) {
           getUIElement('#directoryLabel').text = path;
         });
       });
@@ -321,7 +320,7 @@ abstract class Spark
   void initLaunchManager() {
     // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
     _launchManager = new LaunchManager(_workspace, services,
-        pubManager, bowerManager, this);
+        pubManager, bowerManager, this, new _SparkLaunchController());
   }
 
   void initNavigationManager() {
@@ -383,11 +382,11 @@ abstract class Spark
 
   void initAceManagers() {
     _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme .settings-value'));
+        aceManager, prefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys .settings-value'));
+        aceManager, prefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, syncPrefs, getUIElement('#changeFont .settings-value'));
+        aceManager, prefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -402,17 +401,14 @@ abstract class Spark
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
-        editorArea.onSelected.listen((Tab tab) {
-          if (tab is AceEditorTab && tab.file != null) {
-            Future declarationFuture =
-                aceManager.prepareForLinking(tab.file.project);
-          }
-        });
+
         if (fileUuid == null) {
           editorArea.tabs[0].select();
           return;
         }
+
         ws.Resource resource = workspace.restoreResource(fileUuid);
+
         if (resource == null) {
           editorArea.tabs[0].select();
           return;
@@ -425,7 +421,7 @@ abstract class Spark
   void initEditorArea() {
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         workspace, allowsLabelBar: true);
-    editorManager.setupOutline(querySelector('.tabview-workspace'));
+    editorManager.setupOutline(querySelector('#outlineContainer'));
 
     _editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
@@ -498,6 +494,7 @@ abstract class Spark
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitMergeAction(this, getDialogElement("#gitMergeDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitResolveConflictsAction(this));
@@ -559,7 +556,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return restoreManager(this);
+    return filesystem.restoreManager(this, localPrefs);
   }
 
   //
@@ -2049,7 +2046,7 @@ class GotoDeclarationAction extends SparkAction {
       editor.navigateToDeclaration(new Duration(milliseconds: 500)).then(
           (Declaration declaration) {
         if (declaration == null) spark.showSuccessMessage(NOT_FOUND_ERROR);
-      }).catchError((TimeoutException e) {
+      }).catchError((e) {
         spark.showSuccessMessage(TIMEOUT_ERROR);
       });
     }
@@ -2112,7 +2109,8 @@ class NewProjectAction extends SparkActionWithDialog {
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
-      'core-elements': 'Polymer/core-elements#master'
+      'core-elements': 'Polymer/core-elements#master',
+      'paper-elements': 'Polymer/paper-elements#master'
   };
   // Matches: "proj-template", "proj-template;polymer,core-elements".
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
@@ -2125,7 +2123,8 @@ class NewProjectAction extends SparkActionWithDialog {
   void _invoke([context]) {
     _nameElt.value = '';
     // Show folder picker if top-level folder is not set.
-    fileSystemAccess.getProjectLocation().then((LocationResult r) {
+    filesystem.fileSystemAccess.getProjectLocation().then(
+        (filesystem.LocationResult r) {
       if (r != null) {
         _show();
       }
@@ -2139,14 +2138,15 @@ class NewProjectAction extends SparkActionWithDialog {
 
     if (name.isEmpty) return;
 
-    fileSystemAccess.createNewFolder(name).then((LocationResult location) {
+    filesystem.fileSystemAccess.createNewFolder(name).then(
+        (filesystem.LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
 
       final DirectoryEntry locationEntry = location.entry;
 
-      ws.WorkspaceRoot root = fileSystemAccess.getRootFor(location);
+      ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
@@ -2185,7 +2185,7 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(locationEntry, templates).build();
+        return new ProjectBuilder(locationEntry, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
@@ -2406,7 +2406,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   }
 
   Future<String> _getLocation() {
-    return fileSystemAccess.getDisplayPath(_selectedResource.entry)
+    return filesystem.fileSystemAccess.getDisplayPath(_selectedResource.entry)
         .catchError((e) {
       // SyncFS from ChromeBook falls in here.
       return _selectedResource.entry.fullPath;
@@ -2463,7 +2463,8 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
-    fileSystemAccess.getProjectLocation().then((LocationResult r) {
+    filesystem.fileSystemAccess.getProjectLocation().then(
+        (filesystem.LocationResult r) {
       if (r != null) {
         _show();
         Timer.run(_copyClipboard);
@@ -2683,6 +2684,97 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     branchButton.deliverChanges();
 
     _GitBranchJob job = new _GitBranchJob(
+        gitOperations, _branchNameElement.value, branchName, spark);
+    spark.jobManager.schedule(job).then((_) {
+      _restoreDialog();
+      _hide();
+    }).catchError((e) {
+      spark.showErrorMessage(
+          'Error creating branch ${_branchNameElement.value}', exception: e);
+    });
+    _branchNameElement.disabled = false;
+  }
+
+  void _restoreDialog() {
+    SparkDialogButton commitButton = getElement('#gitBranch');
+    commitButton.disabled = false;
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = false;
+    _toggleProgressVisible(false);
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isScmProject(context);
+}
+
+class GitMergeAction extends SparkActionWithProgressDialog implements ContextAction {
+  ws.Project project;
+  GitScmProjectOperations gitOperations;
+  InputElement _branchNameElement;
+  SelectElement _selectElement;
+
+  GitMergeAction(Spark spark, Element dialog)
+      : super(spark, "git-merge", "Merge Branch…", dialog) {
+    _branchNameElement = _triggerOnReturn("#gitBranchName");
+    _selectElement = getElement("#gitBranches");
+  }
+
+  void _invoke([context]) {
+    project = context.first;
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
+
+    // Clear out the old select options.
+    // TODO (ussuri) : Polymerize.
+    _selectElement.length = 0;
+    _branchNameElement.value = gitOperations.getBranchName();
+    _branchNameElement.disabled = true;
+
+    gitOperations.getLocalBranchNames().then((Iterable<String> localBranches) {
+      List branches = localBranches.toList();
+      branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+      for (String branch in branches) {
+        // Filter out current branch.
+        if (branch != _branchNameElement.value) {
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+      }
+
+      gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
+        List branches = remoteBranches.toList();
+        branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+        for (String branch in branches) {
+          branch = 'origin/${branch}';
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+        _selectElement.selectedIndex = 0;
+      }).then((_) {
+        _show();
+      });
+    });
+  }
+
+  void _commit() {
+    String branchName = "";
+    int selectIndex = _selectElement.selectedIndex;
+    branchName = (_selectElement.children[selectIndex]
+        as OptionElement).value;
+
+    _setProgressMessage("Creating branch ${_branchNameElement.value}…");
+    _toggleProgressVisible(true);
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = true;
+    closeButton.deliverChanges();
+
+    SparkDialogButton branchButton = getElement('#gitBranch');
+    branchButton.disabled = true;
+    branchButton.deliverChanges();
+
+    _GitMergeJob job = new _GitMergeJob(
         gitOperations, _branchNameElement.value, branchName, spark);
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
@@ -3195,8 +3287,8 @@ class _GitCloneTask {
   }
 
   Future run() {
-    return fileSystemAccess.createNewFolder(_projectName).then(
-        (LocationResult location) {
+    return filesystem.fileSystemAccess.createNewFolder(_projectName).then(
+        (filesystem.LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
@@ -3324,6 +3416,39 @@ class _GitBranchJob extends Job {
       }).catchError((e) {
         e = SparkException.fromException(e);
         spark.showErrorMessage('Error creating branch ${_branchName}', exception : e);
+      });
+    });
+  }
+}
+
+class _GitMergeJob extends Job {
+  GitScmProjectOperations gitOperations;
+  String _branchName;
+  String _sourceBranchName;
+  String url;
+  Spark spark;
+
+  _GitMergeJob(this.gitOperations, String branchName, this._sourceBranchName,
+      this.spark) : super("Creating ${branchName}…") {
+    _branchName = branchName;
+  }
+
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
+    monitor.start(name, maxWork: 1);
+
+    return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      String username;
+      String password;
+      if (value != null) {
+        Map<String, String> info = JSON.decode(value);
+        username = info['username'];
+        password = info['password'];
+      }
+      return gitOperations.mergeBranch(_branchName, _sourceBranchName,
+          username: username, password: password).then((_) {
+      }).catchError((e) {
+        e = SparkException.fromException(e);
+        spark.showErrorMessage('Error in Merging branch ${_branchName}', exception : e);
       });
     });
   }
@@ -3583,7 +3708,7 @@ class SettingsAction extends SparkActionWithDialog {
     // showing the dialog:
     Future.wait([
       spark.prefs.onPreferencesReady.then((_) {
-        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave;
+        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave.getValue();
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (PlatformInfo.isCros) {
@@ -3595,7 +3720,7 @@ class SettingsAction extends SparkActionWithDialog {
     ]).then((_) {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
-        spark.prefs.stripWhitespaceOnSave = whitespaceCheckbox.checked;
+        spark.prefs.stripWhitespaceOnSave.setValue(whitespaceCheckbox.checked);
       });
     });
   }
@@ -3624,8 +3749,8 @@ class RunTestsAction extends SparkAction {
 
   void _initTestDriver() {
     if (testDriver == null) {
-      testDriver = new TestDriver(all_tests.defineTests, spark, spark,
-          connectToTestListener: true);
+      testDriver = new TestDriver(all_tests.defineTests, spark,
+          spark.localPrefs, connectToTestListener: true);
     }
   }
 }
@@ -3865,12 +3990,18 @@ class ShowFilesView extends SparkAction {
   }
 }
 
+class _SparkLaunchController implements LaunchController {
+  void displayDeployToMobileDialog(Resource launchResource) {
+    DeployToMobileDialog.deploy(launchResource);
+  }
+}
+
 class RunPythonAction extends SparkAction {
-  WAMFS _fs;
+  WamFS _fs;
   bool _connected;
 
   RunPythonAction(Spark spark) : super(spark, 'run-python', 'Run Python') {
-    _fs = new WAMFS();
+    _fs = new WamFS();
   }
 
   Future _connect() {

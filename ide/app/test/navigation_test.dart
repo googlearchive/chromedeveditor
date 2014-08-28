@@ -6,9 +6,9 @@ library spark.navigation_test;
 
 import 'dart:async';
 
-import 'files_mock.dart';
 import 'package:unittest/unittest.dart';
 
+import '../lib/files_mock.dart';
 import '../lib/preferences.dart';
 import '../lib/navigation.dart';
 import '../lib/workspace.dart';

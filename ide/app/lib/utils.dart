@@ -235,6 +235,9 @@ abstract class Notifier {
   Future showMessageAndWait(String title, String message);
 
   void showSuccessMessage(String message);
+
+  Future<bool> askUserOkCancel(
+      String message, {String okButtonLabel: 'OK', String title: ""});
 }
 
 /**
@@ -245,9 +248,15 @@ class NullNotifier implements Notifier {
     Logger.root.info('${title}:${message}');
   }
 
-  Future showMessageAndWait(String title, String message) => new Future.value("Not implemented");
+  Future showMessageAndWait(String title, String message) => 
+      new Future.value("Not implemented");
 
   void showSuccessMessage(String message) { }
+
+  Future<bool> askUserOkCancel(
+      String message, {String okButtonLabel: 'OK', String title: ""}) {
+    return new Future.value("Not implemented");
+  }
 }
 
 /**

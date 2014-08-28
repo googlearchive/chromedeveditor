@@ -10,6 +10,7 @@ import 'package:archive/archive.dart' as arch;
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
+import 'package:polymer/builder.dart' as polymer;
 
 import 'webstore_client.dart';
 
@@ -97,10 +98,43 @@ void setupBootstrapping(GrinderContext context) {
 /**
  * Run Polymer lint on the Polymer entry point.
  */
-void lint(context) {
-  // TODO(devoncarew): Commented out to work around an NPE in the polymer linter.
-  //polymer.lint(entryPoints: ['app/spark_polymer.html']);
-  print('  !!! lint is temporarily turned off');
+void lint(GrinderContext context) {
+  const entryPoint = 'app/spark_polymer.html';
+
+  context.log('Running polymer linter on ${entryPoint}...');
+  polymer.lint(
+      entryPoints: [entryPoint],
+      options: polymer.parseOptions([]),
+      currentPackage: 'spark'
+  );
+
+  context.log('');
+  context.log('Running release-config.json linter...');
+  Map<String, Map> configs = JSON.decode(
+      new File('tool/release-config.json').readAsStringSync());
+
+  List<String> branchNames = [];
+
+  configs.forEach((String name, Map config) {
+    Function _verify = (key) {
+      if (config[key] == null) context.fail("'${key}' field is missing");
+      if (config[key].isEmpty) context.fail("'${key}' field is empty");
+    };
+
+    context.log('linting ${name} release');
+
+    _verify('name');
+    _verify('branch');
+    _verify('version');
+    _verify('id');
+    _verify('oauth2-clientid');
+
+    String branch = config['branch'];
+    if (branchNames.contains(branch)) {
+      context.fail("Branch name '${branch}' is duplicated");
+    }
+    branchNames.add(branch);
+  });
 }
 
 /**
@@ -405,18 +439,21 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
 }
 
 void _changeMode({bool useTestMode: true}) {
-  File file = joinFile(Directory.current, ['app', 'app.json']);
-  file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
+  _changeModeImpl(
+      useTestMode, joinFile(Directory.current, ['app', 'app.json']));
+  _changeModeImpl(
+      useTestMode, joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']));
+  _changeModeImpl(
+      useTestMode, joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']));
+}
 
-  file = joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']);
-  if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
-  }
+void _changeModeImpl(bool useTestMode, File file) {
+  if (!file.parent.existsSync()) return;
 
-  file = joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']);
-  if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
-  }
+  String content = file.readAsStringSync();
+  var dict = JSON.decode(content);
+  dict['test-mode'] = useTestMode;
+  file.writeAsStringSync(new JsonPrinter().print(dict));
 }
 
 // Returns the URL of the git repository.

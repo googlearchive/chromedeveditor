@@ -1,7 +1,7 @@
 
 import 'package:polymer/polymer.dart';
 import 'package:paper_elements/paper_toast.dart';
-import 'package:dart_web_paper/sample_app.dart';
+import 'package:``projectName``/sample_app.dart';
 
 void main() {
   // Init polymer.

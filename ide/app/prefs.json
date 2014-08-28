@@ -1,0 +1,16 @@
+{
+  "stripWhitespaceOnSave": true,
+  "editorFontSize": 12,
+  "editorTheme": null,
+  "keyBindings": null,
+  "indentation":{
+    "default":{
+      "useTabs": false,
+      "width": 2
+    },
+    "dart":{
+      "useTabs": false,
+      "width": 2
+    }
+  }
+}
