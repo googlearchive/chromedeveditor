@@ -288,14 +288,40 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"usbDevices" permission may be an object', () {
-      String contents = """{ "permissions": [{"usbDevices": []}] }""";
+    test('"usbDevices" permission may be a simple string', () {
+      String contents = """{ "permissions": ["usbDevices"] }""";
+      _validate(contents, [ErrorIds.PERMISSION_MUST_BE_OBJECT]);
+    });
+
+    test('"usbDevices" permission may be an empty array', () {
+      String contents = """{
+  "permissions": [{"usbDevices": []}]
+}""";
       _validate(contents, []);
     });
 
-    test('"usbDevices" permission may be a string', () {
-      String contents = """{ "permissions": ["usbDevices"] }""";
+    test('"usbDevices" permission may be an array of objects', () {
+      String contents = """{
+  "permissions": [{
+    "usbDevices": [{
+      "productId": 1,
+      "vendorId": 1,
+      "interfaceId": 1
+    }]
+  }]
+}""";
       _validate(contents, []);
+    });
+
+    test('"usbDevices" objects cannot have arbitrary keys', () {
+      String contents = """{
+  "permissions": [{
+    "usbDevices": [{
+      "foo": 1
+    }]
+  }]
+}""";
+      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
     });
 
     test('"fileSystem" permission may be an object', () {
@@ -505,12 +531,6 @@ void defineTests() {
   "requirements": {
     "3D": {
       "features": ["foo"]
-    },
-    "plugins": {
-      "npapi": true
-    },
-    "window": {
-      "shape": false
     }
   }
 }

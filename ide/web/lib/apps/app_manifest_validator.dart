@@ -4,6 +4,7 @@
 
 library spark.app.manifest_validator;
 
+import '../json/json_schema_validator.dart' as json_schema_validator;
 import '../json/json_schema_validator.dart';
 import '../json/json_validator.dart';
 
@@ -11,6 +12,7 @@ class ErrorIds {
   static final String INVALID_MANIFEST_VERSION = "INVALID_MANIFEST_VERSION";
   static final String OBSOLETE_MANIFEST_VERSION = "OBSOLETE_MANIFEST_VERSION";
   static final String INVALID_PERMISSION = "INVALID_PERMISSION";
+  static final String PERMISSION_MUST_BE_OBJECT = "PERMISSION_MUST_BE_OBJECT";
   static final String OBSOLETE_ENTRY = "OBSOLETE_ENTRY";
   static final String STRING_OR_OBJECT_EXPECTED = "STRING_OR_OBJECT_EXPECTED";
   static final String VERSION_STRING_EXPECTED = "VERSION_STRING_EXPECTED";
@@ -153,7 +155,8 @@ Map AppManifestSchema =
   }
 };
 
-typedef SchemaValidator SchemaValidatorCreator(ErrorCollector errorCollector);
+typedef SchemaValidator SchemaValidatorCreator(
+    SchemaValidatorFactory factory, ErrorCollector errorCollector);
 
 /**
  * Custom schema factory implementing schema types specific to the
@@ -161,25 +164,26 @@ typedef SchemaValidator SchemaValidatorCreator(ErrorCollector errorCollector);
  */
 class AppManifestValidatorFactory implements SchemaValidatorFactory {
   static final Map<String, SchemaValidatorCreator> _customTypes = {
-    "3d_feature": (x) => new Requirement3dFeatureValueValidator(x),
-    "locale": (x) => new LocaleValueValidator(x),
-    "manifest_version": (x) => new ManifestVersionValueValidator(x),
-    "permission": (x) => new PermissionValueValidator(x),
-    "socket_host_pattern": (x) => new SocketHostPatternValueValidator(x),
-    "version": (x) => new VersionValueValidator(x)
+    "3d_feature": (f, x) => new Requirement3dFeatureValueValidator(x),
+    "locale": (f, x) => new LocaleValueValidator(x),
+    "manifest_version": (f, x) => new ManifestVersionValueValidator(x),
+    "permission": (f, x) => new PermissionValueValidator(f, x),
+    "socket_host_pattern": (f, x) => new SocketHostPatternValueValidator(x),
+    "version": (f, x) => new VersionValueValidator(x)
   };
   final ErrorCollector errorCollector;
 
   AppManifestValidatorFactory(this.errorCollector);
 
   @override
-  SchemaValidator createValidator(dynamic schema) {
+  SchemaValidator createValidator(
+      SchemaValidatorFactory factory, dynamic schema) {
     SchemaValidatorCreator creator = _customTypes[schema];
     if (creator == null) {
       return null;
     }
 
-    return creator(errorCollector);
+    return creator(factory, errorCollector);
   }
 
   @override
@@ -307,20 +311,27 @@ class PermissionValueValidator extends SchemaValidator {
     "developerPrivate"
   ];
   static final List<String> _obsoletePermissions = ["socket"];
+  static final List<String> _objectOnlyPermissions = ["usbDevices"];
 
+  final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
 
-  PermissionValueValidator(this.errorCollector);
+  PermissionValueValidator(this.factory, this.errorCollector);
 
   @override
   JsonValidator enterObject() {
-    return new PermissionObjectValueValidator(errorCollector);
+    return new PermissionObjectValueValidator(factory, errorCollector);
   }
 
   @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     if (entity is StringEntity) {
-      if (_obsoletePermissions.contains(entity.text)) {
+      if (_objectOnlyPermissions.contains(entity.text)) {
+        errorCollector.addMessage(
+            ErrorIds.PERMISSION_MUST_BE_OBJECT,
+            entity.span,
+            "Permission value \"${entity.text}\" must be an object.");
+      } else if (_obsoletePermissions.contains(entity.text)) {
         errorCollector.addMessage(
              ErrorIds.OBSOLETE_ENTRY,
              entity.span,
@@ -333,14 +344,16 @@ class PermissionValueValidator extends SchemaValidator {
             entity.span,
             "Permission value \"${entity.text}\" is not recognized.");
       }
+      return;
     } else if (entity is ObjectEntity) {
       // Validation has been performed by validator from "enterObject".
-    } else {
-      errorCollector.addMessage(
-          ErrorIds.STRING_OR_OBJECT_EXPECTED,
-          entity.span,
-          "String or object expected for permission entries.");
+      return;
     }
+
+    errorCollector.addMessage(
+        ErrorIds.STRING_OR_OBJECT_EXPECTED,
+        entity.span,
+        "String or object expected for permission entries.");
   }
 
   bool _isMatchPattern(String text) {
@@ -366,9 +379,10 @@ class PermissionValueValidator extends SchemaValidator {
  * containing a permission name.
  */
 class PermissionObjectValueValidator extends SchemaValidator {
+  final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
 
-  PermissionObjectValueValidator(this.errorCollector);
+  PermissionObjectValueValidator(this.factory, this.errorCollector);
 
   @override
   JsonValidator propertyName(StringEntity propertyName) {
@@ -383,6 +397,7 @@ class PermissionObjectValueValidator extends SchemaValidator {
 
       // TODO(rpaquay): Implement validators for the permissions below.
       case "usbDevices":
+        return new UsbDevicesValidator(factory, errorCollector);
       case "fileSystem":
         return NullValidator.instance;
 
@@ -397,10 +412,62 @@ class PermissionObjectValueValidator extends SchemaValidator {
 }
 
 /**
- * TODO(rpaquay): Validator for the "usbDevices" permission.
+ * Validator for the "usbDevices" permission.
  */
 class UsbDevicesValidator extends SchemaValidator {
+  final SchemaValidatorFactory factory;
+  final ErrorCollector errorCollector;
 
+  UsbDevicesValidator(this.factory, this.errorCollector);
+
+  @override
+  JsonValidator enterArray() {
+    SchemaValidator validator =
+        new UsbDeviceElementValidator(factory, errorCollector);
+    return new ArrayElementsSchemaValidator(validator);
+  }
+
+  @override
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    if (entity is ArrayEntity) {
+        return;
+    }
+    errorCollector.addMessage(
+        json_schema_validator.ErrorIds.ARRAY_EXPECTED,
+        entity.span,
+        "Array expected.");
+  }
+}
+
+/**
+ * Validator for one element of the "usbDevices" array.
+ */
+class UsbDeviceElementValidator extends SchemaValidator {
+  final SchemaValidatorFactory factory;
+  final ErrorCollector errorCollector;
+
+  UsbDeviceElementValidator(this.factory, this.errorCollector);
+
+  @override
+  JsonValidator enterObject() {
+    var schema = {
+      "vendorId": "int",
+      "productId": "int",
+      "interfaceId": "int"
+    };
+    return new ObjectPropertiesSchemaValidator(factory, errorCollector, schema);
+  }
+
+  @override
+  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
+    if (entity is ObjectEntity) {
+        return;
+    }
+    errorCollector.addMessage(
+        json_schema_validator.ErrorIds.OBJECT_EXPECTED,
+        entity.span,
+        "Object expected.");
+  }
 }
 
 /**

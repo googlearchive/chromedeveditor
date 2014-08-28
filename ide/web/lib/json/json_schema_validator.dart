@@ -41,7 +41,8 @@ abstract class SchemaValidatorFactory {
    * Returns a [SchemaValidator] instance corresponding to the [schema]
    * definition, or `null` if the factory does not understand [schema].
    */
-  SchemaValidator createValidator(dynamic schema);
+  SchemaValidator createValidator(
+      SchemaValidatorFactory factory, dynamic schema);
 
   /** Returns `true` if [schema] is a valid schema for this factory */
   bool validateSchemaForTesting(dynamic schema);
@@ -69,9 +70,10 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
   CoreSchemaValidatorFactory(this.parentFactory, this.errorCollector);
 
   @override
-  SchemaValidator createValidator(dynamic schema) {
+  SchemaValidator createValidator(
+      SchemaValidatorFactory factory, dynamic schema) {
     if (parentFactory != null) {
-      var result = parentFactory.createValidator(schema);
+      var result = parentFactory.createValidator(factory, schema);
       if (result != null) {
         return result;
       }
@@ -222,7 +224,8 @@ class ObjectPropertiesSchemaValidator extends SchemaValidator {
       return NullValidator.instance;
     }
 
-    SchemaValidator valueValidator = factory.createValidator(propertyType);
+    SchemaValidator valueValidator =
+        factory.createValidator(factory, propertyType);
     return new ObjectPropertyValueValidator(entity, valueValidator);
   }
 }
@@ -279,7 +282,8 @@ class ArraySchemaValidator extends SchemaValidator {
 
   @override
   JsonValidator enterArray() {
-    SchemaValidator valueValidator = factory.createValidator(schema[0]);
+    SchemaValidator valueValidator =
+        factory.createValidator(factory, schema[0]);
     return new ArrayElementsSchemaValidator(valueValidator);
   }
 
