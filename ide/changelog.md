@@ -14,6 +14,7 @@
 - fixed an issue with cloning an empty Git repository
 - fixed several issues with 'Pub Get' and 'Pub Update'
 - USB deployment speed improvements
+- fixed a Bower issue where just the top-level files of a package would be downloaded (subdirectories were skipped)
 
 ## M14 (0.14.2, August 5, 2014)
 ### New features:
