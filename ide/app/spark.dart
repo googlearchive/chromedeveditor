@@ -3728,8 +3728,6 @@ class SettingsAction extends SparkActionWithDialog {
       });
     });
   }
-
-
 }
 
 class RunTestsAction extends SparkAction {
