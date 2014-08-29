@@ -18,6 +18,8 @@ import 'dart:html';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
+import 'workspace.dart' as ws;
+
 final Logger _logger = new Logger('preferences');
 
 /**
@@ -50,7 +52,7 @@ class SparkPreferences {
   JsonPreference<IndentationPreference> indentation;
 
   SparkPreferences(this.prefsStore) {
-    _jsonStore = new JsonPreferencesStore(prefsStore);
+    _jsonStore = new JsonPreferencesStore(new PrefFile(fileSystemAccess., _jsonStore, "userJsonPrefs");
     // Initialize each preference:
     stripWhitespaceOnSave = new JsonPreference<bool>(_jsonStore,
         "stripWhitespaceOnSave");
@@ -82,7 +84,8 @@ class JsonPreferencesStore {
   Map _defaultMap;
   Map _userMap;
 
-  PreferenceStore _persistentStore;
+  PrefFile _userPrefFile;
+
   Future whenLoaded;
   bool _loaded = false;
 
@@ -92,7 +95,7 @@ class JsonPreferencesStore {
   Stream<PreferenceEvent> get onPreferenceChange => _changeConroller.stream;
   StreamController<PreferenceEvent> _changeConroller = new StreamController();
 
-  JsonPreferencesStore(this._persistentStore) {
+  JsonPreferencesStore(this. _userPrefFile) {
     whenLoaded = Future.wait([_loadDefaultPrefs(), _loadUserPrefs()]).then((_) =>
         _loaded = true);
   }
@@ -103,10 +106,7 @@ class JsonPreferencesStore {
   }
 
   Future _loadUserPrefs() {
-    return _persistentStore.getValue("userJsonPrefs", "{}")
-        .then((String json) {
-      _userMap = JSON.decode(json);
-    });
+    return _userPrefFile.read().then((String json) => _userMap = JSON.decode(json));
   }
 
   dynamic getValue(String id, [dynamic defaultValue]) {
@@ -116,9 +116,9 @@ class JsonPreferencesStore {
 
   Future setValue(String id, dynamic value) {
     _userMap[id] = value;
-    _changeConroller.add(new PreferenceEvent(_persistentStore, id, value.toString()));
+    _changeConroller.add(new PreferenceEvent(_userPrefFile, id, value.toString()));
     String jsonString = JSON.encode(_userMap);
-    return _persistentStore.setValue("userJsonPrefs", jsonString);
+    return _userPrefFile.setContents(jsonString);
   }
 
   Future removeValue(List<String> keys) {
@@ -144,6 +144,72 @@ class JsonPreference<T> {
 
   T getValue() => _store.getValue(_id);
   Future setValue(T newValue) => _store.setValue(_id, newValue);
+}
+
+class PrefFolder extends ws.Container {
+  final PreferenceStore persistentStore;
+  bool get isFile => false;
+  String get name => "prefsRoot";
+  
+  List<ws.Resource> _children;
+  
+  PrefFolder(ws.Container parent, this.persistentStore) : super(parent) {}
+  Future delete() => throw "Not implemented";
+  List<ws.Resource> getChildren() => _children;
+  Future<ws.PrefFile> getOrCreateFile(String name, [bool createIfMissing = false]) {
+    persistentStore.getValue(name);
+  }
+  Future refresh() => throw "Not implemented";
+}
+
+class PrefFile extends ws.File {
+  bool _hasChanged = false;
+  final PreferenceStore _persistentStore;
+  final String _prefId;
+  int _timestamp;
+
+  PrefFile(PrefFolder parent, this._prefId) : super(parent) {
+    // TODO: get timestamp from pref
+    
+    parent.getOrCreateFile("_prefId").then()
+    
+    _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
+  }
+
+  int get timestamp => _timestamp;
+
+  /**
+   * Rename a resource and returns the new uuids of the resource and its sub-resources.
+   */
+  Future<_RenameInfo> _performRename(String name) => throw "Not implemented";
+  Future<String> getContents() {
+    if (_fileContents != null) {
+      return new Future.value(_contents)
+    } else {
+      return _persistentStore.getValue(_prefId, "{}").then((String storedContents) {
+        _contents = storedContents.substring(10);
+        // TODO: How big can a timestamp be?
+        _timestamp = int.parse(storedContents.substring(0,10);
+        return _contents;
+      }
+    }
+  }
+  
+  Future<chrome.ArrayBuffer> getBytes() => throw "Not implemented";
+
+  Future setContents(String contents) {
+    _timestamp = new Date.now().millisecondsSinceEpoch;
+    return _persistentStore.setValue(_timestampcontents.fixed(10) + contents);
+  }
+
+  Future delete() => throw "Not implemented";
+  Future setBytes(List<int> data) => throw "Not implemented";
+  Future setBytesArrayBuffer(chrome.ArrayBuffer bytes) => throw "Not implemented";
+  Future<bool> sourceHasChanged {
+    Future returnFuture = new Future.value(_hasChanged);
+    _hasChanged = false;
+    return returnFuture;
+  }
 }
 
 /**
@@ -340,9 +406,9 @@ class _ChromePreferenceStore implements PreferenceStore {
  * A event class for preference changes.
  */
 class PreferenceEvent {
-  final PreferenceStore store;
+  final PrefFile file;
   final String key;
   final String value;
 
-  PreferenceEvent(this.store, this.key, this.value);
+  PreferenceEvent(this.file, this.key, this.value);
 }
