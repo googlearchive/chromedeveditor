@@ -33,8 +33,8 @@ final intl.DateFormat RFC_1123_DATE_FORMAT =
  *     dispose();
  */
 class PicoServer {
-  tcp.TcpServer _server;
-  List<PicoServlet> _servlets = [];
+  final tcp.TcpServer _server;
+  final List<PicoServlet> _servlets = [];
   ServerLogger _logger = new _NullLogger();
 
   /**

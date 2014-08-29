@@ -153,7 +153,7 @@ class _TestListenerClient {
 }
 
 class _TestConfiguration extends unittest.Configuration {
-  TestDriver testDriver;
+  final TestDriver testDriver;
 
   _TestConfiguration(this.testDriver): super.blank();
 
@@ -242,7 +242,6 @@ String _fixed(String str, int width) {
     case 7: return '${str}       ';
     case 8: return '${str}        ';
     case 9: return '${str}         ';
-    default:
-      return str;
+    default: return str;
   }
 }
