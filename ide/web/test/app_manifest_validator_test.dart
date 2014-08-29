@@ -65,6 +65,7 @@ _LoggingErrorCollector _validateDocument(String contents) {
 void _validate(String contents, List<String> errorIds) {
   _LoggingErrorCollector errorCollector = _validateDocument(contents);
   _LoggingEventChecker checker = new _LoggingEventChecker(errorCollector);
+  expect(errorCollector.events.length, errorIds.length);
   errorIds.forEach((id) => checker.error(id));
   checker.end();
 }
@@ -157,10 +158,10 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"sockets" cannot contain a unknown property', () {
+    test('"sockets" objects may contain arbitrary keys', () {
       String contents = """{ "sockets": { "foo": {} } }""";
       _validate(
-          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+          contents, []);
     });
 
     test('"sockets.udp" may contain 3 known top level properties', () {
@@ -171,10 +172,10 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"sockets.udp" cannot contain a unknown property', () {
+    test('"sockets.udp" objects may contain arbitrary keys', () {
       String contents = """{ "sockets": { "udp": { "foo": "" } } }""";
       _validate(
-          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+          contents, []);
     });
 
     test('"sockets.tcp" may contain 1 known top level properties', () {
@@ -185,10 +186,10 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"sockets.tcp" cannot contain a unknown property', () {
+    test('"sockets.tcp" objects may contain arbitrary keys', () {
       String contents = """{ "sockets": { "tcp": { "foo": "" } } }""";
       _validate(
-          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+          contents, []);
     });
 
     test('"sockets.tcpServer" may contain 1 known top level properties', () {
@@ -196,10 +197,10 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"sockets.tcpServer" cannot contain a unknown property', () {
+    test('"sockets.tcpServer" objects may contain arbitrary keys', () {
       String contents = """{ "sockets": { "tcpServer": { "foo": "" } } }""";
       _validate(
-          contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+          contents, []);
     });
 
     test('"socket_host_pattern" may be a single value or an array', () {
@@ -313,7 +314,7 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"usbDevices" objects cannot have arbitrary keys', () {
+    test('"usbDevices" objects may contain have arbitrary keys', () {
       String contents = """{
   "permissions": [{
     "usbDevices": [{
@@ -321,7 +322,9 @@ void defineTests() {
     }]
   }]
 }""";
-      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+      _validate(contents, [
+          json_schema_validator.ErrorIds.MISSING_MANDATORY_PROPERTY,
+          json_schema_validator.ErrorIds.MISSING_MANDATORY_PROPERTY]);
     });
 
     test('"fileSystem" permission may be an object', () {
@@ -413,7 +416,7 @@ void defineTests() {
       });
     }
 
-    test('"webview" may be a dictionary of partitions', () {
+    test('"webview" may be a dictionary of "partitions"', () {
       String contents = """{
   "webview": {
     "partitions": [{
@@ -429,7 +432,7 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"webview" cannot contain any other key than "partitions"', () {
+    test('"webview" must contain a "partitions" dictionary', () {
       String contents = """{
   "webview": {
     "partitions2": [{
@@ -442,22 +445,23 @@ void defineTests() {
     ]
   }
 }""";
-      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+      _validate(contents, [json_schema_validator.ErrorIds.MISSING_MANDATORY_PROPERTY]);
     });
 
-    test('"webview.partitions" cannot contain any other key than "name" and "accessible_resources"', () {
+    test('"webview.partitions" may contain arbitrary keys."', () {
       String contents = """{
   "webview": {
     "partitions": [{
-      "name2": "any name",
-      "accessible_resources": ["foo.bar"]
+      "name": "any name",
+      "accessible_resources": ["foo.bar"],
+      "foo": 1
     }]
   }
 }""";
-      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+      _validate(contents, []);
     });
 
-    test('"webview.partitions" cannot contain any other key than "name" and "accessible_resources"', () {
+    test('"webview.partitions" must contain "accessible_resources"', () {
       String contents = """{
   "webview": {
     "partitions": [{
@@ -466,7 +470,21 @@ void defineTests() {
     }]
   }
 }""";
-      _validate(contents, [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+      _validate(contents, [json_schema_validator.ErrorIds.MISSING_MANDATORY_PROPERTY]);
+    });
+
+    test('"webview.partitions" must contain "name" and "accessible_resources"', () {
+      String contents = """{
+  "webview": {
+    "partitions": [{
+      "name2": "any name",
+      "accessible_resources2": ["foo.bar"]
+    }]
+  }
+}""";
+      _validate(contents, [
+          json_schema_validator.ErrorIds.MISSING_MANDATORY_PROPERTY,
+          json_schema_validator.ErrorIds.MISSING_MANDATORY_PROPERTY]);
     });
 
     test('"webview.partitions.accessible_resources" cannot be a sinle string value"', () {

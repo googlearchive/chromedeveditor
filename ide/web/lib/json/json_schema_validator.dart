@@ -9,6 +9,7 @@ import '../json/json_validator.dart';
 class ErrorIds {
   static final String TOP_LEVEL_OBJECT = "TOP_LEVEL_OBJECT";
   static final String UNKNOWN_PROPERTY_NAME = "UNKNOWN_PROPERTY_NAME";
+  static final String MISSING_MANDATORY_PROPERTY = "MISSING_MANDATORY_PROPERTY";
   static final String ARRAY_EXPECTED = "ARRAY_EXPECTED";
   static final String OBJECT_EXPECTED = "OBJECT_EXPECTED";
   static final String STRING_EXPECTED = "STRING_EXPECTED";
@@ -62,7 +63,11 @@ abstract class SchemaValidatorFactory {
  *    "string" |     // string literals only
  *    "var"          // anything is valid
  *    List<SchemaType> |       // Array of types (1 element only)
- *    Map<String, SchemaType>  // Map of (property name, type)
+ *    Map<PropertySpec, SchemaType>
+ *
+ * PropertySpec :==
+ *   propertyName ||   // Simple string containing optional property name
+ *   propertyName "!"  // Mandatory property names have a "!" suffix
  */
 class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
   final SchemaValidatorFactory parentFactory;
@@ -180,12 +185,20 @@ class ObjectSchemaValidator extends SchemaValidator {
   final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
   final Map schema;
+  ObjectPropertiesSchemaValidator validator;
 
-  ObjectSchemaValidator(this.factory, this.errorCollector, this.schema);
+  ObjectSchemaValidator(this.factory, this.errorCollector, this.schema) {
+    validator = new ObjectPropertiesSchemaValidator(factory, errorCollector, schema);
+  }
 
   @override
   JsonValidator enterObject() {
-    return new ObjectPropertiesSchemaValidator(factory, errorCollector, schema);
+    return validator.enterObject();
+  }
+
+  @override
+  void leaveObject(ObjectEntity entity) {
+    validator.leaveObject(entity);
   }
 
   @override
@@ -213,23 +226,64 @@ class ObjectSchemaValidator extends SchemaValidator {
 class ObjectPropertiesSchemaValidator extends SchemaValidator {
   final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
-  final Map schema;
+  final Map<String, dynamic> schema;
+  Set<String> _mandatoryProperties;
+  Set<String> _mandatoryPropertiesSeen = new Set<String>();
 
-  ObjectPropertiesSchemaValidator(this.factory, this.errorCollector, this.schema);
+  ObjectPropertiesSchemaValidator(this.factory, this.errorCollector, this.schema) {
+    _mandatoryProperties = schema.keys
+        .where((String key) => key.endsWith("!"))
+        .map((String key) => key.substring(0, key.length - 1))
+        .toSet();
+  }
 
   @override
   JsonValidator propertyName(StringEntity entity) {
-    var propertyType = schema[entity.text];
+    String name = entity.text;
+    // Keep track of mandatory properties used in this object.
+    if (_mandatoryProperties.contains(name)) {
+      _mandatoryPropertiesSeen.add(name);
+      name += "!";
+    }
+
+    var propertyType = schema[name];
     if (propertyType == null) {
-      String message = "Property \"${entity.text}\" is not recognized.";
-      errorCollector.addMessage(
-          ErrorIds.UNKNOWN_PROPERTY_NAME,  entity.span, message);
+      //String message = "Property \"${entity.text}\" is not recognized.";
+      //errorCollector.addMessage(
+      //    ErrorIds.UNKNOWN_PROPERTY_NAME,  entity.span, message);
       return NullValidator.instance;
     }
 
     SchemaValidator valueValidator =
         factory.createValidator(factory, propertyType);
     return new ObjectPropertyValueValidator(entity, valueValidator);
+  }
+
+  /**
+   * Note: This method is a special case, in the sense that it is explictly
+   * called by "ObjectSchemaValidator".
+   */
+  @override
+  JsonValidator enterObject() {
+    assert(_mandatoryPropertiesSeen.isEmpty);
+    return this;
+  }
+
+  /**
+   * Note: This method is a special case, in the sense that it is explictly
+   * called by "ObjectSchemaValidator".
+   */
+  @override
+  void leaveObject(ObjectEntity entity) {
+    // Create an error for every mandatory property not present in the object.
+    Set<String> missingProperties = _mandatoryProperties
+        .difference(_mandatoryPropertiesSeen);
+    missingProperties.forEach((name) {
+      String message = "Object is missing mandatory property \"${name}\".";
+      errorCollector.addMessage(
+          ErrorIds.MISSING_MANDATORY_PROPERTY, entity.span, message);
+    });
+    _mandatoryPropertiesSeen.clear();
   }
 }
 

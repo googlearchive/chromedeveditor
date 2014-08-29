@@ -4,7 +4,6 @@
 
 library spark.app.manifest_validator;
 
-import '../json/json_schema_validator.dart' as json_schema_validator;
 import '../json/json_schema_validator.dart';
 import '../json/json_validator.dart';
 
@@ -148,12 +147,18 @@ Map AppManifestSchema =
   "url_handlers": "var",
   "version": "version",
   "webview": {
-    "partitions": [{
-      "name": "string",
-      "accessible_resources": ["string"]
+    "partitions!": [{
+      "name!": "string",
+      "accessible_resources!": ["string"]
     }]
   }
 };
+
+List UsbDeviceSchema = [{
+  "vendorId!": "int",
+  "productId!": "int",
+  "interfaceId": "int"
+}];
 
 typedef SchemaValidator SchemaValidatorCreator(
     SchemaValidatorFactory factory, ErrorCollector errorCollector);
@@ -395,9 +400,10 @@ class PermissionObjectValueValidator extends SchemaValidator {
              "Use the \"sockets\" manifest key instead.");
         return NullValidator.instance;
 
-      // TODO(rpaquay): Implement validators for the permissions below.
       case "usbDevices":
-        return new UsbDevicesValidator(factory, errorCollector);
+        return new ArraySchemaValidator(factory, errorCollector, UsbDeviceSchema);
+
+      // TODO(rpaquay): Implement validators for the permissions below.
       case "fileSystem":
         return NullValidator.instance;
 
@@ -408,65 +414,6 @@ class PermissionObjectValueValidator extends SchemaValidator {
             "Permission value \"${propertyName.text}\" is not recognized.");
         return NullValidator.instance;
     }
-  }
-}
-
-/**
- * Validator for the "usbDevices" permission.
- */
-class UsbDevicesValidator extends SchemaValidator {
-  final SchemaValidatorFactory factory;
-  final ErrorCollector errorCollector;
-
-  UsbDevicesValidator(this.factory, this.errorCollector);
-
-  @override
-  JsonValidator enterArray() {
-    SchemaValidator validator =
-        new UsbDeviceElementValidator(factory, errorCollector);
-    return new ArrayElementsSchemaValidator(validator);
-  }
-
-  @override
-  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
-    if (entity is ArrayEntity) {
-        return;
-    }
-    errorCollector.addMessage(
-        json_schema_validator.ErrorIds.ARRAY_EXPECTED,
-        entity.span,
-        "Array expected.");
-  }
-}
-
-/**
- * Validator for one element of the "usbDevices" array.
- */
-class UsbDeviceElementValidator extends SchemaValidator {
-  final SchemaValidatorFactory factory;
-  final ErrorCollector errorCollector;
-
-  UsbDeviceElementValidator(this.factory, this.errorCollector);
-
-  @override
-  JsonValidator enterObject() {
-    var schema = {
-      "vendorId": "int",
-      "productId": "int",
-      "interfaceId": "int"
-    };
-    return new ObjectPropertiesSchemaValidator(factory, errorCollector, schema);
-  }
-
-  @override
-  void checkValue(JsonEntity entity, [StringEntity propertyName]) {
-    if (entity is ObjectEntity) {
-        return;
-    }
-    errorCollector.addMessage(
-        json_schema_validator.ErrorIds.OBJECT_EXPECTED,
-        entity.span,
-        "Object expected.");
   }
 }
 
