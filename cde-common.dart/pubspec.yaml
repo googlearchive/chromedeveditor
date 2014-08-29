@@ -1,0 +1,7 @@
+name: cde_common
+description: This library contains common, non-UI classes for the Chrome Dev Editor (CDE).
+version: 0.0.1
+#author: First Last <email>
+#homepage: http://www.example.com
+dependencies:
+  unittest: any
