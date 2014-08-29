@@ -99,7 +99,7 @@ Map AppManifestSchema =
   "manifest_version": "manifest_version",
   "minimum_chrome_version": "version",
   "nacl_modules": "var",
-  "name": "string",
+  "name!": "string",  // Mandatory
   "oauth2": "var",
   "offline_enabled": "var",
   "omnibox": "var",
@@ -146,7 +146,7 @@ Map AppManifestSchema =
   "update_url": "string",
   "web_accessible_resources": "var",
   "url_handlers": "var",
-  "version": "version",
+  "version!": "version",  // Mandatory
   "webview": {
     "partitions!": [{
       "name!": "string",
