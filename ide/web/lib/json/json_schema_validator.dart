@@ -40,9 +40,10 @@ abstract class SchemaValidatorFactory {
   /**
    * Returns a [SchemaValidator] instance corresponding to the [schema]
    * definition, or `null` if the factory does not understand [schema].
+   * [rootFactory] is the "root" factory in case of chained factories.
    */
   SchemaValidator createValidator(
-      SchemaValidatorFactory factory, dynamic schema);
+      SchemaValidatorFactory rootFactory, dynamic schema);
 
   /** Returns `true` if [schema] is a valid schema for this factory */
   bool validateSchemaForTesting(dynamic schema);
@@ -71,9 +72,11 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
 
   @override
   SchemaValidator createValidator(
-      SchemaValidatorFactory factory, dynamic schema) {
+      SchemaValidatorFactory rootFactory, dynamic schema) {
+    assert(identical(this, rootFactory));
+
     if (parentFactory != null) {
-      var result = parentFactory.createValidator(factory, schema);
+      var result = parentFactory.createValidator(rootFactory, schema);
       if (result != null) {
         return result;
       }

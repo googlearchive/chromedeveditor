@@ -177,13 +177,13 @@ class AppManifestValidatorFactory implements SchemaValidatorFactory {
 
   @override
   SchemaValidator createValidator(
-      SchemaValidatorFactory factory, dynamic schema) {
+      SchemaValidatorFactory rootFactory, dynamic schema) {
     SchemaValidatorCreator creator = _customTypes[schema];
     if (creator == null) {
       return null;
     }
 
-    return creator(factory, errorCollector);
+    return creator(rootFactory, errorCollector);
   }
 
   @override
