@@ -113,12 +113,14 @@ Map AppManifestSchema =
   "requirements": {
     CoreSchemaValidatorFactory.MetaCloseEnded: true,
     "3D": {
-      "features": ["3d_feature"] // "webgl" or "css3d"
+      "features!": ["3d_feature"] // "webgl" or "css3d"
     },
     "plugins": {
+      CoreSchemaValidatorFactory.MetaCloseEnded: true,
       "npapi": "boolean"
     },
     "window": {
+      CoreSchemaValidatorFactory.MetaCloseEnded: true,
       "shape": "boolean"
     }
   },
@@ -148,16 +150,19 @@ Map AppManifestSchema =
   "url_handlers": "var",
   "version!": "version",  // Mandatory
   "webview": {
-    "partitions!": [{
-      "name!": "string",
+    "partitions!": [{    // Mandatory
+      "name!": "string",    // Mandatory
       "accessible_resources!": ["string"]
     }]
   }
 };
 
+/**
+ * Schema for the "usbDevices" permission entry.
+ */
 List UsbDeviceSchema = [{
-  "vendorId!": "int",
-  "productId!": "int",
+  "vendorId!": "int",  // Mandatory
+  "productId!": "int",  // Mandatory
   "interfaceId": "int"
 }];
 

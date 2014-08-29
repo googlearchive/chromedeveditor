@@ -69,6 +69,12 @@ abstract class SchemaValidatorFactory {
  *   propertyName "!"  // Mandatory property names have a "!" suffix
  */
 class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
+  /**
+   * Use this custom property (with a boolean value) to specify that the
+   * object/dictionary can only contain properties defined in the current
+   * schema object definition. Any other property name used in the validated
+   * json document will result in validation errors.
+   */
   static final String MetaCloseEnded = "<meta-close-ended>";
   final SchemaValidatorFactory parentFactory;
   final ErrorCollector errorCollector;
