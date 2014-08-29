@@ -538,7 +538,7 @@ class Workspace extends Container {
 }
 
 abstract class Container extends Resource {
-  Container(Container parent, chrome.Entry entry) : super(parent, entry);
+  Container(Container parent) : super(parent);
 
   Resource getChild(String name) {
     return getChildren().firstWhere((c) => c.name == name, orElse: () => null);
@@ -604,7 +604,6 @@ abstract class Container extends Resource {
 
 abstract class Resource {
   Container _parent;
-  chrome.Entry _entry;
 
   /**
    * This map stores arbitrary metadata that clients can get and set on the
@@ -613,11 +612,9 @@ abstract class Resource {
    */
   Map<String, dynamic> _metadata;
 
-  Resource(this._parent, this._entry);
+  Resource(this._parent);
 
-  String get name => _entry.name;
-
-  chrome.Entry get entry => _entry;
+  String get name;
 
   /**
    * Return the path to this element from the workspace. Paths are not
@@ -633,7 +630,7 @@ abstract class Resource {
 
   bool get isTopLevel => false;
 
-  bool get isFile => false;
+  bool get isFile;
 
   Container get parent => _parent;
 
@@ -653,34 +650,16 @@ abstract class Resource {
     }
   }
 
-  /**
-   * Rename a resource and returns the new uuids of the resource and its subresources.
-   */
-  Future<Map> _rename(String name) {
-    return entry.moveTo(_parent._entry, name: name).then((chrome.Entry e) {
-      if (e.isFile) {
-        File file = new File(_parent, e);
-        _parent.getChildren().add(file);
-        _parent.getChildren().remove(this);
-        return {'resource': file, 'uuids': _resourceUuids(file)};
-      } else {
-        Folder folder = new Folder(_parent, e);
-        _parent.getChildren().add(folder);
-        _parent.getChildren().remove(this);
-        return workspace._gatherChildren(folder).then((_) {
-          return {'resource': folder, 'uuids': _resourceUuids(folder)};
-        });
-      }
-    });
-  }
+  Future<Resource> _performRename => new Future.error("_performRename not implemented.”);
 
   Future rename(String name) {
     List<String> originalUuids = _resourceUuids(this);
     List<ChangeDelta> deletions = ChangeDelta.containerDelete(this);
-    return _rename(name).then((Map renameInfo) {
+    return _performRename(name).then((Resource newResource) {
+      _RenameInfo renameInfo = new _RenameInfo(newResource, _resourceUuids(newResource));
       Map<String, String> mapping = {};
-      List<String> uuids = renameInfo['uuids'];
-      Resource res = renameInfo['resource'];
+      List<String> uuids = renameInfo.uuids;
+      Resource res = renameInfo.resource;
       for (int i = 0 ; i < originalUuids.length ; i++) {
         mapping[originalUuids[i]] = uuids[i];
       }
@@ -796,7 +775,23 @@ abstract class Resource {
   }
 }
 
-class Folder extends Container {
+class _RenameInfo {
+  final List<String> resourceUuids;
+  final Resource resource;
+  _RenameInfo(this.resource, this.resourceUuids);
+}
+
+abstract class EntryBased {
+  chrome.Entry _entry;
+
+  String get name => _entry.name;
+
+  chrome.Entry get entry => _entry;
+}
+
+class Folder extends Container with EntryBased {
+  chrome.DirectoryEntry get _dirEntry => entry;
+
   List<Resource> _children = [];
 
   Folder(Container parent, chrome.Entry entry) : super(parent, entry);
@@ -816,6 +811,20 @@ class Folder extends Container {
       _children.add(file);
       _fireResourceChange(new ChangeDelta(file, EventType.ADD));
       return file;
+    });
+  }
+
+  /**
+   * Rename a [Folder] and returns the new uuids of the resource and its sub-resources.
+   */
+  Future<_RenameInfo> _performRename(String name) {
+    return entry.moveTo(_parent._entry, name: name).then((chrome.Entry e) {
+      Folder folder = new Folder(_parent, e);
+      _parent.getChildren().add(resource);
+      _parent.getChildren().remove(this);
+      return workspace._gatherChildren(folder).then((_) {
+        return folder;
+      });
     });
   }
 
@@ -1035,21 +1044,28 @@ class Folder extends Container {
       });
     });
   }
-
-  chrome.DirectoryEntry get _dirEntry => entry;
 }
 
-class File extends Resource {
-  List<Marker> _markers = [];
-  int _timestamp;
-
-  File(Container parent, chrome.Entry entry) : super(parent, entry) {
+class EntryFile extends File with EntryBased {
+  EntryFile(Container parent, this._entry) : super(parent) {
     entry.getMetadata().then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
     });
   }
 
   int get timestamp => _timestamp;
+
+  /**
+   * Rename a resource and returns the new uuids of the resource and its sub-resources.
+   */
+  Future<_RenameInfo> _performRename(String name) {
+    return entry.moveTo(_parent._entry, name: name).then((chrome.Entry e) {
+      EntryFile file = new EntryFile(_parent, e);
+      _parent.getChildren().add(resource);
+      _parent.getChildren().remove(this);
+      return file;
+    });
+  }
 
   Future<String> getContents() => _fileEntry.readText();
 
@@ -1080,6 +1096,37 @@ class File extends Resource {
       workspace._fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
     });
   }
+
+  Future refresh() {
+    return entry.getMetadata().then((/*Metadata*/ metaData) {
+      final int newStamp = metaData.modificationTime.millisecondsSinceEpoch;
+      if (newStamp != _timestamp) {
+        _timestamp = newStamp;
+        _fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
+      }
+    });
+  }
+
+  chrome.ChromeFileEntry get _fileEntry => entry;
+}
+
+
+abstract class File extends Resource {
+  File(Container parent) : super(parent);
+
+  int get timestamp;
+
+  Future<String> getContents();
+
+  Future<chrome.ArrayBuffer> getBytes();
+
+  Future setContents(String contents);
+
+  Future delete();
+
+  Future setBytes(List<int> data);
+
+  Future setBytesArrayBuffer(chrome.ArrayBuffer bytes);
 
   /**
    * Create a resource marker. For [severity], see [Marker.SEVERITY_INFO],
@@ -1127,17 +1174,7 @@ class File extends Resource {
     return severity;
   }
 
-  Future refresh() {
-    return entry.getMetadata().then((/*Metadata*/ metaData) {
-      final int newStamp = metaData.modificationTime.millisecondsSinceEpoch;
-      if (newStamp != _timestamp) {
-        _timestamp = newStamp;
-        _fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
-      }
-    });
-  }
-
-  chrome.ChromeFileEntry get _fileEntry => entry;
+  Future refresh();
 }
 
 /**
