@@ -22,8 +22,8 @@ class PlatformInfo {
    * probably early during app startup.
    */
   static Future init() {
-    return chrome.runtime.getPlatformInfo().then((Map map) {
-      _instance = new PlatformInfo._(map);
+    return chrome.runtime.getPlatformInfo().then((chrome.PlatformInfo info) {
+      _instance = new PlatformInfo._(info.os, info.arch, info.nacl_arch);
     });
   }
 
@@ -72,6 +72,5 @@ class PlatformInfo {
   final String _arch;
   final String _naclArch;
 
-  PlatformInfo._(Map m) :
-      _os = m['os'], _arch = m['arch'], _naclArch = m['nacl_arch'];
+  PlatformInfo._(this._os, this._arch, this._naclArch);
 }
