@@ -46,8 +46,7 @@ Map AppManifestSchema =
 {
   "app": {
     "background": {
-      "scripts": ["string"],
-      "persistent": "boolean",  // Undocumented (ignored), but sometimes used
+      "scripts": ["string"]
     },
     "service_worker": "var"  // Undocumented (prototype feature)
   },
