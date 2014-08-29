@@ -424,7 +424,8 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
     if (PlatformInfo.chromeVersion < 38 && PlatformInfo.isCros &&
         container.entry.fullPath.startsWith(pattern)) {
       return new Future.error(
-          'Unable to launch; Running a app from Google drive is not supported yet.');
+          'Unable to launch; running a Chrome App from Google drive is only '
+          'supported in Chrome 38 and higher.');
     }
 
     String idToLaunch;
