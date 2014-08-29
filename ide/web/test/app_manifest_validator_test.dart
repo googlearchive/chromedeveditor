@@ -87,7 +87,7 @@ void defineTests() {
 
     test('manifest cannot be a single value', () {
       String contents = """123""";
-      _validate(contents, [json_schema_validator.ErrorIds.TOP_LEVEL_OBJECT]);
+      _validate(contents, [json_schema_validator.ErrorIds.OBJECT_EXPECTED]);
     });
 
     test('"manifest_version" cannot be a string', () {
@@ -539,9 +539,9 @@ void defineTests() {
 """;
       _validate(
           contents,
-          [json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME,
-           json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME,
-           json_schema_validator.ErrorIds.UNKNOWN_PROPERTY_NAME]);
+          [json_schema_validator.ErrorIds.INVALID_PROPERTY_NAME,
+           json_schema_validator.ErrorIds.INVALID_PROPERTY_NAME,
+           json_schema_validator.ErrorIds.INVALID_PROPERTY_NAME]);
     });
 
     test('"requirements.3d.features" cannot be arbitrary strings', () {

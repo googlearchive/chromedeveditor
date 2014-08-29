@@ -7,8 +7,7 @@ library spark.json.schema_validator;
 import '../json/json_validator.dart';
 
 class ErrorIds {
-  static final String TOP_LEVEL_OBJECT = "TOP_LEVEL_OBJECT";
-  static final String UNKNOWN_PROPERTY_NAME = "UNKNOWN_PROPERTY_NAME";
+  static final String INVALID_PROPERTY_NAME = "UNKNOWN_PROPERTY_NAME";
   static final String MISSING_MANDATORY_PROPERTY = "MISSING_MANDATORY_PROPERTY";
   static final String ARRAY_EXPECTED = "ARRAY_EXPECTED";
   static final String OBJECT_EXPECTED = "OBJECT_EXPECTED";
@@ -70,6 +69,7 @@ abstract class SchemaValidatorFactory {
  *   propertyName "!"  // Mandatory property names have a "!" suffix
  */
 class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
+  static final String MetaCloseEnded = "<meta-close-ended>";
   final SchemaValidatorFactory parentFactory;
   final ErrorCollector errorCollector;
 
@@ -117,9 +117,14 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
     }
 
     if (schema is Map) {
-      var isValid = true;
-      schema.forEach((propertyName, propertySchema) {
-        if (!validateSchemaForTesting(propertySchema)) {
+      bool isValid = true;
+      schema.forEach((String propertyName, dynamic propertySchema) {
+        if (propertyName == MetaCloseEnded) {
+          if (propertySchema is! bool) {
+            isValid = false;
+          }
+        }
+        else if (!validateSchemaForTesting(propertySchema)) {
           isValid = false;
         }
       });
@@ -143,36 +148,6 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
     } else {
       return false;
     }
-  }
-}
-
-/**
- * Schema validator used when the root object of the schema is expected to be
- * a json object. Errors are generated if the top level json entity is not a
- * json object.
- */
-class RootObjectSchemaValidator extends SchemaValidator {
-  static const String message = "Top level element must be an object.";
-
-  final SchemaValidatorFactory factory;
-  final ErrorCollector errorCollector;
-  final Map schema;
-
-  RootObjectSchemaValidator(this.factory, this.errorCollector, this.schema);
-
-  @override
-  JsonValidator enterObject() {
-    return new ObjectPropertiesSchemaValidator(factory, errorCollector, schema);
-  }
-
-  @override
-  void leaveArray(ArrayEntity entity) {
-    errorCollector.addMessage(ErrorIds.TOP_LEVEL_OBJECT, entity.span, message);
-  }
-
-  @override
-  void handleRootValue(ValueEntity entity) {
-    errorCollector.addMessage(ErrorIds.TOP_LEVEL_OBJECT, entity.span, message);
   }
 }
 
@@ -219,6 +194,29 @@ class ObjectSchemaValidator extends SchemaValidator {
 }
 
 /**
+ * Schema validator used when the root object of the schema is expected to be
+ * a json object. Errors are generated if the top level json entity is not a
+ * json object.
+ */
+class RootObjectSchemaValidator extends ObjectSchemaValidator {
+  RootObjectSchemaValidator(
+      SchemaValidatorFactory factory,
+      ErrorCollector errorCollector,
+      Map schema)
+    : super(factory, errorCollector, schema);
+
+  @override
+  void leaveArray(ArrayEntity entity) {
+    checkValue(entity);
+  }
+
+  @override
+  void handleRootValue(ValueEntity entity) {
+    checkValue(entity);
+  }
+}
+
+/**
  * Schema validator that handles validation of the properties of a json object
  * based on a [Map] schema definition. Errors are generated for object
  * properties that are not present in [schema].
@@ -227,10 +225,15 @@ class ObjectPropertiesSchemaValidator extends SchemaValidator {
   final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
   final Map<String, dynamic> schema;
+  bool _isCloseEnded;
   Set<String> _mandatoryProperties;
   Set<String> _mandatoryPropertiesSeen = new Set<String>();
 
   ObjectPropertiesSchemaValidator(this.factory, this.errorCollector, this.schema) {
+    _isCloseEnded = schema[CoreSchemaValidatorFactory.MetaCloseEnded];
+    if (_isCloseEnded == null) {
+      _isCloseEnded = false;
+    }
     _mandatoryProperties = schema.keys
         .where((String key) => key.endsWith("!"))
         .map((String key) => key.substring(0, key.length - 1))
@@ -248,9 +251,11 @@ class ObjectPropertiesSchemaValidator extends SchemaValidator {
 
     var propertyType = schema[name];
     if (propertyType == null) {
-      //String message = "Property \"${entity.text}\" is not recognized.";
-      //errorCollector.addMessage(
-      //    ErrorIds.UNKNOWN_PROPERTY_NAME,  entity.span, message);
+      if (_isCloseEnded) {
+        String message = "Property \"${entity.text}\" is not recognized.";
+        errorCollector.addMessage(
+            ErrorIds.INVALID_PROPERTY_NAME,  entity.span, message);
+      }
       return NullValidator.instance;
     }
 

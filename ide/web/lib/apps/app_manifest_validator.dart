@@ -111,6 +111,7 @@ Map AppManifestSchema =
   "platforms": "var",
   "plugins": "var",
   "requirements": {
+    CoreSchemaValidatorFactory.MetaCloseEnded: true,
     "3D": {
       "features": ["3d_feature"] // "webgl" or "css3d"
     },
