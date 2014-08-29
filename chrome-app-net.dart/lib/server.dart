@@ -190,6 +190,7 @@ class HttpRequest {
 
     if (strs.length > 2) {
       method = strs[0];
+
       String file = strs[1];
       String query = null;
 
