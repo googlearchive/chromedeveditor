@@ -135,8 +135,6 @@ class JsonPreferencesStore {
 class JsonPreference<T> {
   final String _id;
   final JsonPreferencesStore _store;
-  final StreamController<T> _updatedController = new StreamController.broadcast();
-  Stream get onUpdated => _updatedController.stream;
 
   final StreamController<T> _changedController = new StreamController.broadcast();
   Stream get onChanged => _changedController.stream;
@@ -150,9 +148,7 @@ class JsonPreference<T> {
   T get value => _store.getValue(_id);
 
   void set value(T newValue) {
-    _store.setValue(_id, newValue).then((_) {
-      _updatedController.add(newValue);
-    });
+    _store.setValue(_id, newValue);
     _changedController.add(newValue);
   }
 }
