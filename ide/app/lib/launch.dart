@@ -23,6 +23,7 @@ import 'exception.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
+import 'platform_info.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
@@ -417,6 +418,15 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
     }
 
     Container container = application.primaryResource;
+
+    // TODO(grv): remove after chrome 38 is stable.
+    final Pattern pattern = '/special/drive-';
+    if (PlatformInfo.chromeVersion < 38 && PlatformInfo.isCros &&
+        container.entry.fullPath.startsWith(pattern)) {
+      return new Future.error(
+          'Unable to launch; running Chrome Apps from Google Drive is only '
+          'supported in Chrome 38 or higher.');
+    }
 
     String idToLaunch;
 

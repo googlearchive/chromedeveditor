@@ -6,14 +6,12 @@
 - new project template: "JavaScript Chrome App (using Polymer paper elements)"
 - new context menu item on project/folder/file(s) to fix certain CSP violations (enables the above)
 - as-you-type validation of manifest.json files (for Chrome apps)
-- Git merge for conflict-free cases 
-- non-fast-forward Git push
-- non-fast-forward Git pull
 
 ### Other changes:
 - fixed an issue with cloning an empty Git repository
 - fixed several issues with 'Pub Get' and 'Pub Update'
 - USB deployment speed improvements
+- fixed a Bower issue where just the top-level files of a package would be downloaded (subdirectories were skipped)
 
 ## M14 (0.14.2, August 5, 2014)
 ### New features:

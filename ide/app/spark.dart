@@ -596,7 +596,11 @@ abstract class Spark
 
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFileEntry(entry);
+        return nextTick().then((_) {
+          return folder.importFileEntry(entry);
+        }).then((File file) {
+          navigationManager.gotoLocation(new NavigationLocation(file));
+        });
       }
     }).catchError((e) {
       if (!_isCancelledException(e)) throw e;
@@ -3724,8 +3728,6 @@ class SettingsAction extends SparkActionWithDialog {
       });
     });
   }
-
-
 }
 
 class RunTestsAction extends SparkAction {
