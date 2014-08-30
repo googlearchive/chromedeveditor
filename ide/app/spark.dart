@@ -3712,7 +3712,7 @@ class SettingsAction extends SparkActionWithDialog {
     // showing the dialog:
     Future.wait([
       spark.prefs.onPreferencesReady.then((_) {
-        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave.getValue();
+        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave.value;
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (PlatformInfo.isCros) {
@@ -3724,7 +3724,7 @@ class SettingsAction extends SparkActionWithDialog {
     ]).then((_) {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
-        spark.prefs.stripWhitespaceOnSave.setValue(whitespaceCheckbox.checked);
+        spark.prefs.stripWhitespaceOnSave.value = whitespaceCheckbox.checked;
       });
     });
   }
