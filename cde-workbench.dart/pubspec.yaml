@@ -1,0 +1,14 @@
+name: cde_workbench
+description: A proscriptive design and layout of a development editor UI.
+version: 0.0.1
+author: Chrome Dev Editor Team
+homepage: https://github.com/dart-lang/chromedeveditor/
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  browser: any
+  core_elements: any
+  paper_elements: any
+  polymer: any
+transformers:
+- polymer
