@@ -874,9 +874,7 @@ class Folder extends Container with EntryBased {
    * filesystem to the current folder.
    */
   Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
-    return _importFileEntry(sourceEntry).then((_) {
-      refresh();
-    });
+    return _importFileEntry(sourceEntry);
   }
 
   Future<File> _importFileEntry(chrome.ChromeFileEntry sourceEntry) {

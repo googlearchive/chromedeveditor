@@ -596,7 +596,11 @@ abstract class Spark
 
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFileEntry(entry);
+        return nextTick().then((_) {
+          return folder.importFileEntry(entry);
+        }).then((File file) {
+          navigationManager.gotoLocation(new NavigationLocation(file));
+        });
       }
     }).catchError((e) {
       if (!_isCancelledException(e)) throw e;
@@ -3708,7 +3712,7 @@ class SettingsAction extends SparkActionWithDialog {
     // showing the dialog:
     Future.wait([
       spark.prefs.onPreferencesReady.then((_) {
-        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave.getValue();
+        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave.value;
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (PlatformInfo.isCros) {
@@ -3720,12 +3724,10 @@ class SettingsAction extends SparkActionWithDialog {
     ]).then((_) {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
-        spark.prefs.stripWhitespaceOnSave.setValue(whitespaceCheckbox.checked);
+        spark.prefs.stripWhitespaceOnSave.value = whitespaceCheckbox.checked;
       });
     });
   }
-
-
 }
 
 class RunTestsAction extends SparkAction {
