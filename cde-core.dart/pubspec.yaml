@@ -1,8 +1,8 @@
 name: cde_core
 version: 0.0.1-dev
 description: Low-level, core functionality for the Chrome Dev Editor (CDE).
-homepage: https://github.com/dart-lang/spark/
+homepage: https://github.com/dart-lang/chromedeveditor/
 environment:
   sdk: '>=1.0.0 <2.0.0'
-dependencies:
+dev_dependencies:
   unittest: any
