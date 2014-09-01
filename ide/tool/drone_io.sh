@@ -7,6 +7,9 @@ if [ "$DRONE" = "true" ]; then
   export HAS_DARTIUM=true
 fi
 
+# Turn on fast fail for the bash script.
+set -e
+
 # Display installed versions.
 dart --version
 /usr/bin/google-chrome --version
