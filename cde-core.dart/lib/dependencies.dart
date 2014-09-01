@@ -3,21 +3,18 @@
 // license that can be found in the LICENSE file.
 
 /**
- * A simple dependency manager for Spark.
- *
- * We may want to upgrade this in the future. For now, we're very leery of
- * anything involving mirrors.
+ * A simple dependency manager for Chrome Dev Editor.
  */
 library core.dependencies;
 
 import 'dart:async';
 
 /**
- * A very simple dependency manager. This class manages a collection of
- * singletons. You can create separate `Dependency` instances to manage separate
- * sets of collections (for instance, one for testing). Or, you can use the
- * single [dependency] instance defined in this library to set up all the
- * singletons for your application.
+ * A simple dependency manager. This class manages a collection of singletons.
+ * You can create separate `Dependency` instances to manage separate sets of
+ * collections (for instance, one for testing). Or, you can use the single
+ * [dependency] instance defined in this library to set up all the singletons
+ * for your application.
  *
  *     Dependencies dependencies = new Dependencies();
  *     dependencies.setDependency(CatManager, catManager);
