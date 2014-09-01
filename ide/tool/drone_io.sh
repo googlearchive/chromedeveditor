@@ -8,7 +8,7 @@ if [ "$DRONE" = "true" ]; then
 fi
 
 # Turn on fast fail for the bash script.
-set -e
+#set -e
 
 # Display installed versions.
 dart --version
