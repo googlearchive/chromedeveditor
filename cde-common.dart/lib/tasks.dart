@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// TODO:
+// TODO: WIP - not finished
 
 library cde_common.tasks;
 
@@ -15,8 +15,8 @@ typedef Future<dynamic> TaskEntry(TaskStatus status);
 /**
  * A [Task] is an abstraction over a long running operation. It supports
  * the ability to cancel the task while its running. The task executes in its
- * own [Zone]. This gives us the ability to pro-actively cancel the task if it
- * is not responsive.
+ * own [Zone]. This lets us pro-actively cancel the task if it is not
+ * responsive.
  */
 class Task {
   final Completer _completer = new Completer();
@@ -83,6 +83,8 @@ class Task {
 }
 
 class TaskStatus {
+  static void throwCancelled() => throw new UserCancelledException();
+
   StreamController _controller = new StreamController.broadcast();
   bool _cancelled = false;
 

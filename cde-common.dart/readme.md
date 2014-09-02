@@ -1,3 +1,3 @@
 # cde_common
 
-A simple hello world command-line application.
+This library contains common, non-UI classes for the Chrome Dev Editor (CDE).
