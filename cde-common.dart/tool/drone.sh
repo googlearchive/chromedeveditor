@@ -10,7 +10,7 @@ pub get
 
 # Verify that the libraries are error free.
 dartanalyzer --fatal-warnings \
-  lib/commands.dart lib/context.dart lib/tasks.dart \
+  lib/commands.dart lib/tasks.dart \
   test/all.dart
 
 # Run the tests.
