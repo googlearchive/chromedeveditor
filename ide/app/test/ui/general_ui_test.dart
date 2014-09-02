@@ -9,8 +9,9 @@ import 'dart:async';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:unittest/unittest.dart';
 
-import "../../lib/filesystem.dart";
 import "ui_access.dart";
+import "../../lib/filesystem.dart";
+import "../../lib/utils.dart";
 
 class DialogTester {
   DialogAccess dialogAccess;
@@ -130,6 +131,9 @@ defineTests() {
 
   group('about dialog', () {
     test('open and close the dialog via x button', () {
+      // TODO: Disabled - see #3302.
+      if (isDartium()) return new Future.value();
+
       AboutDialogAccess aboutDialog = sparkAccess.aboutMenu.dialogAccess;
       return sparkTester.openAndCloseWithX(sparkAccess.aboutMenu).then((_) {
         return sparkTester.openAndCloseWithButton(sparkAccess.aboutMenu,
@@ -140,6 +144,9 @@ defineTests() {
 
   group('Menu items with no projects root selected', () {
     test('New project menu item', () {
+      // TODO: Disabled - see #3302.
+      if (isDartium()) return new Future.value();
+
       OkCancelDialogAccess okCancelDialog = sparkAccess.okCancelDialog;
       return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu,
           sparkAccess.okCancelDialog).then((_) {
@@ -149,6 +156,9 @@ defineTests() {
     });
 
     test('Git clone menu item', () {
+      // TODO: Disabled - see #3302.
+      if (isDartium()) return new Future.value();
+
       OkCancelDialogAccess okCancelDialog = sparkAccess.okCancelDialog;
       return sparkTester.openAndCloseWithX(sparkAccess.gitCloneMenu,
           sparkAccess.okCancelDialog).then((_) {
@@ -160,6 +170,9 @@ defineTests() {
 
   group('Menu items with mock project root selected', () {
     test('New project menu item', () {
+      // TODO: Disabled - see #3302.
+      if (isDartium()) return new Future.value();
+
       MockFileSystemAccess mockFsa = fileSystemAccess;
       return mockFsa.locationManager.setupRoot().then((_) {
         return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
@@ -173,3 +186,5 @@ defineTests() {
     });
   });
 }
+
+bool isDartium() => !isDart2js();
