@@ -43,8 +43,8 @@ class SparkFlags {
       _flags['bower-ignore-dependencies'];
   static bool get bowerUseGitClone =>
       _flags['bower-use-git-clone'] == true;
-  static bool get gitPull =>
-       _flags['git-pull'] == true;
+
+  static bool get gitPull => _flags['enable-git-pull'] == true;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.
