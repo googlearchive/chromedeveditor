@@ -1,9 +1,12 @@
-name: cde_core
+name: cde_common
 version: 0.0.1-dev
-description: Low-level, core functionality for the Chrome Dev Editor (CDE).
+description: This library contains common, non-UI classes for the Chrome Dev Editor (CDE).
 author: The Chrome Dev Editor team
 homepage: https://github.com/dart-lang/chromedeveditor/
 environment:
   sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  cde_core:
+    path: ../cde-core.dart
 dev_dependencies:
   unittest: any
