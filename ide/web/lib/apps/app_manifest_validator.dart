@@ -42,7 +42,7 @@ class AppManifestValidator extends RootObjectSchemaValidator {
  * From https://developer.chrome.com/extensions/manifest
  * and https://developer.chrome.com/apps/manifest
  */
-Map AppManifestSchema =
+final Map AppManifestSchema =
 {
   "app": {
     "background": {
@@ -98,7 +98,7 @@ Map AppManifestSchema =
   "manifest_version": "manifest_version",
   "minimum_chrome_version": "version",
   "nacl_modules": "var",
-  "name!": "string",  // Mandatory
+  "name!": "string",
   "oauth2": "var",
   "offline_enabled": "var",
   "omnibox": "var",
@@ -110,16 +110,16 @@ Map AppManifestSchema =
   "platforms": "var",
   "plugins": "var",
   "requirements": {
-    CoreSchemaValidatorFactory.MetaCloseEnded: true,
+    "<meta-open-ended>": false,
     "3D": {
       "features!": ["3d_feature"] // "webgl" or "css3d"
     },
     "plugins": {
-      CoreSchemaValidatorFactory.MetaCloseEnded: true,
+      "<meta-open-ended>": false,
       "npapi": "boolean"
     },
     "window": {
-      CoreSchemaValidatorFactory.MetaCloseEnded: true,
+      "<meta-open-ended>": false,
       "shape": "boolean"
     }
   },
@@ -147,10 +147,10 @@ Map AppManifestSchema =
   "update_url": "string",
   "web_accessible_resources": "var",
   "url_handlers": "var",
-  "version!": "version",  // Mandatory
+  "version!": "version",
   "webview": {
-    "partitions!": [{    // Mandatory
-      "name!": "string",    // Mandatory
+    "partitions!": [{
+      "name!": "string",
       "accessible_resources!": ["string"]
     }]
   }
@@ -159,9 +159,9 @@ Map AppManifestSchema =
 /**
  * Schema for the "usbDevices" permission entry.
  */
-List UsbDeviceSchema = [{
-  "vendorId!": "int",  // Mandatory
-  "productId!": "int",  // Mandatory
+final List UsbDeviceArraySchema = [{
+  "vendorId!": "int",
+  "productId!": "int",
   "interfaceId": "int"
 }];
 
@@ -406,7 +406,7 @@ class PermissionObjectValueValidator extends SchemaValidator {
         return NullValidator.instance;
 
       case "usbDevices":
-        return new ArraySchemaValidator(factory, errorCollector, UsbDeviceSchema);
+        return new ArraySchemaValidator(factory, errorCollector, UsbDeviceArraySchema);
 
       // TODO(rpaquay): Implement validators for the permissions below.
       case "fileSystem":
@@ -542,6 +542,7 @@ class VersionValueValidator extends SchemaValidator {
  * See https://developer.chrome.com/apps/manifest/requirements.
  */
 class Requirement3dFeatureValueValidator extends SchemaValidator {
+  static final List<String> _validFeatures = ["webgl", "css3d"];
   final ErrorCollector errorCollector;
 
   Requirement3dFeatureValueValidator(this.errorCollector);
@@ -549,23 +550,19 @@ class Requirement3dFeatureValueValidator extends SchemaValidator {
   @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     if (entity is StringEntity) {
-      if (entity.text == "webgl" || entity.text == "css3d") {
+      if (_validFeatures.contains(entity.text)) {
         return;
       }
     }
 
-    if (propertyName == null) {
-      errorCollector.addMessage(
-          ErrorIds.REQUIREMENT_3D_FEATURE_EXPECTED,
-          entity.span,
-          "3D feature must be \"webgl\" or \"css3d\".");
-    } else {
-      errorCollector.addMessage(
-          ErrorIds.REQUIREMENT_3D_FEATURE_EXPECTED,
-          entity.span,
-          "3D feature must be \"webgl\" or \"css3d\" for property " +
-          "\"${propertyName.text}\".");
-    }
+    errorCollector.addMessage(
+        ErrorIds.REQUIREMENT_3D_FEATURE_EXPECTED,
+        entity.span,
+        "3D feature must be one of ${getQuotedFeatureList().join(", ")}.");
+  }
+
+  Iterable<String> getQuotedFeatureList() {
+    return _validFeatures.map((x) => "\"" + x + "\"");
   }
 }
 

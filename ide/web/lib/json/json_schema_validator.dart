@@ -49,6 +49,8 @@ abstract class SchemaValidatorFactory {
   bool validateSchemaForTesting(dynamic schema);
 }
 
+typedef SchemaValidator SchemaValidatorCreator(ErrorCollector errorCollector);
+
 /**
  * The core schema factory understands a limited set of schema types and
  * forwards the to a parent factory for custom schema types.
@@ -65,8 +67,13 @@ abstract class SchemaValidatorFactory {
  *    Map<PropertySpec, SchemaType>
  *
  * PropertySpec :==
- *   propertyName ||   // Simple string containing optional property name
- *   propertyName "!"  // Mandatory property names have a "!" suffix
+ *   MetaPropertyName  // Special properties used for validation
+ *   PropertyName ||   // Simple string containing optional property name
+ *   PropertyName "!"  // Mandatory property names have a "!" suffix
+ *
+ * MetaPropertyName :: =
+ *   "<meta-open-ended>"  // Flag indicating if unlisted property names are
+ *                        // allowed (true by default).
  */
 class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
   /**
@@ -75,7 +82,14 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
    * schema object definition. Any other property name used in the validated
    * json document will result in validation errors.
    */
-  static final String MetaCloseEnded = "<meta-close-ended>";
+  static final String MetaOpenEnded = "<meta-open-ended>";
+  static final Map<String, SchemaValidatorCreator> _literalValidators = {
+    "boolean": (e) => new BooleanValueValidator(e),
+    "int": (e) => new IntegerValueValidator(e),
+    "num": (e) => new NumberValueValidator(e),
+    "string": (e) => new StringValueValidator(e),
+    "var": (e) => SchemaValidator.instance,
+  };
   final SchemaValidatorFactory parentFactory;
   final ErrorCollector errorCollector;
 
@@ -87,7 +101,8 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
     assert(identical(this, rootFactory));
 
     if (parentFactory != null) {
-      var result = parentFactory.createValidator(rootFactory, schema);
+      SchemaValidator result =
+          parentFactory.createValidator(rootFactory, schema);
       if (result != null) {
         return result;
       }
@@ -98,17 +113,9 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
     } else if (schema is List) {
       return new ArraySchemaValidator(this, errorCollector, schema);
     } else if (schema is String) {
-      switch(schema) {
-        case "boolean":
-          return new BooleanValueValidator(errorCollector);
-        case "int":
-          return new IntegerValueValidator(errorCollector);
-        case "num":
-          return new NumberValueValidator(errorCollector);
-        case "string":
-          return new StringValueValidator(errorCollector);
-        case "var":
-          return SchemaValidator.instance;
+      SchemaValidatorCreator creator = _literalValidators[schema];
+      if (creator != null) {
+        return creator(errorCollector);
       }
     }
     throw new FormatException("Element type \"${schema}\" is invalid.");
@@ -118,14 +125,15 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
   bool validateSchemaForTesting(dynamic schema) {
     if (parentFactory != null) {
       var result = parentFactory.validateSchemaForTesting(schema);
-      if (result)
+      if (result) {
         return true;
+      }
     }
 
     if (schema is Map) {
       bool isValid = true;
       schema.forEach((String propertyName, dynamic propertySchema) {
-        if (propertyName == MetaCloseEnded) {
+        if (propertyName == MetaOpenEnded) {
           if (propertySchema is! bool) {
             isValid = false;
           }
@@ -141,16 +149,7 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
       }
       return validateSchemaForTesting(schema[0]);
     } else if (schema is String) {
-      switch(schema) {
-        case "boolean":
-        case "int":
-        case "num":
-        case "string":
-        case "var":
-          return true;
-        default:
-          return false;
-      }
+      return _literalValidators.containsKey(schema);
     } else {
       return false;
     }
@@ -231,14 +230,14 @@ class ObjectPropertiesSchemaValidator extends SchemaValidator {
   final SchemaValidatorFactory factory;
   final ErrorCollector errorCollector;
   final Map<String, dynamic> schema;
-  bool _isCloseEnded;
+  bool _isOpenEnded;
   Set<String> _mandatoryProperties;
   Set<String> _mandatoryPropertiesSeen = new Set<String>();
 
   ObjectPropertiesSchemaValidator(this.factory, this.errorCollector, this.schema) {
-    _isCloseEnded = schema[CoreSchemaValidatorFactory.MetaCloseEnded];
-    if (_isCloseEnded == null) {
-      _isCloseEnded = false;
+    _isOpenEnded = schema[CoreSchemaValidatorFactory.MetaOpenEnded];
+    if (_isOpenEnded == null) {
+      _isOpenEnded = true;
     }
     _mandatoryProperties = schema.keys
         .where((String key) => key.endsWith("!"))
@@ -257,7 +256,7 @@ class ObjectPropertiesSchemaValidator extends SchemaValidator {
 
     var propertyType = schema[name];
     if (propertyType == null) {
-      if (_isCloseEnded) {
+      if (!_isOpenEnded) {
         String message = "Property \"${entity.text}\" is not recognized.";
         errorCollector.addMessage(
             ErrorIds.INVALID_PROPERTY_NAME,  entity.span, message);
