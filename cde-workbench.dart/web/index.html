@@ -1,0 +1,33 @@
+<!doctype html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<html>
+  <head>
+    <script src="packages/web_components/platform.js"></script>
+    <script src="packages/web_components/dart_support.js"></script>
+
+    <link rel="import" href="packages/cde_workbench/cde_editing_area.html">
+    <link rel="import" href="packages/cde_workbench/cde_workbench.html">
+
+    <style type="text/css">
+body {
+  /*font-family: RobotoDraft, sans-serif;*/
+  margin: 0;
+  font-family: RobotoDraft, 'Open Sans', sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.2em;
+}
+    </style>
+  </head>
+  <body unresolved>
+    <cde-workbench>
+      <cde-editing-area flex></cde-editing-area>
+    </cde-workbench>
+
+    <script type="application/dart">export 'package:polymer/init.dart';</script>
+  </body>
+</html>

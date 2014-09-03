@@ -375,6 +375,10 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   // Copy spark/widgets to spark/ide/build/widgets. This is necessary because
   // spark_widgets is a relative "path" dependency in pubspec.yaml.
   copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
+  copyDirectory(getDir('../chrome-app-net.dart'),
+      joinDir(BUILD_DIR, ['chrome-app-net.dart']), context);
+  copyDirectory(getDir('../chrome-app-testing.dart'),
+      joinDir(BUILD_DIR, ['chrome-app-testing.dart']), context);
 
   // Copy the app directory to target/web.
   copyFile(getFile('pubspec.yaml'), sourceDir);

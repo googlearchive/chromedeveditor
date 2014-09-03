@@ -2,13 +2,12 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.tcp_test;
+library chrome_net.tcp_test;
 
 import 'dart:async';
 
+import 'package:chrome_net/tcp.dart' as tcp;
 import 'package:unittest/unittest.dart';
-
-import '../lib/tcp.dart' as tcp;
 
 /** A matcher for SocketExceptions. */
 const isSocketException = const _SocketExceptionMatcher();
@@ -47,6 +46,7 @@ defineTests() {
         client.dispose();
       });
     });
+
     // TODO: fix this test
 //    test('error on read', () {
 //      tcp.TcpClient client;
@@ -71,6 +71,7 @@ defineTests() {
 //
 //      return completer.future;
 //    });
+
     // TODO: fix this test
 //    test('echo', () {
 //      tcp.TcpClient client;
@@ -95,10 +96,12 @@ defineTests() {
 //
 //      return completer.future;
 //    });
+
 //    test('read until close', () {
 //      // TODO:
 //
 //    });
+
 //    test('error on write', () {
 //      // TODO:
 //

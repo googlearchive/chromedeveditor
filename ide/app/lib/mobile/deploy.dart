@@ -11,13 +11,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:chrome_net/tcp.dart';
 import 'package:logging/logging.dart';
 
 import 'adb.dart';
 import 'adb_client_tcp.dart';
 import '../jobs.dart';
 import '../preferences.dart';
-import '../tcp.dart';
 import '../workspace.dart';
 import '../workspace_utils.dart';
 
