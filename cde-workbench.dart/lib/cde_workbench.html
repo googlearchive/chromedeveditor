@@ -11,10 +11,13 @@
 <link rel="import" href="../../packages/core_elements/src/core-icons/hardware-icons.html">
 <link rel="import" href="../../packages/core_elements/core_splitter.html">
 <link rel="import" href="../../packages/core_elements/core_toolbar.html">
+<link rel="import" href="../../packages/paper_elements/paper_dialog.html">
+<link rel="import" href="../../packages/paper_elements/paper_dialog_transition.html">
 <link rel="import" href="../../packages/paper_elements/paper_fab.html">
 <link rel="import" href="../../packages/paper_elements/paper_icon_button.html">
 <link rel="import" href="../../packages/paper_elements/paper_item.html">
 <link rel="import" href="../../packages/paper_elements/paper_menu_button.html">
+<link rel="import" href="../../packages/paper_elements/paper_toast.html">
 <link rel="import" href="cde_content_area.html">
 <link rel="import" href="cde_editing_area.html">
 <link rel="import" href="cde_extension_point.html">
@@ -58,6 +61,21 @@
         <content></content>
       </cde-content-area>
     </div>
+
+    <paper-dialog id="simpleDialog" heading=" "
+        layered="true" backdrop="true" transition="paper-dialog-transition-center">
+      <p></p>
+      <paper-button label="OK" affirmative autofocus></paper-button>
+    </paper-dialog>
+
+    <paper-dialog id="okCancelDialog" heading=" "
+        layered="true" backdrop="true" transition="paper-dialog-transition-center">
+      <p></p>
+      <paper-button label="Cancel" affirmative></paper-button>
+      <paper-button label="OK" affirmative autofocus></paper-button>
+    </paper-dialog>
+
+    <paper-toast id="toast"><paper-toast>
   </template>
   <script type="application/dart" src="cde_workbench.dart"></script>
 </polymer-element>

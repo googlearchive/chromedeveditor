@@ -13,3 +13,12 @@
   top: 0;
   bottom: 0;
 }
+
+paper-dialog {
+  min-width: 440px;
+}
+
+paper-toast {
+  left: auto;
+  right: 10px;
+}

@@ -9,15 +9,19 @@
     <script src="packages/web_components/platform.js"></script>
     <script src="packages/web_components/dart_support.js"></script>
 
-<link rel="import" href="../../packages/core_elements/src/core-icon/core-icon.html">
-<link rel="import" href="../../packages/core_elements/src/core-icons/core-icons.html">
-<link rel="import" href="../../packages/core_elements/src/core-icons/av-icons.html">
-    <link rel="import" href="../../packages/paper_elements/paper_icon_button.html">
+    <link rel="import" href="packages/core_elements/src/core-icon/core-icon.html">
+    <link rel="import" href="packages/core_elements/src/core-icons/core-icons.html">
+    <link rel="import" href="packages/core_elements/src/core-icons/av-icons.html">
+    <link rel="import" href="packages/paper_elements/paper_icon_button.html">
 
     <link rel="import" href="packages/paper_elements/roboto.html">
     <link rel="import" href="packages/cde_workbench/cde_editing_area.html">
     <link rel="import" href="packages/cde_workbench/cde_extensions.html">
+    <link rel="import" href="packages/cde_workbench/cde_icon_button.html">
+    <link rel="import" href="packages/cde_workbench/cde_paper_item.html">
     <link rel="import" href="packages/cde_workbench/cde_workbench.html">
+
+    <link rel="import" href="example_app.html">
 
     <style type="text/css">
 body {
@@ -28,16 +32,21 @@ body {
   font-weight: normal;
   line-height: 1.2em;
 }
+
+body /deep/ paper-dialog {
+  min-width: 440px;
+}
     </style>
   </head>
   <body unresolved>
-    <cde-workbench>
+    <example-app>
       <cde-editing-area flex></cde-editing-area>
-    </cde-workbench>
+    </example-app>
 
     <cde-extensions>
-      <paper-icon-button extension="main-toolbar" icon="av:play-arrow" on-tap="{{handleRun}}"></paper-icon-button>
-      <paper-item extension="main-menu">Extension item!</paper-item>
+      <!-- paper-icon-button extension="main-toolbar" icon="av:play-arrow"></paper-icon-button -->
+      <cde-icon-button extension="main-toolbar" icon="av:play-arrow" command="do-foo"></cde-icon-button>
+      <cde-paper-item extension="main-menu" command="do-bar">Extension item!</cde-paper-item>
     </cde-extensions>
 
     <script type="application/dart">export 'package:polymer/init.dart';</script>
