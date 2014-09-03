@@ -18,6 +18,7 @@ class SparkFlags {
    */
   // NOTE: '...== true' below are on purpose: missing flags default to false.
   static bool get developerMode => _flags['test-mode'] == true;
+  static bool get liveDeployMode => _flags['watch'] == true;
 
   // Editor:
   static bool get useLightAceThemes => _flags['light-ace-themes'] == true;

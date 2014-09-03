@@ -223,10 +223,12 @@ class TextEditor extends Editor {
       return file.setContents(text).then((_) {
         dirty = false;
         _invokeReconcile();
-        return localPrefs.getValue("live-deployment").then((value) {
-          if(value == true)
-            return _testDeploy(getAppContainerFor(file));
-        });
+        if (SparkFlags.liveDeployMode) {
+          return localPrefs.getValue("live-deployment").then((value) {
+            if(value == true)
+              return _testDeploy(getAppContainerFor(file));
+          });
+        }
       });
     } else {
       return new Future.value();

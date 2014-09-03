@@ -152,7 +152,7 @@ abstract class Spark
     initSaveStatusListener();
 
     initLaunchManager();
-
+    localPrefs.setValue("live-deployment", false);
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
       // content of the workspace from other applications. For that reason, when
@@ -2320,7 +2320,10 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       _hide();
       ws_utils.setDeploymentTime(deployContainer,
           (new DateTime.now()).millisecondsSinceEpoch);
-      spark.localPrefs.setValue("live-deployment", getElement("#liveDeploy").checked);
+      if (SparkFlags.liveDeployMode) {
+        InputElement liveDeployCheckBox = getElement("#liveDeploy");
+        spark.localPrefs.setValue("live-deployment", liveDeployCheckBox.checked);
+      }
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
       if (e is! UserCancelledException) {

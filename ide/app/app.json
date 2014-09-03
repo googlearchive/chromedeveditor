@@ -1,5 +1,6 @@
 {
   "test-mode": false,
+  "watch": true,
   "light-ace-themes": false,
   "more-light-ace-themes": false,
   "dark-ace-themes": true,
