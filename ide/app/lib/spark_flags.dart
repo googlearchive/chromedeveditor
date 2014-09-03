@@ -29,6 +29,8 @@ class SparkFlags {
              useDarkAceThemes || useMoreDarkAceThemes;
   }
   static bool get enableMultiSelect => _flags['enable-multiselect'] == true;
+  static bool get packageFilesAreEditable =>
+      _flags['package-files-are-editable'] == true;
 
   static bool get showWipProjectTemplates => _flags['wip-project-templates'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
