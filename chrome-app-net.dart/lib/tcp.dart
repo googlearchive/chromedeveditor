@@ -11,7 +11,7 @@
  * * [developer.chrome.com/apps/socket.html](http://developer.chrome.com/apps/socket.html)
  * * [dart-gde.github.io/chrome.dart/app/chrome.socket.html](http://dart-gde.github.io/chrome.dart/app/chrome.socket.html)
  */
-library spark.tcp;
+library chrome_net.tcp;
 
 import 'dart:async';
 import 'dart:js' as js;

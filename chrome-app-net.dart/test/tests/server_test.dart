@@ -2,16 +2,13 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.server_test;
+library chrome_net.server_test;
 
 import 'dart:async';
 
+import 'package:chrome_net/server.dart';
+import 'package:chrome_net/tcp.dart' as tcp;
 import 'package:unittest/unittest.dart';
-
-import '../lib/server.dart';
-import '../lib/tcp.dart' as tcp;
-
-// TODO(devoncarew): move some tests from dart:io
 
 // TODO(devoncarew): write mime tests
 
