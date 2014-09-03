@@ -14,6 +14,7 @@ import 'package:unittest/unittest.dart' as unittest;
 
 import 'filesystem.dart' as filesystem;
 import 'preferences.dart';
+import 'platform_info.dart';
 import 'tcp.dart' as tcp;
 import 'utils.dart';
 
@@ -95,8 +96,11 @@ class TestDriver {
             '[${r.level.name}] ${_fixed(r.loggerName, 11)}: ${r.message}');
       });
 
-      _logger.info('Running tests on ${window.navigator.appCodeName} '
-          '${window.navigator.appName} ${window.navigator.appVersion}');
+      _logger.info('Running tests on:');
+      _logger.info('${window.navigator.appCodeName}');
+      _logger.info('${window.navigator.appName}');
+      _logger.info('${window.navigator.appVersion}');
+      _logger.info('Chrome version: ${PlatformInfo.chromeVersion}');
 
       runTests().then((bool success) {
         testClient.log('test exit code: ${(success ? 0 : 1)}');

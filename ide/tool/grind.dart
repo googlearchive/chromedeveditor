@@ -220,9 +220,9 @@ Future releaseNightly(GrinderContext context) {
   context.log('Authenticating...');
   return client.requestToken().then((e) {
     context.log('Uploading ${filename}...');
-    return client.uploadItem('dist/${filename}').then((e) {
+    return client.uploadItem('dist/${filename}').then((_) {
       context.log('Publishing...');
-      return client.publishItem().then((e) {
+      return client.publishItem().then((_) {
         context.log('Published');
       });
     });

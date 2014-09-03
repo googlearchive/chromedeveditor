@@ -184,7 +184,18 @@ class HttpRequest {
 
     if (strs.length > 2) {
       method = strs[0];
-      path = new Uri(path: strs[1]);
+
+      String file = strs[1];
+      String query = null;
+
+      int index = file.indexOf('?');
+
+      if (index != -1) {
+        query = file.substring(index + 1);
+        file = file.substring(0, index);
+      }
+
+      path = new Uri(path: file, query: query);
       version = _parseVersion(strs[2]);
     }
 

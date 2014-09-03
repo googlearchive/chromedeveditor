@@ -46,7 +46,8 @@ class SparkButton extends SparkWidget {
     }
 
     if (hoverStyle == null) {
-      hoverStyle = 'background';
+      // TODO(ussuri): #2252.
+      attributes['hoverStyle'] = 'background';
     }
 
     assert(['none', 'small', 'medium', 'large', 'huge'].contains(padding));

@@ -22,7 +22,7 @@
 <body unresolved>
   <core-toolbar>
     <paper-icon-button icon="menu"></paper-icon-button>
-    <span flex>wjap toolbar</span>
+    <span flex>``projectName`` toolbar</span>
     <paper-fab icon="add"></paper-fab>
   </core-toolbar>
 

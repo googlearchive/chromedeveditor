@@ -214,7 +214,7 @@ class TextEditor extends Editor {
       String text = _session.value;
 
       // Remove the trailing whitespace if asked to do so.
-      if (_prefs.stripWhitespaceOnSave.getValue()) {
+      if (_prefs.stripWhitespaceOnSave.value) {
         text = text.replaceAll(whitespaceRegEx, '');
       }
 
@@ -1053,7 +1053,7 @@ class ThemeManager {
       if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
       if (SparkFlags.useMoreLightAceThemes) _themes.addAll(MORE_LIGHT_THEMES);
 
-      String theme = _prefs.editorTheme.getValue();
+      String theme = _prefs.editorTheme.value;
       if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
         theme = _themes[0];
       }
@@ -1083,7 +1083,7 @@ class ThemeManager {
 
   void _updateTheme(String theme) {
     if (SparkFlags.useAceThemes) {
-      _prefs.editorTheme.setValue(theme);
+      _prefs.editorTheme.value = theme;
     }
     _aceEditor.theme = new ace.Theme.named(theme);
     if (_label != null) {
@@ -1098,7 +1098,7 @@ class KeyBindingManager {
   html.Element _label;
 
   KeyBindingManager(this.aceManager, this.prefs, this._label) {
-    String value = prefs.keyBindings.getValue();
+    String value = prefs.keyBindings.value;
     if (value != null) {
       aceManager.setKeyBinding(value);
     }
@@ -1120,7 +1120,7 @@ class KeyBindingManager {
       int index = math.max(AceManager.KEY_BINDINGS.indexOf(name), 0);
       index = (index + direction) % AceManager.KEY_BINDINGS.length;
       String newBinding = AceManager.KEY_BINDINGS[index];
-      prefs.keyBindings.setValue(newBinding);
+      prefs.keyBindings.value = newBinding;
       _updateName(newBinding);
       aceManager.setKeyBinding(newBinding);
     });
@@ -1142,7 +1142,7 @@ class AceFontManager {
     _updateLabel(_value);
 
     try {
-      _value = prefs.editorFontSize.getValue();
+      _value = prefs.editorFontSize.value;
       aceManager.setFontSize(_value);
       _updateLabel(_value);
     } catch (e) {
@@ -1159,7 +1159,7 @@ class AceFontManager {
     _value = newValue.clamp(6, 36);
     aceManager.setFontSize(_value);
     _updateLabel(_value);
-    prefs.editorFontSize.setValue(_value);
+    prefs.editorFontSize.value = _value;
   }
 
   void _updateLabel(num size) {
