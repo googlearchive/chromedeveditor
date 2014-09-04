@@ -602,7 +602,7 @@ Future<String> downloadFileViaXhr(
   return completer.future;
 }
 
-class DeplayedTimer {
+class DelayedTimer {
   Timer _timer;
   Duration delay;
   Future action;

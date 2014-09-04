@@ -4082,6 +4082,17 @@ class RunPythonAction extends SparkAction {
 
 }
 
+class ProgressMonitorImplN extends ProgressMonitor {
+
+  ProgressMonitorImplN();
+
+  void start(String title,
+             {num maxWork: 0,
+              ProgressFormat format: ProgressFormat.NONE}) {
+    super.start(title, maxWork: maxWork, format: format);
+  }
+}
+
 // Analytics code.
 
 void _handleUncaughtException(error, [StackTrace stackTrace]) {
