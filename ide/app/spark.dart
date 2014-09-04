@@ -152,7 +152,8 @@ abstract class Spark
     initSaveStatusListener();
 
     initLaunchManager();
-    localPrefs.setValue("live-deployment", false);
+
+    initLiveDeploy();
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
       // content of the workspace from other applications. For that reason, when
@@ -287,6 +288,23 @@ abstract class Spark
         (ErrorMessageBusEvent event) {
       showErrorMessage(event.title, message: event.error.toString());
     });
+  }
+
+  void initLiveDeploy() {
+    localPrefs.setValue("live-deployment", false);
+    if (SparkFlags.liveDeployMode) {
+      workspace.onResourceChange.forEach((ResourceChangeEvent event) {
+        event.modifiedProjects.forEach((Project p) {
+          if (p == currentProject) {
+            return localPrefs.getValue("live-deployment").then((value) {
+              if (value == true)
+                return _liveDeploy(getAppContainerFor(p));
+            });
+          }
+        });
+      });
+
+    }
   }
 
   void initAnalytics() {
@@ -564,6 +582,26 @@ abstract class Spark
   //
   // - End parts of init().
   //
+
+  Future _liveDeploy(ws.Container deployContainer) {
+    ProgressMonitorImplN _monitor = new ProgressMonitorImplN();
+    MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
+
+    // Invoke the deployer methods in Futures in order to capture exceptions.
+    Future f = new Future(() {
+      return deployer.pushAdb(_monitor);
+    });
+
+    return _monitor.runCancellableFuture(f).then((_) {
+      ws_utils.setDeploymentTime(deployContainer,
+          (new DateTime.now()).millisecondsSinceEpoch);
+      print("succesfull push");
+    }).catchError((e) {
+      print("push failure");
+    }).whenComplete(() {
+      _monitor = null;
+    });
+  }
 
   void addBuilder(Builder builder) {
     workspace.builderManager.builders.add(builder);

@@ -185,27 +185,6 @@ class TextEditor extends Editor {
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
 
-  Future _liveDeploy(ws.Container deployContainer) {
-    ProgressMonitorImplN _monitor = new ProgressMonitorImplN();
-    MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
-
-    // Invoke the deployer methods in Futures in order to capture exceptions.
-    Future f = new Future(() {
-      return deployer.pushAdb(_monitor);
-    });
-
-    return _monitor.runCancellableFuture(f).then((_) {
-      ws_utils.setDeploymentTime(deployContainer,
-          (new DateTime.now()).millisecondsSinceEpoch);
-      print("succesfull push");
-    }).catchError((e) {
-      print("push failure");
-    }).whenComplete(() {
-      _monitor = null;
-    });
-  }
-
-
   Future save() {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
@@ -223,12 +202,6 @@ class TextEditor extends Editor {
       return file.setContents(text).then((_) {
         dirty = false;
         _invokeReconcile();
-        if (SparkFlags.liveDeployMode) {
-          return localPrefs.getValue("live-deployment").then((value) {
-            if(value == true)
-              return _liveDeploy(getAppContainerFor(file));
-          });
-        }
       });
     } else {
       return new Future.value();
