@@ -1,4 +1,4 @@
-#!/path to dart executable
+#!/path to dart
 
 // Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
@@ -10,27 +10,20 @@ import 'dart:typed_data';
 
 void main()
 {
-
-  Stream sIn = stdin;
   try {
-    StreamSubscription cmdSubscription = sIn
-      .listen((data) {
-        try {
-          Map jsonObj = _transformInput(data);
-          if (jsonObj != null) {
-            _sendMessage(JSON.encode(jsonObj));
-            if (jsonObj.containsKey("action")) {
-              String str = jsonObj["action"];
-              if (str == "dartium") {
-                _runDartium();
-              }
-            }
+    stdin.listen((data) {
+      Map jsonObj = _transformInput(data);
+      if (jsonObj != null) {
+        _sendMessage(JSON.encode(jsonObj));
+        if (jsonObj.containsKey("action")) {
+          String str = jsonObj["action"];
+          if (str == "dartium") {
+            _runDartium();
           }
-        } catch(e) {
-          _sendMessage('{"exception":"${e.toString()}"}');
         }
-      },
-      onError: (e) => _sendMessage('{"onError":"${e.toString()}"}'));
+      }
+    },
+    onError: (e) => _sendMessage('{"onError":"${e.toString()}"}'));
   } catch (e) {
     _sendMessage('{"exception":"${e.toString()}"}');
   }
@@ -56,7 +49,7 @@ Map _transformInput(List<int> data) {
   Map jsonObj;
   int len = _fromBytesToInt32(data.sublist(0,4));
   if (len > 0) {
-    String source = UTF8.decode(data.sublist(4, len));
+    String source = UTF8.decode(data.sublist(4));
     jsonObj = JSON.decode(source);
   }
   return jsonObj;
