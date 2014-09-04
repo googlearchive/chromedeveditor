@@ -185,7 +185,7 @@ class TextEditor extends Editor {
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
 
-  Future _testDeploy(ws.Container deployContainer) {
+  Future _liveDeploy(ws.Container deployContainer) {
     ProgressMonitorImplN _monitor = new ProgressMonitorImplN();
     MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
 
@@ -226,7 +226,7 @@ class TextEditor extends Editor {
         if (SparkFlags.liveDeployMode) {
           return localPrefs.getValue("live-deployment").then((value) {
             if(value == true)
-              return _testDeploy(getAppContainerFor(file));
+              return _liveDeploy(getAppContainerFor(file));
           });
         }
       });
