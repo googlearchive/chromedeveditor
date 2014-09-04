@@ -10,8 +10,8 @@ import 'dart:typed_data';
 
 void main()
 {
-  Stream sIn = stdin;
 
+  Stream sIn = stdin;
   try {
     StreamSubscription cmdSubscription = sIn
       .listen((data) {
@@ -27,34 +27,20 @@ void main()
             }
           }
         } catch(e) {
-            _sendMessage('{"exception":"$e"}');
+          _sendMessage('{"exception":"${e.toString()}"}');
         }
       },
-
-      onError: (e) => _sendMessage('{"onError":"e.toString()"}'));
+      onError: (e) => _sendMessage('{"onError":"${e.toString()}"}'));
   } catch (e) {
-    var eStr = e.toString();
-    _sendMessage('{"exception":"$eStr"}');
+    _sendMessage('{"exception":"${e.toString()}"}');
   }
 }
 
 void _runDartium() {
-  List list = new List();
-  list.add("-a");
-  list.add("/path to dartium");
-  Process.run("open", list)..then((ProcessResult results) {
+  List list = ["-a", "/path to dartium"];
+  Process.run("open", list).then((ProcessResult results) {
   //   exit(0);
   });
-}
-
-Map _transformInput(List<int> data) {
-  Map jsonObj;
-  Uint32List len = new Uint32List.fromList(data.sublist(0, 4));
-  if (len != 0) {
-    String source = UTF8.decode(data.sublist(4));
-    jsonObj = JSON.decode(source);
-  }
-  return jsonObj;
 }
 
 void _sendMessage(String msg) {
@@ -66,7 +52,7 @@ void _sendMessage(String msg) {
   stdout.write(msg);
 }
 
-Map _transformInput2(List<int> data) {
+Map _transformInput(List<int> data) {
   Map jsonObj;
   int len = _fromBytesToInt32(data.sublist(0,4));
   if (len > 0) {
