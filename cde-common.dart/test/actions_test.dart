@@ -2,40 +2,40 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library cde_common.commands_test;
+library cde_common.actions_test;
 
 import 'dart:async';
 
-import 'package:cde_common/commands.dart';
+import 'package:cde_common/actions.dart';
 import 'package:unittest/unittest.dart';
 
 void defineTests() {
-  group('CommandHistory', () {
-    CommandHistory history;
-    MockCommand command = new MockCommand('mock command');
+  group('ActionExecutor', () {
+    ActionExecutor history;
+    MockAction action = new MockAction('mock action');
 
     setUp(() {
-      history = new CommandHistory();
+      history = new ActionExecutor();
     });
 
     test('peform', () {
-      history.perform(command);
+      history.perform(action);
       expect(history.canUndo, true);
-      expect(command.executed, true);
+      expect(action.executed, true);
       history.undo();
       expect(history.canUndo, false);
-      expect(command.executed, false);
+      expect(action.executed, false);
       history.redo();
       expect(history.canUndo, true);
-      expect(command.executed, true);
+      expect(action.executed, true);
     });
 
-    test('peform removing commands', () {
-      MockCommand command2 = new MockCommand('mock command 2');
+    test('peform removing actions', () {
+      MockAction action2 = new MockAction('mock action 2');
 
-      history.perform(command);
+      history.perform(action);
       history.undo();
-      history.perform(command2);
+      history.perform(action2);
       expect(history.canUndo, true);
       history.undo();
       expect(history.canUndo, false);
@@ -48,7 +48,7 @@ void defineTests() {
         });
       });
 
-      history.perform(command);
+      history.perform(action);
       history.undo();
 
       return f;
@@ -56,10 +56,10 @@ void defineTests() {
   });
 }
 
-class MockCommand extends Command {
+class MockAction extends Action {
   final bool canUndo;
 
-  MockCommand(String description, {this.canUndo: true}) : super(description);
+  MockAction(String description, {this.canUndo: true}) : super(description);
 
   bool executed = false;
 
@@ -72,8 +72,8 @@ class MockCommand extends Command {
   }
 }
 
-class AsyncMockCommand extends Command {
-  AsyncMockCommand(String description) : super(description);
+class AsyncMockAction extends Action {
+  AsyncMockAction(String description) : super(description);
 
   bool executed = false;
 
