@@ -89,7 +89,6 @@ abstract class ObjectUtils {
       [bool updateIndex=true]) {
     return store.retrieveObject(blobSha, ObjectTypes.BLOB_STR).then(
         (BlobObject blob) {
-      print(fileName);
       return FileOps.createFileWithContent(dir, fileName, blob.data,
           ObjectTypes.BLOB_STR).then((chrome.Entry entry) {
         if (updateIndex == true) {
