@@ -2,9 +2,6 @@
   "test-mode": false,
   "watch": true,
   "light-ace-themes": false,
-  "more-light-ace-themes": false,
-  "dark-ace-themes": true,
-  "more-dark-ace-themes": true,
   "wip-project-templates": false,
   "analyze-javascript": false,
   "enable-multiselect": false,
@@ -14,5 +11,6 @@
   ],
   "bower-override-dependencies": {
   },
-  "bower-use-git-clone": false
+  "bower-use-git-clone": false,
+  "package-files-are-editable": false
 }

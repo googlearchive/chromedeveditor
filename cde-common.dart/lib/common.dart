@@ -4,6 +4,6 @@
 
 library cde_core.common;
 
-export 'commands.dart';
+export 'actions.dart';
 export 'notifier.dart';
 export 'tasks.dart';

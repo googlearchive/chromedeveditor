@@ -531,28 +531,26 @@
         </spark-toolbar>
       </div>
 
-      <template if="{{useAceThemes}}">
-        <div class="form-group" id="changeTheme">
-          <spark-toolbar class="settings-block"
-              horizontal justify="spaced" spacing="small">
-            <label class="settings-label">Editor theme:</label>
-            <span class="settings-value"></span>
-            <spark-button id="themeMinus" class="change-setting-button"
-                flat round padding="none" on-click="{{onThemeMinus}}">
-              <!--TODO(ussuri): Use SVG <use> directives instead here and below.-->
-              <svg viewBox="0 0 24 24" width="24" height="24">
-                <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
-              </svg>
-            </spark-button>
-            <spark-button id="themePlus" class="change-setting-button"
-                flat round padding="none" on-click="{{onThemePlus}}">
-              <svg viewBox="0 0 24 24" width="24" height="24">
-                <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
-              </svg>
-            </spark-button>
-          </spark-toolbar>
-        </div>
-      </template>
+      <div class="form-group" id="changeTheme">
+        <spark-toolbar class="settings-block"
+            horizontal justify="spaced" spacing="small">
+          <label class="settings-label">Editor theme:</label>
+          <span class="settings-value"></span>
+          <spark-button id="themeMinus" class="change-setting-button"
+              flat round padding="none" on-click="{{onThemeMinus}}">
+            <!--TODO(ussuri): Use SVG <use> directives instead here and below.-->
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
+            </svg>
+          </spark-button>
+          <spark-button id="themePlus" class="change-setting-button"
+              flat round padding="none" on-click="{{onThemePlus}}">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
+            </svg>
+          </spark-button>
+        </spark-toolbar>
+      </div>
 
       <div class="form-group" id="changeFont">
         <spark-toolbar class="settings-block"

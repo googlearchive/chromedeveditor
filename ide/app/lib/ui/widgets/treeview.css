@@ -22,7 +22,7 @@
   fill: #7d7d7d;
   position: absolute;
   top: calc((100% - 28px) / 2);
-  transition: -webkit-transform 150ms;
+  transition: -webkit-transform 75ms;
   -webkit-transform: rotate(-90deg) translate(0, -2px);
 }
 

@@ -4,7 +4,7 @@
 
 import 'package:cde_core/dependencies.dart';
 //import 'package:cde_workbench/cde_workbench.dart';
-import 'package:cde_workbench/app_commands.dart';
+import 'package:cde_workbench/commands.dart';
 import 'package:polymer/polymer.dart';
 
 @CustomTag('cde-icon-button')
