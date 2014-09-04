@@ -1,3 +1,4 @@
+.pub/
 .settings/
 app/user.json
 app/lib/mobile/nacl_android_rsa.nmf
