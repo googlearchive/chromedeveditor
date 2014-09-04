@@ -5,21 +5,21 @@
 /**
  * TODO:
  */
-library cde_common.commands;
+library cde_common.actions;
 
 import 'dart:async';
 
 /**
  * TODO:
  */
-abstract class Command {
-  final String description;
+abstract class Action {
+  final String name;
 
-  Command(this.description);
+  Action(this.name);
 
   /**
-   * Perform the command. This method can return [Future] or `null`. If it
-   * returns a `Future`, the command will not be considered to be complete
+   * Perform the action. This method can return [Future] or `null`. If it
+   * returns a `Future`, the action will not be considered to be complete
    * until the `Future` has completed.
    */
   dynamic execute();
@@ -27,80 +27,80 @@ abstract class Command {
   bool get canUndo => false;
 
   /**
-   * Roll back the command. This method can return [Future] or `null`. If it
-   * returns a `Future`, the command will not be considered to be undone
+   * Roll back the action. This method can return [Future] or `null`. If it
+   * returns a `Future`, the action will not be considered to be undone
    * until the `Future` has completed.
    */
   dynamic undo() => null;
 
-  String toString() => description;
+  String toString() => name;
 }
 
 /**
  * TODO:
  */
-class CommandHistory {
-  final List<Command> _commands = [];
+class ActionExecutor {
+  final List<Action> _actions = [];
   int _pos = 0;
 
   StreamController _changeController = new StreamController.broadcast();
   StreamController _exceptionController = new StreamController.broadcast();
 
-  CommandHistory();
+  ActionExecutor();
 
-  bool get canRedo => _pos < _commands.length;
+  bool get canRedo => _pos < _actions.length;
 
-  bool get canUndo => _pos > 0 && _currentCommand.canUndo;
+  bool get canUndo => _pos > 0 && _currentAction.canUndo;
 
-  Future perform(Command command) {
-    if (_pos < _commands.length) {
-      _commands.removeRange(_pos, _commands.length);
+  Future perform(Action action) {
+    if (_pos < _actions.length) {
+      _actions.removeRange(_pos, _actions.length);
     }
 
-    _commands.add(command);
+    _actions.add(action);
     _pos++;
 
-    return _execute(command);
+    return _execute(action);
   }
 
   Future undo() {
     if (!canUndo) return new Future.value();
 
-    Command cmd = _currentCommand;
+    Action action = _currentAction;
     _pos--;
-    return _execute(cmd, true);
+    return _execute(action, true);
   }
 
   Future redo() {
     if (!canRedo) return new Future.value();
 
     _pos++;
-    return _execute(_currentCommand);
+    return _execute(_currentAction);
   }
 
   /**
-   * Remove all `Commands` in this [CommandHistory] matching the given function.
+   * Remove all `Actions` in this [ActionExecutor] matching the given function.
    */
-  void removeMatching(bool matcher(Command command)) {
+  void removeMatching(bool matcher(Action action)) {
     // TODO:
 
   }
 
   /**
-   * This event is fired whenever a command is executed.
+   * This event is fired whenever an action is executed.
    */
   Stream get onChanged => _changeController.stream;
 
   /**
-   * Listen for exceptions that occur as [Command]s are executed.
+   * Listen for exceptions that occur as [Action]s are executed.
    */
   Stream<dynamic> get onException => _exceptionController.stream;
 
-  Command get _currentCommand => _commands[_pos - 1];
+  Action get _currentAction => _actions[_pos - 1];
 
-  Future _execute(Command command, [bool undo = false]) {
+  Future _execute(Action action, [bool undo = false]) {
     try {
-      var result = undo ? command.undo() : command.execute();
+      var result = undo ? action.undo() : action.execute();
 
       if (result is Future) {
         return result.then((_) {
