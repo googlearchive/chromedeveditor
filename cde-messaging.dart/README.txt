@@ -1,5 +1,8 @@
+Modified native messaging example in chromium.org sources at
+chrome/common/extensions/docs/examples/api/nativeMessaging
+
 This directory contains an example of chrome application that uses native
-messaging API that allows to communicate with a native application. The Dart SDK 
+messaging API that allows to communicate with a native application. The Dart SDK
 is needed to run the host. (http://www.dartlang.org)
 
 In order for this example to work you must first install the native messaging
@@ -13,7 +16,7 @@ On Windows:
   or
   HKEY_CURRENT_USER\SOFTWARE\Google\Chrome\NativeMessagingHosts\com.google.chrome.example.dart
   and set its default value to the full path to
-  host\com.google.chrome.example.dart-win.json . 
+  host\com.google.chrome.example.dart-win.json .
 
 On Mac and Linux:
   Run install_host.sh script in the host directory:
