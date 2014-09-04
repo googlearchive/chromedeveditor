@@ -1,0 +1,36 @@
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<link rel="import" href="../../packages/polymer/polymer.html">
+
+<link rel="import" href="../../packages/paper_elements/paper_icon_button.html">
+<link rel="import" href="../../packages/paper_elements/paper_tab.html">
+<link rel="import" href="../../packages/paper_elements/paper_tabs.html">
+
+<polymer-element name="cde-editing-area" layout vertical>
+  <template>
+    <link href="cde_editing_area.css" rel="stylesheet">
+
+    <!-- top -->
+    <div></div>
+
+    <div layout horizontal center>
+      <paper-tabs selected="0" flex>
+        <paper-tab>foo.html</paper-tab>
+        <paper-tab>foo.css</paper-tab>
+        <paper-tab>foo.dart</paper-tab>
+      </paper-tabs>
+      <div id="navButtons">
+        <paper-icon-button icon="arrow-back" on-tap="{{handleBack}}"></paper-icon-button>
+        <paper-icon-button icon="arrow-forward" on-tap="{{handleForward}}"></paper-icon-button>
+      </div>
+    </div>
+
+    <div flex class="editor">TODO: editor <content></content></div>
+
+    <!-- bottom -->
+    <div></div>
+  </template>
+  <script type="application/dart" src="cde_editing_area.dart"></script>
+</polymer-element>

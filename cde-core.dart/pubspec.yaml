@@ -1,6 +1,6 @@
 name: cde_core
-version: 0.0.1-dev
 description: Low-level, core functionality for the Chrome Dev Editor (CDE).
+version: 0.0.1-dev
 author: The Chrome Dev Editor team
 homepage: https://github.com/dart-lang/chromedeveditor/
 environment:

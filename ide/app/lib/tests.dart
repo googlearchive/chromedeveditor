@@ -9,13 +9,13 @@ import 'dart:convert';
 import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:chrome_net/tcp.dart' as tcp;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
 import 'filesystem.dart' as filesystem;
-import 'preferences.dart';
 import 'platform_info.dart';
-import 'tcp.dart' as tcp;
+import 'preferences.dart';
 import 'utils.dart';
 
 const int _DEFAULT_TESTPORT = 5120;

@@ -959,39 +959,39 @@ class AceManager {
 
 class ThemeManager {
   static final LIGHT_THEMES = [
-      'textmate',
-      'tomorrow',
-  ];
-  static final MORE_LIGHT_THEMES = [
+      // White bg color themes:
       'chrome',
       'clouds',
       'crimson_editor',
-      'dawn',
       'dreamweaver',
       'eclipse',
-      'github',
+      // This one uses bold font for keywords: doesn't work well with Monaco.
+      // 'github',
+      'textmate',
+      'tomorrow',
+      'xcode',
+      // Non-white bg color themes:
+      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
+      // 'dawn',
       'katzenmilch',
       'kuroir',
       'solarized_light',
-      'xcode',
   ];
   static final DARK_THEMES = [
-      'monokai',
-      'idle_fingers',
-      'tomorrow_night',
-      'pastel_on_dark',
-  ];
-  static final MORE_DARK_THEMES = [
       'ambiance',
       'chaos',
       'clouds_midnight',
       'cobalt',
+      'idle_fingers',
       'kr_theme',
       'merbivore',
       'merbivore_soft',
       'mono_industrial',
+      'monokai',
+      'pastel_on_dark',
       'solarized_dark',
       'terminal',
+      'tomorrow_night',
       'tomorrow_night_blue',
       'tomorrow_night_bright',
       'tomorrow_night_eighties',
@@ -1006,21 +1006,14 @@ class ThemeManager {
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    if (SparkFlags.useAceThemes) {
-      if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
-      if (SparkFlags.useMoreDarkAceThemes) _themes.addAll(MORE_DARK_THEMES);
-      if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
-      if (SparkFlags.useMoreLightAceThemes) _themes.addAll(MORE_LIGHT_THEMES);
+    _themes.addAll(DARK_THEMES);
+    if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
-      String theme = _prefs.editorTheme.value;
-      if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
-        theme = _themes[0];
-      }
-      _updateTheme(theme);
-    } else {
-      _themes.add(DARK_THEMES[0]);
-      _updateTheme(_themes[0]);
+    String theme = _prefs.editorTheme.value;
+    if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
+      theme = _themes[0];
     }
+    _updateTheme(theme);
   }
 
   void nextTheme(html.Event e) {
@@ -1041,9 +1034,7 @@ class ThemeManager {
   }
 
   void _updateTheme(String theme) {
-    if (SparkFlags.useAceThemes) {
-      _prefs.editorTheme.value = theme;
-    }
+    _prefs.editorTheme.value = theme;
     _aceEditor.theme = new ace.Theme.named(theme);
     if (_label != null) {
       _label.text = utils.toTitleCase(theme.replaceAll('_', ' '));

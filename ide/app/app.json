@@ -1,9 +1,6 @@
 {
   "test-mode": false,
   "light-ace-themes": false,
-  "more-light-ace-themes": false,
-  "dark-ace-themes": true,
-  "more-dark-ace-themes": true,
   "wip-project-templates": false,
   "analyze-javascript": false,
   "enable-multiselect": false,

@@ -1,0 +1,17 @@
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<link rel="import" href="packages/polymer/polymer.html">
+
+<link rel="import" href="packages/cde_workbench/cde_workbench.html">
+
+<polymer-element name="example-app" extends="cde-workbench">
+  <template>
+    <!-- link href="cde_workbench.css" rel="stylesheet" -->
+    <shadow select="div"></shadow>
+
+    <cde-key-binding key="ctrl-d" command="do-foo"></cde-key-binding>
+  </template>
+  <script type="application/dart" src="example_app.dart"></script>
+</polymer-element>

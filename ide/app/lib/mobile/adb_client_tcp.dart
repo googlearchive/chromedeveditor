@@ -13,8 +13,9 @@ library spark.adb_client_tcp;
 
 import 'dart:async';
 
+import 'package:chrome_net/tcp.dart';
+
 import 'adb_client.dart';
-import '../tcp.dart';
 import '../utils.dart';
 
 const int _ADB_PORT = 5037;
