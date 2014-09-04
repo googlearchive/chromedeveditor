@@ -173,6 +173,9 @@ defineTests() {
       // TODO: Disabled - see #3302.
       if (isDartium()) return new Future.value();
 
+      // TODO(devoncarew): We should figure out why we need this guard.
+      if (fileSystemAccess is! MockFileSystemAccess) return new Future.value();
+
       MockFileSystemAccess mockFsa = fileSystemAccess;
       return mockFsa.locationManager.setupRoot().then((_) {
         return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);

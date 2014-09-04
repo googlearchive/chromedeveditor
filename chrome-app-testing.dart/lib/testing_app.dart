@@ -78,7 +78,7 @@ class TestDriver {
       print('Connected to test listener on port ${testClient.port}');
 
       Logger.root.onRecord.listen((LogRecord r) {
-        testClient.log('[${r}');
+        testClient.log('${r}');
       });
 
       _logger.info('Running tests on ${window.navigator.appCodeName} '

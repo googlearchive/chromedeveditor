@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'dependency.dart';
 import 'files_mock.dart';
 import 'preferences.dart';
 import 'spark_flags.dart';
@@ -39,10 +40,13 @@ FileSystemAccess get fileSystemAccess {
 /**
  * Restores the ProjectLocationManager and returns a future with its value.
  */
-Future<ProjectLocationManager> restoreManager(
-    Notifier notifier, PreferenceStore prefs) {
-  return prefs.getValue('projectFolder').then((String folderToken) {
-    return fileSystemAccess.restoreManager(notifier, prefs, folderToken);
+Future<ProjectLocationManager> restoreManager([PreferenceStore localPrefs]) {
+  if (localPrefs == null) {
+    localPrefs = Dependencies.dependency[PreferenceStore];
+  }
+
+  return localPrefs.getValue('projectFolder').then((String folderToken) {
+    return fileSystemAccess.restoreManager(localPrefs, folderToken);
   });
 }
 
@@ -88,9 +92,9 @@ class FileSystemAccess {
    * Restores the ProjectLocationManager and returns a future with its value,
    * based on a folder token.
    */
-  Future<ProjectLocationManager> restoreManager(Notifier notifier,
-      PreferenceStore prefs, String folderToken) {
-    return ProjectLocationManager.restoreManager(notifier, prefs, folderToken)
+  Future<ProjectLocationManager> restoreManager(PreferenceStore prefs,
+      String folderToken) {
+    return ProjectLocationManager.restoreManager(prefs, folderToken)
         .then((ProjectLocationManager manager) {
       _locationManager = manager;
       return manager;
@@ -157,9 +161,9 @@ class MockFileSystemAccess extends FileSystemAccess {
     return new Future.value(entry.fullPath);
   }
 
-  Future<ProjectLocationManager> restoreManager(Notifier notifier,
+  Future<ProjectLocationManager> restoreManager(
       PreferenceStore prefs, String folderToken) {
-    return MockProjectLocationManager.restoreManager(notifier, prefs).then(
+    return MockProjectLocationManager.restoreManager(prefs).then(
         (ProjectLocationManager manager) {
       _locationManager = manager;
       return manager;
@@ -178,7 +182,6 @@ class MockFileSystemAccess extends FileSystemAccess {
  * Windows/Mac/linux.
  */
 class ProjectLocationManager {
-  final Notifier notifier;
   final PreferenceStore prefs;
   LocationResult _projectLocation;
 
@@ -186,21 +189,21 @@ class ProjectLocationManager {
    * Create a ProjectLocationManager asynchronously, restoring the default
    * project location from the given preferences.
    */
-  static Future<ProjectLocationManager> restoreManager(Notifier notifier,
+  static Future<ProjectLocationManager> restoreManager(
       PreferenceStore prefs, String folderToken) {
 
     // If there is nothing to restore, create a new ProjectLocationManager.
     if (folderToken == null) {
-      return new Future.value(new ProjectLocationManager._(notifier, prefs));
+      return new Future.value(new ProjectLocationManager._(prefs));
     }
 
     return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
       return _initFlagsFromProjectLocation(entry).then((_) {
-        return new Future.value(new ProjectLocationManager._(notifier, prefs,
-            new LocationResult(entry, entry, false)));
+        return new Future.value(new ProjectLocationManager._(
+            prefs, new LocationResult(entry, entry, false)));
       });
     }).catchError((e) {
-      return new Future.value(new ProjectLocationManager._(notifier, prefs));
+      return new Future.value(new ProjectLocationManager._(prefs));
     });
   }
 
@@ -218,7 +221,7 @@ class ProjectLocationManager {
     });
   }
 
-  ProjectLocationManager._(this.notifier, this.prefs, [this._projectLocation]);
+  ProjectLocationManager._(this.prefs, [this._projectLocation]);
 
   /**
    * Returns the default location to create new projects in. For Chrome OS, this
@@ -282,6 +285,8 @@ class ProjectLocationManager {
   }
 
   Future<bool> _showRequestFileSystemDialog() {
+    Notifier notifier = Dependencies.dependency[Notifier];
+
     return notifier.askUserOkCancel(
         'Please choose a folder to store your Chrome Dev Editor projects.',
         okButtonLabel: 'Choose Folder',
@@ -354,12 +359,10 @@ class LocationResult {
 class MockProjectLocationManager extends ProjectLocationManager {
   LocationResult _projectLocation;
 
-  MockProjectLocationManager(Notifier notifier, PreferenceStore prefs) :
-      super._(notifier, prefs);
+  MockProjectLocationManager(PreferenceStore prefs) : super._(prefs);
 
-  static Future<ProjectLocationManager> restoreManager(Notifier notifier,
-      PreferenceStore prefs) {
-    return new Future.value(new MockProjectLocationManager(notifier, prefs));
+  static Future<ProjectLocationManager> restoreManager(PreferenceStore prefs) {
+    return new Future.value(new MockProjectLocationManager(prefs));
   }
 
   Future setupRoot() {
