@@ -16,6 +16,7 @@ import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
 import '../options.dart';
+import '../permissions.dart';
 import '../utils.dart';
 
 class MergeItem {
@@ -39,7 +40,6 @@ class MergeTreeEntry {
   TreeEntry entry;
   String path;
   String type;
-  String content;
   String message;
   bool conflict = false;
 
@@ -49,9 +49,7 @@ class MergeTreeEntry {
 
   get isBlob => entry.isBlob;
 
-  MergeTreeEntry(this.entry, this.path, this.type, {this.content, this.message,
-    this.conflict});
-
+  MergeTreeEntry(this.entry, this.path, this.type, {this.message, this.conflict});
 }
 
 class MergeTreeDiff {
@@ -62,26 +60,6 @@ class MergeTreeDiff {
   }
 
   bool isCleanMerge() => getConflicts().isEmpty;
-
-  void expand(ObjectStore store) {
-    dynamic root = store.root;
-    Future.forEach(entries, (MergeTreeEntry entry) {
-      if (entry.conflict != null) {
-        return FileOps.createFileWithContent(
-            root, entry.path, entry.content, 'Text');
-      }
-      // The entry is deleted.
-      if (entry.sha == null) {
-        return root.getFile(entry.path).then((fileEntry) => fileEntry.remove());
-      }
-
-      return store.retrieveObject(entry.sha, ObjectTypes.BLOB_STR).then(
-          (BlobObject blob) {
-        return FileOps.createFileWithContent(root, entry.path,
-            entry.content, 'Text');
-      });
-    });
-  }
 
   List<MergeTreeEntry> adds() => entries.where((entry) =>
       entry.type == MergeEntryType.ADD);
@@ -160,7 +138,7 @@ class Merge {
                 baseEntry = TreeEntry.dummyEntry(false);
                 if (next.isBlob) {
                   // TODO conflict not supported.
-                  conflicts.add( new MergeItem(next, null, theirEntry, true));
+                  conflicts.add(new MergeItem(next, null, theirEntry, true));
                   break;
                 }
               }
@@ -348,20 +326,33 @@ class Merge {
     });
   }
 
-  static Future _checkoutEntry(ObjectStore store, MergeTreeDiff tree) {
-
-
+  static Future _checkoutEntry(
+      ObjectStore store, MergeTreeEntry entry, bool updateIndex) {
+    String path = entry.path.substring(store.root.fullPath.length + 1);
+    return ObjectUtils.expandBlob(store.root, store, path, entry.entry.sha,
+        Permissions.FILE_NON_EXECUTABLE, updateIndex);
   }
 
   static Future _checkoutMergedTree(ObjectStore store, MergeTreeDiff tree) {
     Future.forEach(tree.adds(), (MergeTreeEntry entry) {
+      return _checkoutEntry(store, entry, true);
     }).then((_) {
       Future.forEach(tree.removes(), (MergeTreeEntry entry) {
         return store.root.getFile(entry.path).then((fileEntry) =>
             fileEntry.remove());
       }).then((_) {
         Future.forEach(tree.modified(), (MergeTreeEntry entry) {
+          return _checkoutEntry(store, entry, false);
         }).then((_) {
+          Future.forEach(tree.unmerged(), (MergeTreeEntry entry) {
+            return _checkoutEntry(store, entry, false);
+          }).then((_) {
+            return store.index.updateIndex().then((_) {
+              Future.forEach(tree.unmerged(), (MergeTreeEntry entry) {
+                 store.index.updateStatusAsUnmerged(entry.path);
+              });
+            });
+          });
         });
       });
     });
