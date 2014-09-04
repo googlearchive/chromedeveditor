@@ -111,9 +111,9 @@ class Commit {
     }, onError: (GitException e) {
       return store.getHeadRef().then((String headRefName) {
         return store.getHeadForRef(headRefName).then((String parent) {
-          return _createCommitFromWorkingTree(options, parent, headRefName);
+          return createCommitFromWorkingTree(options, [parent], headRefName);
         }, onError: (e) {
-          return _createCommitFromWorkingTree(options, null, headRefName);
+          return createCommitFromWorkingTree(options, [], headRefName);
         });
       });
     });
@@ -146,13 +146,13 @@ class Commit {
         ObjectTypes.COMMIT_STR, commitContent.toString());
   }
 
-  static Future _createCommitFromWorkingTree(GitOptions options, String parent,
+  static Future createCommitFromWorkingTree(GitOptions options, List<String> parents,
       String refName) {
     ObjectStore store = options.store;
     return walkFiles(options.root, store).then((String sha) {
       // update the index.
       return store.index.onCommit().then((_) {
-        return createCommit(options, parent != null ? [parent] : [], sha, refName)
+        return createCommit(options, parents, sha, refName)
             .then((commitSha) {
           return FileOps.createFileWithContent(options.root, '.git/${refName}',
               commitSha + '\n', 'Text').then((_) {

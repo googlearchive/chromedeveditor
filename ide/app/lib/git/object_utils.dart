@@ -80,23 +80,35 @@ abstract class ObjectUtils {
   /**
    * Expands a git blob object into a file and writes on disc.
    */
-  static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir,
-      ObjectStore store, String fileName, String blobSha, String permission) {
+  static Future<chrome.Entry> expandBlob(
+      chrome.DirectoryEntry dir,
+      ObjectStore store,
+      String fileName,
+      String blobSha,
+      String permission,
+      [bool updateIndex=true]) {
     return store.retrieveObject(blobSha, ObjectTypes.BLOB_STR).then(
         (BlobObject blob) {
       return FileOps.createFileWithContent(dir, fileName, blob.data,
           ObjectTypes.BLOB_STR).then((chrome.Entry entry) {
-        return entry.getMetadata().then((data) {
-          FileStatus status = new FileStatus();
-          status.path = entry.fullPath;
-          status.sha = blobSha;
-          status.headSha = blobSha;
-          status.size = data.size;
-          status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
-          status.permission = permission;
-          store.index.createIndexForEntry(status);
-        });
+        if (updateIndex == true) {
+          return createAndUpdateIndex(store, entry, blobSha, permission);
+        }
       });
+    });
+  }
+
+  static Future createAndUpdateIndex(ObjectStore store, chrome.Entry entry,
+      String blobSha, String permission) {
+    return entry.getMetadata().then((data) {
+      FileStatus status = new FileStatus();
+      status.path = entry.fullPath;
+      status.sha = blobSha;
+      status.headSha = blobSha;
+      status.size = data.size;
+      status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
+      status.permission = permission;
+      store.index.createIndexForEntry(status);
     });
   }
 

@@ -92,21 +92,15 @@ class Pull {
     List shas = [localSha, commonSha, remoteSha];
     return store.getHeadRef().then((String headRefName) {
       return store.getTreesFromCommits(shas).then((trees) {
-        return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
-            .then((String finalTreeSha) {
+        return Merge.mergeTrees(store, trees[0], trees[1], trees[2], store.root.fullPath)
+            .then((MergeTreeDiff finalTree) {
           return store.getCurrentBranch().then((branch) {
             options.branchName = branch;
             options.commitMessage = MERGE_BRANCH_COMMIT_MSG + options.branchName;
             // Create a merge commit by default.
-            return Commit.createCommit(options, [remoteSha, localSha], finalTreeSha,
-                headRefName).then((commitSha) {
-              return Checkout.checkout(options, commitSha).then((_) {
-                return FileOps.createFileWithContent(options.root, '.git/${headRefName}',
-                    commitSha + '\n', 'Text').then((_) {
-                  return store.writeConfig().then((_) => commitSha);
-                });
-              });
-            });
+            return Commit.createCommitFromWorkingTree(options, [remoteSha, localSha],
+                headRefName);
+            // TODO checkout and check the merged tree first.
           });
         }).catchError((e) {
           return new Future.error(
