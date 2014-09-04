@@ -29,7 +29,6 @@ class SparkPolymerUI extends SparkWidget {
   // uses [querySelector] upon startup to find elements in those blocks.
   // The values are later set to their actual values in [refreshFromModel].
   @observable bool developerMode = true;
-  @observable bool useAceThemes = true;
   @observable bool chromeOS = false;
   @observable String appVersion = '';
   // This flag is different from the rest: the comment immediately above doesn't
@@ -63,7 +62,6 @@ class SparkPolymerUI extends SparkWidget {
   void refreshFromModel([_]) {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.developerMode;
-    useAceThemes = SparkFlags.useAceThemes;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
     appVersion = _model.appVersion;

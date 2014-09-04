@@ -3,39 +3,39 @@
 // license that can be found in the LICENSE file.
 
 /**
- * An [AppCommand] is a builder for [Command]s. [AppCommand]s have ids,
+ * An [Command] is a builder for [Action]s. [AppAction]s have ids,
  * descriptions, optional text arguments and, given a context, can create
  * commands that can perform work.
  *
  * For example, a command `file-new` may open
  * a new file dialog. It may try and coerce the given [Context] into a file or
- * directory location to create the new file in.
+ * directory location in which to create the new file.
  *
  * A `sort-lines` command may try and coerce the given context into a text
- * editor. It could create a [Command] which mutated the text editor to sort
- * the given selection. That command could be undoable in order to un-sort the
+ * editor. It could create a [Action] which mutated the text editor to sort
+ * the given selection. That action could be undoable in order to un-sort the
  * text.
  */
-library cde_workbench.app_commands;
+library cde_workbench.commands;
 
 import 'dart:async';
 
-import 'package:cde_common/commands.dart';
+import 'package:cde_common/actions.dart';
 import 'package:cde_core/dependencies.dart';
 import 'package:logging/logging.dart';
 
 import 'context.dart';
 
-export 'package:cde_common/commands.dart';
+export 'package:cde_common/actions.dart';
 
-Logger _logger = new Logger('cde_workbench.app_commands');
+Logger _logger = new Logger('cde_workbench.commands');
 
 /**
  * TODO:
  */
-abstract class AppCommand {
-  static AppCommand create(String id, Function fn) {
-    return new _SimpleAppCommand(id, fn);
+abstract class Command {
+  static Command create(String id, Function fn) {
+    return new _SimpleCommand(id, fn);
   }
 
   final String id;
@@ -44,14 +44,14 @@ abstract class AppCommand {
 
   List<CommandArgument> _args;
 
-  AppCommand(this.id, {this.description, this.argsDescription}) {
+  Command(this.id, {this.description, this.argsDescription}) {
     _args = _parseArgs(argsDescription);
   }
 
   List<CommandArgument> get args => _args;
 
   // TODO: doc
-  Command createCommand(Context context, List<String> args);
+  Action createAction(Context context, List<String> args);
 
   List<CommandArgument> _parseArgs(String desc) {
     if (desc == null) return [];
@@ -94,27 +94,30 @@ class CommandArgument {
  * TODO:
  */
 class CommandManager {
-  final List<AppCommand> _commands = [];
-  CommandHistory _commandExecutor;
+  final List<Command> _commands = [];
+  ActionExecutor _actionExecutor;
 
   CommandManager() {
-    _commandExecutor = Dependencies.instance[CommandHistory];
-    assert(_commandExecutor != null);
+    _actionExecutor = Dependencies.instance[ActionExecutor];
+    assert(_actionExecutor != null);
   }
 
-  void addCommand(AppCommand command) => _commands.add(command);
+  void bind(String command, Function fn) =>
+      addCommand(Command.create(command, fn));
 
-  AppCommand getAppCommand(String id) {
+  void addCommand(Command command) => _commands.add(command);
+
+  Command getCommand(String id) {
     return _commands.firstWhere(
         (command) => command.id == id, orElse: () => null);
   }
 
   Future executeCommand(Context context, String id, [List args = const []]) {
-    AppCommand appCommand = getAppCommand(id);
+    Command command = getCommand(id);
 
-    if (appCommand != null) {
-      Command command = appCommand.createCommand(context, args);
-      return _commandExecutor.perform(command);
+    if (command != null) {
+      Action action = command.createAction(context, args);
+      return _actionExecutor.perform(action);
     } else {
       _logger.warning("command '${id}' not found");
       return new Future.value();
@@ -122,20 +125,20 @@ class CommandManager {
   }
 }
 
-class _SimpleAppCommand extends AppCommand {
+class _SimpleCommand extends Command {
   final Function fn;
 
-  _SimpleAppCommand(String id, this.fn) : super(id);
+  _SimpleCommand(String id, this.fn) : super(id);
 
-  Command createCommand(Context context, List<String> args) {
-    return new SimpleCommand(id, fn);
+  Action createAction(Context context, List<String> args) {
+    return new SimpleAction(id, fn);
   }
 }
 
-class SimpleCommand extends Command {
+class SimpleAction extends Action {
   final Function fn;
 
-  SimpleCommand(String description, this.fn) : super(description);
+  SimpleAction(String description, this.fn) : super(description);
 
   void execute() => fn();
 }

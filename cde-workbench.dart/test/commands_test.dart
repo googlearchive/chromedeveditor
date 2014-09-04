@@ -6,22 +6,21 @@ library cde_workbench.commands_test;
 
 import 'dart:async';
 
-import 'package:cde_workbench/app_commands.dart';
+import 'package:cde_workbench/commands.dart';
 import 'package:cde_workbench/context.dart';
 import 'package:unittest/unittest.dart';
 
 void defineTests() {
   group('commands', () {
-    test('AppCommand ctor', () {
-      AppCommand cmd = new MockAppCommand('foo', 'Foo');
+    test('Command ctor', () {
+      Command cmd = new MockCommand('foo', 'Foo');
       expect(cmd.id, 'foo');
       expect(cmd.description, 'Foo');
       expect(cmd.args.map((arg) => arg.toString()).join(' '), '');
     });
 
-    test('AppCommand ctor 2', () {
-      AppCommand cmd = new MockAppCommand(
-          'foo', 'Foo', '%s %s [%i %s]');
+    test('Command ctor 2', () {
+      Command cmd = new MockCommand('foo', 'Foo', '%s %s [%i %s]');
       expect(cmd.id, 'foo');
       expect(cmd.description, 'Foo');
       expect(cmd.args.map((arg) => arg.toString()).join(' '),
@@ -30,17 +29,17 @@ void defineTests() {
   });
 }
 
-class MockAppCommand extends AppCommand {
-  MockAppCommand(String id, String description, [String argsDescription]) :
+class MockCommand extends Command {
+  MockCommand(String id, String description, [String argsDescription]) :
       super(id, description: description, argsDescription: argsDescription);
 
-  Command createCommand(Context context, List<String> args) {
-    return new MockCommand(description);
+  Action createAction(Context context, List<String> args) {
+    return new MockAction(description);
   }
 }
 
-class MockCommand extends Command {
-  MockCommand(String description) : super(description);
+class MockAction extends Action {
+  MockAction(String name) : super(name);
 
   bool executed = false;
 
@@ -49,8 +48,8 @@ class MockCommand extends Command {
   }
 }
 
-class AsyncMockCommand extends Command {
-  AsyncMockCommand(String description) : super(description);
+class AsyncMockAction extends Action {
+  AsyncMockAction(String name) : super(name);
 
   bool executed = false;
 
