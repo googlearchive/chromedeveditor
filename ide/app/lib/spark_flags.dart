@@ -24,8 +24,6 @@ class SparkFlags {
   // Editor:
   static bool get useLightAceThemes =>
       _flags['light-ace-themes'] == true;
-  static bool get useWhiteAceThemes =>
-      _flags['white-ace-themes'] == true;
   static bool get enableMultiSelect =>
       _flags['enable-multiselect'] == true;
   static bool get packageFilesAreEditable =>

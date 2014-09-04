@@ -955,21 +955,23 @@ class AceManager {
 
 class ThemeManager {
   static final LIGHT_THEMES = [
-      'dawn',
-      'katzenmilch',
-      'kuroir',
-      'solarized_light',
-  ];
-  static final WHITE_THEMES = [
+      // White bg color themes:
       'chrome',
       'clouds',
       'crimson_editor',
       'dreamweaver',
       'eclipse',
-      'github',
+      // This one uses bold font for keywords: doesn't work well with Monaco.
+      // 'github',
       'textmate',
       'tomorrow',
       'xcode',
+      // Non-white bg color themes:
+      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
+      // 'dawn',
+      'katzenmilch',
+      'kuroir',
+      'solarized_light',
   ];
   static final DARK_THEMES = [
       'ambiance',
@@ -1002,7 +1004,6 @@ class ThemeManager {
       _aceEditor = aceManager._aceEditor {
     _themes.addAll(DARK_THEMES);
     if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
-    if (SparkFlags.useWhiteAceThemes) _themes.addAll(WHITE_THEMES);
 
     String theme = _prefs.editorTheme.value;
     if (theme == null || theme.isEmpty || !_themes.contains(theme)) {

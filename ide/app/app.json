@@ -1,7 +1,6 @@
 {
   "test-mode": false,
   "light-ace-themes": false,
-  "white-ace-themes": false,
   "wip-project-templates": false,
   "analyze-javascript": false,
   "enable-multiselect": false,
