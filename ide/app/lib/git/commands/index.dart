@@ -49,6 +49,14 @@ class Index {
     }
   }
 
+
+  void updateStatusAsUnmerged(String path) {
+    FileStatus status = _statusIdx[path];
+    status.type = FileStatusType.UNMERGED;
+    _statusIdx[status.path] = status;
+    _scheduleWriteIndex();
+  }
+
   /**
    * Creats a index entry for a given [status]. If entry already exists delete
    * and create a new entry.
@@ -71,7 +79,16 @@ class Index {
     FileStatus oldStatus = _statusIdx[status.path];
 
     if (oldStatus != null) {
+
       status.headSha = oldStatus.headSha;
+
+
+      if (oldStatus.type == FileStatusType.UNMERGED) {
+        status.type = oldStatus.type;
+        _statusIdx[status.path] = status;
+        _scheduleWriteIndex();
+        return;
+      }
 
       if (!status.compareTo(oldStatus)) {
         switch(oldStatus.type) {
