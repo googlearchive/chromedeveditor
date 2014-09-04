@@ -10,5 +10,6 @@
   ],
   "bower-override-dependencies": {
   },
-  "bower-use-git-clone": false
+  "bower-use-git-clone": false,
+  "package-files-are-editable": false
 }

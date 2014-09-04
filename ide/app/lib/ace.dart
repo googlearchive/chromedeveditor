@@ -151,8 +151,12 @@ class TextEditor extends Editor {
   bool get supportsFormat => false;
 
   // TODO(ussuri): use MetaPackageManager instead when it's ready.
-  bool get readOnly => pubProperties.isInPackagesFolder(file) ||
-      bowerProperties.isInPackagesFolder(file);
+  bool get readOnly {
+    return
+        !SparkFlags.packageFilesAreEditable && (
+            pubProperties.isInPackagesFolder(file) ||
+            bowerProperties.isInPackagesFolder(file));
+  }
 
   void format() { }
 
