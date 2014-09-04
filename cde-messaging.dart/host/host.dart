@@ -1,4 +1,4 @@
-#!/Users/keertip/ide/eclipse382/dart-sdk/bin/dart
+#!/path to dart executable
 
 import 'dart:async';
 import 'dart:io';
