@@ -4079,7 +4079,6 @@ class RunPythonAction extends SparkAction {
       });
     });
   }
-
 }
 
 class ProgressMonitorImplN extends ProgressMonitor {
