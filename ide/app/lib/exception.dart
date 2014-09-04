@@ -103,10 +103,15 @@ class SparkException implements Exception {
             errorCode: SparkErrorConstants.GIT_HTTP_CONN_RESET);
 
       case GitErrorConstants.GIT_INVALID_REPO_URL:
-        return new SparkException(SparkErrorMessages.GIT_INVALID_REPO_URL,
+        return new SparkException(SparkErrorMessages.GIT_INVALID_REPO_URL_MSG,
             errorCode: SparkErrorConstants.GIT_INVALID_REPO_URL);
+
+      case GitErrorConstants.GIT_BITBUCKET_REPO_NOT_SUPPORTED:
+        return new SparkException(SparkErrorMessages.GIT_BITBUCKET_REPO_NOT_SUPPORTED_MSG,
+            errorCode: SparkErrorConstants.GIT_BITBUCKET_REPO_NOT_SUPPORTED);
+
       case GitErrorConstants.GIT_PULL_NON_FAST_FORWARD:
-        return new SparkException(SparkErrorMessages.GIT_PULL_NON_FAST_FORWARD,
+        return new SparkException(SparkErrorMessages.GIT_PULL_NON_FAST_FORWARD_MSG,
             errorCode: SparkErrorConstants.GIT_PULL_NON_FAST_FORWARD);
     }
 
@@ -129,6 +134,8 @@ class SparkErrorConstants {
   static const String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
   static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
   static const String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
+  static const String GIT_BITBUCKET_REPO_NOT_SUPPORTED =
+      "git.bitbucket_repo_not_supported";
 
   static const String GIT_PUSH_NON_FAST_FORWARD =
       "git.push_non_fast_forward";
@@ -175,10 +182,14 @@ class SparkErrorMessages {
       "Repositories with sub modules are not yet supported.";
   static const String GIT_HTTP_CONN_RESET_MSG  = "The connection was reset by "
       "the server. This may happen when pushing commits with large changes.";
-  static const String GIT_INVALID_REPO_URL  = "Received an error from the server;"
+  static const String GIT_INVALID_REPO_URL_MSG  = "Received an error from the server;"
       " possibly an invalid repo URL?";
 
-  static const String GIT_PULL_NON_FAST_FORWARD =
+  static const String GIT_BITBUCKET_REPO_NOT_SUPPORTED_MSG =
+      "Repositories hosted on bitbucket.org are not supported due to "
+      "https://bitbucket.org/site/master/issue/6666/detect-git-requests-by-content-type-header.";
+
+  static const String GIT_PULL_NON_FAST_FORWARD_MSG =
       "Merge conflicts detected. Chrome Dev Editor does not currently support "
       "non-fast forward pulls. As a work-around you can merge your changes on "
       "the remote server and pull those merged changes in.";

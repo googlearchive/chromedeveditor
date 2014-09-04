@@ -220,9 +220,9 @@ Future releaseNightly(GrinderContext context) {
   context.log('Authenticating...');
   return client.requestToken().then((e) {
     context.log('Uploading ${filename}...');
-    return client.uploadItem('dist/${filename}').then((e) {
+    return client.uploadItem('dist/${filename}').then((_) {
       context.log('Publishing...');
-      return client.publishItem().then((e) {
+      return client.publishItem().then((_) {
         context.log('Published');
       });
     });
@@ -375,6 +375,10 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   // Copy spark/widgets to spark/ide/build/widgets. This is necessary because
   // spark_widgets is a relative "path" dependency in pubspec.yaml.
   copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
+  copyDirectory(getDir('../chrome-app-net.dart'),
+      joinDir(BUILD_DIR, ['chrome-app-net.dart']), context);
+  copyDirectory(getDir('../chrome-app-testing.dart'),
+      joinDir(BUILD_DIR, ['chrome-app-testing.dart']), context);
 
   // Copy the app directory to target/web.
   copyFile(getFile('pubspec.yaml'), sourceDir);
@@ -439,18 +443,21 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
 }
 
 void _changeMode({bool useTestMode: true}) {
-  File file = joinFile(Directory.current, ['app', 'app.json']);
-  file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
+  _changeModeImpl(
+      useTestMode, joinFile(Directory.current, ['app', 'app.json']));
+  _changeModeImpl(
+      useTestMode, joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']));
+  _changeModeImpl(
+      useTestMode, joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']));
+}
 
-  file = joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']);
-  if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
-  }
+void _changeModeImpl(bool useTestMode, File file) {
+  if (!file.parent.existsSync()) return;
 
-  file = joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']);
-  if (file.parent.existsSync()) {
-    file.writeAsStringSync('{"test-mode":${useTestMode}}\n');
-  }
+  String content = file.readAsStringSync();
+  var dict = JSON.decode(content);
+  dict['test-mode'] = useTestMode;
+  file.writeAsStringSync(new JsonPrinter().print(dict));
 }
 
 // Returns the URL of the git repository.

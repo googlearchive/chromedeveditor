@@ -1,0 +1,15 @@
+name: chrome_net
+version: 0.0.1-dev
+author: CDE Team
+description: A set of networking library for Chrome Apps.
+homepage: https://github.com/dart-lang/chromedeveditor/
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  chrome: any
+  chrome_testing:
+    path: ../chrome-app-testing.dart
+  intl: any
+  mime: any
+dev_dependencies:
+  unittest: any

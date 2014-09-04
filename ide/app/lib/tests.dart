@@ -9,12 +9,13 @@ import 'dart:convert';
 import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:chrome_net/tcp.dart' as tcp;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import '../spark.dart';
-import 'filesystem.dart';
-import 'tcp.dart' as tcp;
+import 'filesystem.dart' as filesystem;
+import 'platform_info.dart';
+import 'preferences.dart';
 import 'utils.dart';
 
 const int _DEFAULT_TESTPORT = 5120;
@@ -25,22 +26,20 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
+  Function _defineTestsFn;
   final Notifier _notifier;
+  final PreferenceStore _prefs;
 
-  Spark _spark;
   StreamSubscription _logListener;
   StreamController<unittest.TestCase> _onTestFinished =
       new StreamController.broadcast();
 
-  Function _defineTestsFn;
   Element _testDiv;
   Element _statusDiv;
 
   Completer<bool> _testCompleter;
 
-  // TODO(ericarnold): Spark gets passed here twice (once as a Notifier and once
-  //                   as spark), but maybe this is okay?
-  TestDriver(this._defineTestsFn, this._notifier, this._spark,
+  TestDriver(this._defineTestsFn, this._notifier, this._prefs,
       {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 
@@ -53,8 +52,8 @@ class TestDriver {
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
-    setMockFilesystemAccess();
-    restoreManager(_spark);
+    filesystem.setMockFilesystemAccess();
+    filesystem.restoreManager(_notifier, _prefs);
 
     if (_logListener == null) {
       _createTestUI();
@@ -97,8 +96,11 @@ class TestDriver {
             '[${r.level.name}] ${_fixed(r.loggerName, 11)}: ${r.message}');
       });
 
-      _logger.info('Running tests on ${window.navigator.appCodeName} '
-          '${window.navigator.appName} ${window.navigator.appVersion}');
+      _logger.info('Running tests on:');
+      _logger.info('${window.navigator.appCodeName}');
+      _logger.info('${window.navigator.appName}');
+      _logger.info('${window.navigator.appVersion}');
+      _logger.info('Chrome version: ${PlatformInfo.chromeVersion}');
 
       runTests().then((bool success) {
         testClient.log('test exit code: ${(success ? 0 : 1)}');
@@ -127,7 +129,7 @@ class TestDriver {
     _testDiv.nodes.add(_statusDiv);
 
     _logger.onRecord.listen((LogRecord record) {
-      if (record.level > Level.INFO) {
+      if (record.level >= Level.SEVERE) {
         _statusDiv.style.background = 'red';
       }
       _statusDiv.text = record.toString();

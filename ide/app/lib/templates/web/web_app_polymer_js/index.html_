@@ -56,10 +56,13 @@
   </section>
 
   <section>
-    <paper-button raisedButton right label="Show Toast"
-        onclick="document.querySelector('#toast1').show()">
-    </paper-button>
-    <paper-toast id="toast1" text="Sample toast here."></paper-toast>
+    <template id="toastGroup" is="auto-binding">
+      <paper-button raisedButton right label="Show Toast" on-click="{{showToast}}">
+      </paper-button>
+      <paper-toast id="toast" text="Sample toast here."></paper-toast>
+    </template>
   </section>
+  
+  <script src="main.js"></script>
 </body>
 </html>

@@ -16,7 +16,6 @@ import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 
-import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'markdown.dart';
@@ -29,6 +28,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'workspace_utils.dart';
 import 'services.dart' as svc;
+import 'spark_flags.dart';
 import 'outline.dart';
 import 'ui/goto_line_view/goto_line_view.dart';
 import 'utils.dart';
@@ -184,7 +184,7 @@ class TextEditor extends Editor {
       String text = _session.value;
 
       // Remove the trailing whitespace if asked to do so.
-      if (_prefs.stripWhitespaceOnSave) {
+      if (_prefs.stripWhitespaceOnSave.value) {
         text = text.replaceAll(whitespaceRegEx, '');
       }
 
@@ -284,11 +284,14 @@ class DartEditor extends TextEditor {
   void activate() {
     super.activate();
 
-    if (_session != null) {
-      _outline.build(file.name, _session.value);
-    }
+    // Outline will be built in reconcile().
+    //_outline.build(file.name, _session.value);
 
     _outline.scrollPosition = outlineScrollPosition;
+
+    if (file.project != null) {
+      aceManager._analysisService.getCreateProjectAnalyzer(file.project);
+    }
   }
 
   @override
@@ -423,7 +426,7 @@ class GoEditor extends TextEditor {
     // Go files use hard tabs for indentation.
     session.useSoftTabs = false;
 
-    // The number of spaces to use it not specified by Go.
+    // The number of spaces to use is not specified by Go.
     session.tabSize = 4;
   }
 }
@@ -503,13 +506,12 @@ class AceManager {
     //_aceEditor.setOption('enableSnippets', true);
 
     ace.require('ace/ext/linking');
-    _aceEditor.setOptions({'enableMultiselect' : false,
-                           'enableLinking' : true});
+    _aceEditor.setOptions({'enableMultiselect': false,
+                           'enableLinking': true});
 
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
-      if (!DartEditor.isDartFile(currentFile)) {
-        return;
-      }
+      if (currentFile == null) return;
+      if (!DartEditor.isDartFile(currentFile)) return;
 
       ace.Token token = event.token;
 
@@ -568,6 +570,18 @@ class AceManager {
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
     ace.Mode.extensionMap['webapp'] = ace.Mode.JSON;
+    ace.Mode.extensionMap['gsp'] = ace.Mode.HTML;
+    ace.Mode.extensionMap['jsp'] = ace.Mode.HTML;
+    // The extensions used in Spark's own internal templates.
+    ace.Mode.extensionMap['html_'] = ace.Mode.HTML;
+    ace.Mode.extensionMap['css_'] = ace.Mode.CSS;
+    ace.Mode.extensionMap['js_'] = ace.Mode.JAVASCRIPT;
+    ace.Mode.extensionMap['dart_'] = ace.Mode.DART;
+    ace.Mode.extensionMap['json_'] = ace.Mode.JSON;
+    ace.Mode.extensionMap['yaml_'] = ace.Mode.YAML;
+    // The extension that "Refactor for CSP" feature assigns to originals of
+    // refactored HTMLs.
+    ace.Mode.extensionMap['html.pre_csp'] = ace.Mode.HTML;
 
     _setupGotoLine();
 
@@ -582,8 +596,8 @@ class AceManager {
     }
   }
 
-  void setupOutline(html.Element parentElement) {
-    outline = new Outline(_analysisService, parentElement, _prefs.prefStore);
+  void setupOutline(html.Element outlineContainer) {
+    outline = new Outline(_analysisService, outlineContainer, _prefs.prefsStore);
     outline.visible = false;
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
@@ -817,6 +831,7 @@ class AceManager {
 
   void setFontSize(num size) {
     _aceEditor.fontSize = size;
+    outline.setFontSize(size);
   }
 
   void focus() => _aceEditor.focus();
@@ -936,22 +951,52 @@ class AceManager {
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
   }
-
-  Future prepareForLinking(workspace.Project project) {
-    return _analysisService.prepareForLinking(project);
-  }
 }
 
 class ThemeManager {
   static final LIGHT_THEMES = [
-      'textmate', 'tomorrow'
+      'textmate',
+      'tomorrow',
+  ];
+  static final MORE_LIGHT_THEMES = [
+      'chrome',
+      'clouds',
+      'crimson_editor',
+      'dawn',
+      'dreamweaver',
+      'eclipse',
+      'github',
+      'katzenmilch',
+      'kuroir',
+      'solarized_light',
+      'xcode',
   ];
   static final DARK_THEMES = [
-      'monokai', 'tomorrow_night', 'idle_fingers', 'pastel_on_dark'
+      'monokai',
+      'idle_fingers',
+      'tomorrow_night',
+      'pastel_on_dark',
+  ];
+  static final MORE_DARK_THEMES = [
+      'ambiance',
+      'chaos',
+      'clouds_midnight',
+      'cobalt',
+      'kr_theme',
+      'merbivore',
+      'merbivore_soft',
+      'mono_industrial',
+      'solarized_dark',
+      'terminal',
+      'tomorrow_night_blue',
+      'tomorrow_night_bright',
+      'tomorrow_night_eighties',
+      'twilight',
+      'vibrant_ink',
   ];
 
   ace.Editor _aceEditor;
-  PreferenceStore _prefs;
+  SparkPreferences _prefs;
   html.Element _label;
   List<String> _themes = [];
 
@@ -959,14 +1004,15 @@ class ThemeManager {
       _aceEditor = aceManager._aceEditor {
     if (SparkFlags.useAceThemes) {
       if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.useMoreDarkAceThemes) _themes.addAll(MORE_DARK_THEMES);
       if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+      if (SparkFlags.useMoreLightAceThemes) _themes.addAll(MORE_LIGHT_THEMES);
 
-      _prefs.getValue('aceTheme').then((String theme) {
-        if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
-          theme = _themes[0];
-        }
-        _updateTheme(theme);
-      });
+      String theme = _prefs.editorTheme.value;
+      if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
+        theme = _themes[0];
+      }
+      _updateTheme(theme);
     } else {
       _themes.add(DARK_THEMES[0]);
       _updateTheme(_themes[0]);
@@ -992,7 +1038,7 @@ class ThemeManager {
 
   void _updateTheme(String theme) {
     if (SparkFlags.useAceThemes) {
-      _prefs.setValue('aceTheme', theme);
+      _prefs.editorTheme.value = theme;
     }
     _aceEditor.theme = new ace.Theme.named(theme);
     if (_label != null) {
@@ -1003,16 +1049,15 @@ class ThemeManager {
 
 class KeyBindingManager {
   AceManager aceManager;
-  PreferenceStore prefs;
+  SparkPreferences prefs;
   html.Element _label;
 
   KeyBindingManager(this.aceManager, this.prefs, this._label) {
-    prefs.getValue('keyBindings').then((String value) {
-      if (value != null) {
-        aceManager.setKeyBinding(value);
-      }
-      _updateName(value);
-    });
+    String value = prefs.keyBindings.value;
+    if (value != null) {
+      aceManager.setKeyBinding(value);
+    }
+    _updateName(value);
   }
 
   void inc(html.Event e) {
@@ -1030,7 +1075,7 @@ class KeyBindingManager {
       int index = math.max(AceManager.KEY_BINDINGS.indexOf(name), 0);
       index = (index + direction) % AceManager.KEY_BINDINGS.length;
       String newBinding = AceManager.KEY_BINDINGS[index];
-      prefs.setValue('keyBindings', newBinding);
+      prefs.keyBindings.value = newBinding;
       _updateName(newBinding);
       aceManager.setKeyBinding(newBinding);
     });
@@ -1043,7 +1088,7 @@ class KeyBindingManager {
 
 class AceFontManager {
   AceManager aceManager;
-  PreferenceStore prefs;
+  SparkPreferences prefs;
   html.Element _label;
   num _value;
 
@@ -1051,29 +1096,25 @@ class AceFontManager {
     _value = aceManager.getFontSize();
     _updateLabel(_value);
 
-    prefs.getValue('fontSize').then((String pref) {
-      try {
-        if (pref != null) {
-          _value = num.parse(pref);
-          aceManager.setFontSize(_value);
-          _updateLabel(_value);
-        }
-      } catch (e) {
+    try {
+      _value = prefs.editorFontSize.value;
+      aceManager.setFontSize(_value);
+      _updateLabel(_value);
+    } catch (e) {
 
-      }
-    });
+    }
   }
 
-  void dec() => _adjustSize(_value - 2);
+  void dec() => _adjustSize(_value - 1);
 
-  void inc() => _adjustSize(_value + 2);
+  void inc() => _adjustSize(_value + 1);
 
   void _adjustSize(num newValue) {
     // Clamp to between 6pt and 36pt.
     _value = newValue.clamp(6, 36);
     aceManager.setFontSize(_value);
     _updateLabel(_value);
-    prefs.setValue('fontSize', _value.toString());
+    prefs.editorFontSize.value = _value;
   }
 
   void _updateLabel(num size) {

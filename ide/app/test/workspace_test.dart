@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
-import 'files_mock.dart';
+import '../lib/files_mock.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart' as ws;
 

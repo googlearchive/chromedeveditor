@@ -13,9 +13,9 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
-import '../spark_flags.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_utils.dart';
+import 'spark_flags.dart';
 import 'workspace.dart';
 
 final Logger _logger = new Logger('spark.builder');

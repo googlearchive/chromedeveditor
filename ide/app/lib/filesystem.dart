@@ -8,9 +8,10 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import '../spark.dart';
-import '../spark_flags.dart';
-import '../test/files_mock.dart';
+import 'files_mock.dart';
+import 'preferences.dart';
+import 'spark_flags.dart';
+import 'utils.dart';
 import 'workspace.dart' as ws;
 
 FileSystemAccess _fileSystemAccess;
@@ -38,9 +39,10 @@ FileSystemAccess get fileSystemAccess {
 /**
  * Restores the ProjectLocationManager and returns a future with its value.
  */
-Future<ProjectLocationManager> restoreManager(Spark spark) {
-  return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
-    return fileSystemAccess.restoreManager(spark, folderToken);
+Future<ProjectLocationManager> restoreManager(
+    Notifier notifier, PreferenceStore prefs) {
+  return prefs.getValue('projectFolder').then((String folderToken) {
+    return fileSystemAccess.restoreManager(notifier, prefs, folderToken);
   });
 }
 
@@ -86,8 +88,9 @@ class FileSystemAccess {
    * Restores the ProjectLocationManager and returns a future with its value,
    * based on a folder token.
    */
-  Future<ProjectLocationManager> restoreManager(Spark spark, String folderToken) {
-    return ProjectLocationManager.restoreManager(spark, folderToken)
+  Future<ProjectLocationManager> restoreManager(Notifier notifier,
+      PreferenceStore prefs, String folderToken) {
+    return ProjectLocationManager.restoreManager(notifier, prefs, folderToken)
         .then((ProjectLocationManager manager) {
       _locationManager = manager;
       return manager;
@@ -154,12 +157,13 @@ class MockFileSystemAccess extends FileSystemAccess {
     return new Future.value(entry.fullPath);
   }
 
-  Future<ProjectLocationManager> restoreManager(Spark spark, String folderToken) {
-    return MockProjectLocationManager.restoreManager(spark)
-        .then((ProjectLocationManager manager) {
-          _locationManager = manager;
-          return manager;
-        });
+  Future<ProjectLocationManager> restoreManager(Notifier notifier,
+      PreferenceStore prefs, String folderToken) {
+    return MockProjectLocationManager.restoreManager(notifier, prefs).then(
+        (ProjectLocationManager manager) {
+      _locationManager = manager;
+      return manager;
+    });
   }
 
   ws.WorkspaceRoot getRootFor(LocationResult location) {
@@ -174,28 +178,29 @@ class MockFileSystemAccess extends FileSystemAccess {
  * Windows/Mac/linux.
  */
 class ProjectLocationManager {
+  final Notifier notifier;
+  final PreferenceStore prefs;
   LocationResult _projectLocation;
-  final Spark _spark;
 
   /**
    * Create a ProjectLocationManager asynchronously, restoring the default
    * project location from the given preferences.
    */
-  static Future<ProjectLocationManager> restoreManager(Spark spark,
-      String folderToken) {
+  static Future<ProjectLocationManager> restoreManager(Notifier notifier,
+      PreferenceStore prefs, String folderToken) {
 
     // If there is nothing to restore, create a new ProjectLocationManager.
     if (folderToken == null) {
-      return new Future.value(new ProjectLocationManager._(spark));
+      return new Future.value(new ProjectLocationManager._(notifier, prefs));
     }
 
     return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
       return _initFlagsFromProjectLocation(entry).then((_) {
-        return new Future.value(new ProjectLocationManager._(spark,
+        return new Future.value(new ProjectLocationManager._(notifier, prefs,
             new LocationResult(entry, entry, false)));
       });
     }).catchError((e) {
-      return new Future.value(new ProjectLocationManager._(spark));
+      return new Future.value(new ProjectLocationManager._(notifier, prefs));
     });
   }
 
@@ -213,8 +218,7 @@ class ProjectLocationManager {
     });
   }
 
-  //this._prefs, this._workspace
-  ProjectLocationManager._(this._spark, [this._projectLocation]);
+  ProjectLocationManager._(this.notifier, this.prefs, [this._projectLocation]);
 
   /**
    * Returns the default location to create new projects in. For Chrome OS, this
@@ -272,15 +276,16 @@ class ProjectLocationManager {
       if (entry == null) return null;
 
       _projectLocation = new LocationResult(entry, entry, false);
-      _spark.localPrefs.setValue('projectFolder',
-          chrome.fileSystem.retainEntry(entry));
+      prefs.setValue('projectFolder', chrome.fileSystem.retainEntry(entry));
       return _projectLocation;
     });
   }
 
   Future<bool> _showRequestFileSystemDialog() {
-    return _spark.askUserOkCancel('Please choose a folder to store your Chrome Dev Editor projects.',
-        okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
+    return notifier.askUserOkCancel(
+        'Please choose a folder to store your Chrome Dev Editor projects.',
+        okButtonLabel: 'Choose Folder',
+        title: 'Choose top-level workspace folder');
   }
 
   /**
@@ -348,10 +353,13 @@ class LocationResult {
 
 class MockProjectLocationManager extends ProjectLocationManager {
   LocationResult _projectLocation;
-  MockProjectLocationManager(Spark spark) : super._(spark);
 
-  static Future<ProjectLocationManager> restoreManager(Spark spark) {
-    return new Future.value(new MockProjectLocationManager(spark));
+  MockProjectLocationManager(Notifier notifier, PreferenceStore prefs) :
+      super._(notifier, prefs);
+
+  static Future<ProjectLocationManager> restoreManager(Notifier notifier,
+      PreferenceStore prefs) {
+    return new Future.value(new MockProjectLocationManager(notifier, prefs));
   }
 
   Future setupRoot() {

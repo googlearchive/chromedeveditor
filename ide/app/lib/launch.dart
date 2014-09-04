@@ -13,6 +13,7 @@ import 'dart:html' show window;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome/gen/management.dart';
+import 'package:chrome_net/server.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
@@ -23,13 +24,11 @@ import 'exception.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
-import 'server.dart';
+import 'platform_info.dart';
 import 'services.dart';
 import 'utils.dart';
 import 'workspace.dart';
 import 'workspace_utils.dart';
-// TODO(devoncarew): We don't want a dependency from here to spark.dart...
-import '../spark.dart';
 
 final Logger _logger = new Logger('spark.launch');
 
@@ -67,13 +66,13 @@ class LaunchManager {
   List<LaunchParticipant> launchParticipants = [];
 
   LaunchManager(this.workspace, this._services, this._pubManager,
-      this._bowerManager, this._notifier) {
+      this._bowerManager, this._notifier, LaunchController launchController) {
 
     applicationLocators.add(new ChromeAppLocator());
     applicationLocators.add(new WebAppLocator());
 
     launchTargetHandlers.add(new ChromeAppLocalLaunchHandler());
-    launchTargetHandlers.add(new ChromeAppRemoteLaunchHandler());
+    launchTargetHandlers.add(new ChromeAppRemoteLaunchHandler(launchController));
     WebAppLocalLaunchHandler localWebHandler = new WebAppLocalLaunchHandler(
         this, workspace, _services, _pubManager, _bowerManager, _notifier);
     launchTargetHandlers.add(localWebHandler);
@@ -172,6 +171,10 @@ class LaunchManager {
 
     return null;
   }
+}
+
+abstract class LaunchController {
+  void displayDeployToMobileDialog(Resource launchResource);
 }
 
 /**
@@ -416,6 +419,15 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
 
     Container container = application.primaryResource;
 
+    // TODO(grv): remove after chrome 38 is stable.
+    final Pattern pattern = '/special/drive-';
+    if (PlatformInfo.chromeVersion < 38 && PlatformInfo.isCros &&
+        container.entry.fullPath.startsWith(pattern)) {
+      return new Future.error(
+          'Unable to launch; running Chrome Apps from Google Drive is only '
+          'supported in Chrome 38 or higher.');
+    }
+
     String idToLaunch;
 
     // Check if we need to fiddle with the app id to launch Spark.
@@ -510,7 +522,9 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
  * A launch target handler to launch chrome apps on mobile devices.
  */
 class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
-  ChromeAppRemoteLaunchHandler();
+  final LaunchController launchController;
+
+  ChromeAppRemoteLaunchHandler(this.launchController);
 
   String get name => 'Remote Chrome App';
 
@@ -520,8 +534,7 @@ class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
   }
 
   Future launch(Application application, LaunchTarget launchTarget) {
-    DeployToMobileDialog.deploy(application.primaryResource);
-
+    launchController.displayDeployToMobileDialog(application.primaryResource);
     return new Future.value();
   }
 

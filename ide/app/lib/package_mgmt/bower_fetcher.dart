@@ -20,8 +20,8 @@ import 'package:logging/logging.dart';
 import '../enum.dart';
 import '../jobs.dart';
 import '../scm.dart';
+import '../spark_flags.dart';
 import '../utils.dart' as util;
-import '../../spark_flags.dart';
 
 final Logger _logger = new Logger('spark.bower_fetcher');
 
@@ -250,38 +250,47 @@ class BowerFetcher {
 
   Future _inflateArchive(List<int> bytes, chrome.DirectoryEntry dir) {
     // For some reason, [bytes], in particular obtained via an XHR, need
-    // to be cleansed first; otherwise, [ArchiveFile.content] below hangs.
+    // to be cleansed first; otherwise, [file.content] further below hangs.
     final List<int> cleansedBytes = bytes.map((b) => b & 0xff).toList();
     final arc.Archive archive =
         new arc.ZipDecoder().decodeBytes(cleansedBytes, verify: false);
-    // Sequentially write files in the archive to [dir].
-    // TODO(ussuri): Consider doing  this in parallel using [Future.wait], as
-    // [_writeArchiveFile] does both I/O and CPU (for decompression). Also,
-    // that would make writes independent from each other.
+    // Sequentially write files in the archive to [dir]. This is critical:
+    // [archive.files] are listed in the standard `ls` order, with parent
+    // subdirectories preceding the files they contain; thus, sequential
+    // execution will first create the dir, and then populate it with its files.
     return Future.forEach(archive.files, (arc.ArchiveFile file) {
-      _writeArchiveFile(file, dir);
+      _writeArchiveEntry(file, dir);
     });
   }
 
-  Future _writeArchiveFile(arc.ArchiveFile file, chrome.DirectoryEntry dir) {
+  Future _writeArchiveEntry(arc.ArchiveFile file, chrome.DirectoryEntry dir) {
+    // GitHub archives always contain a top level directory named
+    // <package_name>-<branch>. We don't need it.
+    final String path = file.name.replaceFirst(_ZIP_TOP_LEVEL_DIR_RE, '');
+    if (path.isEmpty) return new Future.value();
+
     // NOTE: [ArchiveFile.isFile] always returns true (bug?). Use a workaround.
-    if (file.size == 0 && file.name.endsWith('/')) {
-      // GitHub archives always contain a top level directory named
-      // <package_name>-<branch>. We're not interested in it.
-      // We also don't have to create any sub-directories: [_writeFile] will.
-      return new Future.value();
+    if (file.size == 0 && path.endsWith('/')) {
+      return _createDirectory(path, dir);
     } else {
-      // Same as above: strip the top level directory from the file name.
-      String fileName = file.name.replaceFirst(_ZIP_TOP_LEVEL_DIR_RE, '');
-      return _writeFile(fileName, file.content, dir);
+      return _writeFile(path, dir, file.content);
     }
   }
 
-  Future _writeFile(String path, List<int> bytes, chrome.DirectoryEntry dir) {
-    return dir.createFile(path, exclusive: false).then(
+  Future _createDirectory(String path, chrome.DirectoryEntry parentDir) {
+    return parentDir.createDirectory(path, exclusive: false).catchError((e) {
+      throw "Couldn't create subdirectory $path: $e";
+    });
+  }
+
+  Future _writeFile(
+      String path, chrome.DirectoryEntry parentDir, List<int> bytes) {
+    return parentDir.createFile(path, exclusive: false).then(
         (chrome.ChromeFileEntry entry) {
       final buffer = new chrome.ArrayBuffer.fromBytes(bytes);
       return entry.writeBytes(buffer);
+    }).catchError((e) {
+        throw "Couldn't create file $path: $e";
     });
   }
 
@@ -311,21 +320,21 @@ Some dependencies have been ignored:
     if (_unresolvedDepsComments.isNotEmpty) {
       _logger.warning(
 '''
-Some dependencies could not be resolved and have been skipped. 
-To fix, add or modify the following entry in .spark.json under your workspace 
-directory: 
+Some dependencies could not be resolved and have been skipped.
+To fix, add or modify the following entry in .spark.json under your workspace
+directory:
 
   "bower-override-dependencies": {
     ${_unresolvedDepsComments.join('\n    ')}
   }
 
-Alternatively, you can have any dependency ignored by adding its name to 
+Alternatively, you can have any dependency ignored by adding its name to
 the following list in .spark.json:
 
   "bower-ignore-dependencies": [
   ]
 
-Finally, you can also map unsupported complex versions to latest stable 
+Finally, you can also map unsupported complex versions to latest stable
 by adding the following to .spark.json:
 
   "bower-map-complex-ver-to-latest-stable": true

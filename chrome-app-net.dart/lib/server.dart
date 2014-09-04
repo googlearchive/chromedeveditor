@@ -3,15 +3,14 @@
 // license that can be found in the LICENSE file.
 
 /**
- * An embedded http server. This is used when launching web apps from Spark.
+ * An embedded http server.
  */
-library spark.server;
+library chrome_net.server;
 
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:intl/intl.dart' as intl;
-import 'package:logging/logging.dart';
 import 'package:mime/mime.dart' as mime;
 
 import 'tcp.dart' as tcp;
@@ -20,8 +19,6 @@ const int DEFAULT_HTTP_PORT = 80;
 
 final intl.DateFormat RFC_1123_DATE_FORMAT =
     new intl.Intl().date('EEE, dd MMM yyyy HH:mm:ss z');
-
-final Logger _logger = new Logger('spark.server');
 
 // TODO(devoncarew): support HEAD requests
 
@@ -36,8 +33,9 @@ final Logger _logger = new Logger('spark.server');
  *     dispose();
  */
 class PicoServer {
-  tcp.TcpServer _server;
-  List<PicoServlet> _servlets = [];
+  final tcp.TcpServer _server;
+  final List<PicoServlet> _servlets = [];
+  ServerLogger _logger = new _NullLogger();
 
   /**
    * Create an instance of an http server, bound to the given port. If [port] is
@@ -53,6 +51,10 @@ class PicoServer {
     _server.onAccept.listen(_serveClient);
   }
 
+  void setLogger(ServerLogger logger) {
+    _logger = logger == null ? new _NullLogger() : logger;
+  }
+
   int get port => _server.port;
 
   void addServlet(PicoServlet servlet) => _servlets.add(servlet);
@@ -65,7 +67,7 @@ class PicoServer {
 
   void _serveClient(tcp.TcpClient client) {
     HttpRequest._parse(client).then((HttpRequest request) {
-      _logger.info('<== ${request}');
+      _logger.log('<== ${request}');
 
       for (PicoServlet servlet in _servlets) {
         if (servlet.canServe(request)) {
@@ -75,13 +77,13 @@ class PicoServer {
       }
 
       HttpResponse response = new HttpResponse.notFound();
-      _logger.info('==> ${response}');
+      _logger.log('==> ${response}');
       response._send(client).then((_) {
         client.dispose();
       });
     }).catchError((e) {
       HttpResponse response = new HttpResponse.badRequest();
-      _logger.info('==> ${response}');
+      _logger.log('==> ${response}');
       response._send(client).then((_) {
         client.dispose();
       });
@@ -90,13 +92,17 @@ class PicoServer {
 
   void _serve(PicoServlet servlet, tcp.TcpClient client, HttpRequest request) {
     servlet.serve(request).then((HttpResponse response) {
-      _logger.info('==> ${response}');
+      _logger.log('==> ${response}');
       response._send(client).then((_) {
         // TODO: Try and re-use the connection.
         client.dispose();
       });
     });
   }
+}
+
+abstract class ServerLogger {
+  void log(String message);
 }
 
 /**
@@ -184,7 +190,18 @@ class HttpRequest {
 
     if (strs.length > 2) {
       method = strs[0];
-      path = new Uri(path: strs[1]);
+
+      String file = strs[1];
+      String query = null;
+
+      int index = file.indexOf('?');
+
+      if (index != -1) {
+        query = file.substring(index + 1);
+        file = file.substring(0, index);
+      }
+
+      path = new Uri(path: file, query: query);
       version = _parseVersion(strs[2]);
     }
 
@@ -1190,4 +1207,8 @@ class BytesBuilder {
    * Clear the contents of the builder.
    */
   void clear() => _buffer.clear();
+}
+
+class _NullLogger extends ServerLogger {
+  void log(String message) { }
 }
