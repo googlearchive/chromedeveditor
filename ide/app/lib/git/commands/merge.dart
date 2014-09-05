@@ -7,8 +7,12 @@ library git.commands.merge;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:chrome/chrome_app.dart' as chrome;
+
 import 'checkout.dart';
 import 'commit.dart';
+import 'constants.dart';
+import 'index.dart';
 import '../diff3.dart';
 import '../exception.dart';
 import '../file_operations.dart';
@@ -129,8 +133,17 @@ class Merge {
 
       switch (nextX) {
         case 0:
-          TreeEntry theirEntry = allTrees[2][indices[2]];
-          TreeEntry baseEntry = allTrees[1][indices[1]];
+          TreeEntry theirEntry = TreeEntry.dummyEntry(false);
+          TreeEntry baseEntry = TreeEntry.dummyEntry(false);
+
+          if (indices[2] < allTrees[2].length) {
+            theirEntry = allTrees[2][indices[2]];
+          }
+
+          if (indices[1] < allTrees[1].length) {
+            baseEntry = allTrees[1][indices[1]];
+          }
+
           if (theirEntry.name == next.name) {
             if (!shasEqual(theirEntry.shaBytes, next.shaBytes)) {
               if (baseEntry.name != next.name) {
@@ -145,8 +158,12 @@ class Merge {
               if (next.isBlob == theirEntry.isBlob && (baseEntry.isBlob
                   == next.isBlob)) {
                 if (shasEqual(next.shaBytes, baseEntry.shaBytes)) {
-                  finalTree.entries.add(new MergeTreeEntry(
-                      theirEntry, rootPath +'/' +  theirEntry.name, MergeEntryType.MODIFIED));
+                  if (next.isBlob) {
+                    finalTree.entries.add(new MergeTreeEntry(
+                        theirEntry, rootPath +'/' +  theirEntry.name, MergeEntryType.MODIFIED));
+                  } else {
+                    merges.add(new MergeItem(next, baseEntry, theirEntry));
+                  }
                 } else if (shasEqual(baseEntry.shaBytes, theirEntry.shaBytes)){
                 } else {
                   merges.add(new MergeItem(next, baseEntry, theirEntry));
@@ -166,13 +183,18 @@ class Merge {
               ///conflicts.add(new MergeItem(next, baseEntry, null, true));
             } else {
               finalTree.entries.add(new MergeTreeEntry(next, rootPath +'/' +  next.name,
-                  MergeEntryType.REMOVE, conflict: true));
+                  MergeEntryType.REMOVE));
             }
           }
           break;
 
         case 1:
-          TreeEntry theirEntry = allTrees[2][indices[2]];
+          TreeEntry theirEntry = TreeEntry.dummyEntry(false);
+
+          if (indices[2] < allTrees[2].length) {
+            theirEntry = allTrees[2][indices[2]];
+          };
+
           if (next.name == theirEntry.name && !shasEqual(next.shaBytes,
               theirEntry.shaBytes)) {
             // deleted from ours but changed in theirs. Delete/modify conflict.
@@ -326,7 +348,7 @@ class Merge {
     });
   }
 
-  static Future _checkoutEntry(
+  static Future<chrome.Entry> _checkoutEntry(
       ObjectStore store, MergeTreeEntry entry, bool updateIndex) {
     String path = entry.path.substring(store.root.fullPath.length + 1);
     return ObjectUtils.expandBlob(store.root, store, path, entry.entry.sha,
@@ -334,21 +356,29 @@ class Merge {
   }
 
   static Future _checkoutMergedTree(ObjectStore store, MergeTreeDiff tree) {
-    Future.forEach(tree.adds(), (MergeTreeEntry entry) {
-      return _checkoutEntry(store, entry, true);
+    return Future.forEach(tree.adds(), (MergeTreeEntry entry) {
+      return _checkoutEntry(store, entry, false).then((chrome.Entry entry) {
+        FileStatus status = FileStatus.createFromEntry(entry);
+         status.type = FileStatusType.MODIFIED;
+         store.index.updateIndexForEntry(entry, status);
+      });
     }).then((_) {
-      Future.forEach(tree.removes(), (MergeTreeEntry entry) {
-        return store.root.getFile(entry.path).then((fileEntry) =>
-            fileEntry.remove());
+      return Future.forEach(tree.removes(), (MergeTreeEntry entry) {
+        try {
+          return store.root.getFile(entry.path).then((fileEntry) =>
+              fileEntry.remove().catchError((e) => true));
+        } catch(e) {
+          return new Future.value();
+        }
       }).then((_) {
-        Future.forEach(tree.modified(), (MergeTreeEntry entry) {
+        return Future.forEach(tree.modified(), (MergeTreeEntry entry) {
           return _checkoutEntry(store, entry, false);
         }).then((_) {
-          Future.forEach(tree.unmerged(), (MergeTreeEntry entry) {
+          return Future.forEach(tree.unmerged(), (MergeTreeEntry entry) {
             return _checkoutEntry(store, entry, false);
           }).then((_) {
             return store.index.updateIndex().then((_) {
-              Future.forEach(tree.unmerged(), (MergeTreeEntry entry) {
+              return Future.forEach(tree.unmerged(), (MergeTreeEntry entry) {
                  store.index.updateStatusAsUnmerged(entry.path);
               });
             });
@@ -356,6 +386,5 @@ class Merge {
         });
       });
     });
-    return new Future.value();
   }
 }

@@ -92,7 +92,9 @@ abstract class ObjectUtils {
       return FileOps.createFileWithContent(dir, fileName, blob.data,
           ObjectTypes.BLOB_STR).then((chrome.Entry entry) {
         if (updateIndex == true) {
-          return createAndUpdateIndex(store, entry, blobSha, permission);
+          return createAndUpdateIndex(store, entry, blobSha, permission).then((_) => entry);
+        } else {
+          return entry;
         }
       });
     });
