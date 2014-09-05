@@ -17,10 +17,10 @@ class SparkFlags {
    * Accessors to the currently supported flags.
    */
   // NOTE: '...== true' below are on purpose: missing flags default to false.
-  static bool get developerMode => _flags['test-mode'] == true;
-
   // NOTE: The flags below are formatted in a uniform fashion for readability.
-  
+  static bool get developerMode =>
+      _flags['test-mode'] == true;
+
   // Editor:
   static bool get useLightAceThemes =>
       _flags['light-ace-themes'] == true;
