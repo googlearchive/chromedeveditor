@@ -20,8 +20,11 @@ import '../jobs.dart';
 import '../preferences.dart';
 import '../workspace.dart';
 import '../workspace_utils.dart';
+import '../apps/app_utils.dart';
+import '../spark_flags.dart';
 
 Logger _logger = new Logger('spark.deploy');
+PreferenceStore get localPrefs => localStore;
 
 class DeviceInfo {
   final int vendorId;
@@ -414,4 +417,53 @@ class ADBDeployer extends HttpDeployer {
   ADBDeployer(Container appContainer, PreferenceStore _prefs)
      : super(appContainer, _prefs, TARGET) {
   }
+}
+
+class LiveDeployManager {
+    static final LiveDeployManager _singleton = new LiveDeployManager._internal();
+    Project _currentProject;
+
+    factory LiveDeployManager() {
+      return _singleton;
+    }
+
+    void init(Workspace workspace) {
+      if (SparkFlags.liveDeployMode) {
+        workspace.onResourceChange.forEach((ResourceChangeEvent event) {
+          event.modifiedProjects.forEach((Project p) {
+            if (p == _currentProject) {
+              return localPrefs.getValue("live-deployment").then((value) {
+                if (value == true) {
+                  return _liveDeploy(getAppContainerFor(p));
+                }
+              });
+            }
+          });
+        });
+      }
+    }
+
+    void setCurrentProject(Project project) {
+      this._currentProject = project;
+    }
+
+    LiveDeployManager._internal();
+
+    Future _liveDeploy(Container deployContainer) {
+      ProgressMonitor _monitor = new ProgressMonitor();
+      MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
+
+      // Invoke the deployer methods in Futures in order to capture exceptions.
+      Future f = new Future(() {
+        return deployer.pushAdb(_monitor);
+      });
+
+      return _monitor.runCancellableFuture(f).then((_) {
+        setDeploymentTime(deployContainer,
+            (new DateTime.now()).millisecondsSinceEpoch);
+      }).catchError((e) {
+      }).whenComplete(() {
+        _monitor = null;
+      });
+    }
 }

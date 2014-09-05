@@ -295,19 +295,7 @@ abstract class Spark
 
   void initLiveDeploy() {
     localPrefs.setValue("live-deployment", false);
-    if (SparkFlags.liveDeployMode) {
-      workspace.onResourceChange.forEach((ResourceChangeEvent event) {
-        event.modifiedProjects.forEach((Project p) {
-          if (p == currentProject) {
-            return localPrefs.getValue("live-deployment").then((value) {
-              if (value == true) {
-                return liveDeploy(getAppContainerFor(p));
-              }
-            });
-          }
-        });
-      });
-    }
+    (new LiveDeployManager()).init(workspace);
   }
 
   void initAnalytics() {
@@ -585,24 +573,6 @@ abstract class Spark
   //
   // - End parts of init().
   //
-
-  Future liveDeploy(ws.Container deployContainer) {
-    ProgressMonitor _monitor = new ProgressMonitor();
-    MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
-
-    // Invoke the deployer methods in Futures in order to capture exceptions.
-    Future f = new Future(() {
-      return deployer.pushAdb(_monitor);
-    });
-
-    return _monitor.runCancellableFuture(f).then((_) {
-      ws_utils.setDeploymentTime(deployContainer,
-          (new DateTime.now()).millisecondsSinceEpoch);
-    }).catchError((e) {
-    }).whenComplete(() {
-      _monitor = null;
-    });
-  }
 
   void addBuilder(Builder builder) {
     workspace.builderManager.builders.add(builder);
@@ -2285,6 +2255,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
+  ws.Resource _resource;
 
   DeployToMobileDialog(Spark spark, Element dialog)
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
@@ -2302,15 +2273,13 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   SparkDialogButton get _deployButton => getElement("[submit]");
 
   void _invoke([context]) {
-    ws.Resource resource;
-
     if (context == null) {
-      resource = spark.focusManager.currentResource;
+      _resource = spark.focusManager.currentResource;
     } else {
-      resource = context.first;
+      _resource = context.first;
     }
 
-    deployContainer = getAppContainerFor(resource);
+    deployContainer = getAppContainerFor(_resource);
 
     if (deployContainer == null) {
       spark.showErrorMessage(
@@ -2362,6 +2331,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       if (SparkFlags.liveDeployMode) {
         InputElement liveDeployCheckBox = getElement("#liveDeploy");
         spark.localPrefs.setValue("live-deployment", liveDeployCheckBox.checked);
+        (new LiveDeployManager()).setCurrentProject(_resource);
       }
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
