@@ -501,7 +501,6 @@ abstract class Spark
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this, getDialogElement('#statusDialog')));
-    actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
@@ -3191,39 +3190,6 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   String get category => 'git';
 
   bool appliesTo(context) => _isScmProject(context);
-}
-
-class GitResolveConflictsAction extends SparkAction implements ContextAction {
-  GitResolveConflictsAction(Spark spark) :
-      super(spark, "git-resolve-conflicts", "Resolve Conflicts");
-
-  void _invoke([context]) {
-    ws.Resource file = _getResource(context);
-    ScmProjectOperations operations =
-        spark.scmManager.getScmOperationsFor(file.project);
-
-    operations.markResolved(file);
-  }
-
-  String get category => 'git';
-
-  bool appliesTo(context) => _isUnderScmProject(context) &&
-      _isSingleResource(context) && _fileHasConflicts(context);
-
-  bool _fileHasConflicts(context) {
-    ws.Resource file = _getResource(context);
-    ScmProjectOperations operations =
-        spark.scmManager.getScmOperationsFor(file.project);
-    return operations.getFileStatus(file) == ScmFileStatus.UNMERGED;
-  }
-
-  ws.Resource _getResource(context) {
-    if (context is List) {
-      return context.isNotEmpty ? context.first : null;
-    } else {
-      return null;
-    }
-  }
 }
 
 class GitRevertChangesAction extends SparkAction implements ContextAction {
