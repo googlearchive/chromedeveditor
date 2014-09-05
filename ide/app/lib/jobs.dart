@@ -196,7 +196,7 @@ class ProgressFormat extends Enum<String> {
  * monitor), and [maxWork] (the [work] value determining when progress is
  * complete).  A maxWork of 0 indicates that progress cannot be determined.
  */
-abstract class ProgressMonitor {
+class ProgressMonitor {
   String _title;
   num _maxWork;
   num _work = 0;

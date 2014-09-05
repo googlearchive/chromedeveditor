@@ -1,6 +1,6 @@
 {
   "test-mode": false,
-  "watch": true,
+  "live-deploy-mode": true,
   "light-ace-themes": false,
   "wip-project-templates": false,
   "analyze-javascript": false,

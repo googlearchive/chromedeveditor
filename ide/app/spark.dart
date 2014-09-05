@@ -156,6 +156,7 @@ abstract class Spark
     initLaunchManager();
 
     initLiveDeploy();
+
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
       // content of the workspace from other applications. For that reason, when
@@ -299,13 +300,13 @@ abstract class Spark
         event.modifiedProjects.forEach((Project p) {
           if (p == currentProject) {
             return localPrefs.getValue("live-deployment").then((value) {
-              if (value == true)
-                return _liveDeploy(getAppContainerFor(p));
+              if (value == true) {
+                return liveDeploy(getAppContainerFor(p));
+              }
             });
           }
         });
       });
-
     }
   }
 
@@ -585,8 +586,8 @@ abstract class Spark
   // - End parts of init().
   //
 
-  Future _liveDeploy(ws.Container deployContainer) {
-    ProgressMonitorImplN _monitor = new ProgressMonitorImplN();
+  Future liveDeploy(ws.Container deployContainer) {
+    ProgressMonitor _monitor = new ProgressMonitor();
     MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
 
     // Invoke the deployer methods in Futures in order to capture exceptions.
@@ -597,9 +598,7 @@ abstract class Spark
     return _monitor.runCancellableFuture(f).then((_) {
       ws_utils.setDeploymentTime(deployContainer,
           (new DateTime.now()).millisecondsSinceEpoch);
-      print("succesfull push");
     }).catchError((e) {
-      print("push failure");
     }).whenComplete(() {
       _monitor = null;
     });
@@ -4080,17 +4079,6 @@ class RunPythonAction extends SparkAction {
         });
       });
     });
-  }
-}
-
-class ProgressMonitorImplN extends ProgressMonitor {
-
-  ProgressMonitorImplN();
-
-  void start(String title,
-             {num maxWork: 0,
-              ProgressFormat format: ProgressFormat.NONE}) {
-    super.start(title, maxWork: maxWork, format: format);
   }
 }
 
