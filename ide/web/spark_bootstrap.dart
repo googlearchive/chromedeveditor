@@ -39,21 +39,22 @@ void registerWidgetsWithPolymer() {
   startPolymer([], false);
 
   // Register Polymer components (ones that are actually used in the app).
+  // NOTE: The order is important, following the dependency graph.
   Polymer.register('spark-widget', SparkWidget);
 
   Polymer.register('spark-button', SparkButton);
+  Polymer.register('spark-overlay', SparkOverlay);
+  Polymer.register('spark-modal', SparkModal);
   Polymer.register('spark-dialog', SparkDialog);
   Polymer.register('spark-dialog-button', SparkDialogButton);
   Polymer.register('spark-icon', SparkIcon);
-  Polymer.register('spark-menu', SparkMenu);
-  Polymer.register('spark-menu-button', SparkMenuButton);
-  Polymer.register('spark-menu-item', SparkMenuItem);
-  Polymer.register('spark-menu-separator', SparkMenuSeparator);
-  Polymer.register('spark-modal', SparkModal);
-  Polymer.register('spark-overlay', SparkOverlay);
-  Polymer.register('spark-progress', SparkProgress);
   Polymer.register('spark-selection', SparkSelection);
   Polymer.register('spark-selector', SparkSelector);
+  Polymer.register('spark-menu-item', SparkMenuItem);
+  Polymer.register('spark-menu-separator', SparkMenuSeparator);
+  Polymer.register('spark-menu', SparkMenu);
+  Polymer.register('spark-menu-button', SparkMenuButton);
+  Polymer.register('spark-progress', SparkProgress);
   Polymer.register('spark-splitter', SparkSplitter);
   Polymer.register('spark-split-view', SparkSplitView);
   Polymer.register('spark-status', SparkStatus);
