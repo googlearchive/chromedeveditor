@@ -26,7 +26,8 @@ class Add {
   static Future<FileStatus> addEntry(GitOptions options, chrome.Entry entry) {
     return Status.updateAndGetStatus(options.store, entry).then(
         (FileStatus status) {
-      if (status.type == FileStatusType.UNTRACKED) {
+      if (status.type == FileStatusType.UNTRACKED ||
+          status.type == FileStatusType.UNMERGED) {
         status = FileStatus.createFromEntry(entry);
         status.type = FileStatusType.MODIFIED;
         options.store.index.updateIndexForEntry(entry, status);

@@ -2612,9 +2612,11 @@ class GitAddAction extends SparkActionWithStatusDialog implements ContextAction 
       => _isUnderScmProject(object) && _valid(object);
 
   bool _valid(List<ws.Resource> resources) {
-    return resources.any((resource) =>
-      new ScmFileStatus.createFrom(resource.getMetadata('scmStatus'))
-          == ScmFileStatus.UNTRACKED);
+    return resources.any((resource) {
+      ScmFileStatus status = new ScmFileStatus.createFrom(
+          resource.getMetadata('scmStatus'));
+      return status == ScmFileStatus.UNTRACKED || status == ScmFileStatus.UNMERGED;
+    });
   }
 }
 

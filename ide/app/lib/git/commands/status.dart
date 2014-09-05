@@ -124,7 +124,7 @@ class Status {
 
     return store.index.updateIndex(true).then((_) {
       Map<String, FileStatus> statuses = _getFileStatusesForTypes(store,
-          [FileStatusType.MODIFIED, FileStatusType.STAGED]);
+          [FileStatusType.MODIFIED, FileStatusType.STAGED, FileStatusType.UNMERGED]);
       if (statuses.isNotEmpty) {
         throw new GitException(GitErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
       }

@@ -336,8 +336,9 @@ class Merge {
                     headRefName);
               });
             } else {
-              return new Future.error(
-                  new GitException(GitErrorConstants.GIT_MERGE_ERROR));
+              return _checkoutMergedTree(store, mergedTree).then((_) {
+                return new Future.error("Unable to auto-merge. Resolve the conflicts and merge manually.");
+              });
             }
           });
         }).catchError((e) {
