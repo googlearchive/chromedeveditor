@@ -22,10 +22,9 @@ import '../workspace.dart';
 import '../workspace_utils.dart';
 import '../apps/app_utils.dart';
 import '../spark_flags.dart';
-import '../../spark.dart';
 
 Logger _logger = new Logger('spark.deploy');
-PreferenceStore get localPrefs => localStore;
+PreferenceStore get _localPrefs => localStore;
 
 class DeviceInfo {
   final int vendorId;
@@ -423,16 +422,21 @@ class ADBDeployer extends HttpDeployer {
 class LiveDeployManager {
     static final LiveDeployManager _singleton = new LiveDeployManager._internal();
 
+    StreamSubscription _sub;
+    Function _onError;
+
     factory LiveDeployManager() {
       return _singleton;
     }
 
     void _init(Project currentProject) {
       if (SparkFlags.liveDeployMode) {
-        currentProject.workspace.onResourceChange.forEach((ResourceChangeEvent event) {
+        if (_sub != null) _sub.cancel();
+        _sub = currentProject.workspace.onResourceChange.listen(null);
+        _sub.onData((ResourceChangeEvent event) {
           event.modifiedProjects.forEach((Project p) {
             if (p == currentProject) {
-              return localPrefs.getValue("live-deployment").then((value) {
+              return _localPrefs.getValue("live-deployment").then((value) {
                 if (value == true) {
                   return _liveDeploy(getAppContainerFor(p));
                 }
@@ -443,15 +447,17 @@ class LiveDeployManager {
       }
     }
 
-    static startLiveDeploy(Project currentProject) {
-        _singleton._init(currentProject);
+    static startLiveDeploy(Project currentProject,
+        {void onError(var exception)}) {
+      _singleton._init(currentProject);
+      _singleton._onError = onError;
     }
 
     LiveDeployManager._internal();
 
     Future _liveDeploy(Container deployContainer) {
       ProgressMonitor _monitor = new ProgressMonitor();
-      MobileDeploy deployer = new MobileDeploy(deployContainer, localPrefs);
+      MobileDeploy deployer = new MobileDeploy(deployContainer, _localPrefs);
 
       // Invoke the deployer methods in Futures in order to capture exceptions.
       Future f = new Future(() {
@@ -462,6 +468,7 @@ class LiveDeployManager {
         setDeploymentTime(deployContainer,
             (new DateTime.now()).millisecondsSinceEpoch);
       }).catchError((e) {
+        _onError('Error During Live Deployment', exception: e);
       }).whenComplete(() {
         _monitor = null;
       });
