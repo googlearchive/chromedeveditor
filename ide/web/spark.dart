@@ -295,7 +295,6 @@ abstract class Spark
 
   void initLiveDeploy() {
     localPrefs.setValue("live-deployment", false);
-    (new LiveDeployManager()).init(workspace);
   }
 
   void initAnalytics() {
@@ -2331,7 +2330,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       if (SparkFlags.liveDeployMode) {
         InputElement liveDeployCheckBox = getElement("#liveDeploy");
         spark.localPrefs.setValue("live-deployment", liveDeployCheckBox.checked);
-        (new LiveDeployManager()).setCurrentProject(_resource);
+        LiveDeployManager.startLiveDeploy(_resource.project);
       }
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {

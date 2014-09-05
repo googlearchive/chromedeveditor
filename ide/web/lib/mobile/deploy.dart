@@ -22,6 +22,7 @@ import '../workspace.dart';
 import '../workspace_utils.dart';
 import '../apps/app_utils.dart';
 import '../spark_flags.dart';
+import '../../spark.dart';
 
 Logger _logger = new Logger('spark.deploy');
 PreferenceStore get localPrefs => localStore;
@@ -421,17 +422,16 @@ class ADBDeployer extends HttpDeployer {
 
 class LiveDeployManager {
     static final LiveDeployManager _singleton = new LiveDeployManager._internal();
-    Project _currentProject;
 
     factory LiveDeployManager() {
       return _singleton;
     }
 
-    void init(Workspace workspace) {
+    void _init(Project currentProject) {
       if (SparkFlags.liveDeployMode) {
-        workspace.onResourceChange.forEach((ResourceChangeEvent event) {
+        currentProject.workspace.onResourceChange.forEach((ResourceChangeEvent event) {
           event.modifiedProjects.forEach((Project p) {
-            if (p == _currentProject) {
+            if (p == currentProject) {
               return localPrefs.getValue("live-deployment").then((value) {
                 if (value == true) {
                   return _liveDeploy(getAppContainerFor(p));
@@ -443,8 +443,8 @@ class LiveDeployManager {
       }
     }
 
-    void setCurrentProject(Project project) {
-      this._currentProject = project;
+    static startLiveDeploy(Project currentProject) {
+        _singleton._init(currentProject);
     }
 
     LiveDeployManager._internal();

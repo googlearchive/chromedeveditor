@@ -604,13 +604,13 @@ Future<String> downloadFileViaXhr(
 
 class DelayedTimer {
   Timer _timer;
-  final Duration delay;
-  final Function fn;
+  final Duration _delay;
+  final Function _fn;
 
-  DelayedTimer(this.fn, this.delay);
+  DelayedTimer(this._fn, this._delay);
 
   void start() {
     if (_timer != null) _timer.cancel();
-    _timer = new Timer(delay, fn);
+    _timer = new Timer(_delay, _fn);
   }
 }
