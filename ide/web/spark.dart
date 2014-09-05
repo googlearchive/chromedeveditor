@@ -155,8 +155,6 @@ abstract class Spark
 
     initLaunchManager();
 
-    initLiveDeploy();
-
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
       // content of the workspace from other applications. For that reason, when
@@ -291,10 +289,6 @@ abstract class Spark
         (ErrorMessageBusEvent event) {
       showErrorMessage(event.title, message: event.error.toString());
     });
-  }
-
-  void initLiveDeploy() {
-    localPrefs.setValue("live-deployment", false);
   }
 
   void initAnalytics() {
