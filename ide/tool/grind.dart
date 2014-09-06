@@ -74,7 +74,7 @@ void setup(GrinderContext context) {
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
 
-  _deSymlink(joinDir(Directory.current, ['web']), ignoreTop : true);
+  _removeSymlinks(joinDir(Directory.current, ['web']), ignoreTop : true);
 }
 
 /**
@@ -143,7 +143,7 @@ void deploy(GrinderContext context) {
     }
   }
 
-  _deSymlink(joinDir(BUILD_DIR, ['web']), ignoreTop : true);
+  _removeSymlinks(joinDir(BUILD_DIR, ['web']), ignoreTop : true);
 }
 
 Future releaseNightly(GrinderContext context) {
@@ -225,7 +225,7 @@ void archive(GrinderContext context, [String outputZip]) {
   final String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
                                               '${DIST_DIR.path}/${outputZip}';
   _delete(sparkZip);
-  _deSymlink(joinDir(BUILD_DIR, ['web']), ignoreTop : true);
+  _removeSymlinks(joinDir(BUILD_DIR, ['web']), ignoreTop : true);
   _zip(context, 'build/web', sparkZip);
   _printSize(context, getFile(sparkZip));
 }
@@ -640,12 +640,12 @@ String _execName(String name) {
   return name;
 }
 
-void _deSymlink(Directory dir, {bool ignoreTop: false}) {
-  for (FileSystemEntity entity in dir.listSync(recursive: true, followLinks: false)) {
+void _removeSymlinks(Directory dir, {bool ignoreTop: false}) {
+  for (var entity in dir.listSync(recursive: true, followLinks: false)) {
     if (entity is Link && !ignoreTop) {
       try { entity.deleteSync(); } catch (e) { }
     } else if (entity is Directory) {
-      _deSymlink(entity);
+      _removeSymlinks(entity);
     }
   }
 }
