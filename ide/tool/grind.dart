@@ -252,11 +252,11 @@ void stats(GrinderContext context) {
 }
 
 /**
- * Create the 'web/sdk/dart-sdk.bz' file from the current Dart SDK.
+ * Create the 'lib/sdk/dart-sdk.bz' file from the current Dart SDK.
  */
 void createSdk(GrinderContext context) {
   Directory srcSdkDir = sdkDir;
-  Directory destSdkDir = new Directory('web/sdk');
+  Directory destSdkDir = new Directory('lib/sdk');
 
   destSdkDir.createSync();
 

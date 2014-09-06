@@ -16,6 +16,8 @@ dependencies:
   chrome: '>=0.6.1 <0.7.0'
   chrome_net:
     path: ../chrome-app-net.dart
+  chrome_testing:
+    path: ../chrome-app-testing.dart
   cipher: '>=0.7.0 <0.8.0'
   compiler_unsupported: 0.7.2
   crypto: any
