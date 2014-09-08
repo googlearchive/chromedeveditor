@@ -1,8 +1,8 @@
 name: spark
-version: 0.9.0-dev
-author: Spark Team
 description: A Chrome app based development environment.
-homepage: https://github.com/dart-lang/spark/
+version: 0.9.0-dev
+author: The Chrome Dev Editor team
+homepage: https://github.com/dart-lang/chromedeveditor/
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
@@ -16,6 +16,8 @@ dependencies:
   chrome: '>=0.6.1 <0.7.0'
   chrome_net:
     path: ../chrome-app-net.dart
+  chrome_testing:
+    path: ../chrome-app-testing.dart
   cipher: '>=0.7.0 <0.8.0'
   compiler_unsupported: 0.7.2
   crypto: any
@@ -27,12 +29,12 @@ dependencies:
   markdown: '>=0.7.0 <0.8.0'
   mime: any
   path: any
-  polymer: '>=0.11.0 <0.12.0'
+  polymer: '>=0.13.0 <0.14.0'
   spark_widgets:
     path: ../widgets
   tavern:
-   git: https://github.com/tapted/tavern.git
-   version: '>=0.0.8'
+    git: https://github.com/tapted/tavern.git
+    version: '>=0.0.8'
   unittest: '>=0.11.0 <0.12.0'
   uuid: '>=0.3.0 <0.4.0'
   yaml: '>=1.1.0 <1.2.0'

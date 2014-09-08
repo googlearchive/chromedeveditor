@@ -64,6 +64,11 @@ void performTesting(List<String> args) {
     browserPath = _chromeStablePath();
   }
 
+  if (results['chrome-dev']) {
+    appPath = 'build/web';
+    browserPath = _chromeDevPath();
+  }
+
   if (results['appPath'] != null) {
     appPath = results['appPath'];
   }

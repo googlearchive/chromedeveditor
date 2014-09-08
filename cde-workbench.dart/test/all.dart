@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'app_commands_test.dart' as app_commands_test;
+import 'commands_test.dart' as app_commands_test;
 import 'context_test.dart' as context_test;
 import 'keys_test.dart' as keys_test;
 

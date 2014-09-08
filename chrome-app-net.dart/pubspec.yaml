@@ -1,6 +1,6 @@
 name: chrome_net
-version: 0.0.1-dev
-author: CDE Team
+version: 0.0.1
+author: The Chrome Dev Editor team
 description: A set of networking library for Chrome Apps.
 homepage: https://github.com/dart-lang/chromedeveditor/
 environment:

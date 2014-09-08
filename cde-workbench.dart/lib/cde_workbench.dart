@@ -8,7 +8,8 @@ import 'dart:async';
 
 import 'package:cde_common/common.dart';
 import 'package:cde_core/core.dart';
-import 'package:cde_workbench/app_commands.dart';
+import 'package:cde_workbench/commands.dart';
+import 'package:cde_workbench/keys.dart';
 import 'package:paper_elements/paper_dialog.dart';
 import 'package:paper_elements/paper_toast.dart';
 import 'package:polymer/polymer.dart';
@@ -20,16 +21,23 @@ import 'package:polymer/polymer.dart';
 class CdeWorkbench extends PolymerElement {
   CdeWorkbench.created() : super.created();
 
+  bool _readyCalled = false;
+
   void ready() {
     super.ready();
 
-    Dependencies deps = new Dependencies();
-    Dependencies.setGlobalInstance(deps);
+    if (!_readyCalled) {
+      _readyCalled = true;
 
-    deps[CdeWorkbench] = this;
-    deps[CommandHistory] = new CommandHistory();
-    deps[CommandManager] = new CommandManager();
-    deps[Notifier] = new CdeNotifier(this);
+      Dependencies deps = new Dependencies();
+      Dependencies.setGlobalInstance(deps);
+
+      deps[CdeWorkbench] = this;
+      deps[ActionExecutor] = new ActionExecutor();
+      deps[CommandManager] = new CommandManager();
+      deps[Notifier] = new CdeNotifier(this);
+      deps[Keys] = new Keys();
+    }
   }
 
   void showDialog(String title, String message) {

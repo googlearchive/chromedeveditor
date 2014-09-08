@@ -1,0 +1,16 @@
+{
+  "test-mode": false,
+  "live-deploy-mode": true,
+  "light-ace-themes": false,
+  "wip-project-templates": false,
+  "analyze-javascript": false,
+  "enable-multiselect": false,
+  "search-in-files": false,
+  "bower-map-complex-ver-to-latest-stable": true,
+  "bower-ignore-dependencies": [
+  ],
+  "bower-override-dependencies": {
+  },
+  "bower-use-git-clone": false,
+  "package-files-are-editable": false
+}
