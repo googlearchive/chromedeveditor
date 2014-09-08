@@ -25,3 +25,14 @@ On Mac and Linux:
   you run it with admin privileges (i.e. 'sudo host/install_host.sh'), then the
   host will be installed for all users. You can later use host/uninstall_host.sh
   to uninstall the host.
+
+For use with Dartium: 
+  The host has to be registered in 
+  Windows:
+    HKEY_LOCAL_MACHINE\SOFTWARE\Chromium\NativeMessagingHosts\com.google.chrome.example.dart
+    or
+    HKEY_CURRENT_USER\SOFTWARE\Chromium\NativeMessagingHosts\com.google.chrome.example.dart
+ Mac and Linux:
+    $HOME/Library/Application Support/Chromium/NativeMessagingHosts
+    or
+    $HOME/.config/chromium/NativeMessagingHosts
