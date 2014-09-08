@@ -10,6 +10,7 @@ library spark.bootstrap;
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_button/spark_button.dart';
+import 'package:spark_widgets/spark_icon/spark_icon.dart';
 import 'package:spark_widgets/spark_overlay/spark_overlay.dart';
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
@@ -37,6 +38,7 @@ void registerWidgetsWithPolymer() {
   // Register Polymer components (ones that are actually used in the app).
   Polymer.register('spark-widget', SparkWidget);
   Polymer.register('spark-button', SparkButton);
+  Polymer.register('spark-icon', SparkIcon);
   Polymer.register('spark-overlay', SparkOverlay);
   Polymer.register('spark-dialog', SparkDialog);
   Polymer.register('spark-dialog-button', SparkDialogButton);
