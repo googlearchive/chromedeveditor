@@ -14,7 +14,6 @@ import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'package:spark_widgets/spark_splitter/spark_splitter.dart';
 
 import 'spark.dart';
-import 'spark_bootstrap.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';
@@ -50,29 +49,28 @@ class _TimeLogger {
 
 final _logger = new _TimeLogger();
 
-@polymer.initMethod
 void main() {
-  registerWidgetsWithPolymer();
+  polymer.initPolymer().run(() {
+    // app.json stores the default app configuration.
+    // user.json can be manually added to override some of the flags from app.json
+    // or add other supported flags; the benefit of adding user.dart as opposed
+    // to modifying app.json is that user.json is ignored by git.
+    final List<Future<String>> flagsReaders = [
+        HttpRequest.getString(chrome.runtime.getURL('app.json')),
+        HttpRequest.getString(chrome.runtime.getURL('user.json'))
+    ];
+    SparkFlags.initFromFiles(flagsReaders).then((_) {
+      // Don't set up the zone exception handler if we're running in dev mode.
+      final Function maybeRunGuarded =
+          SparkFlags.developerMode ? (f) => f() : createSparkZone().runGuarded;
 
-  // app.json stores the default app configuration.
-  // user.json can be manually added to override some of the flags from app.json
-  // or add other supported flags; the benefit of adding user.dart as opposed
-  // to modifying app.json is that user.json is ignored by git.
-  final List<Future<String>> flagsReaders = [
-      HttpRequest.getString(chrome.runtime.getURL('app.json')),
-      HttpRequest.getString(chrome.runtime.getURL('user.json'))
-  ];
-  SparkFlags.initFromFiles(flagsReaders).then((_) {
-    // Don't set up the zone exception handler if we're running in dev mode.
-    final Function maybeRunGuarded =
-        SparkFlags.developerMode ? (f) => f() : createSparkZone().runGuarded;
-
-    maybeRunGuarded(() {
-      SparkPolymer spark = new SparkPolymer._();
-      spark.start();
+      maybeRunGuarded(() {
+        SparkPolymer spark = new SparkPolymer._();
+        spark.start();
+      });
+    }).catchError((error) {
+      _logger.logError(error);
     });
-  }).catchError((error) {
-    _logger.logError(error);
   });
 }
 

@@ -33,17 +33,20 @@ export "spark_modal/spark_modal.dart";
 import "spark_overlay/spark_overlay.dart";
 export "spark_overlay/spark_overlay.dart";
 
+import "spark_progress/spark_progress.dart";
+export "spark_progress/spark_progress.dart";
+
 import "spark_selection/spark_selection.dart";
 export "spark_selection/spark_selection.dart";
 
 import "spark_selector/spark_selector.dart";
 export "spark_selector/spark_selector.dart";
 
-import "spark_split_view/spark_split_view.dart";
-export "spark_split_view/spark_split_view.dart";
-
 import "spark_splitter/spark_splitter.dart";
 export "spark_splitter/spark_splitter.dart";
+
+import "spark_split_view/spark_split_view.dart";
+export "spark_split_view/spark_split_view.dart";
 
 import "spark_status/spark_status.dart";
 export "spark_status/spark_status.dart";
@@ -56,3 +59,6 @@ export "spark_toggle_button/spark_toggle_button.dart";
 
 import "spark_toolbar/spark_toolbar.dart";
 export "spark_toolbar/spark_toolbar.dart";
+
+import "spark_tree_view/spark_tree_view.dart";
+export "spark_tree_view/spark_tree_view.dart";
