@@ -69,7 +69,8 @@ class ServicesIsolate {
       }
     });
 
-    chromeService.getAppContents('sdk/dart-sdk.bz').then((List<int> sdkContents) {
+    chromeService.getAppContents('packages/spark/sdk/dart-sdk.bz').then(
+        (List<int> sdkContents) {
       sdk = DartSdk.createSdkFromContents(sdkContents);
 
       _registerServiceImpl(new CompilerServiceImpl(this, sdk));
