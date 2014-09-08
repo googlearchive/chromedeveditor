@@ -372,6 +372,12 @@
               spellcheck="false" autosave>
         </div>
       </div>
+      <template if="{{liveDeployMode}}">
+        <div class="form-group">
+          <input id="liveDeploy" name="liveDeploy" type="checkbox">
+          <label for="liveDeploy">Live Deployment</label>
+        </div>
+      </template>
       <div id="progressDescription"></div>
       <div id='deployCheckDeviceMessage'>
         Please check for a connection authorization dialog on your device.

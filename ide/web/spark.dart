@@ -2248,6 +2248,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
+  ws.Resource _resource;
 
   DeployToMobileDialog(Spark spark, Element dialog)
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
@@ -2265,15 +2266,13 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   SparkDialogButton get _deployButton => getElement("[submit]");
 
   void _invoke([context]) {
-    ws.Resource resource;
-
     if (context == null) {
-      resource = spark.focusManager.currentResource;
+      _resource = spark.focusManager.currentResource;
     } else {
-      resource = context.first;
+      _resource = context.first;
     }
 
-    deployContainer = getAppContainerFor(resource);
+    deployContainer = getAppContainerFor(_resource);
 
     if (deployContainer == null) {
       spark.showErrorMessage(
@@ -2322,6 +2321,11 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       _hide();
       ws_utils.setDeploymentTime(deployContainer,
           (new DateTime.now()).millisecondsSinceEpoch);
+      if (SparkFlags.liveDeployMode) {
+        InputElement liveDeployCheckBox = getElement("#liveDeploy");
+        spark.localPrefs.setValue("live-deployment", liveDeployCheckBox.checked);
+        LiveDeployManager.startLiveDeploy(_resource.project);
+      }
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
       if (e is! UserCancelledException) {
@@ -4039,7 +4043,6 @@ class RunPythonAction extends SparkAction {
       });
     });
   }
-
 }
 
 // Analytics code.

@@ -248,7 +248,7 @@ class NullNotifier implements Notifier {
     Logger.root.info('${title}:${message}');
   }
 
-  Future showMessageAndWait(String title, String message) => 
+  Future showMessageAndWait(String title, String message) =>
       new Future.value("Not implemented");
 
   void showSuccessMessage(String message) { }
@@ -600,4 +600,17 @@ Future<String> downloadFileViaXhr(
   request.send();
 
   return completer.future;
+}
+
+class DelayedTimer {
+  Timer _timer;
+  final Duration _delay;
+  final Function _fn;
+
+  DelayedTimer(this._fn, this._delay);
+
+  void start() {
+    if (_timer != null) _timer.cancel();
+    _timer = new Timer(_delay, _fn);
+  }
 }

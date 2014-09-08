@@ -20,6 +20,8 @@ class SparkFlags {
   // NOTE: The flags below are formatted in a uniform fashion for readability.
   static bool get developerMode =>
       _flags['test-mode'] == true;
+  static bool get liveDeployMode =>
+    _flags['live-deploy-mode'] == true;
 
   // Editor:
   static bool get useLightAceThemes =>
