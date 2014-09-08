@@ -16,14 +16,14 @@ import 'package:logging/logging.dart';
 
 import 'adb.dart';
 import 'adb_client_tcp.dart';
+import '../apps/app_utils.dart';
+import '../dependency.dart';
 import '../jobs.dart';
 import '../preferences.dart';
-import '../workspace.dart';
-import '../workspace_utils.dart';
-import '../apps/app_utils.dart';
 import '../spark_flags.dart';
 import '../utils.dart';
-import '../dependency.dart';
+import '../workspace.dart';
+import '../workspace_utils.dart';
 
 Logger _logger = new Logger('spark.deploy');
 PreferenceStore get _localPrefs => localStore;
@@ -467,7 +467,8 @@ class LiveDeployManager {
         setDeploymentTime(deployContainer,
             (new DateTime.now()).millisecondsSinceEpoch);
       }).catchError((e) {
-        _singleton._notifier.showMessage('Error', 'Error during live deployment: ${e}');
+        _singleton._notifier.showMessage('Error',
+            'Error during live deployment: ${e}');
       }).whenComplete(() {
         _monitor = null;
       });
