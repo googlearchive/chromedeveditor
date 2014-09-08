@@ -22,6 +22,8 @@ import '../workspace.dart';
 import '../workspace_utils.dart';
 import '../apps/app_utils.dart';
 import '../spark_flags.dart';
+import '../utils.dart';
+import '../dependency.dart';
 
 Logger _logger = new Logger('spark.deploy');
 PreferenceStore get _localPrefs => localStore;
@@ -421,9 +423,8 @@ class ADBDeployer extends HttpDeployer {
 
 class LiveDeployManager {
     static final LiveDeployManager _singleton = new LiveDeployManager._internal();
-
+    Notifier _notifier = Dependencies.dependency[Notifier];
     StreamSubscription _sub;
-    Function _onError;
 
     factory LiveDeployManager() {
       return _singleton;
@@ -447,10 +448,8 @@ class LiveDeployManager {
       }
     }
 
-    static startLiveDeploy(Project currentProject,
-        {void onError(var exception)}) {
+    static startLiveDeploy(Project currentProject) {
       _singleton._init(currentProject);
-      _singleton._onError = onError;
     }
 
     LiveDeployManager._internal();
@@ -468,7 +467,7 @@ class LiveDeployManager {
         setDeploymentTime(deployContainer,
             (new DateTime.now()).millisecondsSinceEpoch);
       }).catchError((e) {
-        _onError('Error During Live Deployment', exception: e);
+        _singleton._notifier.showMessage('Error', 'Error during live deployment: ${e}');
       }).whenComplete(() {
         _monitor = null;
       });
