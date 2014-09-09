@@ -6,8 +6,8 @@ library spark.services_bootstrap;
 
 /**
  * Uncomment one of the 2 export below to switch between the isolate and
- * ui thread implementations.  
+ * single thread implementations of worker services.
  */
 
-//export 'services_bootstrap_isolate.dart';
-export 'services_bootstrap_single_thread.dart';
+export 'services_bootstrap_isolate.dart';
+//export 'services_bootstrap_single_thread.dart';
