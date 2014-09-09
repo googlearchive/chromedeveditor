@@ -25,7 +25,6 @@ class SparkFlags {
   static bool get apkBuildMode =>
     _flags['apk-build'] == true;
 
-
   // Editor:
   static bool get useLightAceThemes =>
       _flags['light-ace-themes'] == true;

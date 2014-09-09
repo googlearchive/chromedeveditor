@@ -139,7 +139,6 @@ class FileSystemAccess {
    */
   Future<chrome.ChromeFileEntry> chooseKeyLocation() =>
       locationManager.findKeyDialog();
-
 }
 
 class MockFileSystemAccess extends FileSystemAccess {
@@ -267,8 +266,7 @@ class ProjectLocationManager {
             type: chrome.ChooseEntryType.OPEN_FILE);
     return chrome.fileSystem.chooseEntry(options).then(
             (chrome.ChooseEntryResult res) {
-          chrome.ChromeFileEntry entry = res.entry;
-          return entry;
+          return res.entry;
         });
   }
 

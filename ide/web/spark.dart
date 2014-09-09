@@ -2129,7 +2129,6 @@ class BuildApkAction extends SparkActionWithDialog {
     super._commit();
     //TODO: add here the binding to the build class
   }
-
 }
 
 class NewProjectAction extends SparkActionWithDialog {
