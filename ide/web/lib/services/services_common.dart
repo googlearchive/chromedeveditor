@@ -15,6 +15,25 @@ import '../package_mgmt/pub.dart';
 final Logger _logger = new Logger('spark.services_common');
 
 /**
+ * Abstraction over the port that the worker uses to communicate
+ * with the host.
+ */
+abstract class WorkerPort {
+  /**
+   * Sends a [message] to the host. The message has the same limitation
+   * as [SendPort], i.e. only primitive types, lists and maps are supported. 
+   */
+  void sendToHost(dynamic message);
+  
+  /**
+   * Adds a handler for messages received from the host.
+   * The message has the same limitation as [SendPort], i.e. only primitive
+   * types, lists and maps are supported.
+   */
+  void listenFromHost(void onData(var message));
+}
+
+/**
  * Host side abstraction of an IPC mechanism between a host and a worker.
  */
 abstract class IsolateHandler {

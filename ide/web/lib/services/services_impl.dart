@@ -5,15 +5,14 @@
 library spark.services_impl;
 
 import 'dart:async';
-import 'dart:isolate';
 
 import 'analyzer.dart' as analyzer;
 import 'services_common.dart';
 import 'compiler.dart';
 import '../dart/sdk.dart';
 
-void init(SendPort sendPort) {
-  final ServicesIsolate servicesIsolate = new ServicesIsolate(new SendWorkerPort(sendPort));
+void init(WorkerPort sendPort) {
+  final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
 }
 
 /**
@@ -21,31 +20,6 @@ void init(SendPort sendPort) {
  * its response event in a [Future].
  */
 typedef Future<ServiceActionEvent> RequestHandler(ServiceActionEvent request);
-
-abstract class WorkerPort {
-  void sendToHost(dynamic message);  
-  void listenFromHost(void onData(var message));
-}
-
-class SendWorkerPort implements WorkerPort {
-  final SendPort _sendPort;
-  ReceivePort _receivePort;
-  
-  SendWorkerPort(this._sendPort) {
-    _receivePort = new ReceivePort();
-    _sendPort.send(_receivePort.sendPort);
-  }
-  
-  @override
-  void sendToHost(dynamic message) {
-    _sendPort.send(message);
-  }
-  
-  @override
-  void listenFromHost(void onData(var message)) {
-    _receivePort.listen(onData); 
-  }
-}
 
 /**
  * Defines a handler for all worker-side service implementations.

@@ -9,5 +9,5 @@ library spark.services_bootstrap;
  * ui thread implementations.  
  */
 
-export 'services_bootstrap_isolate.dart';
-//export 'services_bootstrap_single_thread.dart';
+//export 'services_bootstrap_isolate.dart';
+export 'services_bootstrap_single_thread.dart';

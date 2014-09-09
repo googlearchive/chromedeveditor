@@ -13,9 +13,30 @@ import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 
+import 'lib/services/services_common.dart';
 import 'lib/services/services_impl.dart' as services_impl;
 
 SendPort _sendPort;
+
+class SendWorkerPort implements WorkerPort {
+  final SendPort _sendPort;
+  ReceivePort _receivePort;
+  
+  SendWorkerPort(this._sendPort) {
+    _receivePort = new ReceivePort();
+    _sendPort.send(_receivePort.sendPort);
+  }
+  
+  @override
+  void sendToHost(dynamic message) {
+    _sendPort.send(message);
+  }
+  
+  @override
+  void listenFromHost(void onData(var message)) {
+    _receivePort.listen(onData); 
+  }
+}
 
 void main(List<String> args, SendPort sendPort) {
   _sendPort = sendPort;
@@ -27,7 +48,7 @@ void main(List<String> args, SendPort sendPort) {
   });
 
   _createIsolateZone().runGuarded(() {
-    services_impl.init(sendPort);
+    services_impl.init(new SendWorkerPort(sendPort));
   });
 }
 
