@@ -149,7 +149,7 @@ class SparkPolymerUI extends SparkWidget {
   void onClickPrivateKey() {
     fileSystemAccess.chooseKeyLocation().then((chrome.ChromeFileEntry entry) {
       fileSystemAccess.getDisplayPath(entry).then((path) {
-        _model.showKeyLocation('publicKey', path);
+        _model.showKeyLocation('privateKey', path);
       });
     });
   }

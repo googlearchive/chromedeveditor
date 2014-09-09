@@ -286,3 +286,48 @@ label[for="stripWhitespace"] {
   white-space: nowrap;
 }
 
+#privateKey {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#publicKey {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#buildAPKDialog .settings-label {
+  width: 150px;
+}
+
+#buildAPKDialog .settings-value {
+  flex: 1;
+  height: 100%;
+  border: 1px solid #DDD;
+  border-radius: 3px;
+  padding: 5px;
+  color: #666;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#buildAPKDialog .settings-block {
+  width: 100%;
+  height: 30px;
+  background-color: white;
+}
+
+#buildAPKDialog .change-setting-button {
+  width: 30px;
+  height: 30px;
+}
+
+#buildAPKDialog .settings-value + .change-setting-button {
+  margin-left: 5px;
+}
+
+#buildAPKDialog .reset-setting-button {
+  flex: 1;
+  height: 100%;
+}
