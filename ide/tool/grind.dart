@@ -32,7 +32,6 @@ final String buildBranchName = Platform.environment['DRONE_BRANCH'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
-  defineTask('setup-boot', taskFunction: setupBootstrapping, depends: ['setup']);
 
   defineTask('mode-notest', taskFunction: (c) => _changeMode(useTestMode: false));
   defineTask('mode-test', taskFunction: (c) => _changeMode(useTestMode: true));
@@ -43,8 +42,7 @@ void main([List<String> args]) {
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
-  defineTask('archive', taskFunction: archive,
-      depends : ['mode-notest', 'deploy']);
+  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'deploy']);
   defineTask('createSdk', taskFunction: createSdk);
 
   // For now, we won't be building the webstore version from Windows.
@@ -73,33 +71,17 @@ void setup(GrinderContext context) {
   PubTools pub = new PubTools();
   pub.upgrade(context);
 
-  // Copy from ./packages to ./app/packages.
-  copyDirectory(getDir('packages'), getDir('app/packages'), context);
-
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
-}
 
-/**
- * Init dependencies, and convert the symlinks in `packages` to real copies of
- * files.
- */
-void setupBootstrapping(GrinderContext context) {
-  // Remove the symlinks from the 'packages' directory.
-  for (FileSystemEntity entity in getDir('packages').listSync(followLinks: false)) {
-    deleteEntity(entity);
-  }
-
-  // Replace the symlinked contents with actual files. This allows chrome apps
-  // to see the 'packages' direcotry contents, and analyze package: references.
-  copyDirectory(getDir('app/packages'), getDir('packages'), context);
+  _removeSymlinks(joinDir(Directory.current, ['web']), ignoreTop : true);
 }
 
 /**
  * Run Polymer lint on the Polymer entry point.
  */
 void lint(GrinderContext context) {
-  const entryPoint = 'app/spark_polymer.html';
+  const entryPoint = 'web/spark_polymer.html';
 
   context.log('Running polymer linter on ${entryPoint}...');
   polymer.lint(
@@ -138,23 +120,20 @@ void lint(GrinderContext context) {
 }
 
 /**
- * Copy all source to `build/deploy`. Do a polymer deploy to `build/deploy-out`.
- * This builds the regular (non-test) version of the app.
+ * Do a polymer deploy to `build/web/`.
  */
 void deploy(GrinderContext context) {
-  Directory sourceDir = joinDir(BUILD_DIR, ['deploy']);
-  Directory destDir = joinDir(BUILD_DIR, ['deploy-out']);
+  Directory destDir = BUILD_DIR;
 
-  _polymerDeploy(context, sourceDir, destDir);
+  _polymerDeploy(context, destDir);
 
   Directory deployWeb = joinDir(destDir, ['web']);
 
   // Compile the main Spark app.
-  _dart2jsCompile(context, deployWeb,
-      'spark_polymer.html_bootstrap.dart', true);
+  _dart2jsCompile(context, deployWeb, 'spark_polymer.html_bootstrap.dart');
 
   // Compile the services entry-point.
-  _dart2jsCompile(context, deployWeb, 'services_entry.dart', true);
+  _dart2jsCompile(context, deployWeb, 'services_entry.dart');
 
   // Remove map files.
   List files = BUILD_DIR.listSync(recursive: true, followLinks: false);
@@ -163,6 +142,8 @@ void deploy(GrinderContext context) {
       deleteEntity(entity);
     }
   }
+
+  _removeSymlinks(joinDir(BUILD_DIR, ['web']), ignoreTop : true);
 }
 
 Future releaseNightly(GrinderContext context) {
@@ -233,7 +214,7 @@ Future releaseNightly(GrinderContext context) {
 //
 // Sources must be pre-compiled to Javascript using "deploy" task.
 //
-// Will create an archive using the contents of build/deploy-out:
+// Will create an archive using the contents of build/web/:
 // - Copy the compiled sources to build/chrome-app
 // - Clean all packages/ folders that have been duplicated into every
 //   folders by the "compile" task
@@ -244,7 +225,8 @@ void archive(GrinderContext context, [String outputZip]) {
   final String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
                                               '${DIST_DIR.path}/${outputZip}';
   _delete(sparkZip);
-  _zip(context, 'build/deploy-out/web', sparkZip);
+  _removeSymlinks(joinDir(BUILD_DIR, ['web']), ignoreTop : true);
+  _zip(context, 'build/web', sparkZip);
   _printSize(context, getFile(sparkZip));
 }
 
@@ -252,7 +234,7 @@ void docs(GrinderContext context) {
   FileSet docFiles = new FileSet.fromDir(
       new Directory('docs'), pattern: '*.html');
   FileSet sourceFiles = new FileSet.fromDir(
-      new Directory('app'), pattern: '*.dart', recurse: true);
+      new Directory('web'), pattern: '*.dart', recurse: true);
 
   if (!docFiles.upToDate(sourceFiles)) {
     runSdkBinary(context, 'dartdoc',
@@ -262,7 +244,7 @@ void docs(GrinderContext context) {
                     '--include-lib', 'spark,spark.ace,spark.utils,spark.preferences,spark.workspace,spark.sdk',
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
-                    'app/spark_polymer.dart']);
+                    'web/spark_polymer.dart']);
     _zip(context, 'docs', '${DIST_DIR.path}/spark-docs.zip');
   }
 }
@@ -274,11 +256,11 @@ void stats(GrinderContext context) {
 }
 
 /**
- * Create the 'app/sdk/dart-sdk.bz' file from the current Dart SDK.
+ * Create the 'lib/sdk/dart-sdk.bz' file from the current Dart SDK.
  */
 void createSdk(GrinderContext context) {
   Directory srcSdkDir = sdkDir;
-  Directory destSdkDir = new Directory('app/sdk');
+  Directory destSdkDir = new Directory('lib/sdk');
 
   destSdkDir.createSync();
 
@@ -291,8 +273,8 @@ void createSdk(GrinderContext context) {
   copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']), context);
 
   // Get rid of some big directories we don't use.
-  _delete('app/sdk/lib/_internal/compiler', context);
-  _delete('app/sdk/lib/_internal/pub', context);
+  _delete('web/sdk/lib/_internal/compiler', context);
+  _delete('web/sdk/lib/_internal/pub', context);
 
   context.log('creating SDK archive');
   _createSdkArchive(versionFile, joinDir(destSdkDir, ['lib']), destArchiveFile);
@@ -309,12 +291,11 @@ void createSdk(GrinderContext context) {
  */
 void clean(GrinderContext context) {
   // Delete any compiled js output.
-  for (FileSystemEntity entity in getDir('app').listSync()) {
+  for (FileSystemEntity entity in getDir('web').listSync()) {
     if (entity is File) {
       String ext = fileExt(entity);
 
-      if (ext == 'js.map' || ext == 'js.deps' ||
-          ext == 'dart.js' || ext == 'dart.precompiled.js') {
+      if (ext == 'js.map' || ext == 'js.deps' || ext == 'dart.js') {
         entity.deleteSync();
       }
     }
@@ -324,7 +305,7 @@ void clean(GrinderContext context) {
   deleteEntity(BUILD_DIR);
 
   // Remove any symlinked packages that may have snuck into app/.
-  for (var entity in getDir('app').listSync(recursive: true, followLinks: false)) {
+  for (var entity in getDir('web').listSync(recursive: true, followLinks: false)) {
     if (entity is Link && fileName(entity) == 'packages') {
       entity.deleteSync();
     }
@@ -335,7 +316,7 @@ void buildAndroidRSA(GrinderContext context) {
   context.log('building PNaCL Android RSA module');
   final Directory androidRSADir = new Directory('nacl_android_rsa');
   _runCommandSync(context, './make.sh', cwd: androidRSADir.path);
-  Directory appMobileDir = getDir('app/lib/mobile');
+  Directory appMobileDir = getDir('web/lib/mobile');
   appMobileDir.createSync();
   copyFile(getFile('nacl_android_rsa/nacl_android_rsa.nmf'), appMobileDir, context);
   copyFile(getFile('nacl_android_rsa/nacl_android_rsa.pexe'), appMobileDir, context);
@@ -367,37 +348,14 @@ void _zip(GrinderContext context, String dirToZip, String destFile) {
   }
 }
 
-void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir,
-                    {List extraArgs}) {
-  deleteEntity(getDir('${sourceDir.path}'), context);
+void _polymerDeploy(GrinderContext context, Directory destDir) {
   deleteEntity(getDir('${destDir.path}'), context);
 
-  // Copy spark/widgets to spark/ide/build/widgets. This is necessary because
-  // spark_widgets is a relative "path" dependency in pubspec.yaml.
-  copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
-  copyDirectory(getDir('../chrome-app-net.dart'),
-      joinDir(BUILD_DIR, ['chrome-app-net.dart']), context);
-  copyDirectory(getDir('../chrome-app-testing.dart'),
-      joinDir(BUILD_DIR, ['chrome-app-testing.dart']), context);
-
-  // Copy the app directory to target/web.
-  copyFile(getFile('pubspec.yaml'), sourceDir);
-  copyFile(getFile('pubspec.lock'), sourceDir);
-  copyDirectory(getDir('app'), joinDir(sourceDir, ['web']), context);
-
-  deleteEntity(joinFile(destDir, ['web', 'spark_polymer.dart.precompiled.js']), context);
-
-  deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
-  final Link link = new Link(sourceDir.path + '/packages');
-  link.createSync('../../packages');
-
-  var args = ['--out', '../../${destDir.path}'];
-  if (extraArgs != null) args.addAll(extraArgs);
+  var args = ['--out', destDir.path];
 
   runDartScript(context, 'packages/polymer/deploy.dart',
       arguments: args,
-      packageRoot: 'packages',
-      workingDirectory: sourceDir.path);
+      packageRoot: 'packages');
 
   // Create an empty `user.json` overrides file so we don't get an error in the
   // console in the deployed application.
@@ -407,8 +365,9 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   }
 }
 
-void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
-                     [bool removeSymlinks = false]) {
+void _dart2jsCompile(GrinderContext context, Directory target, String filePath) {
+  context.log('');
+
   File scriptFile = joinFile(sdkDir, ['bin', _execName('dart2js')]);
 
   // Run dart2js with a custom heap size.
@@ -430,25 +389,12 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
   deleteEntity(joinFile(target, ['${filePath}.js.deps']), context);
   deleteEntity(joinFile(target, ['${filePath}.js.map']), context);
 
-  if (removeSymlinks) {
-    // de-symlink the directory
-    _removePackagesLinks(context, target);
-
-    copyDirectory(
-        joinDir(target, ['..', '..', '..', 'packages']),
-        joinDir(target, ['packages']),
-        context);
-  }
   _printSize(context, joinFile(target, ['${filePath}.js']));
 }
 
 void _changeMode({bool useTestMode: true}) {
-  _changeModeImpl(
-      useTestMode, joinFile(Directory.current, ['app', 'app.json']));
-  _changeModeImpl(
-      useTestMode, joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']));
-  _changeModeImpl(
-      useTestMode, joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']));
+  _changeModeImpl(useTestMode, joinFile(Directory.current, ['web', 'app.json']));
+  _changeModeImpl(useTestMode, joinFile(BUILD_DIR, ['web', 'app.json']));
 }
 
 void _changeModeImpl(bool useTestMode, File file) {
@@ -491,7 +437,7 @@ String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
   }
 
   // Tweaking build version in manifest.
-  File file = new File('app/manifest.json');
+  File file = new File('web/manifest.json');
   String content = file.readAsStringSync();
   var manifestDict = JSON.decode(content);
   String majorVersion = channelConfig['version'];
@@ -510,15 +456,15 @@ String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
 
   // It needs to be copied to compile result directory.
   copyFile(
-      joinFile(Directory.current, ['app', 'manifest.json']),
-      joinDir(BUILD_DIR, ['deploy-out', 'web']));
+      joinFile(Directory.current, ['web', 'manifest.json']),
+      joinDir(BUILD_DIR, ['web']));
 
   return version;
 }
 
 void _modifyLocaleWithChannelConfig(GrinderContext context,
                                     Map<String, String> channelConfig) {
-  File file = new File('app/_locales/en/messages.json');
+  File file = new File('web/_locales/en/messages.json');
   String content = file.readAsStringSync();
   var messagesJson = JSON.decode(content);
   if (channelConfig['name'] != null) {
@@ -531,8 +477,8 @@ void _modifyLocaleWithChannelConfig(GrinderContext context,
 
   // It needs to be copied to compile result directory.
   copyFile(
-      joinFile(Directory.current, ['app', '_locales', 'en', 'messages.json']),
-      joinDir(BUILD_DIR, ['deploy-out', 'web', '_locales', 'en']));
+      joinFile(Directory.current, ['web', '_locales', 'en', 'messages.json']),
+      joinDir(BUILD_DIR, ['web', '_locales', 'en']));
 }
 
 void _removePackagesLinks(GrinderContext context, Directory target) {
@@ -692,6 +638,16 @@ String _execName(String name) {
   }
 
   return name;
+}
+
+void _removeSymlinks(Directory dir, {bool ignoreTop: false}) {
+  for (var entity in dir.listSync(recursive: true, followLinks: false)) {
+    if (entity is Link && !ignoreTop) {
+      try { entity.deleteSync(); } catch (e) { }
+    } else if (entity is Directory) {
+      _removeSymlinks(entity);
+    }
+  }
 }
 
 /**

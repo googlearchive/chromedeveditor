@@ -151,8 +151,12 @@ class TextEditor extends Editor {
   bool get supportsFormat => false;
 
   // TODO(ussuri): use MetaPackageManager instead when it's ready.
-  bool get readOnly => pubProperties.isInPackagesFolder(file) ||
-      bowerProperties.isInPackagesFolder(file);
+  bool get readOnly {
+    return
+        !SparkFlags.packageFilesAreEditable && (
+            pubProperties.isInPackagesFolder(file) ||
+            bowerProperties.isInPackagesFolder(file));
+  }
 
   void format() { }
 
@@ -581,7 +585,7 @@ class AceManager {
     ace.Mode.extensionMap['yaml_'] = ace.Mode.YAML;
     // The extension that "Refactor for CSP" feature assigns to originals of
     // refactored HTMLs.
-    ace.Mode.extensionMap['html.pre_csp'] = ace.Mode.HTML;
+    ace.Mode.extensionMap['pre_csp'] = ace.Mode.HTML;
 
     _setupGotoLine();
 

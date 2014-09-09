@@ -9,6 +9,7 @@ import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:chrome_testing/testing_app.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
@@ -48,7 +49,6 @@ import 'lib/services.dart';
 import 'lib/scm.dart';
 import 'lib/spark_flags.dart';
 import 'lib/templates/templates.dart';
-import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
 import 'lib/ui/files_controller.dart';
@@ -126,6 +126,8 @@ abstract class Spark
   Future init() {
     // Init the dependency manager.
     dependencies[DecoratorManager] = new DecoratorManager();
+    dependencies[Notifier] = this;
+    dependencies[preferences.PreferenceStore] = localPrefs;
 
     initPreferences();
     initEventBus();
@@ -558,7 +560,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return filesystem.restoreManager(this, localPrefs);
+    return filesystem.restoreManager(localPrefs);
   }
 
   //
@@ -2246,6 +2248,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
+  ws.Resource _resource;
 
   DeployToMobileDialog(Spark spark, Element dialog)
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
@@ -2263,15 +2266,13 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   SparkDialogButton get _deployButton => getElement("[submit]");
 
   void _invoke([context]) {
-    ws.Resource resource;
-
     if (context == null) {
-      resource = spark.focusManager.currentResource;
+      _resource = spark.focusManager.currentResource;
     } else {
-      resource = context.first;
+      _resource = context.first;
     }
 
-    deployContainer = getAppContainerFor(resource);
+    deployContainer = getAppContainerFor(_resource);
 
     if (deployContainer == null) {
       spark.showErrorMessage(
@@ -2320,6 +2321,11 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       _hide();
       ws_utils.setDeploymentTime(deployContainer,
           (new DateTime.now()).millisecondsSinceEpoch);
+      if (SparkFlags.liveDeployMode) {
+        InputElement liveDeployCheckBox = getElement("#liveDeploy");
+        spark.localPrefs.setValue("live-deployment", liveDeployCheckBox.checked);
+        LiveDeployManager.startLiveDeploy(_resource.project);
+      }
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
       if (e is! UserCancelledException) {
@@ -3753,8 +3759,8 @@ class RunTestsAction extends SparkAction {
 
   void _initTestDriver() {
     if (testDriver == null) {
-      testDriver = new TestDriver(all_tests.defineTests, spark,
-          spark.localPrefs, connectToTestListener: true);
+      testDriver = new TestDriver(
+          all_tests.defineTests, connectToTestListener: true);
     }
   }
 }
@@ -4037,7 +4043,6 @@ class RunPythonAction extends SparkAction {
       });
     });
   }
-
 }
 
 // Analytics code.

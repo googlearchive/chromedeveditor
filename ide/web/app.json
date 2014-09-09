@@ -1,5 +1,6 @@
 {
   "test-mode": false,
+  "live-deploy-mode": true,
   "light-ace-themes": false,
   "wip-project-templates": false,
   "analyze-javascript": false,
@@ -10,5 +11,6 @@
   ],
   "bower-override-dependencies": {
   },
-  "bower-use-git-clone": false
+  "bower-use-git-clone": false,
+  "package-files-are-editable": false
 }

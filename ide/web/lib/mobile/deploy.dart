@@ -16,12 +16,17 @@ import 'package:logging/logging.dart';
 
 import 'adb.dart';
 import 'adb_client_tcp.dart';
+import '../apps/app_utils.dart';
+import '../dependency.dart';
 import '../jobs.dart';
 import '../preferences.dart';
+import '../spark_flags.dart';
+import '../utils.dart';
 import '../workspace.dart';
 import '../workspace_utils.dart';
 
 Logger _logger = new Logger('spark.deploy');
+PreferenceStore get _localPrefs => localStore;
 
 class DeviceInfo {
   final int vendorId;
@@ -414,4 +419,58 @@ class ADBDeployer extends HttpDeployer {
   ADBDeployer(Container appContainer, PreferenceStore _prefs)
      : super(appContainer, _prefs, TARGET) {
   }
+}
+
+class LiveDeployManager {
+    static final LiveDeployManager _singleton = new LiveDeployManager._internal();
+    Notifier _notifier = Dependencies.dependency[Notifier];
+    StreamSubscription _sub;
+
+    factory LiveDeployManager() {
+      return _singleton;
+    }
+
+    void _init(Project currentProject) {
+      if (SparkFlags.liveDeployMode) {
+        if (_sub != null) _sub.cancel();
+        _sub = currentProject.workspace.onResourceChange.listen(null);
+        _sub.onData((ResourceChangeEvent event) {
+          event.modifiedProjects.forEach((Project p) {
+            if (p == currentProject) {
+              return _localPrefs.getValue("live-deployment").then((value) {
+                if (value == true) {
+                  return _liveDeploy(getAppContainerFor(p));
+                }
+              });
+            }
+          });
+        });
+      }
+    }
+
+    static startLiveDeploy(Project currentProject) {
+      _singleton._init(currentProject);
+    }
+
+    LiveDeployManager._internal();
+
+    Future _liveDeploy(Container deployContainer) {
+      ProgressMonitor _monitor = new ProgressMonitor();
+      MobileDeploy deployer = new MobileDeploy(deployContainer, _localPrefs);
+
+      // Invoke the deployer methods in Futures in order to capture exceptions.
+      Future f = new Future(() {
+        return deployer.pushAdb(_monitor);
+      });
+
+      return _monitor.runCancellableFuture(f).then((_) {
+        setDeploymentTime(deployContainer,
+            (new DateTime.now()).millisecondsSinceEpoch);
+      }).catchError((e) {
+        _singleton._notifier.showMessage('Error',
+            'Error during live deployment: ${e}');
+      }).whenComplete(() {
+        _monitor = null;
+      });
+    }
 }
