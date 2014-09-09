@@ -28,13 +28,13 @@ class _IsolateHostToWorkerHandler implements HostToWorkerHandler {
   SendPort _sendPort;
   
   @override
-  Stream<ServiceActionEvent> onIsolateMessage;
+  Stream<ServiceActionEvent> onWorkerMessage;
 
   @override
-  Future onceIsolateReady;
+  Future onceWorkerReady;
   
   _IsolateHostToWorkerHandler() {
-    onceIsolateReady = _readyController.stream.first;
+    onceWorkerReady = _readyController.stream.first;
     _startIsolate().then((result) => _isolate = result);
   }
 
@@ -44,7 +44,7 @@ class _IsolateHostToWorkerHandler implements HostToWorkerHandler {
     StreamController<ServiceActionEvent> _messageController =
         new StreamController<ServiceActionEvent>.broadcast();
 
-    onIsolateMessage = _messageController.stream;
+    onWorkerMessage = _messageController.stream;
 
     _receivePort.listen((arg) {
       if (arg is String) {
@@ -83,7 +83,7 @@ class _IsolateHostToWorkerHandler implements HostToWorkerHandler {
     int callId = _topCallId;
     _serviceCallCompleters["ping_$callId"] = completer;
 
-    onceIsolateReady.then((_) {
+    onceWorkerReady.then((_) {
       _sendPort.send(callId);
     });
 

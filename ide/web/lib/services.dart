@@ -22,27 +22,27 @@ final Logger _logger = new Logger('spark.services');
  * Defines a class which contains services and manages their communication.
  */
 class Services {
-  HostToWorkerHandler _isolateHandler;
+  HostToWorkerHandler _workerHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
   final Workspace _workspace;
   final PackageManager _packageManager;
 
   Services(this._workspace, this._packageManager) {
-    _isolateHandler = bootstrap.createHostToWorkerHandler();
-    registerService(new CompilerService(this, _isolateHandler));
-    registerService(new AnalyzerService(this, _isolateHandler));
-    registerService(new TestService(this, _isolateHandler));
-    _chromeService = new ChromeServiceImpl(this, _isolateHandler);
+    _workerHandler = bootstrap.createHostToWorkerHandler();
+    registerService(new CompilerService(this, _workerHandler));
+    registerService(new AnalyzerService(this, _workerHandler));
+    registerService(new TestService(this, _workerHandler));
+    _chromeService = new ChromeServiceImpl(this, _workerHandler);
 
-    _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event) {
+    _workerHandler.onWorkerMessage.listen((ServiceActionEvent event) {
       if (event.serviceId == "chrome") {
         _chromeService.handleEvent(event);
       }
     });
   }
 
-  Future<String> ping() => _isolateHandler.ping();
+  Future<String> ping() => _workerHandler.ping();
 
   Service getService(String serviceId) => _services[serviceId];
 
@@ -50,7 +50,7 @@ class Services {
     _services[service.serviceId] = service;
   }
 
-  void dispose() => _isolateHandler.dispose();
+  void dispose() => _workerHandler.dispose();
 }
 
 /**
@@ -72,14 +72,14 @@ abstract class Service {
   // Wraps up actionId and data into an ActionEvent and sends it to the isolate
   // and invokes the Future once response has been received.
   Future<ServiceActionEvent> _sendAction(String actionId, [Map data]) {
-    return _isolateHandler.onceIsolateReady
+    return _isolateHandler.onceWorkerReady
         .then((_) => _isolateHandler.sendAction(
             _createNewEvent(actionId, data)));
   }
 
   void _sendResponse(ServiceActionEvent event, [Map data]) {
     ServiceActionEvent responseEvent = event.createReponse(data);
-    _isolateHandler.onceIsolateReady
+    _isolateHandler.onceWorkerReady
         .then((_) => _isolateHandler.sendResponse(responseEvent));
   }
 }
@@ -457,7 +457,7 @@ class ChromeServiceImpl extends Service {
         "stackTrace": stackTrace});
 
     responseEvent.error = true;
-    _isolateHandler.onceIsolateReady
+    _isolateHandler.onceWorkerReady
         .then((_) => _isolateHandler.sendResponse(responseEvent));
   }
 }

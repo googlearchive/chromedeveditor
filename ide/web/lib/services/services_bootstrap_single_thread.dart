@@ -58,10 +58,10 @@ class _SingleThreadedHostToWorkerHandler implements HostToWorkerHandler {
   /** Map of call ID to completer for the active tasks. */
   final Map<String, Completer> _serviceCallCompleters = {};
 
-  /** Stream controller underlying [onceIsolateReady]. */
+  /** Stream controller underlying [onceWorkerReady]. */
   final StreamController _readyController = new StreamController.broadcast();
 
-  /** Stream controller underlying [onIsolateMessage]. */
+  /** Stream controller underlying [onWorkerMessage]. */
   final StreamController<ServiceActionEvent> _messageController =
       new StreamController<ServiceActionEvent>.broadcast();
 
@@ -70,15 +70,15 @@ class _SingleThreadedHostToWorkerHandler implements HostToWorkerHandler {
       new SingleThreadedWorkerToHostHandler();
 
   @override
-  Stream<ServiceActionEvent> onIsolateMessage;
+  Stream<ServiceActionEvent> onWorkerMessage;
 
   @override
-  Future onceIsolateReady;
+  Future onceWorkerReady;
 
   _SingleThreadedHostToWorkerHandler() {
     _port.listenFromWorker(_onWorkerMessage);
-    onIsolateMessage = _messageController.stream;
-    onceIsolateReady = _readyController.stream.first;
+    onWorkerMessage = _messageController.stream;
+    onceWorkerReady = _readyController.stream.first;
 
     services_impl.init(_port);
 
@@ -124,7 +124,7 @@ class _SingleThreadedHostToWorkerHandler implements HostToWorkerHandler {
 
     int callId = _topCallId;
     _serviceCallCompleters["ping_$callId"] = completer;
-    onceIsolateReady.then((_) {
+    onceWorkerReady.then((_) {
       _port.sendToHost(callId);
     });
     _topCallId += 1;

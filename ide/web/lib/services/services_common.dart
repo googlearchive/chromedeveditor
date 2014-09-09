@@ -41,14 +41,14 @@ abstract class HostToWorkerHandler {
   /**
    * Fired when the worker originates a message to be consumed.
    */
-  Stream<ServiceActionEvent> onIsolateMessage;
+  Stream<ServiceActionEvent> onWorkerMessage;
 
   /**
    * Future to fire once, when the worker is started and ready to
    * receive and process messages.
-   * Usage: onceIsolateReady.then() => // do stuff
+   * Usage: [onceWorkerReady].then() => // do stuff
    */
-  Future onceIsolateReady;
+  Future onceWorkerReady;
 
   /**
    * Enqueues a [ServiceActionEvent] to be processed by the worker, and
