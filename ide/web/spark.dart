@@ -198,6 +198,10 @@ abstract class Spark
     });
   }
 
+  void showKeyLocation(String keyType, String path) {
+    getUIElement('#$keyType').text = path;
+  }
+
   //
   // SparkModel interface:
   //
@@ -2114,7 +2118,7 @@ class FocusMainMenuAction extends SparkAction {
 
 class BuildApkAction extends SparkActionWithDialog {
   BuildApkAction(Spark spark, Element dialog)
-      : super(spark, "application-build", "Build APK", dialog) {
+      : super(spark, "application-build", "Build APK…", dialog) {
   }
 
   void _invoke([context]) {
