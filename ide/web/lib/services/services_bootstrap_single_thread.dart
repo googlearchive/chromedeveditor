@@ -10,7 +10,7 @@ import 'services_common.dart';
 import 'services_impl.dart' as services_impl;
 
 IsolateHandler createIsolateHandler() {
-  return new _IsolateHandlerSingleThreadImpl();  
+  return new _IsolateHandlerSingleThreadImpl();
 }
 
 class StreamWorkerPort implements WorkerPort {
@@ -21,18 +21,22 @@ class StreamWorkerPort implements WorkerPort {
   void sendToHost(dynamic message) {
     _hostStreamController.add(message);
   }
-  
+
   @override
   void listenFromHost(void onData(var message)) {
-    _workerStreamController.stream.listen(onData);    
+    _workerStreamController.stream.listen((message) {
+      onData(message);
+    });
   }
 
   void sendToWorker(dynamic message) {
     _workerStreamController.add(message);
   }
-  
+
   void listenFromWorker(void onData(var message)) {
-    _hostStreamController.stream.listen(onData);    
+    _hostStreamController.stream.listen((message) {
+      onData(message);
+    });
   }
 }
 
@@ -50,14 +54,14 @@ class _IsolateHandlerSingleThreadImpl implements IsolateHandler {
 
   Stream<ServiceActionEvent> onIsolateMessage;
   Future onceIsolateReady;
-  
+
   _IsolateHandlerSingleThreadImpl() {
      _port.listenFromWorker(_onWorkerMessage);
     onIsolateMessage = _messageController.stream;
     onceIsolateReady = _readyController.stream.first;
-    
+
     services_impl.init(_port);
-    
+
     // The worker is immediately ready to process messages.
     // TODO(rpaquay): Is this correct?
     _readyController..add(null)..close();
@@ -91,18 +95,18 @@ class _IsolateHandlerSingleThreadImpl implements IsolateHandler {
       }
     }
   }
-  
+
   @override
   Future<String> ping() {
     Completer<String> completer = new Completer();
-    
+
     int callId = _topCallId;
     _serviceCallCompleters["ping_$callId"] = completer;
     onceIsolateReady.then((_) {
       _port.sendToHost(callId);
     });
     _topCallId += 1;
-    
+
     return completer.future;
   }
 
@@ -112,7 +116,7 @@ class _IsolateHandlerSingleThreadImpl implements IsolateHandler {
   }
 
   String _getNewCallId() => "host_${_topCallId++}";
-  
+
   @override
   Future<ServiceActionEvent> sendAction(ServiceActionEvent event) {
     Completer<ServiceActionEvent> completer =
