@@ -22,6 +22,9 @@ class SparkFlags {
       _flags['test-mode'] == true;
   static bool get liveDeployMode =>
     _flags['live-deploy-mode'] == true;
+  static bool get apkBuildMode =>
+    _flags['apk-build'] == true;
+
 
   // Editor:
   static bool get useLightAceThemes =>

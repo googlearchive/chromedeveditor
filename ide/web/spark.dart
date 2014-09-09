@@ -484,6 +484,7 @@ abstract class Spark
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
+    actionManager.registerAction(new BuildApkAction(this, getDialogElement('#buildAPKDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
@@ -2109,6 +2110,22 @@ class FocusMainMenuAction extends SparkAction {
   void _invoke([Object context]) {
     spark.getUIElement('#mainMenu').focus();
   }
+}
+
+class BuildApkAction extends SparkActionWithDialog {
+  BuildApkAction(Spark spark, Element dialog)
+      : super(spark, "application-build", "Build APK", dialog) {
+  }
+
+  void _invoke([context]) {
+    _show();
+  }
+
+  void _commit() {
+    super._commit();
+    //TODO: add here the binding to the build class
+  }
+
 }
 
 class NewProjectAction extends SparkActionWithDialog {

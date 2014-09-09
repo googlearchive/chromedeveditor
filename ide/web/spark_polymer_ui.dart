@@ -30,6 +30,7 @@ class SparkPolymerUI extends SparkWidget {
   // The values are later set to their actual values in [refreshFromModel].
   @observable bool liveDeployMode = false;
   @observable bool developerMode = true;
+  @observable bool apkBuildMode = false;
   @observable bool chromeOS = false;
   @observable String appVersion = '';
   // This flag is different from the rest: the comment immediately above doesn't
@@ -64,6 +65,7 @@ class SparkPolymerUI extends SparkWidget {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.developerMode;
     liveDeployMode = SparkFlags.liveDeployMode;
+    apkBuildMode = SparkFlags.apkBuildMode;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
     appVersion = _model.appVersion;

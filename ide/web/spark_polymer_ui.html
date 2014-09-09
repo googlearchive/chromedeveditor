@@ -65,6 +65,10 @@
 
             <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
             </spark-menu-item>
+            <template if="{{apkBuildMode}}">
+              <spark-menu-item action-id="application-build" label="Build APK">
+              </spark-menu-item>
+            </template>
             <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
             </spark-menu-item>
 
@@ -340,6 +344,47 @@
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Create</spark-dialog-button>
     </spark-dialog>
+
+    <!-- Build APK dialog -->
+    <spark-dialog id="buildAPKDialog" headerTitle="Build APK">
+      <div class="form-group">
+        <div class="help-block">
+          Please start the
+          <a href="https://github.com/MobileChromeApps/chrome-app-developer-tool/releases"
+              on-click="{{handleAnchorClick}}">
+            Chrome App Developer Tool for Mobile (App Dev Tool)
+          </a>
+          application on your Android device.
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="vert-align-box">
+          <input id="adb" type="radio" name="mobileDeployType" value="push-adb" checked>
+          <label for="adb">Build via USB</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="vert-align-box">
+          <input id="ip" type="radio" name="mobileDeployType" value="push-ip">
+          <label for="ip">Build to a network host with this IP:</label>
+        </div>
+        <div class="radio-button-dependency">
+          <!-- TODO(devoncarew): Also, support IPv6 name patterns. -->
+          <input id="pushUrl" type="text" class="form-control "
+              placeholder="e.g. 192.168.1.101"
+              pattern="(\d{1,3}\.){3}\d{1,3}"
+              spellcheck="false" autosave>
+        </div>
+      </div>
+      <div id="progressDescription"></div>
+      <div id='deployCheckDeviceMessage'>
+        Please check for a connection authorization dialog on your device.
+      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit focused>Build</spark-dialog-button>
+    </spark-dialog>
+
 
     <!-- Deploy to Mobile dialog -->
     <spark-dialog id="mobileDeployDialog" headerTitle="Deploy to Mobile">
