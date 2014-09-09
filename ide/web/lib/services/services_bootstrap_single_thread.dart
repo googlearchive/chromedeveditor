@@ -9,12 +9,14 @@ import 'dart:async';
 import 'services_common.dart';
 import 'services_impl.dart' as services_impl;
 
-IsolateHandler createIsolateHandler() {
-  return new _IsolateHandlerSingleThreadImpl();
+HostToWorkerHandler createHostToWorkerHandler() {
+  return new _SingleThreadedHostToWorkerHandler();
 }
 
-class StreamWorkerPort implements WorkerPort {
+class SingleThreadedWorkerToHostHandler implements WorkerToHostHandler {
+  /// The stream used for sending message to the host.
   final StreamController _hostStreamController = new StreamController();
+  /// The stream used for sending message to the worker.
   final StreamController _workerStreamController = new StreamController();
 
   @override
@@ -24,6 +26,8 @@ class StreamWorkerPort implements WorkerPort {
 
   @override
   void listenFromHost(void onData(var message)) {
+    // Note: We wrap "onData" with our own handler to facilitate
+    // manual debugging (and possibly logging down the line).
     _workerStreamController.stream.listen((message) {
       onData(message);
     });
@@ -34,6 +38,8 @@ class StreamWorkerPort implements WorkerPort {
   }
 
   void listenFromWorker(void onData(var message)) {
+    // Note: We wrap "onData" with our own handler to facilitate
+    // manual debugging (and possibly logging down the line).
     _hostStreamController.stream.listen((message) {
       onData(message);
     });
@@ -41,22 +47,36 @@ class StreamWorkerPort implements WorkerPort {
 }
 
 /**
- * Implements [IsolateHandler] where the worker runs on the same isolate
- * as the host. This is used for debuggin/testing only.
+ * Implements [HostToWorkerHandler] where the worker runs on the same isolate
+ * as the host. This should used for debuggin/testing only, as this obviously
+ * can make the UI non responsive.
  */
-class _IsolateHandlerSingleThreadImpl implements IsolateHandler {
+class _SingleThreadedHostToWorkerHandler implements HostToWorkerHandler {
+  /** Unique identifier attached to [ServiceActionEvent] messages. */
   int _topCallId = 0;
+
+  /** Map of call ID to completer for the active tasks. */
   final Map<String, Completer> _serviceCallCompleters = {};
+
+  /** Stream controller underlying [onceIsolateReady]. */
   final StreamController _readyController = new StreamController.broadcast();
+
+  /** Stream controller underlying [onIsolateMessage]. */
   final StreamController<ServiceActionEvent> _messageController =
       new StreamController<ServiceActionEvent>.broadcast();
-  final StreamWorkerPort _port = new StreamWorkerPort();
 
+  /** Worker to Host IPC implementation. */
+  final SingleThreadedWorkerToHostHandler _port =
+      new SingleThreadedWorkerToHostHandler();
+
+  @override
   Stream<ServiceActionEvent> onIsolateMessage;
+
+  @override
   Future onceIsolateReady;
 
-  _IsolateHandlerSingleThreadImpl() {
-     _port.listenFromWorker(_onWorkerMessage);
+  _SingleThreadedHostToWorkerHandler() {
+    _port.listenFromWorker(_onWorkerMessage);
     onIsolateMessage = _messageController.stream;
     onceIsolateReady = _readyController.stream.first;
 
@@ -64,7 +84,9 @@ class _IsolateHandlerSingleThreadImpl implements IsolateHandler {
 
     // The worker is immediately ready to process messages.
     // TODO(rpaquay): Is this correct?
-    _readyController..add(null)..close();
+    _readyController
+        ..add(null)
+        ..close();
   }
 
   /**

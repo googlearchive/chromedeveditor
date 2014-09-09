@@ -22,14 +22,14 @@ final Logger _logger = new Logger('spark.services');
  * Defines a class which contains services and manages their communication.
  */
 class Services {
-  IsolateHandler _isolateHandler;
+  HostToWorkerHandler _isolateHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
   final Workspace _workspace;
   final PackageManager _packageManager;
 
   Services(this._workspace, this._packageManager) {
-    _isolateHandler = bootstrap.createIsolateHandler();
+    _isolateHandler = bootstrap.createHostToWorkerHandler();
     registerService(new CompilerService(this, _isolateHandler));
     registerService(new AnalyzerService(this, _isolateHandler));
     registerService(new TestService(this, _isolateHandler));
@@ -61,7 +61,7 @@ abstract class Service {
   final String serviceId;
 
   Services services;
-  IsolateHandler _isolateHandler;
+  HostToWorkerHandler _isolateHandler;
 
   Service(this.services, this.serviceId, this._isolateHandler);
 
@@ -85,7 +85,7 @@ abstract class Service {
 }
 
 class TestService extends Service {
-  TestService(Services services, IsolateHandler handler)
+  TestService(Services services, HostToWorkerHandler handler)
       : super(services, 'test', handler);
 
   Future<String> shortTest(String name) {
@@ -119,7 +119,7 @@ class TestService extends Service {
 }
 
 class CompilerService extends Service {
-  CompilerService(Services services, IsolateHandler handler)
+  CompilerService(Services services, HostToWorkerHandler handler)
       : super(services, 'compiler', handler);
 
   Future<CompileResult> compileString(String string) {
@@ -183,7 +183,7 @@ class AnalyzerService extends Service {
 
   List<ProjectAnalyzer> _recentContexts = [];
 
-  AnalyzerService(Services services, IsolateHandler handler) :
+  AnalyzerService(Services services, HostToWorkerHandler handler) :
       super(services, 'analyzer', handler);
 
   Workspace get workspace => services._workspace;
@@ -398,7 +398,7 @@ class ProjectAnalyzer {
  * cannot handle on its own.
  */
 class ChromeServiceImpl extends Service {
-  ChromeServiceImpl(Services services, IsolateHandler handler)
+  ChromeServiceImpl(Services services, HostToWorkerHandler handler)
       : super(services, 'chrome', handler);
 
   // For incoming (non-requested) actions.

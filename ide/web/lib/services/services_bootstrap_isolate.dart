@@ -9,15 +9,15 @@ import 'dart:isolate';
 
 import 'services_common.dart';
 
-IsolateHandler createIsolateHandler() {
-  return new IsolateHandlerImpl();  
+HostToWorkerHandler createHostToWorkerHandler() {
+  return new _IsolateHostToWorkerHandler();  
 }
 
 /**
- * Implements [IsolateHandler] as the regular IPC from the host to the [Isolate]
+ * Implements [HostToWorkerHandler] as the regular IPC from the host to the [Isolate]
  * worker implementing the services..
  */
-class IsolateHandlerImpl implements IsolateHandler {
+class _IsolateHostToWorkerHandler implements HostToWorkerHandler {
   final String _workerPath = 'services_entry.dart';
   final Map<String, Completer> _serviceCallCompleters = {};
   final StreamController _readyController = new StreamController.broadcast();
@@ -33,7 +33,7 @@ class IsolateHandlerImpl implements IsolateHandler {
   @override
   Future onceIsolateReady;
   
-  IsolateHandlerImpl() {
+  _IsolateHostToWorkerHandler() {
     onceIsolateReady = _readyController.stream.first;
     _startIsolate().then((result) => _isolate = result);
   }

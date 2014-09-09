@@ -11,8 +11,8 @@ import 'services_common.dart';
 import 'compiler.dart';
 import '../dart/sdk.dart';
 
-void init(WorkerPort sendPort) {
-  final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
+void init(WorkerToHostHandler hostHandler) {
+  final ServicesIsolate servicesIsolate = new ServicesIsolate(hostHandler);
 }
 
 /**
@@ -26,7 +26,7 @@ typedef Future<ServiceActionEvent> RequestHandler(ServiceActionEvent request);
  */
 class ServicesIsolate {
   int _topCallId = 0;
-  final WorkerPort _sendPort;
+  final WorkerToHostHandler _hostHandler;
 
   // Fired when host originates a message
   Stream<ServiceActionEvent> onHostMessage;
@@ -39,7 +39,7 @@ class ServicesIsolate {
 
   DartSdk sdk;
 
-  ServicesIsolate(this._sendPort) {
+  ServicesIsolate(this._hostHandler) {
     chromeService = new ChromeService(this);
 
     StreamController<ServiceActionEvent> hostMessageController =
@@ -52,9 +52,10 @@ class ServicesIsolate {
 
     _registerServiceImpl(new TestServiceImpl(this));
 
-    _sendPort.listenFromHost((arg) {
+    _hostHandler.listenFromHost((arg) {
       if (arg is int) {
-        _sendPort.sendToHost(arg);
+        // int: send response to "ping" test message.
+        _hostHandler.sendToHost(arg);
       } else {
         ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
         if (event.response) {
@@ -120,7 +121,7 @@ class ServicesIsolate {
     if (data != null) {
       eventMap['data'] = data;
     }
-    _sendPort.sendToHost(eventMap);
+    _hostHandler.sendToHost(eventMap);
   }
 
   String _getNewCallId() => "iso_${_topCallId++}";
@@ -132,7 +133,7 @@ class ServicesIsolate {
     event.makeRespondable(_getNewCallId());
 
     var eventMap = event.toMap();
-    _sendPort.sendToHost(eventMap);
+    _hostHandler.sendToHost(eventMap);
     return _onResponseByCallId(event.callId);
   }
 }

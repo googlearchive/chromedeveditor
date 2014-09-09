@@ -15,16 +15,16 @@ import '../package_mgmt/pub.dart';
 final Logger _logger = new Logger('spark.services_common');
 
 /**
- * Abstraction over the port that the worker uses to communicate
- * with the host.
+ * Worker-side abstraction of the IPC between the worker services and
+ * the application host..
  */
-abstract class WorkerPort {
+abstract class WorkerToHostHandler {
   /**
    * Sends a [message] to the host. The message has the same limitation
-   * as [SendPort], i.e. only primitive types, lists and maps are supported. 
+   * as [SendPort], i.e. only primitive types, lists and maps are supported.
    */
   void sendToHost(dynamic message);
-  
+
   /**
    * Adds a handler for messages received from the host.
    * The message has the same limitation as [SendPort], i.e. only primitive
@@ -34,21 +34,22 @@ abstract class WorkerPort {
 }
 
 /**
- * Host side abstraction of an IPC mechanism between a host and a worker.
+ * Host-side abstraction of the IPC between the application host and the
+ * worker services.
  */
-abstract class IsolateHandler {
+abstract class HostToWorkerHandler {
   /**
    * Fired when the worker originates a message to be consumed.
    */
   Stream<ServiceActionEvent> onIsolateMessage;
 
   /**
-   * Future to fire once, when the worker is started and ready to 
+   * Future to fire once, when the worker is started and ready to
    * receive and process messages.
    * Usage: onceIsolateReady.then() => // do stuff
    */
   Future onceIsolateReady;
-  
+
   /**
    * Enqueues a [ServiceActionEvent] to be processed by the worker, and
    * returns a [Future] that contains the response to the [event] when
@@ -58,7 +59,7 @@ abstract class IsolateHandler {
 
   /**
    * Enqueues a [ServiceActionEvent] to send as a response to
-   * the worker. 
+   * the worker.
    */
   void sendResponse(ServiceActionEvent event);
 
@@ -67,7 +68,7 @@ abstract class IsolateHandler {
    * Used for testing only.
    */
   Future<String> ping();
-  
+
   /**
    * Terminates this instance. Other operations will fail after this call.
    */
@@ -90,16 +91,16 @@ class ServiceActionEvent {
 
   ServiceActionEvent(this.serviceId, this.actionId, this.data);
 
-  ServiceActionEvent.fromMap(Map map) :
-      serviceId = map["serviceId"], actionId = map["actionId"] {
+  ServiceActionEvent.fromMap(Map map)
+      : serviceId = map["serviceId"],
+        actionId = map["actionId"] {
     _callId = map["callId"];
     data = map["data"];
     response = map["response"];
     error = map["error"];
   }
 
-  ServiceActionEvent.asResponse(
-      this.serviceId, this.actionId, this._callId, this.data) : response = true;
+  ServiceActionEvent.asResponse(this.serviceId, this.actionId, this._callId, this.data) : response = true;
 
   Map toMap() {
     return {
@@ -118,7 +119,9 @@ class ServiceActionEvent {
   }
 
   ServiceActionEvent createErrorReponse(String errorMessage) {
-    return createReponse({'message': errorMessage})..error = true;
+    return createReponse({
+      'message': errorMessage
+    })..error = true;
   }
 
   String getErrorMessage() => data['message'];
@@ -173,11 +176,11 @@ class AnalysisError {
 
   Map toMap() {
     return {
-        "message": message,
-        "offset": offset,
-        "lineNumber": lineNumber,
-        "errorSeverity": errorSeverity,
-        "length": length
+      "message": message,
+      "offset": offset,
+      "lineNumber": lineNumber,
+      "errorSeverity": errorSeverity,
+      "length": length
     };
   }
 
@@ -193,8 +196,7 @@ class AnalysisResult {
     Map<String, List<Map>> uuidToErrors = m;
 
     for (String uuid in uuidToErrors.keys) {
-      List<AnalysisError> errors = uuidToErrors[uuid].map(
-          (Map errorData) => new AnalysisError.fromMap(errorData)).toList();
+      List<AnalysisError> errors = uuidToErrors[uuid].map((Map errorData) => new AnalysisError.fromMap(errorData)).toList();
       _results[workspace.restoreResource(uuid)] = errors;
     }
   }
@@ -210,8 +212,7 @@ class CompileResult {
 
   CompileResult.fromMap(Map map) {
     _output = map['output'];
-    _problems = (map['problems'] as List).map(
-        (p) => new CompileError.fromMap(p)).toList();
+    _problems = (map['problems'] as List).map((p) => new CompileError.fromMap(p)).toList();
   }
 
   Future resolve(UuidResolver resolver) {
@@ -279,8 +280,7 @@ class CompileError {
 
   bool get isError => kind == 'error';
 
-  String toString() =>
-      '[${kind}] ${message} (${file == null ? '' : file.path}:${line})';
+  String toString() => '[${kind}] ${message} (${file == null ? '' : file.path}:${line})';
 }
 
 abstract class ContentsProvider {
@@ -335,7 +335,9 @@ class _EmptyDeclaration extends Declaration {
 class FileDeclaration extends Declaration {
   final File file;
 
-  FileDeclaration(File file) : this.file = file, super(file.name);
+  FileDeclaration(File file)
+      : this.file = file,
+        super(file.name);
 }
 
 /**
@@ -352,8 +354,7 @@ class SourceDeclaration extends Declaration {
   factory SourceDeclaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new SourceDeclaration(Declaration._nameFromMap(map), map["fileUuid"],
-        map["offset"], map["length"]);
+    return new SourceDeclaration(Declaration._nameFromMap(map), map["fileUuid"], map["offset"], map["length"]);
   }
 
   /**
@@ -374,10 +375,10 @@ class SourceDeclaration extends Declaration {
 
   Map toMap() {
     return super.toMap()..addAll({
-      "fileUuid": fileUuid,
-      "offset": offset,
-      "length": length,
-    });
+          "fileUuid": fileUuid,
+          "offset": offset,
+          "length": length,
+        });
   }
 
   String toString() => '${fileUuid} [${offset}:${length}]';
@@ -397,7 +398,9 @@ class DocDeclaration extends Declaration {
     return new DocDeclaration(Declaration._nameFromMap(map), map["url"]);
   }
 
-  Map toMap() => super.toMap()..addAll({"url": url});
+  Map toMap() => super.toMap()..addAll({
+        "url": url
+      });
 }
 
 /**
@@ -409,14 +412,12 @@ class Outline {
   Outline();
 
   Outline.fromMap(Map mapData) {
-    entries = mapData['entries'].map((Map serializedEntry) =>
-        new OutlineTopLevelEntry.fromMap(serializedEntry)).toList();
+    entries = mapData['entries'].map((Map serializedEntry) => new OutlineTopLevelEntry.fromMap(serializedEntry)).toList();
   }
 
   Map toMap() {
     return {
-      "entries": entries.map((OutlineTopLevelEntry entry) =>
-          entry.toMap()).toList()
+      "entries": entries.map((OutlineTopLevelEntry entry) => entry.toMap()).toList()
     };
   }
 }
@@ -492,7 +493,9 @@ class OutlineTypeDef extends OutlineTopLevelEntry {
 
   OutlineTypeDef([String name]) : super(name);
 
-  Map toMap() => super.toMap()..addAll({"type": _type});
+  Map toMap() => super.toMap()..addAll({
+        "type": _type
+      });
 }
 
 /**
@@ -512,17 +515,15 @@ class OutlineClass extends OutlineTopLevelEntry {
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     abstract = mapData["abstract"];
-    members = mapData["members"].map((Map memberMap) =>
-        new OutlineMember.fromMap(memberMap)).toList();
+    members = mapData["members"].map((Map memberMap) => new OutlineMember.fromMap(memberMap)).toList();
   }
 
   Map toMap() {
     return super.toMap()..addAll({
-      "type": _type,
-      "abstract": abstract,
-      "members": members.map((OutlineMember element) =>
-          element.toMap()).toList()
-    });
+          "type": _type,
+          "abstract": abstract,
+          "members": members.map((OutlineMember element) => element.toMap()).toList()
+        });
   }
 }
 
@@ -559,8 +560,8 @@ abstract class OutlineMember extends OutlineEntry {
 
   Map toMap() {
     return super.toMap()..addAll({
-      "static": static
-    });
+          "static": static
+        });
   }
 }
 
@@ -619,8 +620,7 @@ class OutlineClassAccessor extends OutlineMember {
   String returnType;
   bool setter;
 
-  OutlineClassAccessor([String name, this.returnType, this.setter = false]) :
-      super(name);
+  OutlineClassAccessor([String name, this.returnType, this.setter = false]) : super(name);
 
   /**
    * Populates values and children from a map
@@ -672,8 +672,7 @@ class OutlineTopLevelAccessor extends OutlineTopLevelEntry {
   String returnType;
   bool setter;
 
-  OutlineTopLevelAccessor([String name, this.returnType, this.setter = false]) :
-      super(name);
+  OutlineTopLevelAccessor([String name, this.returnType, this.setter = false]) : super(name);
 
   /**
    * Populates values and children from a map

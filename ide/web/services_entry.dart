@@ -18,7 +18,7 @@ import 'lib/services/services_impl.dart' as services_impl;
 
 SendPort _sendPort;
 
-class SendWorkerPort implements WorkerPort {
+class SendWorkerPort implements WorkerToHostHandler {
   final SendPort _sendPort;
   ReceivePort _receivePort;
   
