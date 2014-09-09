@@ -13,7 +13,7 @@ import 'compiler.dart';
 import '../dart/sdk.dart';
 
 void init(SendPort sendPort) {
-  final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
+  final ServicesIsolate servicesIsolate = new ServicesIsolate(new SendWorkerPort(sendPort));
 }
 
 /**
@@ -22,12 +22,37 @@ void init(SendPort sendPort) {
  */
 typedef Future<ServiceActionEvent> RequestHandler(ServiceActionEvent request);
 
+abstract class WorkerPort {
+  void sendToHost(dynamic message);  
+  void listenFromHost(void onData(var message));
+}
+
+class SendWorkerPort implements WorkerPort {
+  final SendPort _sendPort;
+  ReceivePort _receivePort;
+  
+  SendWorkerPort(this._sendPort) {
+    _receivePort = new ReceivePort();
+    _sendPort.send(_receivePort.sendPort);
+  }
+  
+  @override
+  void sendToHost(dynamic message) {
+    _sendPort.send(message);
+  }
+  
+  @override
+  void listenFromHost(void onData(var message)) {
+    _receivePort.listen(onData); 
+  }
+}
+
 /**
  * Defines a handler for all worker-side service implementations.
  */
 class ServicesIsolate {
   int _topCallId = 0;
-  final SendPort _sendPort;
+  final WorkerPort _sendPort;
 
   // Fired when host originates a message
   Stream<ServiceActionEvent> onHostMessage;
@@ -51,14 +76,11 @@ class ServicesIsolate {
     onResponseMessage = responseMessageController.stream;
     onHostMessage = hostMessageController.stream;
 
-    ReceivePort receivePort = new ReceivePort();
-    _sendPort.send(receivePort.sendPort);
-
     _registerServiceImpl(new TestServiceImpl(this));
 
-    receivePort.listen((arg) {
+    _sendPort.listenFromHost((arg) {
       if (arg is int) {
-        _sendPort.send(arg);
+        _sendPort.sendToHost(arg);
       } else {
         ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
         if (event.response) {
@@ -124,7 +146,7 @@ class ServicesIsolate {
     if (data != null) {
       eventMap['data'] = data;
     }
-    _sendPort.send(eventMap);
+    _sendPort.sendToHost(eventMap);
   }
 
   String _getNewCallId() => "iso_${_topCallId++}";
@@ -136,7 +158,7 @@ class ServicesIsolate {
     event.makeRespondable(_getNewCallId());
 
     var eventMap = event.toMap();
-    _sendPort.send(eventMap);
+    _sendPort.sendToHost(eventMap);
     return _onResponseByCallId(event.callId);
   }
 }

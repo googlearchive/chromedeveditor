@@ -15,6 +15,47 @@ import '../package_mgmt/pub.dart';
 final Logger _logger = new Logger('spark.services_common');
 
 /**
+ * Host side abstraction of an IPC mechanism between a host and a worker.
+ */
+abstract class IsolateHandler {
+  /**
+   * Fired when the worker originates a message to be consumed.
+   */
+  Stream<ServiceActionEvent> onIsolateMessage;
+
+  /**
+   * Future to fire once, when the worker is started and ready to 
+   * receive and process messages.
+   * Usage: onceIsolateReady.then() => // do stuff
+   */
+  Future onceIsolateReady;
+  
+  /**
+   * Enqueues a [ServiceActionEvent] to be processed by the worker, and
+   * returns a [Future] that contains the response to the [event] when
+   * it has been processed.
+   */
+  Future<ServiceActionEvent> sendAction(ServiceActionEvent event);
+
+  /**
+   * Enqueues a [ServiceActionEvent] to send as a response to
+   * the worker. 
+   */
+  void sendResponse(ServiceActionEvent event);
+
+  /**
+   * Returns a Future that completes with the "pong" answer from the worker.
+   * Used for testing only.
+   */
+  Future<String> ping();
+  
+  /**
+   * Terminates this instance. Other operations will fail after this call.
+   */
+  void dispose();
+}
+
+/**
  * Defines a received action event.
  */
 class ServiceActionEvent {
