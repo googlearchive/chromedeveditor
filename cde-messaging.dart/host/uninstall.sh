@@ -1,7 +1,7 @@
-#!/bin/sh
-# Copyright 2013 The Chromium Authors. All rights reserved.
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
+#!/bin/bash
+# Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+# All rights reserved. Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 
 set -e
 
@@ -23,7 +23,7 @@ else
   fi
 fi
 
-HOST_NAME=com.google.chrome.example.dart
-rm "$TARGET_DIR/com.google.chrome.example.dart.json"
-rm "$TARGET_DIR_CHROMIUM/com.google.chrome.example.dart.json"
+HOST_NAME=$1
+rm "$TARGET_DIR/$1.json"
+rm "$TARGET_DIR_CHROMIUM/$1.json"
 echo Native messaging host $HOST_NAME has been uninstalled.
