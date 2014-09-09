@@ -18,11 +18,11 @@ import 'lib/services/services_impl.dart' as services_impl;
 
 SendPort _sendPort;
 
-class SendWorkerPort implements WorkerToHostHandler {
+class IsolateWorkerToHostHandler implements WorkerToHostHandler {
   final SendPort _sendPort;
   ReceivePort _receivePort;
   
-  SendWorkerPort(this._sendPort) {
+  IsolateWorkerToHostHandler(this._sendPort) {
     _receivePort = new ReceivePort();
     _sendPort.send(_receivePort.sendPort);
   }
@@ -48,7 +48,7 @@ void main(List<String> args, SendPort sendPort) {
   });
 
   _createIsolateZone().runGuarded(() {
-    services_impl.init(new SendWorkerPort(sendPort));
+    services_impl.init(new IsolateWorkerToHostHandler(sendPort));
   });
 }
 

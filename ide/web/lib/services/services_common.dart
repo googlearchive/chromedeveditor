@@ -92,15 +92,15 @@ class ServiceActionEvent {
   ServiceActionEvent(this.serviceId, this.actionId, this.data);
 
   ServiceActionEvent.fromMap(Map map)
-      : serviceId = map["serviceId"],
-        actionId = map["actionId"] {
+      : serviceId = map["serviceId"], actionId = map["actionId"] {
     _callId = map["callId"];
     data = map["data"];
     response = map["response"];
     error = map["error"];
   }
 
-  ServiceActionEvent.asResponse(this.serviceId, this.actionId, this._callId, this.data) : response = true;
+  ServiceActionEvent.asResponse(
+      this.serviceId, this.actionId, this._callId, this.data) : response = true;
 
   Map toMap() {
     return {
@@ -196,7 +196,8 @@ class AnalysisResult {
     Map<String, List<Map>> uuidToErrors = m;
 
     for (String uuid in uuidToErrors.keys) {
-      List<AnalysisError> errors = uuidToErrors[uuid].map((Map errorData) => new AnalysisError.fromMap(errorData)).toList();
+      List<AnalysisError> errors = uuidToErrors[uuid].map(
+          (Map errorData) => new AnalysisError.fromMap(errorData)).toList();
       _results[workspace.restoreResource(uuid)] = errors;
     }
   }
@@ -212,7 +213,8 @@ class CompileResult {
 
   CompileResult.fromMap(Map map) {
     _output = map['output'];
-    _problems = (map['problems'] as List).map((p) => new CompileError.fromMap(p)).toList();
+    _problems = (map['problems'] as List).map(
+        (p) => new CompileError.fromMap(p)).toList();
   }
 
   Future resolve(UuidResolver resolver) {
@@ -335,9 +337,7 @@ class _EmptyDeclaration extends Declaration {
 class FileDeclaration extends Declaration {
   final File file;
 
-  FileDeclaration(File file)
-      : this.file = file,
-        super(file.name);
+  FileDeclaration(File file) : this.file = file, super(file.name);
 }
 
 /**
@@ -354,7 +354,11 @@ class SourceDeclaration extends Declaration {
   factory SourceDeclaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new SourceDeclaration(Declaration._nameFromMap(map), map["fileUuid"], map["offset"], map["length"]);
+    return new SourceDeclaration(
+        Declaration._nameFromMap(map),
+        map["fileUuid"],
+        map["offset"],
+        map["length"]);
   }
 
   /**
@@ -375,10 +379,10 @@ class SourceDeclaration extends Declaration {
 
   Map toMap() {
     return super.toMap()..addAll({
-          "fileUuid": fileUuid,
-          "offset": offset,
-          "length": length,
-        });
+      "fileUuid": fileUuid,
+      "offset": offset,
+      "length": length,
+    });
   }
 
   String toString() => '${fileUuid} [${offset}:${length}]';
@@ -398,9 +402,7 @@ class DocDeclaration extends Declaration {
     return new DocDeclaration(Declaration._nameFromMap(map), map["url"]);
   }
 
-  Map toMap() => super.toMap()..addAll({
-        "url": url
-      });
+  Map toMap() => super.toMap()..addAll({"url": url});
 }
 
 /**
@@ -412,12 +414,14 @@ class Outline {
   Outline();
 
   Outline.fromMap(Map mapData) {
-    entries = mapData['entries'].map((Map serializedEntry) => new OutlineTopLevelEntry.fromMap(serializedEntry)).toList();
+    entries = mapData['entries'].map((Map serializedEntry) =>
+        new OutlineTopLevelEntry.fromMap(serializedEntry)).toList();
   }
 
   Map toMap() {
     return {
-      "entries": entries.map((OutlineTopLevelEntry entry) => entry.toMap()).toList()
+      "entries": entries.map((OutlineTopLevelEntry entry) =>
+          entry.toMap()).toList()
     };
   }
 }
@@ -493,9 +497,7 @@ class OutlineTypeDef extends OutlineTopLevelEntry {
 
   OutlineTypeDef([String name]) : super(name);
 
-  Map toMap() => super.toMap()..addAll({
-        "type": _type
-      });
+  Map toMap() => super.toMap()..addAll({"type": _type});
 }
 
 /**
@@ -515,15 +517,17 @@ class OutlineClass extends OutlineTopLevelEntry {
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     abstract = mapData["abstract"];
-    members = mapData["members"].map((Map memberMap) => new OutlineMember.fromMap(memberMap)).toList();
+    members = mapData["members"].map((Map memberMap) =>
+        new OutlineMember.fromMap(memberMap)).toList();
   }
 
   Map toMap() {
     return super.toMap()..addAll({
-          "type": _type,
-          "abstract": abstract,
-          "members": members.map((OutlineMember element) => element.toMap()).toList()
-        });
+      "type": _type,
+      "abstract": abstract,
+      "members": members.map((OutlineMember element) =>
+          element.toMap()).toList()
+    });
   }
 }
 
@@ -560,8 +564,8 @@ abstract class OutlineMember extends OutlineEntry {
 
   Map toMap() {
     return super.toMap()..addAll({
-          "static": static
-        });
+      "static": static
+    });
   }
 }
 
@@ -620,7 +624,8 @@ class OutlineClassAccessor extends OutlineMember {
   String returnType;
   bool setter;
 
-  OutlineClassAccessor([String name, this.returnType, this.setter = false]) : super(name);
+  OutlineClassAccessor([String name, this.returnType, this.setter = false])
+    : super(name);
 
   /**
    * Populates values and children from a map
@@ -672,7 +677,8 @@ class OutlineTopLevelAccessor extends OutlineTopLevelEntry {
   String returnType;
   bool setter;
 
-  OutlineTopLevelAccessor([String name, this.returnType, this.setter = false]) : super(name);
+  OutlineTopLevelAccessor([String name, this.returnType, this.setter = false])
+    : super(name);
 
   /**
    * Populates values and children from a map
