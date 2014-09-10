@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 {
-  "name": "com.google.chrome.example.echo",
+  "name": "com.google.chrome.example.py",
   "description": "Chrome Native Messaging API Example Host",
-  "path": "native-messaging-example-host.bat",
+  "path": "HOST_PATH",
   "type": "stdio",
   "allowed_origins": [
     "chrome-extension://knldjmfmopnpolahpmmgbagdohdnhkik/"
