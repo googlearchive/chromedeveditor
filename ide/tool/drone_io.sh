@@ -7,6 +7,9 @@ if [ "$DRONE" = "true" ]; then
   export HAS_DARTIUM=true
 fi
 
+# Turn on fast fail for the bash script.
+#set -e
+
 # Display installed versions.
 dart --version
 /usr/bin/google-chrome --version
@@ -21,7 +24,7 @@ if test x$DRONE_REPO_SLUG = xgithub.com/dart-lang/spark -o x$FORCE_NIGHTLY = xye
       https://raw.githubusercontent.com/dart-lang/chromedeveditor/master/ide/tool/release-config.json
   ./grind release-nightly
 else
-  ./grind archive
+  ./grind deploy
 fi
 
 ./grind mode-test
@@ -33,7 +36,7 @@ fi
 
 # Run tests on the dart2js version of the app.
 if [ "$DRONE" = "true" ]; then
-  dart tool/test_runner.dart --chrome-dev --appPath=build/deploy-out/web
+  dart tool/test_runner.dart --chrome-dev
 else
   dart tool/test_runner.dart --chrome
 fi

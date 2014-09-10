@@ -1,0 +1,81 @@
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<link rel="import" href="../../packages/polymer/polymer.html">
+
+<link rel="import" href="../../packages/core_elements/core_icon.html">
+<link rel="import" href="../../packages/core_elements/src/core-icon/core-icon.html">
+<link rel="import" href="../../packages/core_elements/src/core-icons/core-icons.html">
+<link rel="import" href="../../packages/core_elements/src/core-icons/av-icons.html">
+<link rel="import" href="../../packages/core_elements/src/core-icons/hardware-icons.html">
+<link rel="import" href="../../packages/core_elements/core_splitter.html">
+<link rel="import" href="../../packages/core_elements/core_toolbar.html">
+<link rel="import" href="../../packages/paper_elements/paper_dialog.html">
+<link rel="import" href="../../packages/paper_elements/paper_dialog_transition.html">
+<link rel="import" href="../../packages/paper_elements/paper_fab.html">
+<link rel="import" href="../../packages/paper_elements/paper_icon_button.html">
+<link rel="import" href="../../packages/paper_elements/paper_item.html">
+<link rel="import" href="../../packages/paper_elements/paper_menu_button.html">
+<link rel="import" href="../../packages/paper_elements/paper_toast.html">
+<link rel="import" href="cde_content_area.html">
+<link rel="import" href="cde_editing_area.html">
+<link rel="import" href="cde_extension_point.html">
+<link rel="import" href="cde_navigation_area.html">
+<link rel="import" href="cde_navigation_content.html">
+
+<polymer-element name="cde-workbench">
+  <template>
+    <link href="cde_workbench.css" rel="stylesheet">
+
+    <div layout horizontal class="fullScreen">
+      <cde-navigation-area layout vertical>
+        <core-toolbar>
+          <paper-fab title="New Project..." icon="add" class="mini" on-tap="{{handleAdd}}"></paper-fab>
+          <!-- paper-icon-button icon="search" on-tap="{{handleRun}}"></paper-icon-button -->
+          <cde-extension-point id="main-toolbar"></cde-extension-point>
+
+          <div flex></div>
+
+          <paper-menu-button id="mainMenu" icon="menu" halign="left" valign="bottom">
+            <paper-item>Deploy to Mobile...</paper-item>
+            <paper-item>Send Feedback</paper-item>
+            <cde-extension-point id="main-menu"></cde-extension-point>
+            <paper-item>About</paper-item>
+          </paper-menu-button>
+        </core-toolbar>
+
+        <cde-navigation-content flex>Nav contents</cde-navigation-content>
+
+        <core-toolbar>
+          <!-- TODO: -->
+          <div id="status">Status</div>
+          <div flex></div>
+          <paper-icon-button icon="settings" on-tap="{{openSettings}}"></paper-icon-button>
+        </core-toolbar>
+      </cde-navigation-area>
+
+      <core-splitter direction="left" minSize="200"></core-splitter>
+
+      <cde-content-area flex>
+        <content></content>
+      </cde-content-area>
+    </div>
+
+    <paper-dialog id="simpleDialog" heading=" "
+        layered="true" backdrop="true" transition="paper-dialog-transition-center">
+      <p></p>
+      <paper-button label="OK" affirmative autofocus></paper-button>
+    </paper-dialog>
+
+    <paper-dialog id="okCancelDialog" heading=" "
+        layered="true" backdrop="true" transition="paper-dialog-transition-center">
+      <p></p>
+      <paper-button label="Cancel" affirmative></paper-button>
+      <paper-button label="OK" affirmative autofocus></paper-button>
+    </paper-dialog>
+
+    <paper-toast id="toast"><paper-toast>
+  </template>
+  <script type="application/dart" src="cde_workbench.dart"></script>
+</polymer-element>
