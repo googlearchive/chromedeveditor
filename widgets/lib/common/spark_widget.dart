@@ -112,7 +112,18 @@ class SparkWidget extends PolymerElement {
    */
   void _applyAutofocus(bool isFocused) {
     if (_focusableChild != null) {
-      isFocused ? _focusableChild.focus() : _focusableChild.blur();
+      if (isFocused) {
+        try {
+          // <textarea> and some variants of <input> support select(), which is
+          // focus() + make the current text selected.
+          (_focusableChild as dynamic).select();
+        } catch (NoSuchMethod) {
+          // If the above fails, just focus the element.
+          _focusableChild.focus();
+        }
+      } else {
+        _focusableChild.blur();
+      }
     }
   }
 
