@@ -4,3 +4,4 @@
 # license that can be found in the LICENSE file.
 
 sh ./uninstall.sh com.google.chrome.example.dart
+

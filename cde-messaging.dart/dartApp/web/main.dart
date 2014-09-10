@@ -42,7 +42,7 @@ void onDisconnected(sender) {
 }
 
 void connect(MouseEvent event) {
-  var hostName = "com.google.chrome.example.echo";
+  var hostName = "com.google.chrome.example.py";
   _appendMessage("Connecting to native messaging host" + hostName);
   JsObject runtime = context['chrome']['runtime'];
   port = runtime.callMethod('connectNative', [hostName]);
