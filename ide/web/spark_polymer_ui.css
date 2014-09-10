@@ -286,16 +286,6 @@ label[for="stripWhitespace"] {
   white-space: nowrap;
 }
 
-#privateKey {
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-#publicKey {
-  overflow: hidden;
-  white-space: nowrap;
-}
-
 #buildAPKDialog .settings-label {
   width: 150px;
 }
@@ -310,6 +300,7 @@ label[for="stripWhitespace"] {
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 #buildAPKDialog .settings-block {
