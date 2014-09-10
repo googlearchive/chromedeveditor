@@ -5,12 +5,12 @@
 library spark.services;
 
 import 'dart:async';
-import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 
 import 'package_mgmt/package_manager.dart';
 import 'services/services_common.dart';
+import 'services/services_bootstrap.dart' as bootstrap;
 import 'utils.dart';
 import 'workspace.dart';
 
@@ -22,27 +22,27 @@ final Logger _logger = new Logger('spark.services');
  * Defines a class which contains services and manages their communication.
  */
 class Services {
-  _IsolateHandler _isolateHandler;
+  HostToWorkerHandler _workerHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
   final Workspace _workspace;
   final PackageManager _packageManager;
 
   Services(this._workspace, this._packageManager) {
-    _isolateHandler = new _IsolateHandler();
-    registerService(new CompilerService(this, _isolateHandler));
-    registerService(new AnalyzerService(this, _isolateHandler));
-    registerService(new TestService(this, _isolateHandler));
-    _chromeService = new ChromeServiceImpl(this, _isolateHandler);
+    _workerHandler = bootstrap.createHostToWorkerHandler();
+    registerService(new CompilerService(this, _workerHandler));
+    registerService(new AnalyzerService(this, _workerHandler));
+    registerService(new TestService(this, _workerHandler));
+    _chromeService = new ChromeServiceImpl(this, _workerHandler);
 
-    _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event) {
+    _workerHandler.onWorkerMessage.listen((ServiceActionEvent event) {
       if (event.serviceId == "chrome") {
         _chromeService.handleEvent(event);
       }
     });
   }
 
-  Future<String> ping() => _isolateHandler.ping();
+  Future<String> ping() => _workerHandler.ping();
 
   Service getService(String serviceId) => _services[serviceId];
 
@@ -50,7 +50,7 @@ class Services {
     _services[service.serviceId] = service;
   }
 
-  void dispose() => _isolateHandler.dispose();
+  void dispose() => _workerHandler.dispose();
 }
 
 /**
@@ -61,9 +61,9 @@ abstract class Service {
   final String serviceId;
 
   Services services;
-  _IsolateHandler _isolateHandler;
+  HostToWorkerHandler _workerHandler;
 
-  Service(this.services, this.serviceId, this._isolateHandler);
+  Service(this.services, this.serviceId, this._workerHandler);
 
   ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
     return new ServiceActionEvent(serviceId, actionId, data);
@@ -72,20 +72,20 @@ abstract class Service {
   // Wraps up actionId and data into an ActionEvent and sends it to the isolate
   // and invokes the Future once response has been received.
   Future<ServiceActionEvent> _sendAction(String actionId, [Map data]) {
-    return _isolateHandler.onceIsolateReady
-        .then((_) => _isolateHandler.sendAction(
+    return _workerHandler.onceWorkerReady
+        .then((_) => _workerHandler.sendAction(
             _createNewEvent(actionId, data)));
   }
 
   void _sendResponse(ServiceActionEvent event, [Map data]) {
     ServiceActionEvent responseEvent = event.createReponse(data);
-    _isolateHandler.onceIsolateReady
-        .then((_) => _isolateHandler.sendResponse(responseEvent));
+    _workerHandler.onceWorkerReady
+        .then((_) => _workerHandler.sendResponse(responseEvent));
   }
 }
 
 class TestService extends Service {
-  TestService(Services services, _IsolateHandler handler)
+  TestService(Services services, HostToWorkerHandler handler)
       : super(services, 'test', handler);
 
   Future<String> shortTest(String name) {
@@ -119,7 +119,7 @@ class TestService extends Service {
 }
 
 class CompilerService extends Service {
-  CompilerService(Services services, _IsolateHandler handler)
+  CompilerService(Services services, HostToWorkerHandler handler)
       : super(services, 'compiler', handler);
 
   Future<CompileResult> compileString(String string) {
@@ -183,7 +183,7 @@ class AnalyzerService extends Service {
 
   List<ProjectAnalyzer> _recentContexts = [];
 
-  AnalyzerService(Services services, _IsolateHandler handler) :
+  AnalyzerService(Services services, HostToWorkerHandler handler) :
       super(services, 'analyzer', handler);
 
   Workspace get workspace => services._workspace;
@@ -398,7 +398,7 @@ class ProjectAnalyzer {
  * cannot handle on its own.
  */
 class ChromeServiceImpl extends Service {
-  ChromeServiceImpl(Services services, _IsolateHandler handler)
+  ChromeServiceImpl(Services services, HostToWorkerHandler handler)
       : super(services, 'chrome', handler);
 
   // For incoming (non-requested) actions.
@@ -457,112 +457,9 @@ class ChromeServiceImpl extends Service {
         "stackTrace": stackTrace});
 
     responseEvent.error = true;
-    _isolateHandler.onceIsolateReady
-        .then((_) => _isolateHandler.sendResponse(responseEvent));
+    _workerHandler.onceWorkerReady
+        .then((_) => _workerHandler.sendResponse(responseEvent));
   }
-}
-
-/**
- * Defines a class which handles all isolate setup and communication
- */
-class _IsolateHandler {
-  int _topCallId = 0;
-  Isolate _isolate;
-  Map<String, Completer> _serviceCallCompleters = {};
-
-  final String _workerPath = 'services_entry.dart';
-
-  SendPort _sendPort;
-  final ReceivePort _receivePort = new ReceivePort();
-
-  // Fired when isolate originates a message
-  Stream<ServiceActionEvent> onIsolateMessage;
-
-  // Future to fire once, when isolate is started and ready to receive messages.
-  // Usage: onceIsolateReady.then() => // do stuff
-  Future onceIsolateReady;
-  StreamController _readyController = new StreamController.broadcast();
-
-  _IsolateHandler() {
-    onceIsolateReady = _readyController.stream.first;
-    _startIsolate().then((result) => _isolate = result);
-  }
-
-  String _getNewCallId() => "host_${_topCallId++}";
-
-  Future<Isolate> _startIsolate() {
-    StreamController<ServiceActionEvent> _messageController =
-        new StreamController<ServiceActionEvent>.broadcast();
-
-    onIsolateMessage = _messageController.stream;
-
-    _receivePort.listen((arg) {
-      if (arg is String) {
-        // String: handle as print
-        print(arg);
-      } else if (_sendPort == null) {
-        _sendPort = arg;
-        _readyController..add(null)..close();
-      } else if (arg is int) {
-        // int: handle as ping
-        _pong(arg);
-      } else {
-        ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
-
-        if (event.response == true) {
-          Completer<ServiceActionEvent> completer =
-              _serviceCallCompleters.remove(event.callId);
-          if (event.error) {
-            completer.completeError(event.getErrorMessage());
-          } else {
-            completer.complete(event);
-          }
-        } else {
-          _messageController.add(event);
-        }
-      }
-    });
-
-    return Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
-  }
-
-  Future<String> ping() {
-    Completer<String> completer = new Completer();
-
-    int callId = _topCallId;
-    _serviceCallCompleters["ping_$callId"] = completer;
-
-    onceIsolateReady.then((_) {
-      _sendPort.send(callId);
-    });
-
-    _topCallId += 1;
-    return completer.future;
-  }
-
-  Future _pong(int id) {
-    Completer completer = _serviceCallCompleters.remove("ping_$id");
-    completer.complete("pong");
-    return completer.future;
-  }
-
-  Future<ServiceActionEvent> sendAction(ServiceActionEvent event) {
-    Completer<ServiceActionEvent> completer =
-        new Completer<ServiceActionEvent>();
-
-    event.makeRespondable(_getNewCallId());
-    _serviceCallCompleters[event.callId] = completer;
-    _sendPort.send(event.toMap());
-
-    return completer.future;
-  }
-
-  void sendResponse(ServiceActionEvent event) {
-    _sendPort.send(event.toMap());
-  }
-
-  // TODO: I'm not entirely sure how to terminate an isolate...
-  void dispose() { }
 }
 
 List<String> _filesToUuid(

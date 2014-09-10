@@ -15,6 +15,67 @@ import '../package_mgmt/pub.dart';
 final Logger _logger = new Logger('spark.services_common');
 
 /**
+ * Worker-side abstraction of the IPC between the worker services and
+ * the application host.
+ */
+abstract class WorkerToHostHandler {
+  /**
+   * Sends a [message] to the host. The message has the same limitation
+   * as [SendPort], i.e. only primitive types, lists and maps are supported.
+   */
+  void sendToHost(dynamic message);
+
+  /**
+   * Adds a handler for messages received from the host.
+   * The message has the same limitation as [SendPort], i.e. only primitive
+   * types, lists and maps are supported.
+   */
+  void listenFromHost(void onData(var message));
+}
+
+/**
+ * Host-side abstraction of the IPC between the application host and the
+ * worker services.
+ */
+abstract class HostToWorkerHandler {
+  /**
+   * Fired when the worker originates a message to be consumed.
+   */
+  Stream<ServiceActionEvent> onWorkerMessage;
+
+  /**
+   * Future to fire once, when the worker is started and ready to
+   * receive and process messages.
+   * Usage: [onceWorkerReady].then() => // do stuff
+   */
+  Future onceWorkerReady;
+
+  /**
+   * Enqueues a [ServiceActionEvent] to be processed by the worker, and
+   * returns a [Future] that contains the response to the [event] when
+   * it has been processed.
+   */
+  Future<ServiceActionEvent> sendAction(ServiceActionEvent event);
+
+  /**
+   * Enqueues a [ServiceActionEvent] to send as a response to
+   * the worker.
+   */
+  void sendResponse(ServiceActionEvent event);
+
+  /**
+   * Returns a Future that completes with the "pong" answer from the worker.
+   * Used for testing only.
+   */
+  Future<String> ping();
+
+  /**
+   * Terminates this instance. Other operations will fail after this call.
+   */
+  void dispose();
+}
+
+/**
  * Defines a received action event.
  */
 class ServiceActionEvent {
@@ -30,8 +91,8 @@ class ServiceActionEvent {
 
   ServiceActionEvent(this.serviceId, this.actionId, this.data);
 
-  ServiceActionEvent.fromMap(Map map) :
-      serviceId = map["serviceId"], actionId = map["actionId"] {
+  ServiceActionEvent.fromMap(Map map)
+      : serviceId = map["serviceId"], actionId = map["actionId"] {
     _callId = map["callId"];
     data = map["data"];
     response = map["response"];
@@ -113,11 +174,11 @@ class AnalysisError {
 
   Map toMap() {
     return {
-        "message": message,
-        "offset": offset,
-        "lineNumber": lineNumber,
-        "errorSeverity": errorSeverity,
-        "length": length
+      "message": message,
+      "offset": offset,
+      "lineNumber": lineNumber,
+      "errorSeverity": errorSeverity,
+      "length": length
     };
   }
 
@@ -292,8 +353,11 @@ class SourceDeclaration extends Declaration {
   factory SourceDeclaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new SourceDeclaration(Declaration._nameFromMap(map), map["fileUuid"],
-        map["offset"], map["length"]);
+    return new SourceDeclaration(
+        Declaration._nameFromMap(map),
+        map["fileUuid"],
+        map["offset"],
+        map["length"]);
   }
 
   /**
@@ -559,8 +623,8 @@ class OutlineClassAccessor extends OutlineMember {
   String returnType;
   bool setter;
 
-  OutlineClassAccessor([String name, this.returnType, this.setter = false]) :
-      super(name);
+  OutlineClassAccessor([String name, this.returnType, this.setter = false])
+    : super(name);
 
   /**
    * Populates values and children from a map
@@ -612,8 +676,8 @@ class OutlineTopLevelAccessor extends OutlineTopLevelEntry {
   String returnType;
   bool setter;
 
-  OutlineTopLevelAccessor([String name, this.returnType, this.setter = false]) :
-      super(name);
+  OutlineTopLevelAccessor([String name, this.returnType, this.setter = false])
+    : super(name);
 
   /**
    * Populates values and children from a map
