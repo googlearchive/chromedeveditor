@@ -183,11 +183,11 @@ abstract class Spark
 
   Future<chrome.ChromeFileEntry> chooseFileEntry() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-            type: chrome.ChooseEntryType.OPEN_FILE);
+        type: chrome.ChooseEntryType.OPEN_FILE);
     return chrome.fileSystem.chooseEntry(options).then(
-            (chrome.ChooseEntryResult res) {
-          return res.entry;
-        });
+        (chrome.ChooseEntryResult res) {
+      return res.entry;
+    });
   }
 
   /**
@@ -2148,7 +2148,7 @@ class BuildApkAction extends SparkActionWithDialog {
 
   void _commit() {
     super._commit();
-    //TODO: add here the binding to the build class
+    //TODO(albualexandru): add here the binding to the build class
   }
 }
 
