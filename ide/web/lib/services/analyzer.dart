@@ -118,27 +118,32 @@ class ChromeDartSdk extends DartSdk {
     context.sourceFactory = new SourceFactory([]);
   }
 
-  Source fromEncoding(UriKind kind, Uri uri) {
-    // TODO:
-    throw new UnimplementedError('fromEncoding');
+  @override
+  Source fromFileUri(Uri uri) {
+    return mapDartUri(uri.toString());
   }
 
+  @override
   SdkLibrary getSdkLibrary(String dartUri) => _libraryMap.getLibrary(dartUri);
 
   /**
    * Return the source representing the library with the given `dart:` URI, or
    * `null` if the given URI does not denote a library in this SDK.
    */
+  @override
   Source mapDartUri(String dartUri) {
     SdkLibrary library = getSdkLibrary(dartUri);
 
     return library == null ? null : new SdkSource(_sdk, library.path);
   }
 
+  @override
   List<SdkLibrary> get sdkLibraries => _libraryMap.sdkLibraries;
 
+  @override
   String get sdkVersion => _sdk.version;
 
+  @override
   List<String> get uris => _libraryMap.uris;
 
   void _parseLibrariesFile() {
@@ -164,6 +169,28 @@ class ChromeDartSdk extends DartSdk {
   }
 }
 
+class AnalysisEnginePrintLogger implements Logger {
+  @override
+  void logError(String message) {
+    print("error: ${message}");
+  }
+
+  @override
+  void logError2(String message, Exception exception) {
+    print("error2: ${message} ${exception}");
+  }
+
+  @override
+  void logInformation(String message) {
+    print("info: ${message}");
+  }
+
+  @override
+  void logInformation2(String message, Exception exception) {
+    print("info2: ${message} ${exception}");
+  }
+}
+
 /**
  * A wrapper around an analysis context. There is a one-to-one mapping between
  * projects, on the DOM side, and analysis contexts.
@@ -182,6 +209,8 @@ class ProjectContext {
   final Map<String, FileSource> _sources = {};
 
   ProjectContext(this.id, this.sdk, this.provider) {
+    // TODO(rpaquay): For debugging purposes only.
+    AnalysisEngine.instance.logger = new AnalysisEnginePrintLogger();
     context = AnalysisEngine.instance.createAnalysisContext();
     context.sourceFactory = new SourceFactory([
         new DartUriResolver(sdk),
@@ -344,6 +373,7 @@ class StringSource extends Source {
   StringSource(this._contents, this.fullName)
       : modificationStamp = new DateTime.now().millisecondsSinceEpoch;
 
+  @override
   bool operator==(Object object) {
     if (object is StringSource) {
       return object._contents == _contents && object.fullName == fullName;
@@ -352,33 +382,46 @@ class StringSource extends Source {
     }
   }
 
+  @override
   bool exists() => true;
 
+  @override
   TimestampedData<String> get contents =>
       new TimestampedData<String>(modificationStamp, _contents);
 
   void getContentsToReceiver(Source_ContentReceiver receiver) =>
       receiver.accept(_contents, modificationStamp);
 
+  @override
   String get encoding => 'UTF-8';
 
+  @override
   String get shortName => fullName;
 
-  UriKind get uriKind => throw new UnsupportedError(
-      "StringSource doesn't support uriKind.");
+  @override
+  UriKind get uriKind =>
+      throw new UnsupportedError("StringSource doesn't support uriKind.");
 
+  @override
+  Uri get uri => new Uri.file(fullName);
+
+  @override
   int get hashCode => _contents.hashCode ^ fullName.hashCode;
 
+  @override
   bool get isInSystemLibrary => false;
 
-  Source resolveRelative(Uri relativeUri) {
+  @override
+  Uri resolveRelativeUri(Uri relativeUri) {
+    Uri result;
     int index = fullName.lastIndexOf('/');
     if (index == -1) {
-      return new StringSource('', fullName + '/' + relativeUri.toString());
+      result = new StringSource('', fullName + '/' + relativeUri.toString()).uri;
     } else {
-      return new StringSource(
-          '', fullName.substring(0, index + 1) + relativeUri.toString());
+      result = new StringSource(
+          '', fullName.substring(0, index + 1) + relativeUri.toString()).uri;
     }
+    return result;
   }
 }
 
@@ -391,6 +434,7 @@ class SdkSource extends Source {
 
   SdkSource(this._sdk, this.fullName);
 
+  @override
   bool operator==(Object object) {
     if (object is SdkSource) {
       return object.fullName == fullName;
@@ -399,8 +443,10 @@ class SdkSource extends Source {
     }
   }
 
+  @override
   bool exists() => true;
 
+  @override
   TimestampedData<String> get contents {
     String source = _sdk.getSourceForPath(fullName);
     return source != null ?
@@ -418,22 +464,33 @@ class SdkSource extends Source {
     }
   }
 
+  @override
   String get encoding => 'UTF-8';
 
+  @override
   String get shortName => basename(fullName);
 
+  @override
   UriKind get uriKind => UriKind.DART_URI;
 
+  @override
+  Uri get uri => new Uri.file(fullName);
+
+  @override
   int get hashCode => fullName.hashCode;
 
+  @override
   bool get isInSystemLibrary => true;
 
-  Source resolveRelative(Uri relativeUri) {
-    return new SdkSource(_sdk, '${dirname(fullName)}/${relativeUri.path}');
+  @override
+  Uri resolveRelativeUri(Uri relativeUri) {
+    return new Uri.file('${dirname(fullName)}/${relativeUri.path}');
   }
 
+  @override
   int get modificationStamp => 0;
 
+  @override
   String toString() => fullName;
 }
 
@@ -453,12 +510,15 @@ class FileSource extends Source {
     touchFile();
   }
 
+  @override
   bool operator==(Object object) {
     return object is FileSource ? object.uuid == uuid : false;
   }
 
+  @override
   bool exists() => _exists;
 
+  @override
   TimestampedData<String> get contents {
     return new TimestampedData(modificationStamp, _strContents);
   }
@@ -468,19 +528,28 @@ class FileSource extends Source {
     receiver.accept(cnts.data, cnts.modificationTime);
   }
 
+  @override
   String get encoding => 'UTF-8';
 
+  @override
   String get shortName => basename(uuid);
 
+  @override
   String get fullName {
     int index = uuid.indexOf('/');
     return index == -1 ? uuid : uuid.substring(index + 1);
   }
 
+  @override
   UriKind get uriKind => UriKind.FILE_URI;
 
+  @override
+  Uri get uri => new Uri.file(fullName);
+
+  @override
   int get hashCode => fullName.hashCode;
 
+  @override
   bool get isInSystemLibrary => false;
 
   Source resolveRelative(Uri relativeUri) {
@@ -488,6 +557,13 @@ class FileSource extends Source {
     Uri sourceUri = thisUri.resolveUri(relativeUri);
 
     return context.getSource(sourceUri.path.substring(1));
+  }
+
+  @override
+  Uri resolveRelativeUri(Uri relativeUri) {
+    Uri thisUri = new Uri(scheme: 'file', path: uuid);
+    Uri sourceUri = thisUri.resolveUri(relativeUri);
+    return context.getSource(sourceUri.path.substring(1)).uri;
   }
 
   void setContents(String newContents) {
@@ -499,6 +575,7 @@ class FileSource extends Source {
     modificationStamp = new DateTime.now().millisecondsSinceEpoch;
   }
 
+  @override
   String toString() => uuid;
 }
 
@@ -511,14 +588,16 @@ class FileUriResolver extends UriResolver {
 
   FileUriResolver(this.context);
 
-  Source fromEncoding(UriKind kind, Uri uri) {
-    if (kind == UriKind.FILE_URI) {
-      return context.getSource(uri.path);
-    } else {
-      return null;
-    }
-  }
+//  @override
+//  Source fromEncoding(UriKind kind, Uri uri) {
+//    if (kind == UriKind.FILE_URI) {
+//      return context.getSource(uri.path);
+//    } else {
+//      return null;
+//    }
+//  }
 
+  @override
   Source resolveAbsolute(Uri uri) {
     if (!isFileUri(uri)) {
       return null;
@@ -537,14 +616,16 @@ class PackageUriResolver extends UriResolver {
 
   PackageUriResolver(this.context);
 
-  Source fromEncoding(UriKind kind, Uri uri) {
-    if (kind == UriKind.PACKAGE_URI) {
-      return context.getSource(uri.path);
-    } else {
-      return null;
-    }
-  }
+//  @override
+//  Source fromEncoding(UriKind kind, Uri uri) {
+//    if (kind == UriKind.PACKAGE_URI) {
+//      return context.getSource(uri.path);
+//    } else {
+//      return null;
+//    }
+//  }
 
+  @override
   Source resolveAbsolute(Uri uri) {
     if (!isPackageUri(uri)) {
       return null;
@@ -559,6 +640,7 @@ class SimpleAnalysisErrorListener implements AnalysisErrorListener {
 
   SimpleAnalysisErrorListener();
 
+  @override
   void onError(AnalysisError error) {
     foundError = true;
   }
