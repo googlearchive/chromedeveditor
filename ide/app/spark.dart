@@ -3627,7 +3627,7 @@ class CompileDartJob extends Job {
         throw result;
       }
 
-      String newFileName = '${file.name}.precompiled.js';
+      String newFileName = '${file.name}.js';
       return file.parent.getOrCreateFile(newFileName, true).then((ws.File file) {
         return file.setContents(result.output);
       });

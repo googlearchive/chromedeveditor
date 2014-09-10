@@ -782,7 +782,7 @@ class DartChromeAppParticipant extends LaunchParticipant {
 
           if (!result.getSuccess()) throw new SparkException('${result}');
 
-          String newFileName = '${file.name}.precompiled.js';
+          String newFileName = '${file.name}.js';
           return file.parent.getOrCreateFile(newFileName, true);
         }).then((File newFile) {
           return newFile.setContents(result.output);
