@@ -238,6 +238,8 @@ abstract class Notifier {
 
   Future<bool> askUserOkCancel(
       String message, {String okButtonLabel: 'OK', String title: ""});
+
+  Future<chrome.ChromeFileEntry> chooseFileEntry();
 }
 
 /**
@@ -256,6 +258,10 @@ class NullNotifier implements Notifier {
   Future<bool> askUserOkCancel(
       String message, {String okButtonLabel: 'OK', String title: ""}) {
     return new Future.value("Not implemented");
+  }
+
+  Future<chrome.ChromeFileEntry> chooseFileEntry() {
+    return null;
   }
 }
 

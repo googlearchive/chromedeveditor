@@ -384,7 +384,7 @@
           <label class="settings-label">Public key:</label>
           <span id="publicKey" class="settings-value"></span>
           <spark-button id="choosePublicKey" class="change-setting-button"
-              flat round padding="medium" on-click="{{onClickPublicKey}}">
+              flat round padding="medium">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M10,4H4C2.9,4,2,4.9,2,6l0,12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"></path>
             </svg>
@@ -397,7 +397,7 @@
           <label class="settings-label">Private key:</label>
           <span id="privateKey" class="settings-value"></span>
           <spark-button id="choosePrivateKey" class="change-setting-button"
-              flat round padding="medium" on-click="{{onClickPrivateKey}}">
+              flat round padding="medium">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path d="M10,4H4C2.9,4,2,4.9,2,6l0,12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"></path>
             </svg>
@@ -406,13 +406,13 @@
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="adb" type="radio" name="mobileDeployType" value="push-adb" checked>
+          <input id="adb" type="radio" name="mobileBuildType" value="push-adb" checked>
           <label for="adb">Build via USB</label>
         </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="ip" type="radio" name="mobileDeployType" value="push-ip">
+          <input id="ip" type="radio" name="mobileBuildType" value="push-ip">
           <label for="ip">Build via a network host with this IP:</label>
         </div>
         <div class="radio-button-dependency">

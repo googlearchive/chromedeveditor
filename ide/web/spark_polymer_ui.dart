@@ -137,23 +137,6 @@ class SparkPolymerUI extends SparkWidget {
       }
     });
   }
-
-  void onClickPublicKey() {
-    fileSystemAccess.chooseKeyLocation().then((chrome.ChromeFileEntry entry) {
-      fileSystemAccess.getDisplayPath(entry).then((path) {
-        _model.showKeyLocation('publicKey', path);
-      });
-    });
-  }
-
-  void onClickPrivateKey() {
-    fileSystemAccess.chooseKeyLocation().then((chrome.ChromeFileEntry entry) {
-      fileSystemAccess.getDisplayPath(entry).then((path) {
-        _model.showKeyLocation('privateKey', path);
-      });
-    });
-  }
-
   // TODO(ussuri): Find a better way to achieve this.
   void onResetPreference() {
     Element resultElement = $['preferenceResetResult'];

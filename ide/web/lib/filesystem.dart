@@ -133,12 +133,6 @@ class FileSystemAccess {
    */
   Future<LocationResult> chooseNewProjectLocation(bool showFileSystemDialog) =>
       locationManager.chooseNewProjectLocation(showFileSystemDialog);
-
-  /**
-   * Opens a pop up and asks the user to select a file
-   */
-  Future<chrome.ChromeFileEntry> chooseKeyLocation() =>
-      locationManager.findKeyDialog();
 }
 
 class MockFileSystemAccess extends FileSystemAccess {
@@ -259,15 +253,6 @@ class ProjectLocationManager {
 
     // Show a dialog with explaination about what this folder is for.
     return chooseNewProjectLocation(true);
-  }
-
-  Future<chrome.ChromeFileEntry> findKeyDialog() {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-            type: chrome.ChooseEntryType.OPEN_FILE);
-    return chrome.fileSystem.chooseEntry(options).then(
-            (chrome.ChooseEntryResult res) {
-          return res.entry;
-        });
   }
 
   /**

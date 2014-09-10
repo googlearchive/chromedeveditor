@@ -181,6 +181,15 @@ abstract class Spark
     });
   }
 
+  Future<chrome.ChromeFileEntry> chooseFileEntry() {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+            type: chrome.ChooseEntryType.OPEN_FILE);
+    return chrome.fileSystem.chooseEntry(options).then(
+            (chrome.ChooseEntryResult res) {
+          return res.entry;
+        });
+  }
+
   /**
    * This method shows the root directory path in the UI element.
    */
@@ -2119,6 +2128,20 @@ class FocusMainMenuAction extends SparkAction {
 class BuildApkAction extends SparkActionWithDialog {
   BuildApkAction(Spark spark, Element dialog)
       : super(spark, "application-build", "Build APK…", dialog) {
+    getElement('#choosePrivateKey').onClick.listen((data) {
+      _selectKey('privateKey');
+    });
+    getElement('#choosePublicKey').onClick.listen((data) {
+      _selectKey('publicKey');
+    });
+  }
+
+  void _selectKey(String outputField) {
+    spark.chooseFileEntry().then((ChromeFileEntry entry) {
+      filesystem.fileSystemAccess.getDisplayPath(entry).then((String path) {
+        getElement('#$outputField').text = path;
+      });
+    });
   }
 
   void _invoke([context]) {
