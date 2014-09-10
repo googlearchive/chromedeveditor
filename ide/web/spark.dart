@@ -207,10 +207,6 @@ abstract class Spark
     });
   }
 
-  void showKeyLocation(String keyType, String path) {
-    getUIElement('#$keyType').text = path;
-  }
-
   //
   // SparkModel interface:
   //
