@@ -16,7 +16,7 @@ final Logger _logger = new Logger('spark.services_common');
 
 /**
  * Worker-side abstraction of the IPC between the worker services and
- * the application host..
+ * the application host.
  */
 abstract class WorkerToHostHandler {
   /**
@@ -119,9 +119,7 @@ class ServiceActionEvent {
   }
 
   ServiceActionEvent createErrorReponse(String errorMessage) {
-    return createReponse({
-      'message': errorMessage
-    })..error = true;
+    return createReponse({'message': errorMessage})..error = true;
   }
 
   String getErrorMessage() => data['message'];
@@ -282,7 +280,8 @@ class CompileError {
 
   bool get isError => kind == 'error';
 
-  String toString() => '[${kind}] ${message} (${file == null ? '' : file.path}:${line})';
+  String toString() =>
+      '[${kind}] ${message} (${file == null ? '' : file.path}:${line})';
 }
 
 abstract class ContentsProvider {

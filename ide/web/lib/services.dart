@@ -61,9 +61,9 @@ abstract class Service {
   final String serviceId;
 
   Services services;
-  HostToWorkerHandler _isolateHandler;
+  HostToWorkerHandler _workerHandler;
 
-  Service(this.services, this.serviceId, this._isolateHandler);
+  Service(this.services, this.serviceId, this._workerHandler);
 
   ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
     return new ServiceActionEvent(serviceId, actionId, data);
@@ -72,15 +72,15 @@ abstract class Service {
   // Wraps up actionId and data into an ActionEvent and sends it to the isolate
   // and invokes the Future once response has been received.
   Future<ServiceActionEvent> _sendAction(String actionId, [Map data]) {
-    return _isolateHandler.onceWorkerReady
-        .then((_) => _isolateHandler.sendAction(
+    return _workerHandler.onceWorkerReady
+        .then((_) => _workerHandler.sendAction(
             _createNewEvent(actionId, data)));
   }
 
   void _sendResponse(ServiceActionEvent event, [Map data]) {
     ServiceActionEvent responseEvent = event.createReponse(data);
-    _isolateHandler.onceWorkerReady
-        .then((_) => _isolateHandler.sendResponse(responseEvent));
+    _workerHandler.onceWorkerReady
+        .then((_) => _workerHandler.sendResponse(responseEvent));
   }
 }
 
@@ -457,8 +457,8 @@ class ChromeServiceImpl extends Service {
         "stackTrace": stackTrace});
 
     responseEvent.error = true;
-    _isolateHandler.onceWorkerReady
-        .then((_) => _isolateHandler.sendResponse(responseEvent));
+    _workerHandler.onceWorkerReady
+        .then((_) => _workerHandler.sendResponse(responseEvent));
   }
 }
 

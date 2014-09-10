@@ -5,7 +5,7 @@
 library spark.services_bootstrap;
 
 /**
- * Uncomment one of the 2 export below to switch between the isolate and
+ * Uncomment one of the 2 exports below to switch between the isolate and
  * single thread implementations of worker services.
  */
 
