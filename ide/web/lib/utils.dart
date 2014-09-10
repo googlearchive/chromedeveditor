@@ -261,7 +261,7 @@ class NullNotifier implements Notifier {
   }
 
   Future<chrome.ChromeFileEntry> chooseFileEntry() {
-    return null;
+    return new Future.error(null);
   }
 }
 

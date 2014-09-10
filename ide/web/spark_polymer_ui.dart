@@ -137,6 +137,7 @@ class SparkPolymerUI extends SparkWidget {
       }
     });
   }
+
   // TODO(ussuri): Find a better way to achieve this.
   void onResetPreference() {
     Element resultElement = $['preferenceResetResult'];
