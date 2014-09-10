@@ -30,9 +30,9 @@ class SparkPolymerUI extends SparkWidget {
   // <template if> blocks in the .html are turned on, because the app
   // uses [querySelector] upon startup to find elements in those blocks.
   // The values are later set to their actual values in [refreshFromModel].
-  @observable bool liveDeployMode = false;
+  @observable bool liveDeployMode = true;
   @observable bool developerMode = true;
-  @observable bool apkBuildMode = false;
+  @observable bool apkBuildMode = true;
   @observable bool chromeOS = false;
   @observable String appVersion = '';
   // This flag is different from the rest: the comment immediately above doesn't
