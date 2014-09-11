@@ -4,8 +4,10 @@
 
 library spark_polymer.ui;
 
+import 'dart:async';
 import 'dart:html';
 
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
@@ -28,8 +30,9 @@ class SparkPolymerUI extends SparkWidget {
   // <template if> blocks in the .html are turned on, because the app
   // uses [querySelector] upon startup to find elements in those blocks.
   // The values are later set to their actual values in [refreshFromModel].
-  @observable bool liveDeployMode = false;
+  @observable bool liveDeployMode = true;
   @observable bool developerMode = true;
+  @observable bool apkBuildMode = true;
   @observable bool chromeOS = false;
   @observable String appVersion = '';
   // This flag is different from the rest: the comment immediately above doesn't
@@ -64,6 +67,7 @@ class SparkPolymerUI extends SparkWidget {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.developerMode;
     liveDeployMode = SparkFlags.liveDeployMode;
+    apkBuildMode = SparkFlags.apkBuildMode;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
     appVersion = _model.appVersion;

@@ -181,6 +181,15 @@ abstract class Spark
     });
   }
 
+  Future<chrome.ChromeFileEntry> chooseFileEntry() {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_FILE);
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
+      return res.entry;
+    });
+  }
+
   /**
    * This method shows the root directory path in the UI element.
    */
@@ -484,6 +493,7 @@ abstract class Spark
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
+    actionManager.registerAction(new BuildApkAction(this, getDialogElement('#buildAPKDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
@@ -2108,6 +2118,35 @@ class FocusMainMenuAction extends SparkAction {
   @override
   void _invoke([Object context]) {
     spark.getUIElement('#mainMenu').focus();
+  }
+}
+
+class BuildApkAction extends SparkActionWithDialog {
+  BuildApkAction(Spark spark, Element dialog)
+      : super(spark, "application-build", "Build APK…", dialog) {
+    getElement('#choosePrivateKey').onClick.listen((_) {
+      _selectKey('privateKey');
+    });
+    getElement('#choosePublicKey').onClick.listen((_) {
+      _selectKey('publicKey');
+    });
+  }
+
+  void _selectKey(String outputField) {
+    spark.chooseFileEntry().then((ChromeFileEntry entry) {
+      filesystem.fileSystemAccess.getDisplayPath(entry).then((String path) {
+        getElement('#$outputField').text = path;
+      });
+    });
+  }
+
+  void _invoke([context]) {
+    _show();
+  }
+
+  void _commit() {
+    super._commit();
+    //TODO(albualexandru): add here the binding to the build class
   }
 }
 

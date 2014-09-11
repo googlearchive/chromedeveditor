@@ -116,11 +116,11 @@ spark-dialog {
   opacity: 0.1;
 }
 
-#settingsDialog .settings-label {
+.settings-label {
   width: 150px;
 }
 
-#settingsDialog .settings-value {
+.settings-value {
   flex: 1;
   height: 100%;
   border: 1px solid #DDD;
@@ -130,24 +130,25 @@ spark-dialog {
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
 }
 
-#settingsDialog .settings-block {
+.settings-block {
   width: 100%;
   height: 30px;
   background-color: white;
 }
 
-#settingsDialog .change-setting-button {
+.change-setting-button {
   width: 30px;
   height: 30px;
 }
 
-#settingsDialog .settings-value + .change-setting-button {
+.settings-value + .change-setting-button {
   margin-left: 5px;
 }
 
-#settingsDialog .reset-setting-button {
+.reset-setting-button {
   flex: 1;
   height: 100%;
 }
@@ -285,4 +286,3 @@ label[for="stripWhitespace"] {
   overflow: hidden;
   white-space: nowrap;
 }
-
