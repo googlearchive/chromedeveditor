@@ -2124,10 +2124,10 @@ class FocusMainMenuAction extends SparkAction {
 class BuildApkAction extends SparkActionWithDialog {
   BuildApkAction(Spark spark, Element dialog)
       : super(spark, "application-build", "Build APK…", dialog) {
-    getElement('#choosePrivateKey').onClick.listen((data) {
+    getElement('#choosePrivateKey').onClick.listen((_) {
       _selectKey('privateKey');
     });
-    getElement('#choosePublicKey').onClick.listen((data) {
+    getElement('#choosePublicKey').onClick.listen((_) {
       _selectKey('publicKey');
     });
   }

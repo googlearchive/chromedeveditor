@@ -368,7 +368,7 @@
         <div class="input-label">
           <label for="packageName">Package Name:</label>
           <input id="packageName" type="text" class="form-control"
-              placeholder="com.example.myfirstapp"
+              placeholder="com.example.helloworld"
               spellcheck="false" autosave>
         </div>
         <div class="input-label">
@@ -406,24 +406,24 @@
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="adb" type="radio" name="mobileBuildType" value="push-adb" checked>
-          <label for="adb">Build via USB</label>
+          <input id="buildTargetADB" type="radio" name="mobileBuildType" value="build-target-adb" checked>
+          <label for="buildTargetADB">Build via USB</label>
         </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="ip" type="radio" name="mobileBuildType" value="push-ip">
-          <label for="ip">Build via a network host with this IP:</label>
+          <input id="buildTargetIP" type="radio" name="mobileBuildType" value="build-target-ip">
+          <label for="buildTargetIP">Build via a network host with this IP:</label>
         </div>
         <div class="radio-button-dependency">
           <!-- TODO(devoncarew): Also, support IPv6 name patterns. -->
-          <input id="pushUrlBuild" type="text" class="form-control"
+          <input id="buildTargetUrl" type="text" class="form-control"
               placeholder="e.g. 192.168.1.101"
               pattern="(\d{1,3}\.){3}\d{1,3}"
               spellcheck="false" autosave>
         </div>
       </div>
-      <div id="progressDescription"></div>
+      <div id="buildProgressDescription"></div>
       <div id='buildCheckDeviceMessage' hidden>
         Please check for a connection authorization dialog on your device.
       </div>
