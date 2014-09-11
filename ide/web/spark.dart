@@ -2140,8 +2140,6 @@ class BuildApkAction extends SparkActionWithDialog {
     });
   }
 
-  Element get _buildDeviceMessage => getElement('#buildCheckDeviceMessage');
-
   void _invoke([context]) {
     _show();
   }

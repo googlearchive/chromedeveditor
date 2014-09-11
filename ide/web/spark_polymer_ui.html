@@ -359,26 +359,26 @@
       </div>
 
       <div class="form-group">
-          <div class="input-label">
-            <label for="appName">App Name:</label>
-            <input id="appName" type="text" class="form-control"
-                placeholder="MyFirstApp"
-                spellcheck="false" autosave>
-          </div>
-          <div class="input-label">
-            <label for="packageName">Package Name:</label>
-            <input id="packageName" type="text" class="form-control"
-                placeholder="com.example.myfirstapp"
-                spellcheck="false" autosave>
-          </div>
-          <div class="input-label">
-            <label for="versionName">Version:</label>
-            <input id="versionName" type="text" class="form-control"
-                placeholder="1.0"
-                spellcheck="false" autosave>
-          </div>
-    </div>
-      <div class="form-group" id="rootDirectory">
+        <div class="input-label">
+          <label for="appName">App Name:</label>
+          <input id="appName" type="text" class="form-control"
+              placeholder="HelloWorld"
+              spellcheck="false" autosave>
+        </div>
+        <div class="input-label">
+          <label for="packageName">Package Name:</label>
+          <input id="packageName" type="text" class="form-control"
+              placeholder="com.example.myfirstapp"
+              spellcheck="false" autosave>
+        </div>
+        <div class="input-label">
+          <label for="versionName">Version:</label>
+          <input id="versionName" type="text" class="form-control"
+              placeholder="1.0"
+              spellcheck="false" autosave>
+        </div>
+      </div>
+      <div class="form-group">
         <spark-toolbar class="settings-block"
             horizontal justify="spaced" spacing="small">
           <label class="settings-label">Public key:</label>
@@ -391,7 +391,7 @@
           </spark-button>
         </spark-toolbar>
       </div>
-      <div class="form-group" id="rootDirectory">
+      <div class="form-group">
         <spark-toolbar class="settings-block"
             horizontal justify="spaced" spacing="small">
           <label class="settings-label">Private key:</label>
@@ -417,7 +417,7 @@
         </div>
         <div class="radio-button-dependency">
           <!-- TODO(devoncarew): Also, support IPv6 name patterns. -->
-          <input id="pushUrl" type="text" class="form-control "
+          <input id="pushUrlBuild" type="text" class="form-control"
               placeholder="e.g. 192.168.1.101"
               pattern="(\d{1,3}\.){3}\d{1,3}"
               spellcheck="false" autosave>
