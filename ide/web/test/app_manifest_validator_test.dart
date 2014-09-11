@@ -128,11 +128,38 @@ void defineTests() {
       _validate(contents, []);
     });
 
-    test('"default_locale" cannot be an arbitrary string', () {
+    test('"default_locale" may be a valid locale string with hyphen', () {
       String contents = """{
   "name": "foo",
   "version": "1",
-  "default_locale": "foo"
+  "default_locale": "en-US"
+} """;
+      _validate(contents, []);
+    });
+
+    test('"default_locale" may be a valid locale string with digits', () {
+      String contents = """{
+  "name": "foo",
+  "version": "1",
+  "default_locale": "es_419"
+} """;
+      _validate(contents, []);
+    });
+
+    test('"default_locale" cannot contain special characters', () {
+      String contents = """{
+  "name": "foo",
+  "version": "1",
+  "default_locale": "~!@#"
+} """;
+      _validate(contents, [ErrorIds.INVALID_LOCALE]);
+    });
+
+    test('"default_locale" cannot be a single character', () {
+      String contents = """{
+  "name": "foo",
+  "version": "1",
+  "default_locale": "a"
 } """;
       _validate(contents, [ErrorIds.INVALID_LOCALE]);
     });
@@ -216,8 +243,7 @@ void defineTests() {
   "version": "1",
   "sockets": { "foo": {} }
 }""";
-      _validate(
-          contents, []);
+      _validate(contents, []);
     });
 
     test('"sockets.udp" may contain 3 known top level properties', () {
@@ -236,8 +262,7 @@ void defineTests() {
   "version": "1",
   "sockets": { "udp": { "foo": "" } }
 }""";
-      _validate(
-          contents, []);
+      _validate(contents, []);
     });
 
     test('"sockets.tcp" may contain 1 known top level properties', () {
@@ -256,8 +281,7 @@ void defineTests() {
   "version": "1",
   "sockets": { "tcp": { "foo": "" } }
 }""";
-      _validate(
-          contents, []);
+      _validate(contents, []);
     });
 
     test('"sockets.tcpServer" may contain 1 known top level properties', () {
@@ -275,8 +299,7 @@ void defineTests() {
   "version": "1",
   "sockets": { "tcpServer": { "foo": "" } } 
 }""";
-      _validate(
-          contents, []);
+      _validate(contents, []);
     });
 
     test('"socket_host_pattern" may be a single value or an array', () {

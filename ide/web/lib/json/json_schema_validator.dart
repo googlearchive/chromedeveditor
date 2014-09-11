@@ -137,8 +137,7 @@ class CoreSchemaValidatorFactory implements SchemaValidatorFactory {
           if (propertySchema is! bool) {
             isValid = false;
           }
-        }
-        else if (!validateSchemaForTesting(propertySchema)) {
+        } else if (!validateSchemaForTesting(propertySchema)) {
           isValid = false;
         }
       });

@@ -211,7 +211,7 @@ class ManifestVersionValueValidator extends IntegerValueValidator {
 
   @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
-    // The "manifest_version" type is always directly associted to an
+    // The "manifest_version" type is always directly associated to an
     // object key.
     assert(propertyName != null);
 
@@ -346,24 +346,21 @@ class PermissionValueValidator extends SchemaValidator {
              ErrorIds.OBSOLETE_ENTRY,
              entity.span,
              "Permission value \"${entity.text}\" is obsolete.");
-      }
-      else if (!_permissionNames.contains(entity.text) &&
+      } else if (!_permissionNames.contains(entity.text) &&
           !_isMatchPattern(entity.text)) {
         errorCollector.addMessage(
             ErrorIds.INVALID_PERMISSION,
             entity.span,
             "Permission value \"${entity.text}\" is not recognized.");
       }
-      return;
     } else if (entity is ObjectEntity) {
       // Validation has been performed by validator from "enterObject".
-      return;
+    } else {
+      errorCollector.addMessage(
+          ErrorIds.STRING_OR_OBJECT_EXPECTED,
+          entity.span,
+          "String or object expected for permission entries.");
     }
-
-    errorCollector.addMessage(
-        ErrorIds.STRING_OR_OBJECT_EXPECTED,
-        entity.span,
-        "String or object expected for permission entries.");
   }
 
   bool _isMatchPattern(String text) {
@@ -482,10 +479,8 @@ class SocketHostPatternValueValidator extends SchemaValidator {
     return false;
   }
 
-  static bool _isValidHost(String x) {
-    // Leave "host" part as free form.
-    return true;
-  }
+  // Leave "host" part as free form.
+  static bool _isValidHost(String x) => true;
 
   static bool _isValidPort(String x) {
     if (x == "" || x == "*") {
@@ -571,70 +566,24 @@ class Requirement3dFeatureValueValidator extends SchemaValidator {
  * See https://developer.chrome.com/webstore/i18n?csw=1#localeTable.
  */
 class LocaleValueValidator extends SchemaValidator {
-  static final Map<String, String> _validLocales = {
-    "ar": "Arabic",
-    "am": "Amharic",
-    "bg": "Bulgarian",
-    "bn": "Bengali",
-    "ca": "Catalan",
-    "cs": "Czech",
-    "da": "Danish",
-    "de": "German",
-    "el": "Greek",
-    "en": "English",
-    "en_GB": "English (Great Britain)",
-    "en_US": "English (USA)",
-    "es": "Spanish",
-    "es_419": "Spanish (Latin America and Caribbean)",
-    "et": "Estonian",
-    "fa": "Persian",
-    "fi": "Finnish",
-    "fil": "Filipino",
-    "fr": "French",
-    "gu": "Gujarati",
-    "he": "Hebrew",
-    "hi": "Hindi",
-    "hr": "Croatian",
-    "hu": "Hungarian",
-    "id": "Indonesian",
-    "it": "Italian",
-    "ja": "Japanese",
-    "kn": "Kannada",
-    "ko": "Korean",
-    "lt": "Lithuanian",
-    "lv": "Latvian",
-    "ml": "Malayalam",
-    "mr": "Marathi",
-    "ms": "Malay",
-    "nl": "Dutch",
-    "no": "Norwegian",
-    "pl": "Polish",
-    "pt_BR": "Portuguese (Brazil)",
-    "pt_PT": "Portuguese (Portugal)",
-    "ro": "Romanian",
-    "ru": "Russian",
-    "sk": "Slovak",
-    "sl": "Slovenian",
-    "sr": "Serbian",
-    "sv": "Swedish",
-    "sw": "Swahili",
-    "ta": "Tamil",
-    "te": "Telugu",
-    "th": "Thai",
-    "tr": "Turkish",
-    "uk": "Ukrainian",
-    "vi": "Vietnamese",
-    "zh_CN": "Chinese (China)",
-    "zh_TW": "Chinese (Taiwan)",
-  };
+  static final Set<int> _validCodeUnits = _getValidCodeUnits();
   final ErrorCollector errorCollector;
 
   LocaleValueValidator(this.errorCollector);
 
+  static Set<int> _getValidCodeUnits() {
+    final String validCharacters =
+        "abcdefghijklmnopqrstuvwxyz" +
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+        "1234567890" +
+        "-_";
+    return new Set<int>()..addAll(validCharacters.codeUnits);
+  }
+
   @override
   void checkValue(JsonEntity entity, [StringEntity propertyName]) {
     if (entity is StringEntity) {
-      if (_validLocales.containsKey(entity.text)) {
+      if (_isValidLocale(entity.text)) {
         return;
       }
     }
@@ -650,5 +599,17 @@ class LocaleValueValidator extends SchemaValidator {
           entity.span,
           "Locale is invalid for property \"${propertyName.text}\".");
     }
+  }
+
+  bool _isValidLocale(String text) {
+    if (text.length < 2)
+      return false;
+
+    for(int i = 0; i < text.length; i++) {
+      if (!_validCodeUnits.contains(text.codeUnitAt(0))) {
+        return false;
+      }
+    }
+    return true;
   }
 }
