@@ -120,21 +120,49 @@ class ChromeDartSdk extends DartSdk {
 
   @override
   Source fromFileUri(Uri uri) {
-    return mapDartUri(uri.toString());
+    Source result = mapDartUri(uri.toString());
+    print("fromFileUri(${uri}): ${result == null ? "null" : result.uri}");
+    return result;
   }
 
   @override
   SdkLibrary getSdkLibrary(String dartUri) => _libraryMap.getLibrary(dartUri);
 
   /**
-   * Return the source representing the library with the given `dart:` URI, or
-   * `null` if the given URI does not denote a library in this SDK.
+   * Return the source representing the library with the given `dart:` URI, or `null` if
+   * the given URI does not denote a library in this SDK.
+   *
+   * @param dartUri the URI of the library to be returned
+   * @return the source representing the specified library
    */
   @override
   Source mapDartUri(String dartUri) {
-    SdkLibrary library = getSdkLibrary(dartUri);
+    assert(dartUri.startsWith(DartUriResolver.DART_SCHEME));
 
-    return library == null ? null : new SdkSource(_sdk, library.path);
+    int index = dartUri.indexOf("/");
+    String libraryName;
+    String relativePath;
+    if (index < 0) {
+      libraryName = dartUri;
+      relativePath = "";
+    } else {
+      libraryName = dartUri.substring(0, index);
+      relativePath = dartUri.substring(index + 1);
+    }
+
+    SdkLibrary library = getSdkLibrary(libraryName);
+    Source result;
+    if (library == null) {
+      result = null;
+    } else {
+      String path = library.path;
+      if (relativePath.isNotEmpty) {
+        path = dirname(path) + "/" + relativePath;
+      }
+      result = new SdkSource(_sdk, path);
+    }
+    print("mapDartUri(${dartUri}): ${result == null ? "null" : result.uri}");
+    return result;
   }
 
   @override
@@ -213,7 +241,7 @@ class ProjectContext {
     AnalysisEngine.instance.logger = new AnalysisEnginePrintLogger();
     context = AnalysisEngine.instance.createAnalysisContext();
     context.sourceFactory = new SourceFactory([
-        new DartUriResolver(sdk),
+        new CustomDartUriResolver(sdk),
         new PackageUriResolver(this),
         new FileUriResolver(this)
     ]);
@@ -403,7 +431,7 @@ class StringSource extends Source {
       throw new UnsupportedError("StringSource doesn't support uriKind.");
 
   @override
-  Uri get uri => new Uri.file(fullName);
+  Uri get uri => new Uri(scheme: FileSource.FILE_SCHEME, path: fullName);
 
   @override
   int get hashCode => _contents.hashCode ^ fullName.hashCode;
@@ -432,7 +460,9 @@ class SdkSource extends Source {
   final sdk.DartSdk _sdk;
   final String fullName;
 
-  SdkSource(this._sdk, this.fullName);
+  SdkSource(this._sdk, this.fullName) {
+    print("SdkSource: ${fullName}");
+  }
 
   @override
   bool operator==(Object object) {
@@ -449,6 +479,7 @@ class SdkSource extends Source {
   @override
   TimestampedData<String> get contents {
     String source = _sdk.getSourceForPath(fullName);
+    print("getSourceForPath(${fullName}):${source.length}");
     return source != null ?
         new TimestampedData<String>(modificationStamp, source) : null;
   }
@@ -474,7 +505,11 @@ class SdkSource extends Source {
   UriKind get uriKind => UriKind.DART_URI;
 
   @override
-  Uri get uri => new Uri.file(fullName);
+  Uri get uri {
+      var result = new Uri(scheme: DartUriResolver.DART_SCHEME, path: fullName);
+      print("uri: ${result}");
+      return result;
+  }
 
   @override
   int get hashCode => fullName.hashCode;
@@ -484,7 +519,12 @@ class SdkSource extends Source {
 
   @override
   Uri resolveRelativeUri(Uri relativeUri) {
-    return new Uri.file('${dirname(fullName)}/${relativeUri.path}');
+    if (relativeUri.path == "bool.dart") {
+      print("hello");
+    }
+    Uri result = new Uri(scheme: DartUriResolver.DART_SCHEME, path: '${dirname(fullName)}/${relativeUri.path}');
+    print("SdkSource.resolveRelativeUri(${fullName} + ${relativeUri}) = ${result}");
+    return result;
   }
 
   @override
@@ -498,6 +538,7 @@ class SdkSource extends Source {
  * A [Source] implementation based on workspace uuids.
  */
 class FileSource extends Source {
+  static final FILE_SCHEME = "file";
   final ProjectContext context;
   final String uuid;
 
@@ -544,7 +585,7 @@ class FileSource extends Source {
   UriKind get uriKind => UriKind.FILE_URI;
 
   @override
-  Uri get uri => new Uri.file(fullName);
+  Uri get uri => new Uri(scheme: FILE_SCHEME, path: uuid);
 
   @override
   int get hashCode => fullName.hashCode;
@@ -552,17 +593,14 @@ class FileSource extends Source {
   @override
   bool get isInSystemLibrary => false;
 
-  Source resolveRelative(Uri relativeUri) {
-    Uri thisUri = new Uri(scheme: 'file', path: uuid);
-    Uri sourceUri = thisUri.resolveUri(relativeUri);
-
-    return context.getSource(sourceUri.path.substring(1));
-  }
-
+//  Source resolveRelative(Uri relativeUri) {
+//    Uri sourceUri = uri.resolveUri(relativeUri);
+//    return context.getSource(sourceUri.path.substring(1));
+//  }
+//
   @override
   Uri resolveRelativeUri(Uri relativeUri) {
-    Uri thisUri = new Uri(scheme: 'file', path: uuid);
-    Uri sourceUri = thisUri.resolveUri(relativeUri);
+    Uri sourceUri = uri.resolveUri(relativeUri);
     return context.getSource(sourceUri.path.substring(1)).uri;
   }
 
@@ -599,11 +637,14 @@ class FileUriResolver extends UriResolver {
 
   @override
   Source resolveAbsolute(Uri uri) {
+    Source result;
     if (!isFileUri(uri)) {
-      return null;
+      result = null;
     } else {
-      return context.getSource(uri.path);
+      result = context.getSource(uri.path);
     }
+    print("PackageUriResolver.resolveAbsolute(${uri}): ${result == null ? 'null' : result.uri}");
+    return result;
   }
 }
 
@@ -627,11 +668,28 @@ class PackageUriResolver extends UriResolver {
 
   @override
   Source resolveAbsolute(Uri uri) {
+    Source result;
     if (!isPackageUri(uri)) {
-      return null;
+      result = null;
     } else {
-      return context.getSource(uri.toString());
+      result = context.getSource(uri.toString());
     }
+    print("PackageUriResolver.resolveAbsolute(${uri}): ${result == null ? 'null' : result.uri}");
+    return result;
+  }
+}
+
+class CustomDartUriResolver extends DartUriResolver {
+  CustomDartUriResolver(DartSdk sdk) : super(sdk);
+
+  @override
+  Source resolveAbsolute(Uri uri) {
+    if (uri.path == 'core/core.dart') {
+      print("hello");
+    }
+    Source result = super.resolveAbsolute(uri);
+    print("CustomDartUriResolver.resolveAbsolute(${uri}): ${result == null ? 'null' : result.uri}");
+    return result;
   }
 }
 
