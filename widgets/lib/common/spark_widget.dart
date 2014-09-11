@@ -129,42 +129,6 @@ class SparkWidget extends PolymerElement {
   }
 
   /**
-   * Put an opaque veil over the element.
-   */
-  void veil() {
-    classes..remove('unveiled')..toggle('veiled', true);
-  }
-
-  /**
-   * Undo the result of [veil].
-   */
-  void unveil() {
-    classes..remove('veiled')..toggle('unveiled', true);
-  }
-
-  /**
-   * Prevent FOUC (Flash Of Unstyled Content).
-   */
-  void preventFlashOfUnstyledContent({Function method,
-                                      Duration delay}) {
-    // TODO(ussuri): We use a temporary crude way here. Polymer's advertised
-    // machanisms (via :resolved pseudo class as well as older .polymer-veiled
-    // class) have failed to work so far, although :unresolved reportedly
-    // functions in Chrome 34. Revisit.
-    veil();
-
-    if (method != null) {
-      method();
-    }
-
-    if (delay != null) {
-      asyncTimer(unveil, delay);
-    } else {
-      unveil();
-    }
-  }
-
-  /**
    * Returns true if the point is within the widget's boundary.
    */
   bool isPointInWidget(Point xyGlobal) {

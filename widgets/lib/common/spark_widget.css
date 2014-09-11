@@ -11,14 +11,6 @@
   outline: none;
 }
 
-:host(.veiled) {
-  opacity: 0;
-}
-
-:host(.unveiled) {
-  opacity: 1;
-}
-
 /* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
 :host * {
   /* BUG #2629 */
