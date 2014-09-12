@@ -786,7 +786,7 @@ abstract class Spark
       _publishedAppDialog =
           createDialog(getDialogElement('#webStorePublishedDialog'));
       _publishedAppDialog.getElement("[submit]")
-          .onClick.listen(_hideBackdropOnClick)
+          .onClick.listen(_hideBackdropOnClick);
       _publishedAppDialog.getElement("#webStorePublishedAction")
           .onClick.listen((MouseEvent event) {
         window.open('https://chrome.google.com/webstore/detail/${appID}',

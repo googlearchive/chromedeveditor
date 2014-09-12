@@ -4,10 +4,8 @@
 
 library spark_polymer.ui;
 
-import 'dart:async';
 import 'dart:html';
 
-import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
