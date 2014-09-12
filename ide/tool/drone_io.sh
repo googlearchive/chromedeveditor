@@ -1,30 +1,42 @@
 # Install zip and start a virtual frame buffer.
 if [ "$DRONE" = "true" ]; then
   sudo apt-get -y -q install zip
+  curl -O https://dl.google.com/linux/direct/google-chrome-unstable_current_amd64.deb
+  sudo dpkg -i google-chrome-unstable_current_amd64.deb
   sudo start xvfb
+  export HAS_DARTIUM=true
 fi
 
-# Setup the build environment.
-pub get 
+# Turn on fast fail for the bash script.
+#set -e
+
+# Display installed versions.
+dart --version
+/usr/bin/google-chrome --version
+
+# Get our packages.
+pub get
 
 # Build the archive.
-if test x$DRONE_BRANCH = xmaster -o x$FORCE_NIGHTLY = xyes ; then
+if test x$DRONE_REPO_SLUG = xgithub.com/dart-lang/spark -o x$FORCE_NIGHTLY = xyes ; then
+  # Retrieve configuration from the master branch
+  curl -o tool/release-config.json \
+      https://raw.githubusercontent.com/dart-lang/chromedeveditor/master/ide/tool/release-config.json
   ./grind release-nightly
 else
-  ./grind archive
+  ./grind deploy
 fi
-
-# Disable polymer deploy on drone.io for now.
-#./grind deploy-test
 
 ./grind mode-test
 
-# Run tests on dartium.
-dart tool/test_runner.dart --dartium
-
-# Run tests on chrome.
-if [ "$DRONE" = "true" ]; then
-  # Show the version of Chrome installed on drone.io.
-  /usr/bin/google-chrome --version
+# Run tests the Dart version of the app.
+if [ "$HAS_DARTIUM" = "true" ]; then
+  dart tool/test_runner.dart --dartium
 fi
-dart tool/test_runner.dart --chrome
+
+# Run tests on the dart2js version of the app.
+if [ "$DRONE" = "true" ]; then
+  dart tool/test_runner.dart --chrome-dev
+else
+  dart tool/test_runner.dart --chrome
+fi

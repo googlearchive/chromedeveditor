@@ -1,0 +1,8 @@
+/**
+ * Upon installation, opens a new tab with introduction.
+ *
+ * @see http://developer.chrome.com/extensions/runtime
+ */
+chrome.runtime.onInstalled.addListener(function() {
+  chrome.tabs.create({url: "intro.html", active: true});
+});

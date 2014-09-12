@@ -1,0 +1,54 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 0 20px;
+  border: none;
+  overflow: hidden;
+  cursor: pointer;
+  width: 100%;
+}
+
+::content * {
+  overflow: hidden;
+}
+
+#label,
+::content * {
+  color: #000;
+}
+
+#main {
+  position: relative;
+  width: 100%;
+}
+
+#description {
+  color: #bdbdbd;
+  justify-content: flex-end;
+}
+
+#checkmark {
+  display: none;
+  position: absolute;
+  right: 0px;
+  top: -3px;
+}
+
+:host([checkmark="true"]) #checkmark {
+  display: block;
+}
+
+:host(.selected) {
+  background-color: rgba(66, 129, 244, 0.5);
+}
+
+:host(.active) {
+  background: #e4e4e4;
+}

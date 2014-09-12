@@ -1,0 +1,52 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../resources/roboto/roboto.css");
+
+:host,
+:host *,
+::content * {
+  box-sizing: border-box;
+  outline: none;
+}
+
+/* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
+:host * {
+  /* BUG #2629 */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  -webkit-font-smoothing: auto;
+}
+
+.stacking-context {
+  /* This no-op transform creates an independent stacking context. */
+  -webkit-transform: translateX(0);
+}
+
+/* Uncomment these 2 rules, or selectively apply the .debug class or debug
+ * attribute, to facilitate debuging of Spark widgets.
+ */
+/*
+:host > * {
+  outline: red dashed 1px !important;
+}
+::content > * {
+  outline: green dotted 1px !important;
+}
+*/
+.debug, [debug] {
+  outline: blue solid 1px !important;
+}
+
+/* Uncomment this rule to debug focus changes, e.g. when cycling the focus
+ * using TAB.
+ */
+/*
+:host(:focus),
+*:focus,
+::content > *:focus {
+  box-shadow: 0 0 10px 10px pink !important;
+}
+*/

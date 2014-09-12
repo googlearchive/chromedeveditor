@@ -1,0 +1,4 @@
+name: ``projectName``
+description: A sample Polymer Dart custom element
+dependencies:
+  polymer: any

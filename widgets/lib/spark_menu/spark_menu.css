@@ -1,0 +1,23 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+
+:host {
+  display: block;
+  border: none;
+}
+
+::content spark-menu-item,
+::content spark-menu-separator {
+  min-width: 160px;
+}
+
+::content spark-menu-item {
+  min-height: 35px;
+}
+
+::content spark-menu-separator {
+  margin: 2px 0px;
+}

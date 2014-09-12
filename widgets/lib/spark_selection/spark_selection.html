@@ -6,19 +6,30 @@
 
 <!--
 /**
- * See g-selection https://github.com/Polymer/toolkit-ui/tree/master/elements.
+ * spark-selection is a UI-less utility element to keep track of single- or
+ * multi-item selection in a group of items. It is supposed to be instantiated
+ * within an element that needs this functionality and used programmatically
+ * via its Dart API.
+ */
+/**
+ * Fired when tracked selection items change their selected state as a result
+ * of a programmatic call to [select()], [toggle()] etc. For example:
+ * with [multi] unset or false, when [select(B)] is called and item A is
+ * currently selected, the `selected` event will fire for both 
+ * A (isSelected==false) and B (isSelected==true).
+ *
+ * @event selected
+ * @param {dynamic} detail['value'] the item that has changed its state
+ * @param {bool} detail['isSelected'] the new selected state of the item
  */
 -->
 
-<polymer-element name="spark-selection" attributes="multi">
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
+<polymer-element name="spark-selection" extends="spark-widget"
+    attributes="multi">
   <template>
-    <style>
-      @host {
-        * {
-          display: none !important;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="spark_selection.css">
   </template>
 
   <script type="application/dart" src="spark_selection.dart"></script>

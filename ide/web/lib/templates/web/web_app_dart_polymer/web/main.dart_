@@ -1,0 +1,22 @@
+
+import 'package:polymer/polymer.dart';
+import 'package:paper_elements/paper_toast.dart';
+import 'package:``projectName``/sample_app.dart';
+
+void main() {
+  // Init polymer.
+  initPolymer();
+  
+  // Register Polymer components (ones that are actually used in the app).
+  registerWidgetsWithPolymer();
+}
+
+@initMethod
+void postPolymerBoot() {
+  print('Polymer init complete.');
+}
+
+void registerWidgetsWithPolymer() {
+  upgradePaperToast();
+  Polymer.register('sample-app', SampleApp);
+}

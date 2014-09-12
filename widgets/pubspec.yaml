@@ -1,9 +1,30 @@
 name: spark_widgets
-version: 0.0.1-dev
-author: Chrome Team <apps-dev@chromium.org>
-description: GUI widget library for Spark IDE and applications built with it.
-homepage: https://github.com/GoogleChrome/spark
+version: 0.0.4
+author: Spark Team
+description: A general purpose Polymer widget library (used by Spark IDE)
+homepage: https://github.com/dart-lang/spark/
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  polymer: '>=0.9.2'
+  bootjack: '>=0.6.5 <0.7.0'
+  polymer: '>=0.13.0+3 <0.14.0'
+
+dev_dependencies:
+  unittest: '>=0.11.0 <0.12.0'
+
+transformers:
+- polymer:
+    entry_points:
+      - example/index.html
+      - example/spark_button/index.html
+      - example/spark_icon/index.html
+      - example/spark_menu/index.html
+      - example/spark_menu_button/index.html
+      - example/spark_menu_item/index.html
+      - example/spark_overlay/index.html
+      - example/spark_selection/index.html
+      - example/spark_selector/index.html
+      - example/spark_splitter/index.html
+      - example/spark_split_view/index.html
+      - example/spark_toggle_button/index.html
+      - example/spark_toolbar/index.html

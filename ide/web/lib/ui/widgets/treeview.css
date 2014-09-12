@@ -1,0 +1,43 @@
+.treeviewcell {
+  height: 100%;
+}
+
+.treeviewcell-dragoverlay {
+  border: 2px solid #aaf;
+  border-radius: 10px;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0px;
+}
+
+.treeviewcell-content {
+  position: absolute;
+  top: 0px;
+  height: 100%;
+}
+
+.treeviewcell-disclosure {
+  fill: #7d7d7d;
+  position: absolute;
+  top: calc((100% - 28px) / 2);
+  transition: -webkit-transform 75ms;
+  -webkit-transform: rotate(-90deg) translate(0, -2px);
+}
+
+.listview-cell-highlighted .treeviewcell-disclosure {
+  fill: #ddd;
+}
+
+.treeviewcell-disclosure:hover {
+  fill: #000;
+}
+
+.listview-cell-highlighted .treeviewcell-disclosure:hover {
+  fill: #fff;
+}
+
+.treeviewcell-disclosed {
+  -webkit-transform: rotate(0deg) translate(-4px, 2px);
+}

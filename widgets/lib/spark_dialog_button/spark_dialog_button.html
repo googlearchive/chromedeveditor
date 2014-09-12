@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ * spark-dialog-button
+ */
+-->
+
+<!-- TODO(ussuri): See comment in .dart -->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_button/spark_button.html"/>
+
+<polymer-element name="spark-dialog-button" extends="spark-widget"
+    attributes="submit
+                cancel
+                dismiss
+                secondary
+                raised
+                disabled">
+  <template>
+    <link rel="stylesheet" href="spark_dialog_button.css">
+
+    <spark-button
+        primary?="{{(submit || dismiss) && !secondary}}"
+        raised?="{{raised}}"
+        disabled?="{{disabled}}"
+        padding="huge"
+        overlayToggle?="{{submit || dismiss || cancel}}"
+        focused>
+      <content></content>
+    </spark-button>
+  </template>
+
+  <script type="application/dart" src="spark_dialog_button.dart"></script>
+</polymer-element>

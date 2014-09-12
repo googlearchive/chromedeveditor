@@ -6,234 +6,298 @@ library spark_widgets.overlay;
 
 import 'dart:async';
 import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 
-// Ported from Polymer Javascript to Dart code.
-@CustomTag("spark-overlay")
-class SparkOverlay extends Widget {
-  // TODO(sorvell): need keyhelper component.
-  static final int ESCAPE_KEY = 27;
+// TODO(ussuri): add more comments.
 
+class _SparkOverlayManager {
   // Track overlays for z-index and focus managemant.
-  static List overlays = [];
-  static void trackOverlays(inOverlay) {
+  // TODO(ussuri): The z-index management with a fixed base z-index is shaky at
+  // best. SparkOverlay doesn't know in what z-index environment its instances
+  // will live, so assumption that 1000 is always a good value is invalid.
+  // Consider:
+  // 1) Stacking contexts (https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context).
+  // 2) Some way to set the base z-index in the client.
+  // 3) Set the same z-index for all spark-overlays in the client, then bump
+  //    the current overlay's z-index if any other are currently opened.
+  static final List<SparkOverlay> overlays = [];
+
+  static void trackOverlays(SparkOverlay inOverlay) {
     if (inOverlay.opened) {
-      var z0 = currentOverlayZ();
+      final int z0 = _currentOverlayZ();
       overlays.add(inOverlay);
-      var z1 = currentOverlayZ();
+      final int z1 = _currentOverlayZ();
       if (z0 != null && z1 != null && z1 <= z0) {
-        applyOverlayZ(inOverlay, z0);
+        _applyOverlayZ(inOverlay, z0);
       }
     } else {
-      var i = overlays.indexOf(inOverlay);
+      final int i = overlays.indexOf(inOverlay);
       if (i >= 0) {
         overlays.removeAt(i);
-        setZ(inOverlay, null);
+        _setZ(inOverlay, null);
       }
     }
   }
 
-  static void applyOverlayZ(inOverlay, inAboveZ) {
-    setZ(inOverlay, inAboveZ + 2);
+  static void _applyOverlayZ(SparkOverlay inOverlay, int inAboveZ) {
+    _setZ(inOverlay, inAboveZ + 2);
   }
 
-  static void setZ(inNode, inZ) {
+  static void _setZ(Element inNode, int inZ) {
     inNode.style.zIndex = "$inZ";
   }
 
-  static currentOverlay() {
+  static _currentOverlay() {
     return overlays.isNotEmpty ? overlays.last : null;
   }
 
-  static int DEFAULT_Z = 1000;
+  // TODO(ussuri): This widget doesn't know in which z-index environment it's
+  // going to live. Choosing an arbitrary starting z-index here is wrong. Redo.
+  static const int _DEFAULT_Z = 1000;
 
-  static currentOverlayZ() {
-    var z = DEFAULT_Z;
-    var current = currentOverlay();
+  static _currentOverlayZ() {
+    int z = _DEFAULT_Z;
+    final SparkOverlay current = _currentOverlay();
     if (current != null) {
-      var z1 = current.getComputedStyle().zIndex;
+      final z1 = current.getComputedStyle().zIndex;
       z = int.parse(z1, onError: (source) { });
     }
     return z;
   }
 
   static void focusOverlay() {
-    var current = currentOverlay();
+    final SparkOverlay current = _currentOverlay();
     if (current != null) {
-      current.applyFocus();
+      current.focus();
     }
   }
+}
 
-  // Function closures aren't canonicalized: need to have one pointer for the
-  // listener's handler that is added/removed.
-  EventListener _captureHandler;
-  EventListener _resizeHandler;
-
-  SparkOverlay.created(): super.created() {
-    _captureHandler = captureHandler;
-    _resizeHandler = resizeHandler;
-  }
+@CustomTag("spark-overlay")
+class SparkOverlay extends SparkWidget {
+  bool _opened = false;
 
   /**
    * Set opened to true to show an overlay and to false to hide it.
    * A spark-overlay may be made intially opened by setting its opened
    * attribute.
    */
-  @published bool opened = false;
+  @published bool get opened => _opened;
 
-  /**
-   * By default an overlay will close automatically if the user taps outside
-   * it or presses the escape key. Disable this behavior by setting the
-   * autoCloseDisabled property to true.
-   */
-  @published bool autoCloseDisabled = false;
-
-  // TODO(terry): Should be tap when PointerEvents are supported.
-  static const String captureEventType = 'mousedown';
-  Timer autoCloseTask = null;
-
-  void ready() {
-    style.visibility = "visible";
-    if (tabIndex == null) {
-      tabIndex = -1;
+  @published set opened(bool val) {
+    if (_opened != val) {
+      _opened = val;
+      // TODO(ussuri): Getter/setter were needed to fix the Menu and Modal not
+      // working in the deployed code. With a simple `@published bool opened`,
+      // writes to it via data binding or direct assignment elsewhere here
+      // were not detected (didn't invoke [openedChanged]).
+      openedChanged();
     }
-    attributes['touch-action'] = 'none';
   }
 
-  /// Toggle the opened state of the overlay.
+  /**
+   * Adds an arrow on a side of the overlay at a specified location.
+   */
+  @published String arrow = 'none';
+
+  static final List<String> _SUPPORTED_ARROWS = [
+    'none', 'top-center', 'top-left', 'top-right'
+  ];
+
+  /**
+   * Prevents other elements in the document from receiving [_captureEventTypes]
+   * events. This essentially disables the rest of the UI while the overlay
+   * is open.
+   */
+  @published bool modal = false;
+
+  /**
+   * Close the overlay automatically if the user taps outside it or presses
+   * the escape key.
+   */
+  @published bool autoClose = false;
+
+  /**
+   * The kind of animation that the overlay should perform on open/close.
+   */
+  @PublishedProperty(reflect: true) String animation = 'none';
+
+  static final List<String> _SUPPORTED_ANIMATIONS = [
+    'none', 'fade', 'shake', 'scale-slideup'
+  ];
+
+  Timer _autoCloseTask = null;
+
+  List<StreamSubscription> _eventSubs = [];
+
+  SparkOverlay.created(): super.created();
+
+  @override
+  void attached() {
+    super.attached();
+
+    assert(_SUPPORTED_ARROWS.contains(arrow));
+    assert(_SUPPORTED_ANIMATIONS.contains(animation));
+
+    style.visibility = "visible";
+
+    // TODO(ussuri): This has been causing problems with ghost overlays
+    // lingering after closing and reacting to mouse clicks etc.
+    // E.g. try to open and close the menu and click in the area where it was.
+    // enableKeyboardEvents();
+
+    window.onAnimationStart.listen(_openedAnimationStart);
+    window.onAnimationEnd.listen(_openedAnimationEnd);
+    onTransitionEnd.listen(_openedTransitionEnd);
+    onClick.listen(_tapHandler);
+    onKeyDown.listen(_keyDownHandler);
+  }
+
+  void show() {
+    if (!opened) opened = true;
+  }
+
+  void hide() {
+    if (opened) opened = false;
+  }
+
+  /**
+   * Toggle the opened state of the overlay.
+   */
   void toggle() {
     opened = !opened;
   }
 
   void openedChanged() {
-    renderOpened();
-    trackOverlays(this);
-    if (!autoCloseDisabled) {
-      enableCaptureHandler(opened);
+    _renderOpened();
+
+    _SparkOverlayManager.trackOverlays(this);
+
+    if (opened) {
+      _eventSubs.addAll(
+          SparkWidget.addEventHandlers([window.onResize], resizeHandler));
+
+      /**
+       * For modal and auto-closing overlays, intercept and block some events
+       * at the [document] level during the event capture phase.
+       */
+      if (autoClose || modal) {
+        final eventStreams = new Set<Stream<Event>>();
+        if (modal) {
+          eventStreams.addAll([
+              document.body.onMouseDown,
+              document.body.onMouseUp,
+              document.body.onClick,
+              document.body.onDoubleClick,
+              document.body.onMouseWheel,
+              document.body.onContextMenu,
+              document.body.onFocus,
+              document.body.onBlur,
+          ]);
+        }
+        if (autoClose) {
+          eventStreams.addAll([
+              document.body.onMouseDown,
+              document.body.onMouseWheel,
+              document.body.onContextMenu,
+          ]);
+        }
+        _eventSubs.addAll(
+            SparkWidget.addEventHandlers(
+                eventStreams, _captureHandler, capture: true));
+      }
+    } else {
+      SparkWidget.removeEventHandlers(_eventSubs);
     }
-    enableResizeHandler(opened);
+
     asyncFire('opened', detail: opened);
   }
 
-  void enableResizeHandler(inEnable) {
-    if (inEnable) {
-      window.addEventListener('resize', _resizeHandler);
-    } else {
-      window.removeEventListener('resize', _resizeHandler);
-    }
-  }
-
-  void enableCaptureHandler(inEnable) {
-    // TODO(terry): Need to use overlay docfrag document doesn't map to that.
-    //              However, we should use getShadowRoot or lightdom or the
-    //              event.path when those work we should be able to use
-    //              var doc = getShadowRoot('spark-overlay');
-    var doc = document;
-    if (inEnable) {
-      doc.addEventListener(captureEventType, _captureHandler, true);
-    } else {
-      doc.removeEventListener(captureEventType, _captureHandler, true);
-    }
-  }
-
-  getFocusNode() {
-    var focus = this.querySelector('[autofocus]');
-    return (focus != null) ? focus : this;
-  }
-
-  // TODO(sorvell): nodes stay focused when they become un-focusable due to
-  // an ancestory becoming display: none; file bug.
-  void applyFocus() {
-    var focusNode = getFocusNode();
+  void _applyFocus() {
     if (opened) {
-      focusNode.focus();
+      focus();
     } else {
-      focusNode.blur();
-      focusOverlay();
+      // Focus the next overlay in the stack.
+      _SparkOverlayManager.focusOverlay();
     }
   }
 
-  void renderOpened() {
+  void _renderOpened() {
     classes.remove('closing');
     classes.add('revealed');
-    // continue styling after delay so display state can change without
-    // aborting transitions
-    Timer.run(() { continueRenderOpened(); });
-//    asyncMethod('continueRenderOpened');
+    // Continue styling after delay so display state can change without
+    // aborting transitions.
+    Timer.run(() { _continueRenderOpened(); });
   }
 
-  void continueRenderOpened() {
+  void _continueRenderOpened() {
     classes.toggle('opened', opened);
     classes.toggle('closing', !opened);
-//    this.animating = this.asyncMethod('completeOpening', null, this.timeout);
   }
 
-  void completeOpening() {
-//    clearTimeout(this.animating);
+  void _completeOpening() {
     classes.remove('closing');
     classes.toggle('revealed', opened);
-    applyFocus();
+    _applyFocus();
+    asyncFire('transition-complete', detail: {"opened": opened});
   }
 
-  void openedAnimationEnd(AnimationEvent e) {
+  void _openedAnimationEnd(AnimationEvent e) {
     if (!opened) {
-      classes.remove('animation');
+      classes.remove('animation-in-progress');
     }
-    // same steps as when a transition ends
-    openedTransitionEnd(e);
+    // Same steps as when a transition ends.
+    _openedTransitionEnd(e);
   }
 
-  void openedTransitionEnd(Event e) {
+  void _openedTransitionEnd(Event e) {
     // TODO(sorvell): Necessary due to
     // https://bugs.webkit.org/show_bug.cgi?id=107892
     // Remove when that bug is addressed.
     if (e.target == this) {
-      completeOpening();
-      e.stopImmediatePropagation();
-      e.preventDefault();
+      _completeOpening();
+      e..stopImmediatePropagation()..preventDefault();
     }
   }
 
-  void openedAnimationStart(AnimationEvent e) {
-    classes.add('animation');
-    e.stopImmediatePropagation();
-    e.preventDefault();
+  void _openedAnimationStart(AnimationEvent e) {
+    classes.add('animation-in-progress');
+    e..stopImmediatePropagation()..preventDefault();
   }
 
-  void tapHandler(MouseEvent e) {
+  void _tapHandler(MouseEvent e) {
     Element target = e.target;
-    if (target != null && target.attributes.containsKey('overlay-toggle')) {
-      toggle();
-    } else if (autoCloseTask != null) {
-      autoCloseTask.cancel();
-      autoCloseTask = null;
+    if (target != null && target.attributes.containsKey('overlayToggle')) {
+      hide();
+    } else if (_autoCloseTask != null) {
+      _autoCloseTask.cancel();
+      _autoCloseTask = null;
     }
   }
 
-  // TODO(sorvell): This approach will not work with modal. For this we need a
-  // scrim.
-  void captureHandler(MouseEvent e) {
-    // TODO(terry): Hack to work around lightdom or event.path not yet working.
-    if (!autoCloseDisabled && !pointInOverlay(this, e.client)) {
-      // TODO(terry): How to cancel the event e.cancelable = true;
-      e.stopImmediatePropagation();
-      e.preventDefault();
+  /**
+   * If a mouse or keyboard event is outside the overlay, handle auto-closing
+   * and modality, as set.
+   */
+  void _captureHandler(Event e) {
+    final bool inOverlay = isEventInWidget(e);
 
-      autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
+    if (!inOverlay) {
+      if (modal) {
+        e..stopPropagation()..preventDefault();
+      }
+      if (autoClose) {
+        _autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
+      }
     }
   }
 
-  bool pointInOverlay(SparkOverlay overlay, Point xyGlobal) {
-    return overlay.offset.containsPoint(xyGlobal);
-  }
-
-  void keydownHandler(KeyboardEvent e) {
-    if (!autoCloseDisabled && (e.keyCode == ESCAPE_KEY)) {
-      this.opened = false;
-      e.stopImmediatePropagation();
-      e.preventDefault();
+  void _keyDownHandler(KeyboardEvent e) {
+    if (e.keyCode == KeyCode.ESC) {
+      opened = false;
     }
   }
 

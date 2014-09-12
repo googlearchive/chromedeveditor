@@ -1,0 +1,24 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+:host {
+  display: block;
+}
+
+.fullScreen {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+paper-dialog {
+  min-width: 440px;
+}
+
+paper-toast {
+  left: auto;
+  right: 10px;
+}

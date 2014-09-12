@@ -1,0 +1,6 @@
+name: ``projectName``
+description: A sample Dart Chrome packaged application
+dependencies:
+  chrome: any
+transformers:
+- chrome

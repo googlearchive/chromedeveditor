@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+
+<polymer-element name="``tagName``" attributes="who">
+  <template>
+    <link rel="stylesheet" href="``sourceName``.css">
+
+    <div id="greeting">
+      {{greeting}}
+    </div>
+
+    <content></content>
+  </template>
+
+  <script type="application/dart;component=1" src="``sourceName``.dart"></script>
+</polymer-element>

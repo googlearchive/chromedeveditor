@@ -1,0 +1,56 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+
+:host {
+  display: inline-block;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#status-container {
+  background-color: rgba(66, 129, 244, 0.9);
+  border-radius: 22px;
+  padding: 10px 20px;
+  pointer-events: none;
+}
+
+#throbber {
+  display: none;
+  width: 16px;
+  height: 16px;
+  margin-left: 10px;
+  position: relative;
+  top: -3px;
+  vertical-align: middle;
+}
+
+#throbber.spinning {
+  display: inline-block;
+}
+
+#label {
+  text-overflow: ellipsis;
+  font-weight: 500;
+  color: white;
+  display: inline;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  vertical-align: middle;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+#status-container.hidden {
+  opacity: 0;
+}
+
+#spinner {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  background-image:url("throbber.gif");
+}

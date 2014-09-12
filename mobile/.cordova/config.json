@@ -1,0 +1,19 @@
+{
+    "plugin_search_path": [
+        "/usr/local/lib/node_modules/cca/cordova",
+        "/usr/local/lib/node_modules/cca/cordova/cordova-plugins",
+        "/usr/local/lib/node_modules/cca/chrome-cordova/plugins"
+    ],
+    "lib": {
+        "android": {
+            "uri": "/usr/local/lib/node_modules/cca/cordova/cordova-android"
+        },
+        "ios": {
+            "uri": "/usr/local/lib/node_modules/cca/cordova/cordova-ios"
+        },
+        "www": {
+            "uri": "/Users/devoncarew/projects/spark/ide/build/deploy-out/web",
+            "link": true
+        }
+    }
+}

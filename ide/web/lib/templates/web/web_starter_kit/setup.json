@@ -1,0 +1,149 @@
+{
+  "files": [
+    { "source": "CONTRIBUTING.md_", "dest": "CONTRIBUTING.md" },
+    { "source": "LICENSE_", "dest": "LICENSE" },
+    { "source": "README.md_", "dest": "README.md" },
+    { "source": "gulpfile.js_", "dest": "gulpfile.js" },
+    { "source": "package.json_", "dest": "package.json" }
+  ],
+  "directories": {
+    "app": {
+      "files": [
+        { "source": "apple-touch-icon-precomposed.png_", "dest": "apple-touch-icon-precomposed.png" },
+        { "source": "basic.html_", "dest": "basic.html" },
+        { "source": "favicon.ico_", "dest": "favicon.ico" },
+        { "source": "humans.txt_", "dest": "humans.txt" },
+        { "source": "index.html_", "dest": "index.html" },
+        { "source": "manifest.webapp_", "dest": "manifest.webapp" },
+        { "source": "robots.txt_", "dest": "robots.txt" }
+      ],
+      "directories": {
+        "fonts": {
+          "files": [
+            { "source": "RobotoCondensed-Bold.eot_", "dest": "RobotoCondensed-Bold.eot" },
+            { "source": "RobotoCondensed-Bold.ttf_", "dest": "RobotoCondensed-Bold.ttf" },
+            { "source": "RobotoCondensed-Bold.woff_", "dest": "RobotoCondensed-Bold.woff" },
+            { "source": "RobotoCondensed-BoldItalic.eot_", "dest": "RobotoCondensed-BoldItalic.eot" },
+            { "source": "RobotoCondensed-BoldItalic.ttf_", "dest": "RobotoCondensed-BoldItalic.ttf" },
+            { "source": "RobotoCondensed-BoldItalic.woff_", "dest": "RobotoCondensed-BoldItalic.woff" },
+            { "source": "RobotoCondensed-Italic.eot_", "dest": "RobotoCondensed-Italic.eot" },
+            { "source": "RobotoCondensed-Italic.ttf_", "dest": "RobotoCondensed-Italic.ttf" },
+            { "source": "RobotoCondensed-Italic.woff_", "dest": "RobotoCondensed-Italic.woff" },
+            { "source": "RobotoCondensed-Light.eot_", "dest": "RobotoCondensed-Light.eot" },
+            { "source": "RobotoCondensed-Light.ttf_", "dest": "RobotoCondensed-Light.ttf" },
+            { "source": "RobotoCondensed-Light.woff_", "dest": "RobotoCondensed-Light.woff" },
+            { "source": "RobotoCondensed-LightItalic.eot_", "dest": "RobotoCondensed-LightItalic.eot" },
+            { "source": "RobotoCondensed-LightItalic.ttf_", "dest": "RobotoCondensed-LightItalic.ttf" },
+            { "source": "RobotoCondensed-LightItalic.woff_", "dest": "RobotoCondensed-LightItalic.woff" },
+            { "source": "RobotoCondensed-Regular.eot_", "dest": "RobotoCondensed-Regular.eot" },
+            { "source": "RobotoCondensed-Regular.ttf_", "dest": "RobotoCondensed-Regular.ttf" },
+            { "source": "RobotoCondensed-Regular.woff_", "dest": "RobotoCondensed-Regular.woff" }
+          ]
+        },
+        "images": {
+          "files": [
+            { "source": "hamburger.svg_", "dest": "hamburger.svg" }
+          ],
+          "directories": {
+            "icons": {
+              "files": [
+                { "source": "icons-hinted.ttf_", "dest": "icons-hinted.ttf" },
+                { "source": "icons.eot_", "dest": "icons.eot" },
+                { "source": "icons.svg_", "dest": "icons.svg" },
+                { "source": "icons.ttf_", "dest": "icons.ttf" },
+{ "source": "icons.woff2_", "dest": "icons.woff2" },
+                { "source": "icons.woff_", "dest": "icons.woff" },
+                { "source": "placeholder--medium.png_", "dest": "placeholder--medium.png" },
+                { "source": "placeholder--small.png_", "dest": "placeholder--small.png" },
+                { "source": "placeholder--wide.png_", "dest": "placeholder--wide.png" }
+              ]
+            },
+            "touch": {
+              "files": [
+                { "source": "chrome-touch-icon-196x196.png_", "dest": "chrome-touch-icon-196x196.png" },
+                { "source": "icon-128x128.png_", "dest": "icon-128x128.png" },
+                { "source": "ms-touch-icon-144x144-precomposed.png_", "dest": "ms-touch-icon-144x144-precomposed.png" }
+              ]
+            }
+          }
+        },
+        "scripts": {
+          "files": [
+            { "source": "main.js_", "dest": "main.js" }
+          ]
+        },
+        "styleguide": {
+          "files": [
+            { "source": "index.html_", "dest": "index.html" }
+          ]
+        },
+        "styles": {
+          "files": [
+            { "source": "h5bp.css_", "dest": "h5bp.css" },
+            { "source": "main.css_", "dest": "main.css" }
+          ],
+          "directories": {
+            "components": {
+              "files": [
+                { "source": "_global.scss_", "dest": "_global.scss" },
+                { "source": "_helper.scss_", "dest": "_helper.scss" },
+                { "source": "_normalize.scss_", "dest": "_normalize.scss" },
+                { "source": "_palette.scss_", "dest": "_palette.scss" },
+                { "source": "_themed.scss_", "dest": "_themed.scss" },
+                { "source": "_utils.scss_", "dest": "_utils.scss" },
+                { "source": "components.css_", "dest": "components.css" },
+                { "source": "components.scss_", "dest": "components.scss" }
+              ],
+              "directories": {
+                "_components": {
+                  "files": [
+                    { "source": "_articles-list.scss_", "dest": "_articles-list.scss" },
+                    { "source": "_breadcrumb.scss_", "dest": "_breadcrumb.scss" },
+                    { "source": "_button.scss_", "dest": "_button.scss" },
+                    { "source": "_column-list.scss_", "dest": "_column-list.scss" },
+                    { "source": "_grid.scss_", "dest": "_grid.scss" },
+                    { "source": "_guides-list.scss_", "dest": "_guides-list.scss" },
+                    { "source": "_icon-circle.scss_", "dest": "_icon-circle.scss" },
+                    { "source": "_icons.scss_", "dest": "_icons.scss" },
+                    { "source": "_link.scss_", "dest": "_link.scss" },
+                    { "source": "_list.scss_", "dest": "_list.scss" },
+                    { "source": "_media.scss_", "dest": "_media.scss" },
+                    { "source": "_subsection-title.scss_", "dest": "_subsection-title.scss" },
+                    { "source": "_table.scss_", "dest": "_table.scss" },
+                    { "source": "_typography.scss_", "dest": "_typography.scss" }
+                  ]
+                },
+                "_modules": {
+                  "files": [
+                    { "source": "_article-nav.scss_", "dest": "_article-nav.scss" },
+                    { "source": "_articles-section.scss_", "dest": "_articles-section.scss" },
+                    { "source": "_did-you-know.scss_", "dest": "_did-you-know.scss" },
+                    { "source": "_editorial-header.scss_", "dest": "_editorial-header.scss" },
+                    { "source": "_featured-section.scss_", "dest": "_featured-section.scss" },
+                    { "source": "_featured-spotlight.scss_", "dest": "_featured-spotlight.scss" },
+                    { "source": "_guides-section.scss_", "dest": "_guides-section.scss" },
+                    { "source": "_highlight.scss_", "dest": "_highlight.scss" },
+                    { "source": "_in-this-guide.scss_", "dest": "_in-this-guide.scss" },
+                    { "source": "_next-lessons.scss_", "dest": "_next-lessons.scss" },
+                    { "source": "_page-header.scss_", "dest": "_page-header.scss" },
+                    { "source": "_quote.scss_", "dest": "_quote.scss" },
+                    { "source": "_related-guides.scss_", "dest": "_related-guides.scss" },
+                    { "source": "_related-items.scss_", "dest": "_related-items.scss" },
+                    { "source": "_summary-header.scss_", "dest": "_summary-header.scss" },
+                    { "source": "_toc.scss_", "dest": "_toc.scss" }
+                  ]
+                },
+                "_pages": {
+                  "files": [
+                    { "source": "_page-resources.scss_", "dest": "_page-resources.scss" },
+                    { "source": "_styleguide.scss_", "dest": "_styleguide.scss" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

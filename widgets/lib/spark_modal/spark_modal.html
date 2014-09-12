@@ -4,13 +4,20 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
+<!--
+/**
+ * spark-modal is just a shortcut for a modal spark-overlay.
+ */
+-->
+
 <link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 
-<polymer-element name="spark-modal" extends="spark-overlay"
-    on-click="{{tapHandler}}"
-    on-keydown="{{keydownHandler}}">
+<polymer-element name="spark-modal"
+    extends="spark-overlay"
+    modal>
   <template>
     <shadow></shadow>
   </template>
+
   <script type="application/dart" src="spark_modal.dart"></script>
 </polymer-element>

@@ -1,0 +1,67 @@
+<link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
+
+<polymer-element name="example-ui">
+  <template>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
+    <style>
+      .cont {
+        margin: 20px;
+        border: 1px solid black;
+      }
+
+      .row-flex.cont {
+        width: 400px;
+        height: 200px;
+      }
+
+      .col-flex.cont {
+        width: 200px;
+        height: 400px;
+      }
+
+      .resize.box {
+        width: 200px;
+        height: 200px;
+        background-color: lightgreen;
+      }
+
+      .flex.box {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        background-color: lightblue;
+      }
+    </style>
+
+    <div class="col-flex">
+      <div class="row-flex cont">
+        <div class="resize box">left (resize)</div>
+        <spark-splitter handle direction="left"></spark-splitter>
+        <div class="flex box">right (flex)</div>
+      </div>
+
+      <div class="row-flex cont">
+        <div class="flex box">left (flex)</div>
+        <spark-splitter handle direction="right"></spark-splitter>
+        <div class="resize box">right (resize)</div>
+      </div>
+    </div>
+
+    <div class="row-flex">
+      <div class="col-flex cont">
+        <div class="resize box">top (resize)</div>
+        <spark-splitter handle direction="up"></spark-splitter>
+        <div class="flex box">bottom (flex)</div>
+      </div>
+
+      <div class="col-flex cont">
+        <div class="flex box">top (flex)</div>
+        <spark-splitter handle direction="down"></spark-splitter>
+        <div class="resize box">bottom (resize)</div>
+      </div>
+    </div>
+  </template>
+
+  <script type="application/dart" src="example_ui.dart"></script>
+</polymer-element>

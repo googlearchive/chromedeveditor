@@ -6,40 +6,39 @@
 
 <!--
 /**
- * See g-menu-item https://github.com/Polymer/toolkit-ui/tree/master/elements.
- *
- * spark-menu-item is intended for use in a spark-menu.
+ * spark-menu-item is intended to be used as a selectable element of a
+ * spark-menu and its derivatives (e.g. spark-menu-button).
  */
 -->
 
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 <link rel="import" href="../../../packages/spark_widgets/spark_icon/spark_icon.html">
 
-<polymer-element name="spark-menu-item" attributes="src label iconsize">
+<polymer-element name="spark-menu-item" extends="spark-widget"
+    attributes="icon
+                iconSize
+                label
+                description
+                checkmark">
   <template>
-    <style>
-      .labelText {
-        margin: 0 5px;
-      }
+    <link rel="stylesheet" href="spark_menu_item.css">
 
-      spark-icon, .labelText, .labelText > * {
-        display: inline-block;
-        vertical-align: middle;
-      }
-
-      spark-menu-item:hover {
-        color: black;
-        opacity: 1 !important;
-        border: 1px solid #ccc;
-        background: #eee;
-      }
-    </style>
-
-    <spark-icon src="{{src}}" size="{{iconsize}}"></spark-icon>
-
-    <div class="labelText">
-      <span>{{label}}</span>
+    <span id="main">
+      <template if="{{icon.isNotEmpty}}">
+        <spark-icon id="icon" src="{{icon}}" size="{{iconSize}}"></spark-icon>
+      </template>
+      <span id="label">{{label}}</span>
       <content></content>
-    </div>
+      <div id="checkmark">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <g>
+            <polygon points="9,16.2 4.8,12 3.4,13.4 9,19 21,7 19.6,5.6">
+            </polygon>
+          </g>
+        </svg>
+      </div>
+    </span>
+    <span id="description">{{description}}</span>
   </template>
 
   <script type="application/dart" src="spark_menu_item.dart"></script>

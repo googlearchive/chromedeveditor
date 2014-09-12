@@ -1,0 +1,72 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url(../common/spark_widget.css);
+
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #fafafa;
+}
+
+:host([horizontal]) {
+  padding: 0 5px;
+  flex-flow: row;
+}
+
+:host([vertical]) {
+  padding: 5px 0;
+  flex-flow: column;
+}
+
+:host([justify=left]) {
+  justify-content: flex-start;
+}
+
+:host([justify=right]) {
+  justify-content: flex-end;
+}
+
+:host([justify=center]) {
+  justify-content: center;
+}
+
+:host([justify=spaced]) {
+  justify-content: space-around;
+}
+
+:host([justify=edges]) {
+  justify-content: space-between;
+}
+
+:host([spacing=none]) ::content > * {
+  margin: 0;
+}
+
+:host([spacing=small]) ::content > * {
+  margin: 2px;
+}
+
+:host([spacing=medium]) ::content > * {
+  margin: 5px;
+}
+
+:host([spacing=large]) ::content > * {
+  margin: 10px;
+}
+
+:host([horizontal]) ::content > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+:host([vertical]) ::content > * {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+::content > [flex] {
+  flex: 1;
+}

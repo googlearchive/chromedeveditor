@@ -4,48 +4,53 @@
 
 library spark_widgets.button;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
+
+// TODO(ussuri): Add comments.
 
 @CustomTag('spark-button')
-class SparkButton extends Widget {
-  @published bool primary = false;
-  @published bool active = true;
-  @published bool large = false;
-  @published bool small = false;
-
-  String get actionId => attributes['action-id'];
-
-  @observable String get btnClasses {
-    List classes = [
-        CSS_BUTTON,
-        primary ? CSS_PRIMARY : CSS_DEFAULT,
-        active ? Widget.CSS_ENABLED : Widget.CSS_DISABLED
-    ];
-
-    if (large) classes.add(CSS_LARGE);
-    if (small) classes.add(CSS_SMALL);
-
-    return joinClasses(classes);
-  }
-
-  static const CSS_BUTTON = "btn";
-  static const CSS_DEFAULT = "btn-default";
-  static const CSS_PRIMARY = "btn-primary";
-  static const CSS_LARGE = "btn-lg";
-  static const CSS_SMALL = "btn-sm";
+class SparkButton extends SparkWidget {
+  // [flat] is the default.
+  @published bool flat;
+  @published bool raised;
+  @published bool round;
+  @published bool primary;
+  @published_reflected String padding;
+  @published_reflected String hoverStyle;
+  @published bool disabled;
+  @published bool active;
+  @published String tooltip;
 
   SparkButton.created() : super.created();
 
-  void focus() {
-    // Only the first found element that has 'focused' attribute on it will be
-    // actually focused; if there are more than one, the rest will be ignored.
-    Element elementToFocus = this.getShadowDomElement('[focused]');
-    if (elementToFocus != null) {
-      elementToFocus.focus();
+  @override
+  void attached() {
+    super.attached();
+
+    // Make sure at most one of [raised] or [flat] is defined by the client.
+    // TODO(ussuri): This is really clumsy. Find a better way to provide
+    // mutually exclusive flags.
+    assert(raised == null || flat == null);
+    if (flat != null) {
+      raised = !flat;
+    } else if (raised != null) {
+      flat = !raised;
+    } else {
+      flat = true;
     }
+
+    if (padding == null) {
+      padding = 'medium';
+    }
+
+    if (hoverStyle == null) {
+      // TODO(ussuri): #2252.
+      attributes['hoverStyle'] = 'background';
+    }
+
+    assert(['none', 'small', 'medium', 'large', 'huge'].contains(padding));
+    assert(['background', 'foreground'].contains(hoverStyle));
   }
 }

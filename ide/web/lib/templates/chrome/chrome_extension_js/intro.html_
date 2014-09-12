@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>``projectName``</title>
+
+  <link rel="stylesheet" href="intro.css">
+</head>
+
+<body>
+  <h1>
+    Hello, I'm "``projectName``"!
+    <br>
+    Now switch to some other tab and click my icon
+    to the right of the Chrome address bar.
+  </h1>
+</body>
+</html>

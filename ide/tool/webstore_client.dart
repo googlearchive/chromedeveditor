@@ -44,6 +44,7 @@ class WebStoreClient {
           }, onError: (e) {
             completer.completeError('Connection to server closed unexpectedly');
           }, onDone: () {
+            print('request token: ${result}');
             Map<String, String> response = JSON.decode(result) as Map<String, String>;
             _token = response['access_token'];
             if (_token == null) {
@@ -57,61 +58,72 @@ class WebStoreClient {
         });
   }
 
-  Future uploadItem(String filename) {
+  Future<String> uploadItem(String filename) {
     File file = new File(filename);
     List<int> data = file.readAsBytesSync();
-  
-    HttpClient client = new HttpClient();
-    return client.openUrl('PUT', Uri.parse("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${_appID}"))
-        .then((HttpClientRequest request) {
-          request.headers.contentType
-              = new ContentType("application", "zip");
-          request.headers.contentLength = data.length;
-          request.headers.set('Accept', '*/*');
-          request.headers.set('x-goog-api-version', '2');
-          request.headers.set('Authorization', 'Bearer ${_token}');
-          request.add(data);
-          return request.close();
-        })
-        .then((HttpClientResponse response) {
-          Completer completer = new Completer();
-          String result = '';
-          response.listen((List<int> data) {
-            String str = new String.fromCharCodes(data);
-            result += str;
-          }, onError: (e) {
-            completer.completeError('Connection to server closed unexpectedly');
-          }, onDone: () {
-            completer.complete(result);
-          });
 
-          return completer.future;
-        });
+    HttpClient client = new HttpClient();
+    Future f = client.openUrl('PUT', Uri.parse(
+        "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${_appID}"));
+
+    return f.then((HttpClientRequest request) {
+      request.headers.contentType
+          = new ContentType("application", "zip");
+      request.headers.contentLength = data.length;
+      request.headers.set('Accept', '*/*');
+      request.headers.set('x-goog-api-version', '2');
+      request.headers.set('Authorization', 'Bearer ${_token}');
+      request.add(data);
+      return request.close();
+    }).then((HttpClientResponse response) {
+      Completer completer = new Completer();
+      String result = '';
+      response.listen((List<int> data) {
+        String str = new String.fromCharCodes(data);
+        result += str;
+      }, onError: (e) {
+        completer.completeError('Connection to server closed unexpectedly');
+      }, onDone: () {
+        print('upload item: ${result}');
+        completer.complete(result);
+      });
+
+      return completer.future;
+    });
   }
 
-  Future publishItem() {
+  Future<String> publishItem() {
     HttpClient client = new HttpClient();
-    return client.postUrl(Uri.parse("https://www.googleapis.com/chromewebstore/v1.1/items/${_appID}/publish"))
-        .then((HttpClientRequest request) {
-          request.headers.contentLength = 0;
-          request.headers.set('Accept', '*/*');
-          request.headers.set('x-goog-api-version', '2');
-          request.headers.set('Authorization', 'Bearer ${_token}');
-          return request.close();
-        })
-        .then((HttpClientResponse response) {
-          Completer completer = new Completer();
-          String result = '';
-          response.listen((List<int> data) {
-            String str = new String.fromCharCodes(data);
-            result += str;
-          }, onError: (e) {
-            completer.completeError('Connection to server closed unexpectedly');
-          }, onDone: () {
-            completer.complete(result);
-          });
 
-          return completer.future;
-        });
+    Future f = client.postUrl(Uri.parse(
+        "https://www.googleapis.com/chromewebstore/v1.1/items/${_appID}/publish"));
+
+    return f.then((HttpClientRequest request) {
+      request.headers.contentLength = 0;
+      request.headers.set('Accept', '*/*');
+      request.headers.set('x-goog-api-version', '2');
+      request.headers.set('Authorization', 'Bearer ${_token}');
+      return request.close();
+    }).then((HttpClientResponse response) {
+      Completer completer = new Completer();
+      String result = '';
+      response.listen((List<int> data) {
+        String str = new String.fromCharCodes(data);
+        result += str;
+      }, onError: (e) {
+        completer.completeError('Connection to server closed unexpectedly');
+      }, onDone: () {
+        print('publish item: ${result}');
+
+        // publish item: {"error":{"errors":[...
+        if (result.startsWith('{"error":')) {
+          completer.completeError(result);
+        } else {
+          completer.complete(result);
+        }
+      });
+
+      return completer.future;
+    });
   }
 }

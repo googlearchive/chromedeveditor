@@ -1,0 +1,13 @@
+<link rel="import" href="packages/spark_widgets/spark_icon/spark_icon.html">
+
+<polymer-element name="example-ui">
+  <template>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
+    <template repeat="{{size in ['4', '14', '24', '32', '34']}}">
+      <spark-icon src="../resources/add.png" size="{{size}}"></spark-icon>
+    </template>
+  </template>
+
+  <script type="application/dart" src="example_ui.dart"></script>
+</polymer-element>

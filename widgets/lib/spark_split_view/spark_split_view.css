@@ -1,0 +1,38 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+
+:host {
+  display: flex;
+  /* The no-op transform forms an independent stacking context */
+  -webkit-transform: translateX(0);
+}
+
+:host([direction="left"]:host, [direction="right"]:host) {
+  flex-flow: row;
+}
+
+:host([direction="up"]:host, [direction="down"]:host) {
+  flex-flow: column;
+}
+
+/* Z-order the splitter higher than the two split halves */
+::content > * {
+  position: relative;
+}
+
+#splitter {
+  position: relative;
+  /* This z-index is local to :host. */
+  z-index: 1;
+}
+
+/* Make the passive target of resizing 'flex', so it auto-adjusts when the
+   active target is resized.
+*/
+:host([direction="left"], [direction="up"]) > content[select="[afterSplit]"]::content > *,
+:host([direction="right"], [direction="down"]) > content[select="[beforeSplit]"]::content > * {
+  flex: 1;
+}

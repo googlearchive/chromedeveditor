@@ -10,19 +10,19 @@
  * of the sibling elements. Use the property "direction" to indicate
  * the orientation of the split and which sibling to resize:
  *   "left":  vertical split,   left sibling
- *   "rigth": vertical split,   right sibling
+ *   "right": vertical split,   right sibling
  *   "up":    horizontal split, upper sibling
  *   "down":  horizontal split, lower sibling
  *
  * Examples:
  *
- *     <div class="flexbox">
+ *     <div style="display: flex">
  *       <div>left</div>
  *       <spark-splitter direction="left"></spark-splitter>
  *       <div flex>right</div>
  *     </div>
  *
- *     <div class="flexbox column">
+ *     <div style="display: flex; flex-flow: column">
  *       <div>top</div>
  *       <spark-splitter direction="up"></spark-splitter>
  *       <div flex>bottom</div>
@@ -30,33 +30,19 @@
  */
 -->
 
-<polymer-element name="spark-splitter"
-    attributes="direction locked onUpdate">
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
+<polymer-element name="spark-splitter" extends="spark-widget"
+    attributes="direction
+                size
+                handle
+                targetSize
+                minTargetSize
+                maxTargetSize
+                locked">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="spark_splitter.css" -->
-    <style>
-      @host {
-        * {
-          display: block;
-          width: 6px;
-          border-left: 1px solid #DDD;
-          border-right: 1px solid #DDD;
-          cursor: col-resize;
-          background-color: #F7F7F7;
-        }
-
-        .horizontal {
-          width: auto;
-          height: 6px;
-          cursor: row-resize;
-        }
-
-        :hover, .active {
-          
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="spark_splitter.css">
+    <div id="draggable"></div>
   </template>
 
   <script type="application/dart" src="spark_splitter.dart"></script>
