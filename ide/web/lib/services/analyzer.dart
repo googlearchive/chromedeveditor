@@ -26,6 +26,60 @@ import 'services_common.dart' as common;
 import '../dart/sdk.dart' as sdk;
 
 /**
+ * Logger specific to this library.
+ */
+abstract class _DebugLogger {
+  /// Switch between `null` and [print] logger implementations.
+  //static _DebugLogger instance = new _NullDebugLogger();
+  static _DebugLogger instance = new _PrintDebugLogger();
+
+  void debug(String message);
+}
+
+/**
+ * Default `null` logger.
+ */
+class _NullDebugLogger implements _DebugLogger {
+  void debug(String message) {
+  }
+}
+
+/**
+ * Logger forwarding messages to the [print] method.
+ */
+class _PrintDebugLogger implements _DebugLogger {
+  void debug(String message) {
+    print(message);
+  }
+}
+
+/**
+ * Logger for the analysis engine messages, forwards all calls to
+ * [_DebugLogger.instance].
+ */
+class _AnalysisEngineDebugLogger implements Logger {
+  @override
+  void logError(String message) {
+    _DebugLogger.instance.debug("[analyzer] error: ${message}");
+  }
+
+  @override
+  void logError2(String message, Exception exception) {
+    _DebugLogger.instance.debug("[analyzer] error: ${message} ${exception}");
+  }
+
+  @override
+  void logInformation(String message) {
+    _DebugLogger.instance.debug("[analyzer] info: ${message}");
+  }
+
+  @override
+  void logInformation2(String message, Exception exception) {
+    _DebugLogger.instance.debug("[analyzer] info: ${message} ${exception}");
+  }
+}
+
+/**
  * Create and return a ChromeDartSdk.
  */
 ChromeDartSdk createSdk(sdk.DartSdk dartSdk) {
@@ -124,9 +178,9 @@ class ChromeDartSdk extends DartSdk {
    */
   @override
   Source fromFileUri(Uri uri) {
-    print("> ChromeDartSdk.fromFileUri(${uri})");
+    _DebugLogger.instance.debug("> ChromeDartSdk.fromFileUri('${uri}')");
     Source result = mapDartUri(uri.toString());
-    print("< ChromeDartSdk.fromFileUri(${uri}): ${result == null ? 'null' : result.uri}");
+    _DebugLogger.instance.debug("< ChromeDartSdk.fromFileUri('${uri}'): '${result == null ? 'null' : result.uri}'");
     return result;
   }
 
@@ -139,7 +193,7 @@ class ChromeDartSdk extends DartSdk {
   @override
   SdkLibrary getSdkLibrary(String dartUri) {
     SdkLibrary result = _libraryMap.getLibrary(dartUri);
-    print("= ChromeDartSdk.getSdkLibrary(${dartUri}): ${result== null ? 'null' : result.path}");
+    _DebugLogger.instance.debug("= ChromeDartSdk.getSdkLibrary('${dartUri}'): '${result== null ? 'null' : result.path}'");
     return result;
   }
 
@@ -160,7 +214,7 @@ class ChromeDartSdk extends DartSdk {
    */
   @override
   Source mapDartUri(String dartUri) {
-    print("> ChromeDartSdk.mapDartUri(${dartUri})");
+    _DebugLogger.instance.debug("> ChromeDartSdk.mapDartUri('${dartUri}')");
 
     // The URI scheme is always "dart"
     Uri uri = parseUriWithException(dartUri);
@@ -193,7 +247,7 @@ class ChromeDartSdk extends DartSdk {
       }
       result = new SdkSource(_sdk, uri, path);
     }
-    print("< ChromeDartSdk.mapDartUri(${dartUri}): ${result == null ? 'null' : result}");
+    _DebugLogger.instance.debug("< ChromeDartSdk.mapDartUri('${dartUri}'): ${result == null ? 'null' : result}");
     return result;
   }
 
@@ -229,28 +283,6 @@ class ChromeDartSdk extends DartSdk {
   }
 }
 
-class AnalysisEnginePrintLogger implements Logger {
-  @override
-  void logError(String message) {
-    print("error: ${message}");
-  }
-
-  @override
-  void logError2(String message, Exception exception) {
-    print("error2: ${message} ${exception}");
-  }
-
-  @override
-  void logInformation(String message) {
-    print("info: ${message}");
-  }
-
-  @override
-  void logInformation2(String message, Exception exception) {
-    print("info2: ${message} ${exception}");
-  }
-}
-
 /**
  * A wrapper around an analysis context. There is a one-to-one mapping between
  * projects, on the DOM side, and analysis contexts.
@@ -269,8 +301,7 @@ class ProjectContext {
   final Map<String, FileSource> _sources = {};
 
   ProjectContext(this.id, this.sdk, this.provider) {
-    // TODO(rpaquay): For debugging purposes only.
-    AnalysisEngine.instance.logger = new AnalysisEnginePrintLogger();
+    AnalysisEngine.instance.logger = new _AnalysisEngineDebugLogger();
     context = AnalysisEngine.instance.createAnalysisContext();
     context.sourceFactory = new SourceFactory([
         new CustomDartUriResolver(sdk),
@@ -502,7 +533,7 @@ class SdkSource extends Source {
   final String fullName;
 
   SdkSource(this._sdk, this.uri, this.fullName) {
-    print("= SdkSource: uri=${uri}, path=${fullName}");
+    _DebugLogger.instance.debug("= SdkSource: uri='${uri}', path='${fullName}'");
   }
 
   @override
@@ -519,13 +550,13 @@ class SdkSource extends Source {
 
   @override
   TimestampedData<String> get contents {
-    print("> SdkSource.contents");
+    _DebugLogger.instance.debug("> SdkSource.contents");
     String source = _sdk.getSourceForPath(fullName);
-    print("= SdkSource.getSourceForPath(${fullName}):${source == null ? 'null' : source.length}");
+    _DebugLogger.instance.debug("= SdkSource.getSourceForPath('${fullName}'): '${source == null ? 'null' : source.length}'");
     TimestampedData<String> result = (source == null)
         ? null
         : new TimestampedData<String>(modificationStamp, source);
-    print("< SdkSource.contents: ${result == null ? 'null' : result.data.length}");
+    _DebugLogger.instance.debug("< SdkSource.contents: length='${result == null ? 'null' : result.data.length}'");
     return result;
   }
 
@@ -559,7 +590,7 @@ class SdkSource extends Source {
   Uri resolveRelativeUri(Uri relativeUri) {
     return resolveRelativeUriHelper(uri, relativeUri);
 //    Uri result = new Uri(scheme: DartUriResolver.DART_SCHEME, path: '${dirname(fullName)}/${relativeUri.path}');
-//    print("= SdkSource.resolveRelativeUri(${relativeUri}) = ${result} (fullName=${fullName})");
+//    DebugLogger.instance.debug("= SdkSource.resolveRelativeUri(${relativeUri}) = ${result} (fullName=${fullName})");
 //    return result;
   }
 
@@ -567,7 +598,7 @@ class SdkSource extends Source {
   int get modificationStamp => 0;
 
   @override
-  String toString() => "SdkSource(uri=${uri}, fullName=${fullName})";
+  String toString() => "SdkSource(uri='${uri}', fullName='${fullName}')";
 }
 
 /**
@@ -634,7 +665,7 @@ class FileSource extends Source {
     return resolveRelativeUriHelper(uri, relativeUri);
 //    Uri sourceUri = uri.resolveUri(relativeUri);
 //    Uri result = context.getSource(sourceUri.path.substring(1)).uri;
-//    print("= FileSource.resolveRelativeUri(${relativeUri}) = ${result} (fullName=${fullName})");
+//    DebugLogger.instance.debug("= FileSource.resolveRelativeUri(${relativeUri}) = ${result} (fullName=${fullName})");
 //    return result;
   }
 
@@ -670,9 +701,9 @@ class CustomDartUriResolver extends DartUriResolver {
    */
   @override
   Source resolveAbsolute(Uri uri) {
-    print("> CustomDartUriResolver.resolveAbsolute(${uri})");
+    _DebugLogger.instance.debug("> CustomDartUriResolver.resolveAbsolute('${uri}')");
     Source result = super.resolveAbsolute(uri);
-    print("< CustomDartUriResolver.resolveAbsolute(${uri}): ${result == null ? 'null' : result.uri}");
+    _DebugLogger.instance.debug("< CustomDartUriResolver.resolveAbsolute('${uri}'): ${result == null ? 'null' : result}");
     return result;
   }
 }
@@ -691,14 +722,14 @@ class FileUriResolver extends UriResolver {
 
   @override
   Source resolveAbsolute(Uri uri) {
-    print("> FileUriResolver.resolveAbsolute(${uri})");
+    _DebugLogger.instance.debug("> FileUriResolver.resolveAbsolute('${uri}')");
     Source result;
     if (!isFileUri(uri)) {
       result = null;
     } else {
       result = context.getSource(uri.path);
     }
-    print("< FileUriResolver.resolveAbsolute(${uri}): ${result == null ? 'null' : result.uri}");
+    _DebugLogger.instance.debug("< FileUriResolver.resolveAbsolute('${uri}'): ${result == null ? 'null' : result}");
     return result;
   }
 }
@@ -722,14 +753,14 @@ class PackageUriResolver extends UriResolver {
    */
   @override
   Source resolveAbsolute(Uri uri) {
-    print("> PackageUriResolver.resolveAbsolute(${uri})");
+    _DebugLogger.instance.debug("> PackageUriResolver.resolveAbsolute('${uri}')");
     Source result;
     if (!isPackageUri(uri)) {
       result = null;
     } else {
       result = context.getSource(uri.toString());
     }
-    print("< PackageUriResolver.resolveAbsolute(${uri}): ${result == null ? 'null' : result.uri}");
+    _DebugLogger.instance.debug("< PackageUriResolver.resolveAbsolute('${uri}'): ${result == null ? 'null' : result}");
     return result;
   }
 }
@@ -762,7 +793,7 @@ String dirname(String str) {
  * implementation because we cannot use `dart:io`.
  */
 Uri resolveRelativeUriHelper(Uri uri, Uri containedUri) {
-  print("> resolveRelativeUriHelper(${uri}, ${containedUri})");
+  _DebugLogger.instance.debug("> resolveRelativeUriHelper('${uri}', '${containedUri}')");
   Uri baseUri = uri;
   bool isOpaque = uri.isAbsolute && !uri.path.startsWith('/');
   if (isOpaque) {
@@ -777,7 +808,7 @@ Uri resolveRelativeUriHelper(Uri uri, Uri containedUri) {
   if (isOpaque) {
     result = parseUriWithException("${result.scheme}:${result.path.substring(1)}");
   }
-  print("< resolveRelativeUriHelper(${uri}, ${containedUri}): ${result}");
+  _DebugLogger.instance.debug("< resolveRelativeUriHelper('${uri}', '${containedUri}'): '${result}'");
   return result;
 }
 
