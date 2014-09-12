@@ -40,8 +40,8 @@ class CspFixer {
   static bool mightProcess(List resources) {
     // TODO(ussuri): Expand onto
     return resources.any((r) {
-      return (r is ws.Folder && mightProcess(r.getChildren())) ||
-             (r is ws.File && _HTML_FNAME_RE.matchAsPrefix(r.name) != null);
+      return (r is ws.File && _HTML_FNAME_RE.matchAsPrefix(r.name) != null) ||
+             (r is ws.Container && mightProcess(r.getChildren()));
     });
   }
 
