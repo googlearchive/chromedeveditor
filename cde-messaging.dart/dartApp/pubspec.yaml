@@ -1,0 +1,13 @@
+name: cde_messaging
+version: 0.0.1-dev
+author: The Chrome Dev Editor team
+description: A sample Chrome packaged application to demostrate chrome native messaging.
+homepage: https://github.com/dart-lang/chromedeveditor/
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  chrome: any
+transformers:
+- chrome
+- $dart2js:
+    csp: true

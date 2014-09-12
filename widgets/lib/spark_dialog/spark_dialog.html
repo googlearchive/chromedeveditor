@@ -34,13 +34,7 @@
       </spark-toolbar>
 
       <form id="body">
-        <content id="bodyContent"
-           select="div,span,label,input,p,h4,spark-progress,template">
-        </content>
-        <!-- TODO(ussuri): remove the line above and uncomment the line below
-             once the fix for :not() makes it to Chrome 36 stable
-             (it's in canary as of 05/29/2014). BUG #2183. -->
-        <!--content select=":not(spark-dialog-button)"></content-->
+        <content id="bodyContent" select=":not(spark-dialog-button)"></content>
       </form>
 
       <spark-toolbar id="footer"

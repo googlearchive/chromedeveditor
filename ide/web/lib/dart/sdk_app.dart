@@ -19,7 +19,8 @@ import '../utils.dart';
  * objects.
  */
 Future<DartSdk> createSdk() {
-  return getAppContentsBinary('sdk/dart-sdk.bz').then((List<int> contents) {
+  return getAppContentsBinary('packages/spark/sdk/dart-sdk.bz').then(
+      (List<int> contents) {
     return new DartSdk.withContents(contents);
   }).catchError((e) {
     return new DartSdk.fromVersion('');

@@ -5,15 +5,14 @@
 library spark.services_impl;
 
 import 'dart:async';
-import 'dart:isolate';
 
 import 'analyzer.dart' as analyzer;
 import 'services_common.dart';
 import 'compiler.dart';
 import '../dart/sdk.dart';
 
-void init(SendPort sendPort) {
-  final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
+void init(WorkerToHostHandler hostHandler) {
+  final ServicesIsolate servicesIsolate = new ServicesIsolate(hostHandler);
 }
 
 /**
@@ -27,7 +26,7 @@ typedef Future<ServiceActionEvent> RequestHandler(ServiceActionEvent request);
  */
 class ServicesIsolate {
   int _topCallId = 0;
-  final SendPort _sendPort;
+  final WorkerToHostHandler _hostHandler;
 
   // Fired when host originates a message
   Stream<ServiceActionEvent> onHostMessage;
@@ -40,7 +39,7 @@ class ServicesIsolate {
 
   DartSdk sdk;
 
-  ServicesIsolate(this._sendPort) {
+  ServicesIsolate(this._hostHandler) {
     chromeService = new ChromeService(this);
 
     StreamController<ServiceActionEvent> hostMessageController =
@@ -51,14 +50,12 @@ class ServicesIsolate {
     onResponseMessage = responseMessageController.stream;
     onHostMessage = hostMessageController.stream;
 
-    ReceivePort receivePort = new ReceivePort();
-    _sendPort.send(receivePort.sendPort);
-
     _registerServiceImpl(new TestServiceImpl(this));
 
-    receivePort.listen((arg) {
+    _hostHandler.listenFromHost((arg) {
       if (arg is int) {
-        _sendPort.send(arg);
+        // int: send response to "ping" test message.
+        _hostHandler.sendToHost(arg);
       } else {
         ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
         if (event.response) {
@@ -69,7 +66,8 @@ class ServicesIsolate {
       }
     });
 
-    chromeService.getAppContents('sdk/dart-sdk.bz').then((List<int> sdkContents) {
+    chromeService.getAppContents('packages/spark/sdk/dart-sdk.bz').then(
+        (List<int> sdkContents) {
       sdk = DartSdk.createSdkFromContents(sdkContents);
 
       _registerServiceImpl(new CompilerServiceImpl(this, sdk));
@@ -123,7 +121,7 @@ class ServicesIsolate {
     if (data != null) {
       eventMap['data'] = data;
     }
-    _sendPort.send(eventMap);
+    _hostHandler.sendToHost(eventMap);
   }
 
   String _getNewCallId() => "iso_${_topCallId++}";
@@ -135,7 +133,7 @@ class ServicesIsolate {
     event.makeRespondable(_getNewCallId());
 
     var eventMap = event.toMap();
-    _sendPort.send(eventMap);
+    _hostHandler.sendToHost(eventMap);
     return _onResponseByCallId(event.callId);
   }
 }
