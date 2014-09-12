@@ -1432,12 +1432,11 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       resources = sel;
     }
 
-    String message;
-    if (resources.length == 1) {
-      message = "Do you really want to delete '${resources.first.name}'?\nThis will permanently delete this file from disk and cannot be undone.";
-    } else {
-      message = "Do you really want to delete ${resources.length} files?\nThis will permanently delete the files from disk and cannot be undone.";
-    }
+    String ordinality = (resources.length == 1) ?
+        '${resources.first.name}' : '${resources.length} files/folders';
+    String message =
+        "Do you really want to delete $ordinality?\n"
+        "This will permanently delete the files from disk and cannot be undone.";
 
     spark.askUserOkCancel(message, okButtonLabel: 'Delete', title: 'Delete')
         .then((bool val) {
