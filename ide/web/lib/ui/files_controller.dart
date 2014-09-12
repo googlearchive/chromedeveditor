@@ -347,6 +347,7 @@ class FilesController implements TreeViewDelegate {
       return false;
     }
     Resource destination = _filesMap[targetNodeUid];
+
     // Collect list of ancestors of the destination.
     Set<String> ancestorsUids = new Set();
     Resource currentNode = destination;
@@ -376,9 +377,19 @@ class FilesController implements TreeViewDelegate {
       if (node.project != destinationProject) {
         return false;
       }
+      if (_isResourceConflict(node, destination)) return false;
     }
 
     return true;
+  }
+
+  bool _isResourceConflict(Resource res1, Resource res2) {
+    for (Resource child in res2.traverse()) {
+      if ((child.parent == res2) && (child.name == res1.name)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void treeViewDropCells(TreeView view,
