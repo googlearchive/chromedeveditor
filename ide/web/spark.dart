@@ -2520,7 +2520,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   String get category => 'properties';
 
   // "Properties" make sense only for a single resource.
-  bool appliesTo(List context) => context.length == 1;
+  bool appliesTo(context) => _isSingleResource(context);
 }
 
 /* Git operations */
