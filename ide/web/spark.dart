@@ -1461,7 +1461,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
 // TODO(ussuri): Convert to SparkActionWithDialog.
 class ProjectRemoveAction extends SparkAction implements ContextAction {
-  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Remove…");
+  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Delete…");
 
   void _invoke([List<ws.Resource> resources]) {
     ws.Project project = resources.first;
@@ -1510,7 +1510,8 @@ This will permanently delete the project contents from disk and cannot be undone
 // TODO(ussuri): 1) Convert to SparkActionWithDialog. 2) This dialog is almost
 // the same as ProjectRemoveAction -- combine.
 class TopLevelFileRemoveAction extends SparkAction implements ContextAction {
-  TopLevelFileRemoveAction(Spark spark) : super(spark, "top-level-file-remove", "Remove");
+  TopLevelFileRemoveAction(Spark spark)
+      : super(spark, "top-level-file-remove", "Delete…");
 
   void _invoke([List<ws.Resource> resources]) {
     ws.File file = resources.first;
