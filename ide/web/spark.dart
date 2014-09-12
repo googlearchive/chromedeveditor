@@ -1432,12 +1432,11 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       resources = sel;
     }
 
-    String message;
-    if (resources.length == 1) {
-      message = "Do you really want to delete '${resources.first.name}'?\nThis will permanently delete this file from disk and cannot be undone.";
-    } else {
-      message = "Do you really want to delete ${resources.length} files?\nThis will permanently delete the files from disk and cannot be undone.";
-    }
+    String ordinality = (resources.length == 1) ?
+        '${resources.first.name}' : '${resources.length} files/folders';
+    String message =
+        "Do you really want to delete $ordinality?\n"
+        "This will permanently delete the files from disk and cannot be undone.";
 
     spark.askUserOkCancel(message, okButtonLabel: 'Delete', title: 'Delete')
         .then((bool val) {
@@ -1461,7 +1460,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
 // TODO(ussuri): Convert to SparkActionWithDialog.
 class ProjectRemoveAction extends SparkAction implements ContextAction {
-  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Remove…");
+  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Delete…");
 
   void _invoke([List<ws.Resource> resources]) {
     ws.Project project = resources.first;
@@ -1510,7 +1509,8 @@ This will permanently delete the project contents from disk and cannot be undone
 // TODO(ussuri): 1) Convert to SparkActionWithDialog. 2) This dialog is almost
 // the same as ProjectRemoveAction -- combine.
 class TopLevelFileRemoveAction extends SparkAction implements ContextAction {
-  TopLevelFileRemoveAction(Spark spark) : super(spark, "top-level-file-remove", "Remove");
+  TopLevelFileRemoveAction(Spark spark)
+      : super(spark, "top-level-file-remove", "Delete…");
 
   void _invoke([List<ws.Resource> resources]) {
     ws.File file = resources.first;
