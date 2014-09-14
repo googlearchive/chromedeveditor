@@ -383,8 +383,8 @@ class FilesController implements TreeViewDelegate {
   }
 
   bool _isResourceConflict(Resource movedRes, Resource destRes) {
-    for (Resource child in destRes.traverse()) {
-      if ((child.parent == destRes) && (child.name == movedRes.name)) {
+    for (Resource child in destRes.getChildren()) {
+      if (child.name == movedRes.name) {
         return true;
       }
     }
