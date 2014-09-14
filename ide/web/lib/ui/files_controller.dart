@@ -376,9 +376,19 @@ class FilesController implements TreeViewDelegate {
       if (node.project != destinationProject) {
         return false;
       }
+      if (_isResourceConflict(node, destination)) return false;
     }
 
     return true;
+  }
+
+  bool _isResourceConflict(Resource movedRes, Resource destRes) {
+    for (Resource child in destRes.getChildren()) {
+      if (child.name == movedRes.name) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void treeViewDropCells(TreeView view,
