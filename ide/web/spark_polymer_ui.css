@@ -286,3 +286,8 @@ label[for="stripWhitespace"] {
   overflow: hidden;
   white-space: nowrap;
 }
+
+.form-control-static {
+  overflow: hidden;
+  white-space: nowrap;
+}
