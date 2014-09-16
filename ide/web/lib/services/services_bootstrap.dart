@@ -9,5 +9,5 @@ library spark.services_bootstrap;
  * single thread implementations of worker services.
  */
 
-export 'services_bootstrap_isolate.dart';
-//export 'services_bootstrap_single_thread.dart';
+//export 'services_bootstrap_isolate.dart';
+export 'services_bootstrap_single_thread.dart';

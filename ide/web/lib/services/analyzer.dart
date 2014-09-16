@@ -26,6 +26,60 @@ import 'services_common.dart' as common;
 import '../dart/sdk.dart' as sdk;
 
 /**
+ * Logger specific to this library.
+ */
+abstract class _DebugLogger {
+  /// Switch between `null` and [print] logger implementations.
+  //static _DebugLogger instance = new _NullDebugLogger();
+  static _DebugLogger instance = new _PrintDebugLogger();
+
+  void debug(String message);
+}
+
+/**
+ * Default `null` logger.
+ */
+class _NullDebugLogger implements _DebugLogger {
+  void debug(String message) {
+  }
+}
+
+/**
+ * Logger forwarding messages to the [print] method.
+ */
+class _PrintDebugLogger implements _DebugLogger {
+  void debug(String message) {
+    print(message);
+  }
+}
+
+/**
+ * Logger for the analysis engine messages, forwards all calls to
+ * [_DebugLogger.instance].
+ */
+class _AnalysisEngineDebugLogger implements Logger {
+  @override
+  void logError(String message) {
+    _DebugLogger.instance.debug("[analyzer] error: ${message}");
+  }
+
+  @override
+  void logError2(String message, Exception exception) {
+    _DebugLogger.instance.debug("[analyzer] error: ${message} ${exception}");
+  }
+
+  @override
+  void logInformation(String message) {
+    _DebugLogger.instance.debug("[analyzer] info: ${message}");
+  }
+
+  @override
+  void logInformation2(String message, Exception exception) {
+    _DebugLogger.instance.debug("[analyzer] info: ${message} ${exception}");
+  }
+}
+
+/**
  * Create and return a ChromeDartSdk.
  */
 ChromeDartSdk createSdk(sdk.DartSdk dartSdk) {
@@ -233,6 +287,7 @@ class ProjectContext {
   final Map<String, WorkspaceSource> _sources = {};
 
   ProjectContext(this.id, this.sdk, this.provider) {
+    AnalysisEngine.instance.logger = new _AnalysisEngineDebugLogger();
     context = AnalysisEngine.instance.createAnalysisContext();
     context.sourceFactory = new SourceFactory([
         new DartSdkUriResolver(sdk),
@@ -609,7 +664,9 @@ abstract class WorkspaceSource extends Source {
  * A source file from a package.
  */
 class PackageSource extends WorkspaceSource {
-  PackageSource(ProjectContext context, String uuid): super._(context, uuid);
+  PackageSource(ProjectContext context, String uuid): super._(context, uuid) {
+    _DebugLogger.instance.debug("PackageSource(${uuid})");
+  }
 
   @override
   String getScheme() => WorkspaceSource.PACKAGE_SCHEME;
@@ -628,7 +685,9 @@ class PackageSource extends WorkspaceSource {
  * A regular source file from the application.
  */
 class FileSource extends WorkspaceSource {
-  FileSource(ProjectContext context, String uuid): super._(context, uuid);
+  FileSource(ProjectContext context, String uuid): super._(context, uuid) {
+    _DebugLogger.instance.debug("FileSource(${uuid})");
+  }
 
   @override
   String getScheme() => WorkspaceSource.FILE_SCHEME;
@@ -760,6 +819,7 @@ Uri resolveRelativeUriHelper(Uri uri, Uri containedUri) {
   if (isOpaque) {
     result = parseUriWithException("${result.scheme}:${result.path.substring(1)}");
   }
+  _DebugLogger.instance.debug("resolveRelativeUriHelper(${uri}, ${containedUri}): ${result}");
   return result;
 }
 
