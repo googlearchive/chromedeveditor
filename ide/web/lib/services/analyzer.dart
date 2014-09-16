@@ -30,8 +30,8 @@ import '../dart/sdk.dart' as sdk;
  */
 abstract class _DebugLogger {
   /// Switch between `null` and [print] logger implementations.
-  //static _DebugLogger instance = new _NullDebugLogger();
-  static _DebugLogger instance = new _PrintDebugLogger();
+  static _DebugLogger instance = new _NullDebugLogger();
+  //static _DebugLogger instance = new _PrintDebugLogger();
 
   void debug(String message);
 }
