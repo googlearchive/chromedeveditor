@@ -27,17 +27,15 @@ Container getAppContainerFor(Resource resource) {
   if (_hasManifest(resource.project)) {
     return resource.project;
   }
-
-  // Look in app/.
-  if (resource.project.getChild('app') is Container) {
-    Container app = resource.project.getChild('app');
-    if (_hasManifest(app)) return app;
-  }
-
-  // Look in web/.
-  if (resource.project.getChild('web') is Container) {
-    Container app = resource.project.getChild('web');
-    if (_hasManifest(app)) return app;
+  
+  // Check potential subdirectories.
+  var subdirsToCheck = ['app', 'web', 'www'];
+  
+  for (var subdir in subdirsToCheck) {
+    if (resource.project.getChild(subdir) is Container) {
+      Container app = resource.project.getChild(subdir);
+      if (_hasManifest(app)) return app;
+    }
   }
 
   return null;
