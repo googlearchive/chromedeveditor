@@ -321,7 +321,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
   Declaration _getDeclarationFor(analyzer.ProjectContext context,
       String fileUuid, int offset) {
-    analyzer.FileSource source = context.getSource(fileUuid);
+    analyzer.WorkspaceSource source = context.getSource(fileUuid);
 
     List<analyzer.Source> librarySources =
         context.context.getLibrariesContaining(source);
@@ -339,8 +339,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
         node.parent is analyzer.NamespaceDirective) {
       analyzer.SimpleStringLiteral literal = node;
       analyzer.NamespaceDirective directive = node.parent;
-      if (directive.source is analyzer.FileSource) {
-        analyzer.FileSource fileSource = directive.source;
+      if (directive.source is analyzer.WorkspaceSource) {
+        analyzer.WorkspaceSource fileSource = directive.source;
         return new SourceDeclaration(literal.value, fileSource.uuid, 0, 0);
       } else {
         // TODO(ericarnold): Handle SDK import
@@ -362,8 +362,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
       }
     }
 
-    if (element.source is analyzer.FileSource) {
-      analyzer.FileSource fileSource = element.source;
+    if (element.source is analyzer.WorkspaceSource) {
+      analyzer.WorkspaceSource fileSource = element.source;
       return new SourceDeclaration(element.displayName, fileSource.uuid,
           element.nameOffset, element.name.length);
     } else if (element.source is analyzer.SdkSource) {
