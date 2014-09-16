@@ -13,8 +13,6 @@ import 'package:html5lib/parser.dart' as html_parser;
 import 'package:logging/logging.dart';
 
 import '../jobs.dart';
-import '../package_mgmt/bower_properties.dart';
-import '../package_mgmt/pub.dart';
 import '../workspace.dart' as ws;
 
 final Logger _logger = new Logger('spark.csp_fixer');
