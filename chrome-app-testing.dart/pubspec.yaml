@@ -1,15 +1,14 @@
 name: chrome_testing
-version: 0.0.2
+version: 0.1.0
 author: The Chrome Dev Editor team
 description: A library to aid in the testing of Dart Chrome Apps.
-homepage: https://github.com/dart-lang/chromedeveditor/
+homepage: https://github.com/dart-lang/chromedeveditor/tree/master/chrome-app-testing.dart
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
   args: any
   chrome: any
-  chrome_net:
-    path: ../chrome-app-net.dart
+  chrome_net: '>=0.1.0 <0.2.0'
   grinder: any
   logging: any
 dev_dependencies:
