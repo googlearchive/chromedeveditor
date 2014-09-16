@@ -480,7 +480,7 @@ class StringSource extends Source {
       throw new UnsupportedError("StringSource doesn't support uriKind.");
 
   @override
-  Uri get uri => new Uri.file(fullName);
+  Uri get uri => new Uri(path: fullName);
 
   @override
   int get hashCode => _contents.hashCode ^ fullName.hashCode;
@@ -741,7 +741,13 @@ class FileUriResolver extends UriResolver {
       return null;
     }
 
-    return context.getSource(uri.path);
+    // TODO(rpaquay): This is somewhat brittle, as this relies on the specific
+    // format of [uuid] returned by the Workspace implementation.
+    // Example:
+    //   context.id = "chrome-app-id:application-name"
+    //   uri.path = "path-to-source-file-within-chrome-app"
+    String uuid = pathconcat(context.id, uri.path);
+    return context.getSource(uuid);
   }
 }
 
@@ -796,6 +802,19 @@ String basename(String path) {
 String dirname(String path) {
   int index = path.lastIndexOf('/');
   return index == -1 ? '' : path.substring(0, index);
+}
+
+String pathconcat(String path1, String path2) {
+  if (path1.isEmpty) {
+    return path2;
+  }
+  if (path2.isEmpty){
+    return path1;
+  }
+  if (path1.endsWith("/") || path2.startsWith("/")) {
+    return path1 + path2;
+  }
+  return path1 + "/" + path2;
 }
 
 /**
