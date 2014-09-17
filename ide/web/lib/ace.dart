@@ -689,7 +689,7 @@ class AceManager {
 
     html.Element minimap = _minimapElement;
 
-    // Sort my line, then by severity.
+    // Sort by line, then by severity.
     markers.sort((m1, m2) {
       if (m1.severity == m2.severity) {
         return m1.lineNum.compareTo(m2.lineNum);
