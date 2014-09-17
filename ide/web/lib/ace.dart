@@ -689,7 +689,15 @@ class AceManager {
 
     html.Element minimap = _minimapElement;
 
-    markers.sort((x, y) => x.lineNum.compareTo(y.lineNum));
+    // Sort my line, then by severity.
+    markers.sort((m1, m2) {
+      if (m1.severity == m2.severity) {
+        return m1.lineNum.compareTo(m2.lineNum);
+      } else {
+        return m2.severity.compareTo(m1.severity);
+      }
+    });
+
     int numberMarkers = markers.length.clamp(0, 100);
 
     var isScrolling = (_aceEditor.lastVisibleRow -
@@ -727,7 +735,7 @@ class AceManager {
       ace.Annotation annotation = new ace.Annotation(
           html: markerHtml,
           row: aceRow,
-          type: annotationType);
+          type: existingAnnotation != null ? existingAnnotation.type : annotationType);
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 

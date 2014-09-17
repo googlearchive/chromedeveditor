@@ -7,8 +7,8 @@ library spark.app_utils;
 import '../workspace.dart';
 
 /**
- * Given a [Resource], return the [Container] containing the `manifest.mf` file
- * for the Chrome app. Returns `null` if no Chrome app can be found.
+ * Given a [Resource], return the [Container] containing the `manifest.json`
+ * file for a Chrome app. Returns `null` if no Chrome app can be found.
  */
 Container getAppContainerFor(Resource resource) {
   if (resource == null || resource.project == null) return null;
@@ -27,14 +27,12 @@ Container getAppContainerFor(Resource resource) {
   if (_hasManifest(resource.project)) {
     return resource.project;
   }
-  
-  // Check potential subdirectories.
-  var subdirsToCheck = ['app', 'web', 'www'];
-  
-  for (var subdir in subdirsToCheck) {
-    if (resource.project.getChild(subdir) is Container) {
-      Container app = resource.project.getChild(subdir);
-      if (_hasManifest(app)) return app;
+
+  // Check potential subdirectories in the order of probability.
+  for (String subdir in ['web', 'www', 'app']) {
+    container = resource.project.getChild(subdir);
+    if (container is Container && _hasManifest(container)) {
+      return container;
     }
   }
 
