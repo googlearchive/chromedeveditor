@@ -2160,7 +2160,7 @@ class FocusMainMenuAction extends SparkAction {
   }
 }
 
-class BuildApkAction extends SparkActionWithDialog {
+class BuildApkAction extends SparkActionWithProgressDialog {
   BuildApkAction(Spark spark, Element dialog)
       : super(spark, "application-build", "Build APK…", dialog) {
     getElement('#choosePrivateKey').onClick.listen((_) {
@@ -2179,13 +2179,76 @@ class BuildApkAction extends SparkActionWithDialog {
     });
   }
 
+  InputElement _pushUrlElement;
+  ProgressMonitor _monitor;
+  ws.Container deployContainer;
+  ws.Resource _resource;
+
   void _invoke([context]) {
-    _show();
+    if (context == null) {
+      _resource = spark.focusManager.currentResource;
+    } else {
+      _resource = context.first;
+    }
+
+    deployContainer = getAppContainerFor(_resource);
+
+    if (deployContainer == null) {
+      spark.showErrorMessage(
+          'Unable to Build the APK',
+          message: 'Unable to build the current selection; '
+                   'please select a Chrome App to build.');
+    } else if (!MobileDeploy.isAvailable()) {
+      spark.showErrorMessage(
+          'Unable to Build', message: 'No USB devices available.');
+    } else {
+      _pushUrlElement = getElement('#buildTargetUrl');
+      _toggleProgressVisible(false);
+      _show();
+    }
   }
 
   void _commit() {
     super._commit();
-    //TODO(albualexandru): add here the binding to the build class
+
+    _setProgressMessage("Deploying…");
+    _toggleProgressVisible(true);
+    /*_deployButton.disabled = true;
+    // TODO(ussuri): BUG #2252.
+    _deployButton.deliverChanges();*/
+
+    //build the app.json
+    Map<String, String> mobileAppManifest = {};
+    mobileAppManifest["appName"] =  getElement('#appName').value;
+    mobileAppManifest["packageName"] =  getElement('#packageName').value;
+    mobileAppManifest["versionName"] =  getElement('#versionName').value;
+    print(JSON.encode(mobileAppManifest).toString());
+
+    _monitor = new ProgressMonitorImpl(this);
+
+    String type = getElement('input[name="mobileBuildType"]:checked').id;
+    bool useAdb = type == 'buildTargetADB';
+    String url = _pushUrlElement.value;
+
+    MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
+
+    // Invoke the deployer methods in Futures in order to capture exceptions.
+    Future f = new Future(() {
+      return useAdb ?
+          deployer.pushAdb(_monitor) : deployer.pushToHost(url, _monitor);
+    });
+    /*
+     _monitor.runCancellableFuture(f).then((_) {
+      _hide();
+      spark.showSuccessMessage('Successfully pushed');
+    }).catchError((e) {
+      if (e is! UserCancelledException) {
+        spark.showMessage('Push Failure', e.toString());
+      }
+    }).whenComplete(() {
+      //_restoreDialog();
+      _monitor = null;
+    });*/
   }
 }
 
