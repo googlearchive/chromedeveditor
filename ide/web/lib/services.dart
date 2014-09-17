@@ -410,8 +410,13 @@ class ChromeServiceImpl extends Service {
           return new Future.delayed(duration).then((_) => _sendResponse(event));
         case "getAppContents":
           String path = event.data['path'];
+
+          PrintProfiler timer = new PrintProfiler('getAppContents(${path})');
           return getAppContentsBinary(path).then((List<int> contents) {
             return _sendResponse(event, {"contents": contents});
+          }).then((response) {
+            _logger.info(timer.finishProfiler());
+            return response;
           });
         case "getFileContents":
           String uuid = event.data['uuid'];

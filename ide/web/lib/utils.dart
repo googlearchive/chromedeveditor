@@ -267,9 +267,9 @@ class NullNotifier implements Notifier {
 
 /**
  * A simple class to do `print()` profiling. It is used to profile a single
- * operation, and can time multiple sequential tasks within that operation.
- * Each call to [emit] reset the task timer, but does not effect the operation
- * timer. Call [finish] when the whole operation is complete.
+ * operation, and can time multiple sequential tasks within that operation. Each
+ * call to [finishCurrentTask] reset the task timer, but does not effect the
+ * operation timer. Call [finishProfiler] when the whole operation is complete.
  */
 class PrintProfiler {
   final String name;

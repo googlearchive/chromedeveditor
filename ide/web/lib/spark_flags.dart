@@ -37,8 +37,6 @@ class SparkFlags {
       _flags['wip-project-templates'] == true;
   static bool get performJavaScriptAnalysis =>
       _flags['analyze-javascript'] == true;
-  static bool get searchInFiles =>
-      _flags['search-in-files'] == true;
 
   // Bower:
   static bool get bowerMapComplexVerToLatestStable =>
