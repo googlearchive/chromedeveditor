@@ -635,9 +635,8 @@ abstract class WorkspaceSource extends Source {
   bool get isInSystemLibrary => false;
 
   @override
-  Uri resolveRelativeUri(Uri relativeUri) {
-    return resolveRelativeUriHelper(uri, relativeUri);
-  }
+  Uri resolveRelativeUri(Uri relativeUri) =>
+    resolveRelativeUriHelper(uri, relativeUri);
 
   void setContents(String newContents) {
     _strContents = newContents;
