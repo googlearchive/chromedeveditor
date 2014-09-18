@@ -2174,6 +2174,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     _versionNameElement = getElement('#versionName');
     _privateKeyElement = getElement('#privateKey');
     _publicKeyElement = getElement('#publicKey');
+    _privatePasswordElement = getElement('#privateKeyPassword');
     getElement('#choosePrivateKey').onClick.listen((_) {
       _selectKey('privateKey');
     });
@@ -2203,6 +2204,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
   InputElement _appNameElement;
   InputElement _packageNameElement;
   InputElement _versionNameElement;
+  InputElement _privatePasswordElement;
   SpanElement _publicKeyElement;
   SpanElement _privateKeyElement;
 
@@ -2247,7 +2249,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     _appInfo.mobileAppManifest["appName"] = _appNameElement.value;
     _appInfo.mobileAppManifest["packageName"] = _packageNameElement.value;
     _appInfo.mobileAppManifest["versionName"] = _versionNameElement.value;
-    _appInfo.mobileAppManifest["keyPassword"] = "android";
+    _appInfo.mobileAppManifest["keyPassword"] = _privatePasswordElement.value;
     _appInfo.mobileAppManifest["publicKeyName"] =  _appInfo.publicKey.name;
     _appInfo.mobileAppManifest["privateKeyName"] = _appInfo.privateKey.name;
 
