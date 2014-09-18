@@ -48,6 +48,7 @@ import 'lib/refactor/csp_fixer.dart';
 import 'lib/services.dart';
 import 'lib/scm.dart';
 import 'lib/spark_flags.dart';
+import 'lib/state.dart';
 import 'lib/templates/templates.dart';
 import 'lib/utils.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
@@ -229,6 +230,7 @@ abstract class Spark
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
   preferences.PreferenceStore get syncPrefs => preferences.syncStore;
+  StateManager get stateManager => dependencies[StateManager];
 
   //
   // - End SparkModel interface.
@@ -287,6 +289,10 @@ abstract class Spark
 
   void initPreferences() {
     prefs = new preferences.SparkPreferences(localPrefs);
+
+    LocalStateManager.create().then((StateManager state) {
+      dependencies[StateManager] = state;
+    });
   }
 
   void initServices() {
