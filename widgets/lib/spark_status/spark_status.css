@@ -11,6 +11,12 @@
   fill: #7d7d7d;
 }
 
+.spinnerContainer {
+  width: 28px;
+  height: 36px;
+  margin-left: 8px;
+}
+
 #spinner {
   display: inline-block;
   opacity: 0;
@@ -34,7 +40,6 @@
   text-overflow: ellipsis;
   font-weight: 500;
   white-space: nowrap;
-  margin-left: 0.5em;
   overflow: hidden;
   font-size: 15px;
 }
