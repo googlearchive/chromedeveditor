@@ -11,7 +11,6 @@ library spark.editor_area;
 import 'dart:async';
 import 'dart:html' hide File;
 
-import 'ace.dart' as ace;
 import 'editors.dart';
 import 'filesystem.dart';
 import 'ui/widgets/tabview.dart';
@@ -185,12 +184,10 @@ class EditorArea extends TabView {
       Editor editor = editorProvider.createEditorForFile(file);
       editorReadyFuture = editor.whenReady;
 
-      if (editor is ace.TextEditor) {
-        tab = new AceEditorTab(this, editorProvider, editor, file);
-      } else if (editor is ImageViewer) {
+      if (editor is ImageViewer) {
         tab = new ImageViewerTab(this, editorProvider, editor, file);
       } else {
-        assert(false);
+        tab = new AceEditorTab(this, editorProvider, editor, file);
       }
 
       // On explicit request to open a tab, persist the new tab.
