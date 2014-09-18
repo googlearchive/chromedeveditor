@@ -49,7 +49,6 @@ class Outline {
   html.DivElement _outlineDiv;
   html.DivElement _rootListDiv;
   html.UListElement _rootList;
-  html.Element _outlineButton;
 
   final PreferenceStore _prefs;
   bool _visible = true;
@@ -63,8 +62,17 @@ class Outline {
         event.stopPropagation());
     _rootListDiv = _outlineDiv.querySelector('#outline');
     _rootList = _rootListDiv.querySelector('ul');
-    _outlineButton = html.querySelector('#toggleOutlineButton');
-    _outlineButton.onClick.listen((e) => toggle());
+
+    html.document.on['command'].listen((e) {
+      if (e is html.CustomEvent && e.type == 'command') {
+        String command = e.detail['command'];
+
+        if (command == 'toggle-outline') {
+          e.stopPropagation();
+          toggle();
+        }
+      }
+    });
 
     _prefs.getValue('OutlineCollapsed').then((String data) {
       if (data == 'true') {
@@ -90,7 +98,6 @@ class Outline {
   set visible(bool value) {
     _visible = value;
     _outlineDiv.classes.toggle('hidden', !_visible);
-    _outlineButton.classes.toggle('hidden', !_visible);
   }
 
   bool get showing => _visible && !_outlineDiv.classes.contains('collapsed');

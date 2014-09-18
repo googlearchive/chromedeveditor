@@ -43,7 +43,8 @@
   <template>
     <link rel="stylesheet" href="spark_button.css">
 
-    <div id="button" focused tabindex="0" title="{{tooltip}}">
+    <div id="button" focused tabindex="0" title="{{tooltip}}"
+        on-click="{{handleClick}}">
       <div id="focusBg"></div>
       <div id="content">
         <content></content>
