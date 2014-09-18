@@ -40,17 +40,14 @@ abstract class _DebugLogger {
  * Default `null` logger.
  */
 class _NullDebugLogger implements _DebugLogger {
-  void debug(String message) {
-  }
+  void debug(String message) => null;
 }
 
 /**
  * Logger forwarding messages to the [print] method.
  */
 class _PrintDebugLogger implements _DebugLogger {
-  void debug(String message) {
-    print(message);
-  }
+  void debug(String message) => print(message);
 }
 
 /**
@@ -59,24 +56,20 @@ class _PrintDebugLogger implements _DebugLogger {
  */
 class _AnalysisEngineDebugLogger implements Logger {
   @override
-  void logError(String message) {
+  void logError(String message) =>
     _DebugLogger.instance.debug("[analyzer] error: ${message}");
-  }
 
   @override
-  void logError2(String message, Exception exception) {
+  void logError2(String message, Exception exception) =>
     _DebugLogger.instance.debug("[analyzer] error: ${message} ${exception}");
-  }
 
   @override
-  void logInformation(String message) {
+  void logInformation(String message) =>
     _DebugLogger.instance.debug("[analyzer] info: ${message}");
-  }
 
   @override
-  void logInformation2(String message, Exception exception) {
+  void logInformation2(String message, Exception exception) =>
     _DebugLogger.instance.debug("[analyzer] info: ${message} ${exception}");
-  }
 }
 
 /**
@@ -128,9 +121,8 @@ class AnalyzerResult {
 
   List<AnalysisError> get errors => errorInfo.errors;
 
-  LineInfo_Location getLineInfo(AnalysisError error) {
-    return errorInfo.lineInfo.getLocation(error.offset);
-  }
+  LineInfo_Location getLineInfo(AnalysisError error) =>
+    errorInfo.lineInfo.getLocation(error.offset);
 
   String toString() => 'AnalyzerResult[${errorInfo.errors.length} issues]';
 }
