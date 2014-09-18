@@ -2247,8 +2247,9 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     _appInfo.mobileAppManifest["appName"] = _appNameElement.value;
     _appInfo.mobileAppManifest["packageName"] = _packageNameElement.value;
     _appInfo.mobileAppManifest["versionName"] = _versionNameElement.value;
-    _appInfo.mobileAppManifest["publicKey"] =  _publicKeyElement.text;
-    _appInfo.mobileAppManifest["privateKey"] = _privateKeyElement.text;
+    _appInfo.mobileAppManifest["keyPassword"] = "android";
+    _appInfo.mobileAppManifest["publicKeyName"] =  _appInfo.publicKey.name;
+    _appInfo.mobileAppManifest["privateKeyName"] = _appInfo.privateKey.name;
 
     _monitor = new ProgressMonitorImpl(this);
 
