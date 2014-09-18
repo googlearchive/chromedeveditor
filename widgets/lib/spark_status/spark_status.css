@@ -5,8 +5,6 @@
 @import url("../common/spark_widget.css");
 
 :host {
-  display: inline-block;
-  align-items: center;
   white-space: nowrap;
   pointer-events: none;
   color: #7d7d7d;
@@ -14,11 +12,10 @@
 }
 
 #spinner {
+  display: inline-block;
   opacity: 0;
   width: 20px;
   height: 20px;
-  display: inline-block;
-  vertical-align: middle;
 }
 
 #spinner.spinning {
@@ -33,12 +30,11 @@
 }
 
 #label {
+  display: inline;
   text-overflow: ellipsis;
   font-weight: 500;
-  display: inline;
   white-space: nowrap;
   margin-left: 0.5em;
   overflow: hidden;
-  vertical-align: middle;
   font-size: 15px;
 }

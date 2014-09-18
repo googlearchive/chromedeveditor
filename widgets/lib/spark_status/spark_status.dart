@@ -94,8 +94,8 @@ class SparkStatus extends PolymerElement {
   bool get _showingTemporaryMessage => _temporaryMessage != null;
 
   void _update() {
-    spinner.classes.toggle('spinning', _spinning && (_temporaryMessage == null));
-    label.text = _calculateMessage();
+    _spinner.classes.toggle('spinning', _spinning && (_temporaryMessage == null));
+    _label.text = _calculateMessage();
   }
 
   String _calculateMessage() {
@@ -105,8 +105,8 @@ class SparkStatus extends PolymerElement {
     return '';
   }
 
-  Element get label => $['label'];
-  Element get spinner => $['spinner'];
+  Element get _label => $['label'];
+  Element get _spinner => $['spinner'];
 
   SparkStatus.created() : super.created();
 }
