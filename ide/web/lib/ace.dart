@@ -187,6 +187,10 @@ class TextEditor extends Editor {
 
     if (m != null) {
       _session.scrollTop = m['scrollTop'];
+
+      // TODO(devoncarew): Consider saving a SHA for the file, so that we don't
+      // select text that is wildly different from the (possible changed)
+      // current version of the file.
       aceManager.cursorPosition = new html.Point(m['x'], m['y']);
     }
   }
