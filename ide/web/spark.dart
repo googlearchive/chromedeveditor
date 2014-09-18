@@ -2163,6 +2163,11 @@ class FocusMainMenuAction extends SparkAction {
 class BuildApkAction extends SparkActionWithProgressDialog {
   BuildApkAction(Spark spark, Element dialog)
       : super(spark, "application-build", "Build APK…", dialog) {
+    _appNameElement = getElement('#appName');
+    _packageNameElement = getElement('#packageName');
+    _versionNameElement = getElement('#versionName');
+    _privateKeyElement = getElement('#privateKey');
+    _publicKeyElement = getElement('#publicKey');
     getElement('#choosePrivateKey').onClick.listen((_) {
       _selectKey('privateKey');
     });
@@ -2173,6 +2178,11 @@ class BuildApkAction extends SparkActionWithProgressDialog {
 
   void _selectKey(String outputField) {
     spark.chooseFileEntry().then((ChromeFileEntry entry) {
+      if (outputField == 'publicKey') {
+        _appInfo.publicKey = entry;
+      } else {
+        _appInfo.privateKey = entry;
+      }
       filesystem.fileSystemAccess.getDisplayPath(entry).then((String path) {
         getElement('#$outputField').text = path;
       });
@@ -2183,6 +2193,13 @@ class BuildApkAction extends SparkActionWithProgressDialog {
   ProgressMonitor _monitor;
   ws.Container deployContainer;
   ws.Resource _resource;
+  MobileBuildInfo _appInfo;
+  InputElement _appNameElement;
+  InputElement _packageNameElement;
+  InputElement _versionNameElement;
+  SpanElement _publicKeyElement;
+  SpanElement _privateKeyElement;
+
 
   void _invoke([context]) {
     if (context == null) {
@@ -2204,25 +2221,28 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     } else {
       _pushUrlElement = getElement('#buildTargetUrl');
       _toggleProgressVisible(false);
+      _appInfo = new MobileBuildInfo();
       _show();
     }
   }
 
+  SparkDialogButton get _buildButton => getElement("#buildButton");
+
   void _commit() {
     super._commit();
 
-    _setProgressMessage("Deploying…");
+    _setProgressMessage("Building…");
     _toggleProgressVisible(true);
-    /*_deployButton.disabled = true;
-    // TODO(ussuri): BUG #2252.
-    _deployButton.deliverChanges();*/
+    _buildButton.disabled = true;
+    _buildButton.deliverChanges();
 
     //build the app.json
-    Map<String, String> mobileAppManifest = {};
-    mobileAppManifest["appName"] =  getElement('#appName').value;
-    mobileAppManifest["packageName"] =  getElement('#packageName').value;
-    mobileAppManifest["versionName"] =  getElement('#versionName').value;
-    print(JSON.encode(mobileAppManifest).toString());
+
+    _appInfo.mobileAppManifest["appName"] = _appNameElement.value;
+    _appInfo.mobileAppManifest["packageName"] = _packageNameElement.value;
+    _appInfo.mobileAppManifest["versionName"] = _versionNameElement.value;
+    _appInfo.mobileAppManifest["publicKey"] =  _publicKeyElement.text;
+    _appInfo.mobileAppManifest["privateKey"] = _privateKeyElement.text;
 
     _monitor = new ProgressMonitorImpl(this);
 
@@ -2230,25 +2250,27 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     bool useAdb = type == 'buildTargetADB';
     String url = _pushUrlElement.value;
 
-    MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
+    MobileDeploy deployer = new MobileDeploy(deployContainer,
+        spark.localPrefs, _appInfo);
 
     // Invoke the deployer methods in Futures in order to capture exceptions.
+
     Future f = new Future(() {
       return useAdb ?
-          deployer.pushAdb(_monitor) : deployer.pushToHost(url, _monitor);
+          deployer.buildWithAdb(_monitor) : deployer.pushToHost(url, _monitor);
     });
-    /*
      _monitor.runCancellableFuture(f).then((_) {
       _hide();
-      spark.showSuccessMessage('Successfully pushed');
+      spark.showSuccessMessage('Successfully built');
     }).catchError((e) {
       if (e is! UserCancelledException) {
-        spark.showMessage('Push Failure', e.toString());
+        spark.showMessage('Build Failure', e.toString());
       }
     }).whenComplete(() {
-      //_restoreDialog();
+       _buildButton.disabled = false;
+       _buildButton.deliverChanges();
       _monitor = null;
-    });*/
+    });
   }
 }
 

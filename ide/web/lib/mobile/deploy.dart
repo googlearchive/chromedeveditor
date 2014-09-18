@@ -48,9 +48,11 @@ class MobileDeploy {
   final Container appContainer;
   final PreferenceStore _prefs;
 
-  List<DeviceInfo> _knownDevices = [];
 
-  MobileDeploy(this.appContainer, this._prefs) {
+  List<DeviceInfo> _knownDevices = [];
+  MobileBuildInfo _appInfo;
+
+  MobileDeploy(this.appContainer, this._prefs, [this._appInfo]) {
     if (appContainer == null) {
       throw new ArgumentError('must provide an app to push');
     }
@@ -101,6 +103,36 @@ class MobileDeploy {
       // No server found, so use our own USB code.
       return _pushViaUSB(monitor);
     });
+  }
+
+  Future buildWithHost(String target, ProgressMonitor monitor) {
+    monitor.start('Building…', maxWork: 10);
+
+    _logger.info('building application to ip host');
+    HttpDeployer dep = new HttpDeployer(appContainer, _prefs, target);
+    return dep.build(monitor, _appInfo);
+  }
+
+
+  Future buildWithAdb(ProgressMonitor monitor) {
+    monitor.start('Building…', maxWork: 10);
+
+    // Try to find a local ADB server. If we fail, try to use USB.
+    return AdbClientTcp.createClient().then((AdbClientTcp client) {
+      _logger.info('building application via adb server');
+      return client.forwardTcp(DEPLOY_PORT, DEPLOY_PORT).then((_) {
+        // Push the app binary on DEPLOY_PORT.
+        ADBDeployer dep = new ADBDeployer(appContainer, _prefs);
+        return dep.build(monitor, _appInfo);
+      });
+    }, onError: (_) {
+      _logger.info('building application via ADB over USB');
+      USBDeployer dep = new USBDeployer(appContainer, _prefs);
+      return dep.init().then((_) {
+        return dep.build(monitor, _appInfo);
+      });
+    });
+
   }
 
   Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
@@ -310,6 +342,20 @@ abstract class AbstractDeployer {
   /// that the used resources are disposed
   void _doWhenComplete();
 
+  Future build(ProgressMonitor monitor, MobileBuildInfo appInfo) {
+    return archiveContainerForBuild(appContainer, appInfo).then((List<int> bytes) {
+      chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+              type: chrome.ChooseEntryType.SAVE_FILE);
+          return chrome.fileSystem.chooseEntry(options).then(
+              (chrome.ChooseEntryResult res) {
+            chrome.ChromeFileEntry r = res.entry;
+            r.writeBytes(new chrome.ArrayBuffer.fromBytes(bytes));
+            return new Future.error("Not implemented");
+          });
+//      return new Future.error("Not implemented");
+    });
+  }
+
   /// Implements the deployement flow
   Future deploy(ProgressMonitor monitor) {
     List<int> httpRequest;
@@ -473,4 +519,10 @@ class LiveDeployManager {
         _monitor = null;
       });
     }
+}
+
+class MobileBuildInfo {
+  Map<String, String> mobileAppManifest = {};
+  chrome.ChromeFileEntry publicKey;
+  chrome.ChromeFileEntry privateKey;
 }
