@@ -27,15 +27,11 @@ import '../common/spark_widget.dart';
  * * or default message, if any
  */
 @CustomTag('spark-status')
-class SparkStatus extends SparkWidget {
+class SparkStatus extends PolymerElement {
   bool _spinning = false;
   String _defaultMessage;
   String _progressMessage;
   String _temporaryMessage;
-
-  Element _label;
-  Element _throbber;
-  Element _container;
 
   Timer _timer;
 
@@ -86,9 +82,6 @@ class SparkStatus extends SparkWidget {
   void attached() {
     super.attached();
 
-    _container = getShadowDomElement('#status-container');
-    _label = getShadowDomElement('#label');
-    _throbber = getShadowDomElement('#throbber');
     _update();
   }
 
@@ -101,11 +94,8 @@ class SparkStatus extends SparkWidget {
   bool get _showingTemporaryMessage => _temporaryMessage != null;
 
   void _update() {
-    _throbber.classes.toggle('spinning',
-        _spinning && (_temporaryMessage == null));
-    final String text = _calculateMessage();
-    _container.classes.toggle('hidden', text.isEmpty);
-    _label.text = text;
+    spinner.classes.toggle('spinning', _spinning && (_temporaryMessage == null));
+    label.text = _calculateMessage();
   }
 
   String _calculateMessage() {
@@ -114,6 +104,9 @@ class SparkStatus extends SparkWidget {
     if (_defaultMessage != null) return _defaultMessage;
     return '';
   }
+
+  Element get label => $['label'];
+  Element get spinner => $['spinner'];
 
   SparkStatus.created() : super.created();
 }
