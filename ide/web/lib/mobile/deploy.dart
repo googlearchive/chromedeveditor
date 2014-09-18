@@ -159,6 +159,7 @@ abstract class AbstractDeployer {
   static const int DEPLOY_PORT = 2424;
   static Duration REGULAR_REQUEST_TIMEOUT = new Duration(seconds: 2);
   static Duration PUSH_REQUEST_TIMEOUT = new Duration(seconds: 60);
+  static Duration BUILD_REQUEST_TIMEOUT = new Duration(seconds: 120);
 
   final Container appContainer;
   final PreferenceStore _prefs;
@@ -211,6 +212,12 @@ abstract class AbstractDeployer {
   List<int> _buildPushRequest(String target, List<int> archivedData) {
     return _buildHttpRequest("POST" ,target,
         "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
+        payload: archivedData);
+  }
+
+  List<int> _makeBuildRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest("POST" ,target,
+        "build?appId=${appContainer.project.name}&appType=chrome",
         payload: archivedData);
   }
 
@@ -343,16 +350,17 @@ abstract class AbstractDeployer {
   void _doWhenComplete();
 
   Future build(ProgressMonitor monitor, MobileBuildInfo appInfo) {
-    return archiveContainerForBuild(appContainer, appInfo).then((List<int> bytes) {
+    return archiveContainerForBuild(appContainer, appInfo).then((List<int> archivedData) {
+      List<int> httpRequest = _buildPushRequest(_getTarget(), archivedData);
+
       chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
               type: chrome.ChooseEntryType.SAVE_FILE);
-          return chrome.fileSystem.chooseEntry(options).then(
-              (chrome.ChooseEntryResult res) {
-            chrome.ChromeFileEntry r = res.entry;
-            r.writeBytes(new chrome.ArrayBuffer.fromBytes(bytes));
-            return new Future.error("Not implemented");
-          });
-//      return new Future.error("Not implemented");
+      return chrome.fileSystem.chooseEntry(options).then(
+          (chrome.ChooseEntryResult res) {
+        chrome.ChromeFileEntry r = res.entry;
+        r.writeBytes(new chrome.ArrayBuffer.fromBytes(archivedData));
+        return new Future.error("Not implemented");
+      });
     });
   }
 
