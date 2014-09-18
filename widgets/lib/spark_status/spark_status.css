@@ -12,27 +12,27 @@
 }
 
 .spinnerContainer {
-  width: 28px;
+  width: 32px;
   height: 36px;
-  margin-left: 8px;
+  margin-left: 4px;
 }
 
 #spinner {
   display: inline-block;
   opacity: 0;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 #spinner.spinning {
   opacity: 1;
   transform-origin: 50% 50%;
-  -webkit-animation: spin 4s infinite linear;
+  -webkit-animation: spin 1.5s infinite linear;
 }
 
 @-webkit-keyframes spin {
   0%   { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
+  100% { -webkit-transform: rotate(-360deg); }
 }
 
 #label {
