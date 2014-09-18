@@ -41,10 +41,10 @@ class BowerManager extends PackageManager {
       new _BowerResolver._(project);
 
   Future installPackages(Folder container, ProgressMonitor monitor) =>
-      _installOrUpgradePackages(container.project, FetchMode.INSTALL, monitor);
+      _installOrUpgradePackages(container, FetchMode.INSTALL, monitor);
 
   Future upgradePackages(Folder container, ProgressMonitor monitor) =>
-      _installOrUpgradePackages(container.project, FetchMode.UPGRADE, monitor);
+      _installOrUpgradePackages(container, FetchMode.UPGRADE, monitor);
 
   // TODO(keertip): implement for bower
   Future<dynamic> arePackagesInstalled(Folder container) =>
