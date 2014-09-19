@@ -11,7 +11,6 @@ library spark.editor_area;
 import 'dart:async';
 import 'dart:html' hide File;
 
-import 'ace.dart' as ace;
 import 'editors.dart';
 import 'filesystem.dart';
 import 'ui/widgets/tabview.dart';
@@ -45,7 +44,7 @@ class AceEditorTab extends EditorTab {
   bool _active = false;
 
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
-    : super(parent, file) {
+      : super(parent, file) {
     page = editor.element;
     editor.onModification.listen((_) => parent.persistTab(file));
   }
@@ -76,7 +75,7 @@ class ImageViewerTab extends EditorTab {
   final EditorProvider provider;
 
   ImageViewerTab(EditorArea parent, this.provider, this.imageViewer, Resource file)
-    : super(parent, file) {
+      : super(parent, file) {
     page = imageViewer.element;
   }
 
@@ -95,27 +94,20 @@ class ImageViewerTab extends EditorTab {
  * Manages a list of open editors.
  */
 class EditorArea extends TabView {
-  static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
-
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
 
-  final Workspace _workspace;
-
-  bool _allowsLabelBar = true;
+  bool allowsLabelBar;
 
   StreamController<String> _nameController = new StreamController.broadcast();
 
-  EditorArea(Element parentElement,
-             this.editorProvider, this._workspace,
-             {bool allowsLabelBar: true})
+  EditorArea(Element parentElement, this.editorProvider, Workspace workspace,
+             {this.allowsLabelBar: true})
       : super(parentElement) {
     onClose.listen((EditorTab tab) => closeFile(tab.file));
-    this.allowsLabelBar = allowsLabelBar;
     showLabelBar = true;
 
-    _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+    workspace.onResourceChange.listen((ResourceChangeEvent event) {
       // TODO(dvh): reflect name change instead of closing the file.
       event = new ResourceChangeEvent.fromList(event.changes, filterRename: true);
       for (ChangeDelta delta in event.changes) {
@@ -129,11 +121,6 @@ class EditorArea extends TabView {
   }
 
   Stream<String> get onNameChange => _nameController.stream;
-
-  bool get allowsLabelBar => _allowsLabelBar;
-  set allowsLabelBar(bool value) {
-    _allowsLabelBar = value;
-  }
 
   // TabView
   Tab add(EditorTab tab, {bool switchesTab: true}) {
@@ -165,7 +152,7 @@ class EditorArea extends TabView {
   }
 
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
-  /// [selectFile] will be called instead. Otherwise the editor provide is
+  /// [selectFile] will be called instead. Otherwise the editor provider is
   /// requested to switch the file to the editor in case the editor is shared.
   Future selectFile(Resource file,
                     {bool forceOpen: false, bool switchesTab: true,
@@ -185,12 +172,10 @@ class EditorArea extends TabView {
       Editor editor = editorProvider.createEditorForFile(file);
       editorReadyFuture = editor.whenReady;
 
-      if (editor is ace.TextEditor) {
-        tab = new AceEditorTab(this, editorProvider, editor, file);
-      } else if (editor is ImageViewer) {
+      if (editor is ImageViewer) {
         tab = new ImageViewerTab(this, editorProvider, editor, file);
       } else {
-        assert(false);
+        tab = new AceEditorTab(this, editorProvider, editor, file);
       }
 
       // On explicit request to open a tab, persist the new tab.
@@ -234,7 +219,7 @@ class EditorArea extends TabView {
 
   void _savePersistedTabs() {
     List<String> filesUuids = [];
-    for(EditorTab tab in tabs) {
+    for (EditorTab tab in tabs) {
       if (tab.persisted) filesUuids.add(tab.file.uuid);
     }
 

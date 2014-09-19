@@ -98,22 +98,8 @@ spark-dialog {
   border: none;
   position: absolute;
   right: 0;
-  width: 95px;
+  width: 131px;
   z-index: 150;
-}
-
-#sparkStatusContainer {
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  pointer-events: none;
-  right: 0;
-  text-align: center;
-  z-index: 101;
-}
-
-#sparkStatus.hovered {
-  opacity: 0.1;
 }
 
 .settings-label {

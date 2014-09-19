@@ -12,6 +12,7 @@ import 'package:unittest/unittest.dart';
 import '../lib/ace.dart';
 import '../lib/navigation.dart';
 import '../lib/outline.dart';
+import '../lib/state.dart';
 import '../lib/workspace.dart' as workspace;
 import '../lib/ui/goto_line_view/goto_line_view.dart';
 import '../lib/preferences.dart';
@@ -107,6 +108,11 @@ class MockAceEditor implements TextEditor {
   int getCursorOffset() => 0;
 
   void customizeSession(EditSession session) { }
+
+  StateManager get state => null;
+
+  void restoreState() => null;
+  void saveState() => null;
 }
 
 class MockEditSession implements EditSession {

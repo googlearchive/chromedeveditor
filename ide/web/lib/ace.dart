@@ -18,6 +18,7 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:crc32/crc32.dart' as crc;
 
 import 'css/cssbeautify.dart';
+import 'dependency.dart';
 import 'editors.dart';
 import 'markdown.dart';
 import 'navigation.dart';
@@ -30,6 +31,7 @@ import 'workspace.dart' as workspace;
 import 'workspace_utils.dart';
 import 'services.dart' as svc;
 import 'spark_flags.dart';
+import 'state.dart';
 import 'outline.dart';
 import 'ui/goto_line_view/goto_line_view.dart';
 import 'utils.dart';
@@ -53,6 +55,8 @@ class TextEditor extends Editor {
   int _lastSavedHash;
 
   bool _dirty = false;
+
+  StateManager get state => Dependencies.dependency[StateManager];
 
   factory TextEditor(AceManager aceManager, workspace.File file,
       SparkPreferences prefs) {
@@ -84,18 +88,6 @@ class TextEditor extends Editor {
 
   Future<Editor> get whenReady => _whenReadyCompleter.future;
 
-  void setSession(ace.EditSession value) {
-    _session = value;
-
-    customizeSession(_session);
-
-    if (_aceSubscription != null) _aceSubscription.cancel();
-    _aceSubscription = _session.onChange.listen((_) => dirty = true);
-    if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
-
-    _invokeReconcile();
-  }
-
   bool get dirty => _dirty;
 
   Stream get onDirtyChange => _dirtyController.stream;
@@ -116,6 +108,20 @@ class TextEditor extends Editor {
     aceManager._aceEditor.readOnly = readOnly;
   }
 
+  void setSession(ace.EditSession value) {
+    _session = value;
+
+    customizeSession(_session);
+
+    restoreState();
+
+    if (_aceSubscription != null) _aceSubscription.cancel();
+    _aceSubscription = _session.onChange.listen((_) => dirty = true);
+    if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
+
+    _invokeReconcile();
+  }
+
   /**
    * Called a short delay after the file's content has been altered.
    */
@@ -125,6 +131,8 @@ class TextEditor extends Editor {
     if (supportsOutline && _outline.visible) {
       _outline.visible = false;
     }
+
+    saveState();
   }
 
   void resize() => aceManager.resize();
@@ -151,7 +159,6 @@ class TextEditor extends Editor {
 
   bool get supportsFormat => false;
 
-  // TODO(ussuri): use MetaPackageManager instead when it's ready.
   bool get readOnly {
     return
         !SparkFlags.packageFilesAreEditable && (
@@ -166,6 +173,28 @@ class TextEditor extends Editor {
    */
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
       new Future.value(svc.Declaration.EMPTY_DECLARATION);
+
+  void saveState() {
+    html.Point p = aceManager.cursorPosition;
+    state.setState(file.uuid, {
+      'scrollTop': _session.scrollTop,
+      'column': p.x,
+      'row': p.y
+    });
+  }
+
+  void restoreState() {
+    Map m = state.getState(file.uuid);
+
+    if (m != null) {
+      _session.scrollTop = m['scrollTop'];
+
+      // TODO(devoncarew): Consider saving a SHA for the file, so that we don't
+      // select text that is wildly different from the (possible changed)
+      // current version of the file.
+      aceManager.cursorPosition = new html.Point(m['x'], m['y']);
+    }
+  }
 
   void fileContentsChanged() {
     if (_session != null) {

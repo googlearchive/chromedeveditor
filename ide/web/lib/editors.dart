@@ -302,7 +302,6 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
             textEditor.setSession(state.session);
             _selectedController.add(currentFile);
             _aceContainer.switchTo(state.session, state.file);
-            _aceContainer.cursorPosition = state.cursorPosition;
             persistState();
           }
         });
@@ -419,14 +418,13 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
 /**
  * This class tracks the state associated with each open editor.
+ *
+ * TODO(devoncarew): We want to remove this class and track state in each editor.
  */
 class _EditorState {
   EditorManager manager;
   File file;
   ace.EditSession session;
-
-  num scrollTop = 0;
-  html.Point cursorPosition = new html.Point(0, 0);
 
   _EditorState.fromFile(this.manager, this.file);
 
@@ -437,25 +435,15 @@ class _EditorState {
       return null;
     } else {
       _EditorState state = new _EditorState.fromFile(manager, f);
-      state.scrollTop = m['scrollTop'];
-      state.cursorPosition = new html.Point(m['column'], m['row']);
       return state;
     }
   }
 
   bool get hasSession => session != null;
 
-  // This method save the ACE editor state in this class.
-  // Then, further calls of toMap() to save the state of the editor will return
-  // correct values.
-  void updateState() {
-    if (session != null) {
-      scrollTop = session.scrollTop;
-      if (manager._currentState == this) {
-        cursorPosition = manager._aceContainer.cursorPosition;
-      }
-    }
-  }
+  // This method save the ACE editor state in this class. Then, further calls
+  // of toMap() to save the state of the editor will return correct values.
+  void updateState() { }
 
   /**
    * Return a [Map] representing the persistable state of this editor. This map
@@ -464,9 +452,6 @@ class _EditorState {
   Map toMap() {
     Map m = {};
     m['file'] = file.uuid;
-    m['scrollTop'] = scrollTop;
-    m['column'] = cursorPosition.x;
-    m['row'] = cursorPosition.y;
     return m;
   }
 
@@ -477,10 +462,8 @@ class _EditorState {
       if (manager.editorType(file.name) == EditorManager.EDITOR_TYPE_IMAGE) {
         return new Future.value(this);
       } else {
-        // TODO(dvh): don't load if the user cannot see the content.
         return file.getContents().then((text) {
           session = manager._aceContainer.createEditSession(text, file.name);
-          session.scrollTop = scrollTop;
           return this;
         });
       }

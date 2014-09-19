@@ -22,6 +22,7 @@ class SparkButton extends SparkWidget {
   @published bool disabled;
   @published bool active;
   @published String tooltip;
+  @published String command;
 
   SparkButton.created() : super.created();
 
@@ -52,5 +53,13 @@ class SparkButton extends SparkWidget {
 
     assert(['none', 'small', 'medium', 'large', 'huge'].contains(padding));
     assert(['background', 'foreground'].contains(hoverStyle));
+  }
+
+  void handleClick(event) {
+    if (!disabled && command != null && command.isNotEmpty) {
+      event.preventDefault();
+      event.stopPropagation();
+      fire('command', detail: {'command': command});
+    }
   }
 }
