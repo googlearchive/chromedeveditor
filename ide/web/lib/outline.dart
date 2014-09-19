@@ -11,6 +11,25 @@ import 'enum.dart';
 import 'services.dart' as services;
 import 'preferences.dart';
 
+/**
+ * Listen for the given command event on an element. Call the given function
+ * when we receive the command.
+ *
+ * TODO(devoncarew): Move this into a command specific library.
+ */
+void _handleCommand(html.Element element, String commandId, Function fn) {
+   element.on['command'].listen((e) {
+    if (e is html.CustomEvent && e.type == 'command') {
+      String command = e.detail['command'];
+
+      if (command == commandId) {
+        e.stopPropagation();
+        fn(e.detail);
+      }
+    }
+  });
+}
+
 class OffsetRange {
   int top;
   int bottom;
@@ -63,16 +82,7 @@ class Outline {
     _rootListDiv = _outlineDiv.querySelector('#outline');
     _rootList = _rootListDiv.querySelector('ul');
 
-    html.document.on['command'].listen((e) {
-      if (e is html.CustomEvent && e.type == 'command') {
-        String command = e.detail['command'];
-
-        if (command == 'toggle-outline') {
-          e.stopPropagation();
-          toggle();
-        }
-      }
-    });
+    _handleCommand(html.document.body, 'toggle-outline', (_) => toggle());
 
     _prefs.getValue('OutlineCollapsed').then((String data) {
       if (data == 'true') {

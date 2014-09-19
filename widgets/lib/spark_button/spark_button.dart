@@ -58,6 +58,7 @@ class SparkButton extends SparkWidget {
   void handleClick(event) {
     if (!disabled && command != null && command.isNotEmpty) {
       event.preventDefault();
+      event.stopPropagation();
       fire('command', detail: {'command': command});
     }
   }
