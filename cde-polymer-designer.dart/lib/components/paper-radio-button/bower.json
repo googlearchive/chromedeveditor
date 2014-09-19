@@ -1,0 +1,7 @@
+{
+  "name": "paper-radio-button",
+  "private": true,
+  "dependencies": {
+    "paper-ripple": "Polymer/paper-ripple#master"
+  }
+}

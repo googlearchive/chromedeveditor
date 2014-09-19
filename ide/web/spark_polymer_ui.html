@@ -60,6 +60,10 @@
             </spark-menu-item>
             <spark-menu-item action-id="git-clone" label="Git Clone...">
             </spark-menu-item>
+            <template if="{{polymerDesigner}}">
+              <spark-menu-item action-id="polymer-designer" label="Open Polymer Designer...">
+              </spark-menu-item>
+            </template>
 
             <spark-menu-separator></spark-menu-separator>
 
@@ -861,6 +865,17 @@
         Remove Reference
       </spark-dialog-button>
     </spark-dialog>
+
+    <template if="{{polymerDesigner}}">
+      <spark-dialog id="polymerDesignerDialog" headerTitle="Polymer Designer">
+        <webview id="polymerDesignerWebview"
+            src="packages/polymer_designer/index.html"
+            partition="polymer-designer"
+            autosize="on">
+        </webview>
+      </spark-dialog>
+    </template>
+
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>

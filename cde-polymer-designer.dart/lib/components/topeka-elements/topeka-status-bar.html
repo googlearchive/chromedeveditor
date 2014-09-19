@@ -1,0 +1,102 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="avatars.html">
+<link rel="import" href="../core-icon/core-icon.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+
+<polymer-element name="topeka-status-bar" attributes="avatar scores category wide" vertical layout>
+<template>
+
+  <style>
+  
+    :host {
+      display: block;
+      height: 64px;
+      background-color: #fff;
+    }
+  
+    .topeka-avatar {
+      border-radius: 50%;
+      overflow: hidden;
+      width: 40px;
+      height: 40px;
+      /* unclear why this is necessary; filed 
+      http://crbug.com/410054 */
+      will-change: transform;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+    
+    paper-progress {
+      width: 100%;
+    }
+    
+    .info {
+      padding: 0 16px;
+    }
+    
+    .wide.info {
+      padding: 0 24px;
+    }
+    
+    .cat-info {
+      padding: 0 16px;
+    }
+    
+    .cat-info > .title {
+      font-size: 14px;
+      line-height: 24px;
+    }
+    
+    .pts {
+      font-size: 24px;
+    }
+    
+    paper-progress::shadow #activeProgress {
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+  </style>
+  
+  <paper-progress value="{{scores.length + (scores.length === category.quizzes.length ? 0 : 1)}}" max="{{category.quizzes.length}}"></paper-progress>
+  
+  <div class="info {{ {wide: wide} | tokenList }}" flex horizontal center layout>
+
+    <core-icon icon="avatars:avatar-{{avatar}}" class="topeka-avatar"></core-icon>
+    
+    <div class="cat-info" flex vertical layout>
+      <div class="title font-medium">{{category.name}}</div>
+      <div class="progress">{{scores.length + (scores.length === category.quizzes.length ? 0 : 1)}} / {{category.quizzes.length}}</div>
+    </div>
+    
+    <div class="pts">{{pts}}</div>
+    
+  </div>
+
+</template>
+<script>
+
+  Polymer('topeka-status-bar', {
+    
+    wide: false,
+    
+    scoresChanged: function() {
+      this.pts = 0;
+      if (this.scores) {
+        for (var i = 0; i < this.scores.length; i++) {
+          this.pts += (this.scores[i] || 0);
+        }
+      }
+    }
+  
+  });
+
+</script>
+</polymer-element>

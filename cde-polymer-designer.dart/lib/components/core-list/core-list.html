@@ -1,0 +1,403 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`core-list` displays a virtual, 'infinite' list. The template inside the 
+`core-list` element represents the dom to create for each list item. The
+`data` property specifies an array of list item data. The `height` property
+represents the height of a list item.
+
+By default, the list supports selection via tapping. Styling the selection 
+should be done via binding. The `selectedProperty` property is set on the 
+list view data for each selected item.
+
+`core-list` manages a viewport of data based on the current scroll position.
+For performance reasons, not every item in the list is rendered at once.
+
+    <core-list data="{{data}}" height="80">
+      <template>
+        <div class="{{ {selected: selected} | tokenList }}">List row: {{index}}</div>
+      </template>
+    </core-list>
+
+@group Polymer Core Elements
+@element core-list
+-->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../core-selection/core-selection.html">
+
+<polymer-element name="core-list" on-tap="{{tapHandler}}">
+<template>
+  <core-selection id="selection" multi="{{multi}}" on-core-select="{{selectedHandler}}"></core-selection>
+  <link rel="stylesheet" href="core-list.css">
+  <div id="viewport" class="core-list-viewport"><content></content></div>
+</template>
+<script>
+(function() {
+
+  Polymer('core-list', {
+    
+    publish: {
+      /**
+       * Fired when an item element is tapped.
+       * 
+       * @event core-activate
+       * @param {Object} detail
+       *   @param {Object} detail.item the item element
+       */
+
+      /**
+       * 
+       * An array of source data for the list to display.
+       *
+       * @attribute data
+       * @type array
+       * @default null
+       */
+      data: null,
+
+      /**
+       * 
+       * An optional element on which to listen for scroll events.
+       *
+       * @attribute scrollTarget
+       * @type Element
+       * @default core-list
+       */
+      scrollTarget: null,
+
+      /**
+       * 
+       * The height of a list item. `core-list` currently supports only fixed-height
+       * list items. This height must be specified via the height property.
+       *
+       * @attribute height
+       * @type number
+       * @default 80
+       */
+      height: 80,
+
+      /**
+       * 
+       * The number of extra items rendered above the minimum set required to
+       * fill the list's height.
+       *
+       * @attribute extraItems
+       * @type number
+       * @default 30
+       */
+      extraItems: 30,
+
+      /**
+       * 
+       * The property set on the list view data to represent selection state. 
+       * This should set so that it does not conflict with other data properties.
+       * Note, selection data is not stored on the data in given in the data property.
+       *
+       * @attribute selectedProperty
+       * @type string
+       * @default 'selected'
+       */
+      selectedProperty: 'selected',
+
+      // TODO(sorvell): experimental
+      /**
+       * 
+       * If true, data is sync'd from the list back to the list's data.
+       *
+       * @attribute sync
+       * @type boolean
+       * @default false
+       */
+      sync: false,
+
+      /**
+       * 
+       * Set to true to support multiple selection.
+       *
+       * @attribute multi
+       * @type boolean
+       * @default false
+       */
+      multi: false
+
+    },
+    
+    observe: {
+      'data template scrollTarget': 'initialize'
+    },
+
+    ready: function() {
+      this.clearSelection();
+      this._boundScrollHandler = this.scrollHandler.bind(this);
+    },
+
+    attached: function() {
+      this.template = this.querySelector('template');
+    },
+
+    // TODO(sorvell): it'd be nice to dispense with 'data' and just use 
+    // template repeat's model. However, we need tighter integration
+    // with TemplateBinding for this.
+    initialize: function() {
+      if (!this.data || !this.template) {
+        return;
+      }
+      var target = this.scrollTarget || this;
+      if (this._target !== target) {
+        if (this._target) {
+          this._target.removeEventListener('scroll', this._boundScrollHandler, false);
+        }
+        this._target = target;
+        this._target.addEventListener('scroll', this._boundScrollHandler, false);
+      }
+
+      this.initializeViewport();
+      this.initalizeData();
+      this.onMutation(this, this.initializeItems);
+    },
+
+    // TODO(sorvell): need to handle resizing
+    initializeViewport: function() {
+      this.$.viewport.style.height = this.height * this.data.length + 'px';
+      this._visibleCount = Math.ceil(this._target.offsetHeight / this.height);
+      this._physicalCount = Math.min(this._visibleCount + this.extraItems,
+          this.data.length);
+      this._physicalHeight = this.height * this._physicalCount;
+    },
+
+    // TODO(sorvell): selection currently cannot be maintained when
+    // items are added or deleted.
+    initalizeData: function() {
+      var exampleDatum = this.data[0] || {};
+      this._propertyNames = Object.getOwnPropertyNames(exampleDatum);
+      this._physicalData = new Array(this._physicalCount);
+      for (var i = 0; i < this._physicalCount; ++i) {
+        this._physicalData[i] = {};
+        this.updateItem(i, i);
+      }
+      this.template.model = this._physicalData;
+      this.template.setAttribute('repeat', '');
+    },
+
+    initializeItems: function() {
+      this._physicalItems = new Array(this._physicalCount);
+      for (var i = 0, item = this.template.nextElementSibling;
+           item && i < this._physicalCount;
+           ++i, item = item.nextElementSibling) {
+        this._physicalItems[i] = item;
+        item._transformValue = 0;
+      }
+      this.refresh(false);
+    },
+
+    updateItem: function(virtualIndex, physicalIndex) {
+      var virtualDatum = this.data[virtualIndex];
+      var physicalDatum = this._physicalData[physicalIndex];
+      this.pushItemData(virtualDatum, physicalDatum);
+      physicalDatum._physicalIndex = physicalIndex;
+      physicalDatum._virtualIndex = virtualIndex;
+      if (this.selectedProperty) {
+        physicalDatum[this.selectedProperty] = this._selectedData.get(virtualDatum);
+      }
+    },
+
+    pushItemData: function(source, dest) {
+      for (var i = 0; i < this._propertyNames.length; ++i) {
+        var propertyName = this._propertyNames[i];
+        dest[propertyName] = source[propertyName];
+      }
+    },
+
+    // experimental: push physical data back to this.data.
+    // this is optional when scrolling and needs to be called at other times.
+    syncData: function() {
+      if (this.firstPhysicalIndex === undefined || 
+          this.baseVirtualIndex === undefined) {
+        return;
+      }
+      var p, v;
+      for (var i = 0; i < this.firstPhysicalIndex; ++i) {
+        p = this._physicalData[i];
+        v = this.data[this.baseVirtualIndex + this._physicalCount + i];
+        this.pushItemData(p, v);
+      }
+      for (var i = this.firstPhysicalIndex; i < this._physicalCount; ++i) {
+        p = this._physicalData[i];
+        v = this.data[this.baseVirtualIndex + i];
+        this.pushItemData(p, v);
+      }
+    },
+
+    scrollHandler: function(e, detail) {
+      this._scrollTop = e.detail ? e.detail.target.scrollTop : e.target.scrollTop;
+      this.refresh(false);
+    },
+
+    /**
+     * Refresh the list at the current scroll position.
+     *
+     * @method refresh
+     */
+    refresh: function(force) {
+      var firstVisibleIndex = Math.floor(this._scrollTop / this.height);
+      var visibleMidpoint = firstVisibleIndex + this._visibleCount / 2;
+
+      var firstReifiedIndex = Math.max(0, Math.floor(visibleMidpoint - 
+          this._physicalCount / 2));
+      firstReifiedIndex = Math.min(firstReifiedIndex, this.data.length - 
+          this._physicalCount);
+
+      var firstPhysicalIndex = firstReifiedIndex % this._physicalCount;
+      var baseVirtualIndex = firstReifiedIndex - firstPhysicalIndex;
+
+      var baseTransformValue = Math.floor(this.height * baseVirtualIndex);
+      var nextTransformValue = Math.floor(baseTransformValue + 
+          this._physicalHeight);
+
+      var baseTransformString = 'translate3d(0,' + baseTransformValue + 'px,0)';
+      var nextTransformString = 'translate3d(0,' + nextTransformValue + 'px,0)';
+      // TODO(sorvell): experiemental for sync'ing back to virtual data.
+      if (this.sync) {
+        this.syncData();
+      }
+      this.firstPhysicalIndex = firstPhysicalIndex;
+      this.baseVirtualIndex = baseVirtualIndex;
+
+      for (var i = 0; i < firstPhysicalIndex; ++i) {
+        var item = this._physicalItems[i];
+        if (force || item._transformValue != nextTransformValue) {
+          this.updateItem(baseVirtualIndex + this._physicalCount + i, i);
+          setTransform(item, nextTransformString, nextTransformValue);
+        }
+      }
+      for (var i = firstPhysicalIndex; i < this._physicalCount; ++i) {
+        var item = this._physicalItems[i];
+        if (force || item._transformValue != baseTransformValue) {
+          this.updateItem(baseVirtualIndex + i, i);
+          setTransform(item, baseTransformString, baseTransformValue);
+        }
+      }
+    },
+
+    // list selection
+    tapHandler: function(e) {
+      if (e.target === this) {
+        return;
+      }
+      if (this.sync) {
+        this.syncData();
+      }
+      var n = e.target;
+      var model = n.templateInstance && n.templateInstance.model;
+      if (model) {
+        var vi = model._virtualIndex, pi = model._physicalIndex;
+        var data = this.data[vi], item = this._physicalItems[pi];
+        this.$.selection.select(data);
+        this.asyncFire('core-activate', {data: data, item: item});
+      }
+    },
+
+    selectedHandler: function(e, detail) {
+      if (this.selectedProperty) {
+        var i$ = this.indexesForData(detail.item);
+        // TODO(sorvell): we should be relying on selection to store the
+        // selected data but we want to optimize for lookup.
+        this._selectedData.set(detail.item, detail.isSelected);
+        if (i$.physical >= 0) {
+          this.updateItem(i$.virtual, i$.physical);
+        }
+      }
+    },
+
+    /**
+     * Select the list item at the given index.
+     *
+     * @method selectItem
+     * @param {number} index 
+     */
+    selectItem: function(index) {
+      var data = this.data[index];
+      if (data) {
+        this.$.selection.select(data);
+      }
+    },
+
+    /**
+     * Set the selected state of the list item at the given index.
+     *
+     * @method setItemSelected
+     * @param {number} index 
+     * @param {boolean} isSelected 
+     */
+    setItemSelected: function(index, isSelected) {
+      var data = this.data[index];
+      if (data) {
+        this.$.selection.setItemSelected(data, isSelected);
+      }
+    },
+
+    indexesForData: function(data) {
+      var virtual = this.data.indexOf(data);
+      var physical = this.virtualToPhysicalIndex(virtual);
+      return { virtual: virtual, physical: physical };
+    },
+
+    virtualToPhysicalIndex: function(index) {
+      for (var i=0, l=this._physicalData.length; i<l; i++) {
+        if (this._physicalData[i]._virtualIndex === index) {
+          return i;
+        }
+      }
+      return -1;
+    },
+
+    get selection() {
+      return this.$.selection.getSelection();
+    },
+
+    selectedChanged: function() {
+      this.$.selection.select(this.selected);
+    },
+
+    clearSelection: function() {
+      this._selectedData = new WeakMap();
+      if (this.multi) {
+        var s$ = this.selection;
+        for (var i=0, l=s$.length, s; (i<l) && (s=s$[i]); i++) {
+          this.$.selection.setItemSelected(s, false);
+        }
+      } else {
+        this.$.selection.setItemSelected(this.selection, false);
+      }
+      this.$.selection.clear();
+    },
+
+    scrollToItem: function(index) {
+      this.scrollTop = index * this.height;
+    }
+
+  });
+
+  // determine proper transform mechanizm
+  if (document.documentElement.style.transform !== undefined) {
+    var setTransform = function(element, string, value) {
+      element.style.transform = string;
+      element._transformValue = value;
+    }
+  } else {
+    var setTransform = function(element, string, value) {
+      element.style.webkitTransform = string;
+      element._transformValue = value;
+    }
+  }
+
+})();
+</script>
+</polymer-element>

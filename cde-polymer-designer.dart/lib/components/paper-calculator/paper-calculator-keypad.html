@@ -1,0 +1,124 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="paper-calculator-keygrid.html">
+<link rel="import" href="paper-calculator-panels.html">
+
+<polymer-element name="paper-calculator-keypad" attributes="wideMode standardKeys advancedKeys modeKeys">
+
+  <template>
+
+    <style>
+    
+      :host {
+        display: block;
+        position: relative;
+        cursor: pointer;
+      }
+      
+      #outerPanels {
+        width: 100%;
+        height: 100%;
+      }
+      
+      #standard {
+        background-color: #4c4c4c;
+        font-weight: 300;
+        font-size: 2em;
+        color: #fff;
+      }
+      
+      #standard::shadow #keys > div:nth-of-type(4) {
+        background-color: #666;
+        border-left: 1px solid #444;
+      }
+      
+      .narrow #standard, 
+      .narrow #standard::shadow #keys > div:nth-of-type(4) {
+        box-shadow: inset 0 12px 12px rgba(0, 0, 0, 0.25);
+      }
+      
+      #innerPanels {
+        background-color: #40bd9e;
+      }
+      
+      [drawer] {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+      }
+      
+      .narrow #innerPanels {
+        box-shadow: -4px 0 4px rgba(0, 0, 0, 0.2);
+      }
+      
+      #advanced {
+        background-color: #40bd9e;
+        font-weight: 400;
+        font-size: 1.125em;
+        color: #f7f7f7;
+      }
+
+      .narrow #advanced {      
+        box-shadow: inset 0 7px 7px rgba(0, 0, 0, 0.25);
+      }
+      
+      #mode {
+        background-color: #1de9b6;
+        font-weight: 400;
+        font-size: 1em;
+        color: #777;
+      }
+
+      .narrow #mode {      
+        box-shadow: -4px 0 4px rgba(0, 0, 0, 0.2), inset 0 5px 5px rgba(0, 0, 0, 0.25);
+      }
+      
+    </style>
+    
+    <paper-calculator-panels id="outerPanels" class="{{ {narrow : !wideMode} | tokenList}}" margin="{{margin}}" wideMode="{{wideMode}}" drawerWidthRatio="0.8">
+    
+      <paper-calculator-keygrid id="standard" main keys="{{standardKeys}}"></paper-calculator-keygrid>
+    
+      <paper-calculator-panels id="innerPanels" drawer margin="{{margin}}" wideMode="{{wideMode}}" drawerWidthRatio="0.3">
+      
+        <paper-calculator-keygrid id ="advanced" main keys="{{advancedKeys}}"></paper-calculator-keygrid>
+        
+        <paper-calculator-keygrid id="mode" drawer keys="{{modeKeys}}"></paper-calculator-keygrid>
+        
+      </paper-calculator-panels>
+      
+    </paper-calculator-panels>
+    
+  </template>
+
+  <script>
+
+    Polymer('paper-calculator-keypad', {
+      
+      margin: 24,
+      
+      findKey: function(label) {
+        var ps = [this.$.standard, this.$.advanced, this.$.mode];
+        for (var i = 0, p; p = ps[i]; i++) {
+          var key = p.findKey(label);
+          if (key) {
+            return key;
+          }
+        }
+      },
+      
+      get equalKey() {
+        return this.$.standard.findKey('=');
+      }
+      
+    });
+
+  </script>
+
+</polymer-element>

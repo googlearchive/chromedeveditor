@@ -1,0 +1,9 @@
+{
+  "name": "firebase-element",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master",
+    "firebase": "*",
+    "firebase-simple-login": "~1.6.2"
+  }
+}

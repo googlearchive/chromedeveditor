@@ -1,0 +1,275 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../components/polymer/polymer.html">
+
+<polymer-element name="design-host">
+<script>
+(function() {
+
+Polymer({
+
+  name: 'my-element',
+  __designHost: true,
+
+  ready: function() {
+    this.model = {};
+    this.treeInfo = {name: this.name, id: ''};
+  },
+
+  marshalNodeReferences: function(root) {
+    this.super(arguments);
+    this.model = this.model || {};
+    this.model.$ = this.$;
+  },
+
+  dumpTag: function(serializer, indent, tab) {
+    // convert to :host
+    if (this.__styleRule) {
+      var selectorText = this.__styleRule.selectorText;
+      // use polyfill compatible selector / serializer normalizes this
+      this.__styleRule.selectorText = '-host';
+    }
+    var indented = indent + tab, attrs = '';
+    var attrs = this.dumpAttributes();
+    var html = indent + '<polymer-element' + attrs + '>\n\n' + 
+        indented + '<template>\n' +
+        serializer.dumpChildren(this,indented + tab) +
+        indented + '</template>\n\n' +
+        indented + '<sc' + 'ript>\n\n' +
+        indented + tab + this.dumpScript(indented + tab, tab) +
+        indented + '</sc' + 'ript>\n\n' +
+        indent + '</polymer-element>';
+    if (selectorText) {
+      this.__styleRule.selectorText = selectorText;
+    }
+    return html;
+  },
+
+  dumpAttributes: function() {
+    var attrs = '';
+    var a$ = this.polymerElement ? this.polymerElement.attributes : 
+        [{name: 'name', value: this.name}];
+    for (var i=0, a; (a=a$[i]); i++) {
+      attrs += ' ' + a.name + '="' + a.value + '"';
+    }
+    return attrs;
+  },
+
+  dumpScript: function(indent, tab) {
+    var s = 'Polymer({\n' + indent + tab;
+    var props = [];
+    Object.keys(this.model).forEach(function(k) {
+      if (serializeScriptBlacklist.indexOf(k) < 0) {
+        var propString = serializePropertyValue(k, this.model, indent, tab);
+        if (propString) {
+          props.push(propString);
+        }
+      }
+    }, this);
+    s += props.join(',\n' + indent + tab);
+    s += '\n' + indent + '});' + '\n\n';
+    return s;
+  },
+
+  loadHtml: function(html, callback) {
+    // use a template to ensure the polymer-element does not upgrade
+    var raw = document.createElement('template');
+    raw.innerHTML = html;
+    // remove imports
+    var imports = raw.querySelectorAll('link[rel=import]').array();
+    imports.forEach(function(i) {
+      i.remove();
+    });
+    // absorb polymer-element
+    this.polymerElement = raw.content.querySelector('polymer-element');
+    if (!this.polymerElement) {
+      throw new Error('Must load a <polymer-element>');
+    }
+    this.name = this.polymerElement.getAttribute('name');
+    this.treeInfo.name = this.name;
+    // absorb script
+    this.scriptElement = this.polymerElement.querySelector('script');
+    this.model = this.modelFromScript(this.scriptElement);
+    // absorb template
+    var template = this.polymerElement.querySelector('template');
+    if (template) {
+      // ensure template is owned by document so that its contents upgrade
+      document.adoptNode(template);
+      // absorb styles, convert :host style
+      var style = template.content.querySelector('style');
+      if (style) {
+        style.textContent = style.textContent.replace(/\:host/g, 
+            '#' + this.id);
+      }
+      // make imports go...
+      this.loadElementImports(template.content, function() {
+        // TODO(sorvell): note, event handlers will work if we use 
+        // the element's syntax here (this.element.syntax).
+        // However we do not want events to function while we are designing,
+        // so, we use a custom delegate.
+        this.appendChild(template.createInstance(this.model, syntax));
+        this._designMeta.ensureMeta(this);
+        this.marshalNodeReferences(this);
+        callback && callback();
+      }.bind(this));
+    } else if (callback) {
+      callback();
+    }
+  },
+
+  loadElementImports: function(element, callback) {
+    var pending = 1;
+    var receive = function() {
+      pending--;
+      checkDone();
+    }
+    var checkDone = function() {
+      if (pending == 0 && callback) {
+        callback();
+      }
+    };
+    this._designMeta.ensureMeta(element);
+    var n$ = element.querySelectorAll('*');
+    for (var i=0, l=n$.length, n, m; (i<l) && (n=n$[i]); i++) {
+      m = n._designMeta;
+      if (m && !m.importsLoaded) {
+        pending++;
+        m.loadImports(receive);
+      }
+    }
+    receive();
+  },
+
+  modelFromScript: function(script) {
+    var p = executePolymerScript(script);
+    return p || {};
+  },
+
+  _getInspectorProps: function() {
+    return this.model;
+  }
+
+});
+
+var serializeScriptBlacklist = ['$'];
+var MAX_SERIALIZE_LENGTH = 5;
+
+function serializePropertyValue(name, obj, indent, tab) {
+  var value = obj[name], type = typeof value;
+  switch(type) {
+    case 'function':
+      value = value.toString();
+      break;
+    case 'string':
+      value = '\'' + value + '\'';
+      break;
+    case 'object': 
+      var length = value ? (Array.isArray(value) ? value.length : 
+          Object.keys(value).length) : 0;
+      if (length > MAX_SERIALIZE_LENGTH) {
+        value = null;
+      } else {
+        try {
+          value = JSON.stringify(value, null, tab);
+          value = value.replace(/\n/g, '\n' + indent + tab);
+        } catch(e) {
+          value = null;
+        }
+      }
+      break;
+  }
+  return name + ': ' + value;
+}
+
+// this is not secure, it's just intended to make it harder to accidentally
+// mess up the main document.
+var frame = document.createElement('iframe');
+frame.style.display = 'none';
+document.body.appendChild(frame);
+frame.src = '';
+
+function executePolymerScript(script) {
+  if (!frame.contentWindow.Polymer) {
+    frame.contentWindow.Polymer = function(name, model) {
+      var model = typeof name === 'object' ? name : model;
+      frame.contentWindow.model = model;
+    }
+  }
+  try {
+    var code = script.textContent.trim();
+    frame.contentWindow.eval(code);
+  } catch(e) {
+    console.log(e);
+  }
+  var r = frame.contentWindow.model;
+  frame.contentWindow.model = null;
+  return r;
+}
+
+function executeScriptsInScope(scope) {
+  // make scripts go....
+  var s$ = scope.querySelectorAll('script:not([src])');
+  for (var i=0, l=s$.length, s; (i<l) && (s=s$[i]); i++) {
+    replaceAndExecuteScript(s);
+  }
+}
+
+function replaceAndExecuteScript(script) {
+  var newScript = document.createElement('script');
+  script.parentNode.replaceChild(newScript, script);
+  newScript.textContent = script.textContent;
+}
+
+// Use a custom syntax for designed elements
+// We want to handle events specially such that they record as bindings
+// but do no hookup. This is so that event handlers do not function
+// while the user is designing.
+var syntax = new PolymerExpressions();
+var prepareBinding = syntax.prepareBinding;
+syntax.prepareBinding = function(pathString, name, node) {
+  var path = Path.get(pathString);
+  return prepareEventBinding(path, name, node) ||
+         prepareBinding.call(syntax, pathString, name, node);
+};
+
+function prepareEventBinding(path, name, node) {
+  if (!hasEventPrefix(name)) {
+    return;
+  }
+
+  return function(model, node, oneTime) {
+    function bindingValue() {
+      return '{{ ' + path + ' }}';
+    }
+
+    var observer = {
+      open: bindingValue,
+      discardChanges: bindingValue,
+      close: nop,
+      path: path
+    };
+
+    if (node._recordBinding) {
+      node._recordBinding(observer);
+    }
+
+    return observer;
+  };
+}
+
+function nop() {};
+
+function hasEventPrefix(n) {
+  return n && (n[0] === 'o') && (n[1] === 'n') && (n[2] === '-');
+}
+
+})();
+</script>
+</polymer-element>

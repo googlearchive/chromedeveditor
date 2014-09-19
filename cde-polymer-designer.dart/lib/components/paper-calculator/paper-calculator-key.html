@@ -1,0 +1,100 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../paper-ripple/paper-ripple.html">
+
+<polymer-element name="paper-calculator-key" on-down="{{downAction}}" on-up="{{upAction}}">
+
+  <template>
+
+    <style>
+
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      #keyLabel, .ink-container {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+
+      #keyLabel {
+        pointer-events: none;
+      }
+
+      .ink-center {
+        position: relative;
+        width: 0;
+        height: 0;
+      }
+
+      #ink {
+        position: absolute;
+        top: -30px;
+        left: -30px;
+        width: 60px;
+        height: 60px;
+        color: rgb(241, 250, 65);
+        pointer-events: none;
+      }
+
+      .small {
+        font-size: smaller;
+      }
+
+    </style>
+
+    <div class="ink-container" horizontal center-justified center layout>
+      <div class="ink-center">
+        <paper-ripple id="ink" class="circle recenteringTouch" initialOpacity="0.85" opacityDecayVelocity="2"></paper-ripple>
+      </div>
+    </div>
+
+    <div id="keyLabel" horizontal center-justified center layout>{{label}}</div>
+
+  </template>
+
+  <script>
+
+    Polymer('paper-calculator-key', {
+
+      publish: {
+        label: {reflect: true}
+      },
+
+      labelChanged: function() {
+        this.$.keyLabel.classList.toggle('small', this.label === 'DEL');
+      },
+
+      downAction: function(e) {
+        this.$.ink.downAction(e);
+      },
+
+      upAction: function() {
+        this.$.ink.upAction();
+      },
+
+      cancelKey: function(e) {
+        e.preventTap();
+        this.resetInk();
+      },
+
+      resetInk: function() {
+        this.$.ink.cancel();
+      }
+
+    });
+
+  </script>
+
+</polymer-element>

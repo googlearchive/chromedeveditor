@@ -1,0 +1,87 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
+The complete set of authors may be found at http://polymer.github.io/AUTHORS
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
+-->
+
+<!--
+@group Paper Elements
+`paper-icon-button` is a button with an image placed at the center.
+
+Example:
+
+    <paper-icon-button iconSrc="star.png"></paper-icon-button>
+
+`paper-icon-button` includes a default icon set.  Use `icon` to specify 
+which icon from the icon set to use.
+
+Example:
+
+    <paper-icon-button icon="menu"></paper-icon-button>
+
+The icons provided by `core-icons` are SVG, and you can style them with CSS.
+
+Example:
+
+    <paper-icon-button icon="favorite" style="fill:red;"></paper-icon-button>
+
+See `core-iconset` for more information about how to use a custom icon set.
+
+@element paper-icon-button
+@extends paper-button
+@homepage github.io
+-->
+
+<link href="../core-icon/core-icon.html" rel="import">
+<link href="../paper-button/paper-button.html" rel="import">
+
+<polymer-element name="paper-icon-button" extends="paper-button" attributes="fill">
+
+  <template>
+
+    <link href="paper-icon-button.css" rel="stylesheet">
+
+    <shadow></shadow>
+
+  </template>
+
+  <script>
+  
+    Polymer('paper-icon-button', {
+
+      publish: {
+
+        /**
+         * If true, the ripple expands to a square to fill the containing box.
+         *
+         * @attribute fill
+         * @type boolean
+         * @default false
+         */
+        fill: {value: false, reflect: true}
+
+      },
+
+      ready: function() {
+        this.$.ripple.classList.add('recenteringTouch');
+        this.fillChanged();
+      },
+
+      fillChanged: function() {
+        this.$.ripple.classList.toggle('circle', !this.fill);
+      },
+
+      iconChanged: function(oldIcon) {
+        if (!this.label) {
+          this.setAttribute('aria-label', this.icon);
+        }
+      }
+
+    });
+    
+  </script>
+  
+</polymer-element>

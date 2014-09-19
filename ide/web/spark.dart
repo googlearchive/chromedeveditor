@@ -572,6 +572,14 @@ abstract class Spark
     actionManager.registerAction(new ShowSearchView(this));
     actionManager.registerAction(new ShowFilesView(this));
     actionManager.registerAction(new RunPythonAction(this));
+    // TODO(ussuri): The current default is 'false'. This forces the action
+    // not to be created on startup. If later the value is overridden from
+    // <workspace>/.spark.json, the UI gets populated, but the action is still
+    // missing.
+    // if (SparkFlags.polymerDesigner) {
+      actionManager.registerAction(new PolymerDesignerAction(this,
+          getDialogElement("#polymerDesignerDialog")));
+    // }
 
     actionManager.registerKeyListener();
 
@@ -4149,6 +4157,24 @@ class RunPythonAction extends SparkAction {
         });
       });
     });
+  }
+}
+
+class PolymerDesignerAction extends SparkActionWithStatusDialog {
+  PolymerDesignerAction(Spark spark, SparkDialog dialog)
+      : super(spark, "polymer-designer", "Open Polymer Designer…", dialog);
+
+  void _invoke([List<ws.Resource> resources]) {
+    // (spark.getUIElement('#polymerDesignerWebview') as dynamic).reload();
+    _show();
+  }
+
+  void _commit() {
+    super._commit();
+  }
+
+  void _cancel() {
+    super._cancel();
   }
 }
 

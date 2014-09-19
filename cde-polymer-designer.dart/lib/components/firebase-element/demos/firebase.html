@@ -1,0 +1,105 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+
+  <title>firebase-element</title>
+
+  <script src="../../platform/platform.js"></script>
+  
+  <link rel="import" href="../firebase-element.html">
+
+</head>
+<body unresolved>
+
+  <template is="auto-binding">
+
+    <firebase-element id="base" on-data-change="{{dataChange}}" data="{{data}}" location="https://treedata-demo.firebaseio.com/demo" log></firebase-element>
+
+    <h3>Top-level properties persist automatically:</h3>
+
+    <input value="{{data.name}}">
+    <br>
+    <input value="{{data.info}}">
+
+    <hr>
+
+    <h3>Nested properties must be persisted manually:</h3>
+
+    <input value="{{data.more.color}}">
+    
+    <button on-tap="{{commitMore}}">Commit data.more</button>
+     
+    <hr>
+    
+    <h3>Remote Data</h3>
+    <pre>{{json}}</pre>
+
+    <hr>
+
+    <button on-tap="{{resetLocal}}">Reset Local</button>
+    <button on-tap="{{removeLocal}}">Remove Local</button>
+    <button on-tap="{{resetRemote}}">Reset remote</button>
+    <button on-tap="{{removeRemote}}">Remove Remote</button>
+
+
+  </template>
+  
+  <script>
+    
+    addEventListener('template-bound', function(e) {
+
+      scope = e.target;
+
+      scope.resetLocal = function() {
+        // direct setting of data is persisted automatically
+        this.data = {
+          name: 'anonymous',
+          info: 'none',
+          more: {
+            color: "yellow"
+          }
+        };
+      };
+
+      scope.removeLocal = function() {
+        this.data = null;
+      };
+      
+      scope.resetRemote = function() {
+        // Simulate other actor setting data to same remote location
+        new Firebase('https://treedata-demo.firebaseio.com/demo').set({
+          name: 'anonymous',
+          info: 'none',
+          more: {
+            color: "yellow"
+          }
+        });
+      };
+
+      scope.removeRemote = function() {
+        // Simulate other actor removing data from same remote location
+        new Firebase('https://treedata-demo.firebaseio.com/demo').remove();
+      };
+
+      scope.commitMore = function() {
+        this.$.base.commitProperty('more');
+      };
+      
+      scope.dataChange = function() {
+        this.json = JSON.stringify(this.data, null, '\t');
+      };
+      
+    });
+  </script>
+
+</body>
+</html>

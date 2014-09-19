@@ -1,0 +1,31 @@
+{
+    "project": {
+        "name": "Docs",
+        "description": "Docs"
+    },
+    "files": {
+        "..\\..\\cool-clock\\coolclock.js": {
+            "name": "..\\..\\cool-clock\\coolclock.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {},
+    "classes": {},
+    "classitems": [
+        {
+            "file": "..\\..\\cool-clock\\coolclock.js",
+            "line": 1,
+            "description": "CoolClock 2.1.4\nCopyright 2010, Simon Baird\nReleased under the BSD License.\n\nDisplay an analog clock using canvas.\nhttp://randomibis.com/coolclock/",
+            "class": ""
+        }
+    ],
+    "warnings": [
+        {
+            "message": "Missing item type\nCoolClock 2.1.4\nCopyright 2010, Simon Baird\nReleased under the BSD License.\n\nDisplay an analog clock using canvas.\nhttp://randomibis.com/coolclock/",
+            "line": " ..\\..\\cool-clock\\coolclock.js:1"
+        }
+    ]
+}

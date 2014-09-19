@@ -1,0 +1,211 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+@group Paper Elements
+
+`paper-button` is a button containing text or an image. When the user touches
+the button, a ripple effect emanates from the point of contact.
+
+A `paper-button` may be flat or raised. A raised button behaves like a piece
+of paper resting on another sheet, and lifts up upon press. Flat buttons do
+not raise up. Add the `raisedButton` attribute to make a raised button.
+
+Example:
+
+    <paper-button label="flat button"></paper-button>
+    <paper-button label="raised button" raisedButton></paper-button>
+
+A button should be styled with a background color, text color, ripple color
+and hover color.
+
+To style the background, text and hover color, apply the `background` and
+`color` CSS properties to the button. To style the ripple color, apply the
+`color` CSS property to the `#ripple` element in the button's shadow root:
+
+    /* Style #my-button blue with white text and darker blue ink. */
+    #my-button {
+        background: #4285f4;
+        color: #fff;
+    }
+
+    #my-button:hover {
+        background: #2a56c6;
+    }
+
+    #my-button::shadow #ripple {
+        color: #2a56c6;
+    }
+
+@element paper-button
+@extends paper-focusable
+-->
+
+<link href="../polymer/polymer.html" rel="import">
+<link href="../core-icon/core-icon.html" rel="import">
+<link href="../paper-focusable/paper-focusable.html" rel="import">
+<link href="../paper-ripple/paper-ripple.html" rel="import">
+<link href="../paper-shadow/paper-shadow.html" rel="import">
+
+<polymer-element name="paper-button" extends="paper-focusable" attributes="label raisedButton iconSrc icon"
+role="button">
+
+  <template>
+
+    <link href="paper-button.css" rel="stylesheet">
+
+    <template if="{{raisedButton}}">
+      <div fit id="shadow-container">
+        <paper-shadow id="shadow" z="{{z}}" animated></paper-shadow>
+      </div>
+    </template>
+
+    <div id="clip">
+      <!-- <div id="focusBg"></div> -->
+      <paper-ripple id="ripple"></paper-ripple>
+      <div id="content">
+        <template if="{{iconSrc || icon}}">
+          <core-icon id="icon" src="{{iconSrc}}" icon="{{icon}}"></core-icon>
+        </template>
+        <template if="{{label}}">
+          <span>{{label}}</span>
+        </template>
+      </div>
+    </div>
+
+  </template>
+
+  <script>
+    Polymer('paper-button', {
+
+      publish: {
+
+        /**
+         * The label of the button.
+         *
+         * @attribute label
+         * @type string
+         * @default ''
+         */
+        label: '',
+
+        /**
+         * If true, the button will be styled as a "raised" button.
+         *
+         * @attribute raisedButton
+         * @type boolean
+         * @default false
+         */
+        raisedButton: {value: false, reflect: true},
+
+        /**
+         * (optional) The URL of an image for an icon to use in the button.
+         * Should not use `icon` property if you are using this property.
+         *
+         * @attribute iconSrc
+         * @type string
+         * @default ''
+         */
+         iconSrc: '',
+
+         /**
+          * (optional) Specifies the icon name or index in the set of icons
+          * available in the icon set. If using this property, load the icon
+          * set separately where the icon is used. Should not use `src`
+          * if you are using this property.
+          *
+          * @attribute icon
+          * @type string
+          * @default ''
+          */
+         icon: ''
+
+      },
+
+      z: 1,
+
+      attached: function() {
+        if (this.textContent && this.textContent.match(/\S+/)) {
+          console.warn('Using textContent to label the button is deprecated. Use the "label" property instead');
+          this.label = this.textContent;
+        }
+      },
+
+      activeChanged: function() {
+        this.super();
+
+        if (this.active) {
+          // FIXME: remove when paper-ripple can have a default 'down' state.
+          if (!this.lastEvent) {
+            var rect = this.getBoundingClientRect();
+            this.lastEvent = {
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2
+            }
+          }
+          this.$.ripple.downAction(this.lastEvent);
+        } else {
+          this.$.ripple.upAction();
+        }
+        this.adjustZ();
+      },
+
+      focusedChanged: function() {
+        this.super();
+        this.adjustZ();
+      },
+
+      disabledChanged: function() {
+        this.super();
+        this.adjustZ();
+      },
+
+      // waitForSpillCompleted: function(callback) {
+      //   this.async(callback, null, (this.$.ink.spillCompleted ? 0 : this.duration));
+      // },
+
+      // resetInk: function() {
+      //   this.active = false;
+      //   this.$.ink.reset();
+      // },
+
+      insideButton: function(x, y) {
+        var rect = this.getBoundingClientRect();
+        return (rect.left <= x) && (x <= rect.right) && (rect.top <= y) && (y <= rect.bottom);
+      },
+
+      adjustZ: function() {
+        if (this.focused) {
+          this.classList.add('paper-shadow-animate-z-1-z-2');
+        } else {
+          this.classList.remove('paper-shadow-animate-z-1-z-2');
+
+          if (this.active) {
+            this.z = 2;
+          } else if (this.disabled) {
+            this.z = 0;
+          } else {
+            this.z = 1;
+          }
+
+        }
+      },
+
+      downAction: function(e) {
+        this.super(e);
+        this.lastEvent = e;
+      },
+
+      labelChanged: function() {
+        this.setAttribute('aria-label', this.label);
+      }
+
+    });
+  </script>
+</polymer-element>

@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
+The complete set of authors may be found at http://polymer.github.io/AUTHORS
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
+-->
+<html>
+<head>
+  <title>topeka-quiz-multi-select</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <script src="../../platform/platform.js"></script>
+  
+  <link rel="import" href="../../font-roboto/roboto.html">
+  <link rel="import" href="../../core-icons/core-icons.html">
+  <link rel="import" href="../../paper-button/paper-button.html">
+  <link rel="import" href="../templates/topeka-quiz-toggle-translate.html">
+
+  <style>
+
+    body {
+      font-family: "RobotoDraft", sans-serif;
+      padding: 20px;
+    }
+    
+  </style>
+
+</head>
+<body unresolved>
+
+  <topeka-quiz-toggle-translate></topeka-quiz-toggle-translate>
+  
+  <br><br><br>
+  
+  <paper-button raisedButton label="verify" onclick="verify()"></paper-button>
+  
+  <script>
+  
+    var q = document.querySelector('topeka-quiz-toggle-translate');
+  
+    addEventListener('polymer-ready', function() {
+  
+      q.quiz = {
+        question: "Toggle the words and select which landmark to American state pairings are correct.",
+        options: [
+          ["Las Vegas", "Arizona"],
+          ["Death Valley", "California"],
+          ["Mount Rushmore", "North Dakota"],
+          ["Fort Knox", "Kentucky"],
+          ["Kennedy Space Centre", "Florida"]
+        ],
+        answer: [1,3,4]
+      }
+      
+    });
+    
+    function verify() {
+      alert('score: ' + q.getScore());
+    }
+  
+  </script>
+  
+</body>
+</html>

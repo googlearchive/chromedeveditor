@@ -28,6 +28,8 @@ dependencies:
   mime: any
   path: any
   polymer: '>=0.13.0+3 <0.14.0'
+  polymer_designer:
+    path: ../cde-polymer-designer.dart
   spark_widgets:
     path: ../widgets
   tavern:

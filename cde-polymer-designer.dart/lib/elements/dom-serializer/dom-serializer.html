@@ -1,0 +1,331 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../components/polymer/polymer.html">
+<link rel="import" href="../../components/inspector-elements/binding.html"></link>
+
+<polymer-element name="basic-serializer">
+<script>
+(function() {
+
+Polymer({
+
+  tab: '  ',
+  attributesBlacklist: ['style', 'tabindex', 'role', 'classname'],
+
+  dumpTag: function(node, indent) {
+    if (node.dumpTag) {
+      return node.dumpTag(this, indent, this.tab);
+    }
+    if (node.nodeType == Node.TEXT_NODE) {
+      return this.dumpTextNode(node, indent);
+    }
+    var html = '';
+    html += indent + '<' + node.localName;
+    html += this.dumpAttributes(node, indent);
+    html += '>';
+    var end = {input: 1}[node.localName] ? '\n' : '</' + node.localName + '>\n';
+    if (node._designMeta && node._designMeta.hideSubtree) {
+      html += end;
+    } else {
+      var root = node.content || node;
+      if (root.firstElementChild) {
+        Array.prototype.forEach.call(root.children, function(c, i) {
+          if (i == 0) {
+            html += '\n';
+          }
+          html += this.dumpTag(c, indent + this.tab);
+        }, this);
+        html += indent + end;
+      } else {
+        html += root.firstChild ? this.dumpTextNode(root.firstChild, indent)
+           + end : end;
+      }
+    }
+    return html;
+  },
+
+  dumpAttributes: function(node, indent) {
+    var html = '';
+    var attributes = this.calcAttributeValues(node, indent);
+    Object.keys(attributes).forEach(function(k) {
+      var v = attributes[k];
+      if (v !== null && v !== undefined) {
+        var type = typeof v;
+        if (type === 'boolean') {
+          if (v) {
+            html += ' ' + k;
+          }
+        } else {
+          // json properties can contain " so surround them with '
+          var sep = type === 'string' && v.indexOf('"') >= 0 ? '\'' : '"';
+          html += ' ' + k + (v !== '' ? '=' + sep + v + sep: '');
+        }
+      }
+    });
+    return html;
+  },
+
+  calcAttributeValues: function(node, indent) {
+    var p$ = Reflection.properties(node);
+    var attributes = {};
+    p$.forEach(function(p) {
+      var v = p.value, n = p.name, binding = Bindings.getBinding(node, n);
+      if (n == 'textContent') {
+        return;
+      }
+      if (binding) {
+        v = '{{ ' + binding + ' }}';
+      }
+      // TODO(sorvell): should have a better way to get defaultValue.
+      var defaultValue;
+      // catch errors when accessing native prototype properties
+      try {
+        defaultValue = node.__proto__[n];
+      } catch(e) {}
+      if (!this.shouldSerializeProperty(v, defaultValue, p.meta)) {
+        v = null;
+      }
+      attributes[n.toLowerCase()] = v === null ? v : 
+          this.serializeAttributeValue(v, indent);
+    }, this);
+    for (var i=0, a, n; (a = node.attributes[i]); i++) {
+      n = a.name.toLowerCase();
+      if (attributes[n] === undefined) {
+        attributes[n] = a.value;
+      }
+    }
+    this.filterAttributes(attributes);
+    return attributes;
+  },
+
+  shouldSerializeProperty: function(value, defaultValue, meta) {
+    // must be valued
+    var valued = (value !== defaultValue) && (value || value === 0);
+    if (!valued) {
+      return;
+    }
+    // must be proper type
+    return (typeof value === 'string' || typeof value === 'number' ||
+        typeof value === 'boolean') || (typeof value === 'object' && 
+        meta && meta.kind === 'json');
+  },
+
+  serializeAttributeValue: function(value, indent) {
+    if (typeof value === 'object') {
+      value = JSON.stringify(value);
+    }
+    return value;
+  },
+
+  // special handling for certain attributes: style, class
+  filterAttributes: function(attributes) {
+    for (var i in attributes) {
+      if (this.attributesBlacklist.indexOf(i) >= 0 || i.match(/^aria/)) {
+        attributes[i] = null;
+      }
+    }
+    var v = attributes['class'];
+    if (v) {
+      for (var i=0, c; (c=blackListedClasses[i]); i++) {
+        v = v.replace(c, '');
+      }
+      v = v.trim();
+    }
+    attributes['class'] = v || null;
+  },
+
+  dumpTextNode: function(node) {
+    var binding = Bindings.getBinding(node, 'textContent');
+    return binding ? '{{ ' + binding + ' }}' : node.textContent;
+  }
+
+});
+
+// TODO(sorvell): This is ad hoc. We need a way to know what classes
+// should not be serialized.
+var blackListedClasses = ['selected-element', 'core-selected', 
+    'core-light-theme', 'core-dark-theme'];
+
+})();
+</script>
+</polymer-element>
+
+<polymer-element name="dom-serializer" extends="basic-serializer">
+<script>
+(function() {
+
+Polymer({
+
+  elementBlackList: [],
+  propertyBlackList: null,
+
+  ready: function() {
+    var node = document.createElement('serializer-blacklist');
+    this.propertyBlackList = Object.keys(node.__proto__);
+  },
+
+  dumpElement: function(node, indent) {
+    var html = '', indent = indent || '';
+    if (!node.querySelector('link[rel=import]')) {
+      html+= this.dumpImports(node, indent) + '\n';
+    }
+    html += this.dumpChildren(node, indent);
+    return html;
+  },
+
+  dumpChildren: function(node, indent) {
+    var children = '', indent = indent || '';
+    Array.prototype.forEach.call(node.children, function(c) {
+      if (this.elementBlackList.indexOf(c.localName) < 0) {
+        children += this.dumpTag(c, indent);
+      }
+    }, this);
+    return children || (indent + '\n');
+  },
+
+  dumpTextNode: function(node, indent) {
+    if (node.parentNode.localName === 'style') {
+      var style = node.parentNode;
+      return this.cssTextFromSheet(style, style.sheet, indent);
+    } else {
+      return this.super(arguments);
+    }
+  },
+
+  dumpElementAttributes: function(node) {
+    var html = '';
+    if (node.elementAttributes) {
+      Object.keys(node.elementAttributes).forEach(function(a) {
+        html += ' ' + a + '="' + node.elementAttributes[a] + '"';
+      });
+    }
+    return html;
+  },
+
+  dumpProto: function(node, indent) {
+    var dump = '{\n';
+    var props = Object.keys(node.__proto__).filter(function(p) {
+      return (this.propertyBlackList.indexOf(p) < 0);
+    }, this);
+    if (!props.length) {
+      dump += indent + this.tab;
+    }
+    props.forEach(function(k, i) {
+      var value = node.__proto__[k], nodeValue = node[k];
+      dump += indent + this.tab + k + ': ';
+      if (typeof value == 'function') {
+        dump += value.toString();
+      } else {
+        dump += (typeof value == 'string' ? '\'' + nodeValue +
+          '\'' : nodeValue);
+      }
+      dump += (i <  props.length-1 ? ',\n' : '');
+    }, this);
+    dump += '\n' + indent + '}';
+    return dump;
+  },
+
+  cssTextFromSheet: function(node, sheet, indent) {
+    if (sheet) {
+      var rules = sheet.cssRules;
+      var css = [indent];
+      for (var i=0, r; i < rules.length; i++) {
+        if (!(this.ignoreSelector(node, rules[i].selectorText))) {
+          r = this.dumpRule(rules[i], indent + this.tab);
+          if (r) {
+            css.push(r);
+          }
+        }
+      }
+      css.push('');
+      return css.join('\n') + indent;
+    }
+    return '';
+  },
+
+  // ignore id selectors
+  ignoreSelector: function (node, selector) {
+    //return selector.match(/^#[^, ]*$/) && node.querySelector(selector);
+  },
+
+  dumpRule: function(rule, indent) {
+    if (!rule.style.cssText) {
+      return null;
+    }
+    indent = indent || '';
+    // format
+    var css = indent + rule.selectorText.replace('-host', ':host') + ' {\n' +
+        rule.style.cssText.replace(/([^;]*);\s*:?/g, indent + this.tab + 
+        '$1;\n') + 
+        indent + '}';
+    return css;
+  },
+
+  dumpImports: function(element, indent) {
+    var imports = this.importsFromElement(element);
+    var d = element.ownerDocument.createElement('div'), hrefs=[];
+    for (var i=0, l=imports.length, n, h; (i<l) && (n=imports[i]); i++) {
+      h = n.getAttribute('href');
+      if (hrefs.indexOf(h) < 0) {
+        hrefs.push(h);
+        d.appendChild(n);
+        d.appendChild(element.ownerDocument.createTextNode('\n'));
+      }
+    }
+    return d.innerHTML;
+  },
+
+  importsFromElement: function(element) {
+    var n$ = element.querySelectorAll('*');
+    var imports = [], metas=[];
+    for (var i=0, l=n$.length, n, m; (i<l) && (n=n$[i]); i++) {
+      m = n._designMeta;
+      if (m && metas.indexOf(m) < 0) {
+        metas.push(m);
+        imports = imports.concat(this.importsFromMeta(m));
+      }
+    }
+    // ensure we at least import polymer
+    if (!imports.length) {
+      var p = element.ownerDocument.createElement('link');
+      p.rel = 'import';
+      p.setAttribute('href', '../polymer/polymer.html');
+      imports.push(p);
+    }
+    return imports;
+  },
+
+  importsFromMeta: function(meta) {
+    var t = meta && meta.getImports && meta.getImports();
+    if (t) {
+      var c = t.content.cloneNode(true);
+      var imports = c.querySelectorAll('link[rel=import]').array();
+      for (var i=0, l=imports.length, p, h; (i<l) && (p=imports[i]); i++) {
+        // make serializable href
+        h = p.getAttribute('href').replace('components', '..');
+        p.setAttribute('href', h);
+      }
+      return imports;
+    }
+    return [];
+  }
+
+});
+
+var parts = document.location.pathname.split('/');
+parts.pop();
+var basePath = document.location.origin + parts.join('/');
+
+})();
+</script>
+</polymer-element>
+
+<!-- provides a specimen for generating the polymer-element property blacklist -->
+<polymer-element name="serializer-blacklist" noscript></polymer-element>

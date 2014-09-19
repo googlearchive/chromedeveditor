@@ -1,0 +1,43 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../topeka-quiz-base.html">
+<link rel="import" href="../../paper-slider/paper-slider.html">
+
+<polymer-element name="topeka-quiz-alpha-picker" extends="topeka-quiz-base">
+<template>
+
+  <link rel="stylesheet" href="topeka-quiz-picker.css">
+  
+  <div class="picker-value font-light">{{value}}</div>
+  
+  <paper-slider max="25" immediateValue="{{immediateValue}}"></paper-slider>
+
+</template>
+<script>
+
+  Polymer('topeka-quiz-alpha-picker', {
+    
+    eventDelegates: {
+      down: 'answered',
+    },
+    
+    reset: function() {
+      this.super();
+      this.immediateValue = 0;
+    },
+    
+    immediateValueChanged: function() {
+      this.value = String.fromCharCode(65 + this.immediateValue);
+    }
+    
+  });
+
+</script>
+</polymer-element>

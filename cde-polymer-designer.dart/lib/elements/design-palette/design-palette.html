@@ -1,0 +1,92 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../components/core-icons/core-icons.html">
+<link rel="import" href="../../components/core-icon/core-icon.html">
+<link rel="import" href="../../components/core-item/core-item.html">
+<link rel="import" href="../../components/core-menu/core-menu.html">
+<link rel="import" href="../../components/core-menu/core-submenu.html">
+<link rel="import" href="../../components/core-drag-drop/core-drag-drop.html">
+
+<polymer-element name="design-palette" vertical layout attributes="mode categories">
+
+<template>
+
+  <link rel="stylesheet" href="design-palette.css">
+
+  <core-drag-drop on-drag-start="{{dragStart}}"></core-drag-drop>
+
+  <template if="{{mode == 'menu'}}">
+    <div flex id="list">
+
+      <core-menu selectedClass="palette-selected">
+        <template repeat="{{categories}}">
+          <core-submenu class="group-item" label="{{name}}">
+            <span flex class="item-content"></span>
+            <core-icon class="item-content" icon="expand-more"></core-icon>
+            <template repeat="{{list}}">
+              <div class="simple-item" tag="{{id}}" loaded?="{{importsLoaded}}" ishidden?="{{isHidden}}">{{label}}</div>
+            </template>
+
+          </core-submenu>
+        </template>
+      </core-menu>
+
+    </div>
+  </template>
+
+  <template if="{{mode == 'grid'}}">
+    <div flex id="grid">
+      <template repeat="{{categories}}">
+        <template repeat="{{list}}">
+
+          <div class="grid-item" tag="{{id}}">
+            <div style="height: 64px; line-height: 64px;"><img src="../../assets/{{id}}.png" onerror="this.src='../../assets/cog.svg';"></div>
+            <br>
+            <div>{{label}}</div>
+          </div>
+
+        </template>
+      </template>
+    </div>
+  </template>
+
+</template>
+<script>
+
+Polymer({
+  mode: 'grid',
+
+  dragStart: function(event, dragInfo) {
+    // decorate dragInfo
+    dragInfo.tag = dragInfo.event.target.getAttribute('tag');
+    dragInfo.origin = {left: dragInfo.event.pageX - 24,
+      top: dragInfo.event.pageY - 24};
+    // delegate to arbitrary ancestor
+    this.fire('palette-drag', dragInfo);
+    // multiplex drop
+    dragInfo.delegateDrop = dragInfo.drop;
+    dragInfo.drop = this.drop.bind(this);
+  },
+
+  drop: function(dragInfo) {
+    var dropped = false;
+    if (dragInfo.delegateDrop) {
+      dropped = dragInfo.delegateDrop(dragInfo);
+    }
+    if (!dropped && dragInfo.element) {
+      // dropping here sends the item to the bitbucket
+      dragInfo.element.remove();
+    }
+  }
+
+});
+
+</script>
+</polymer-element>

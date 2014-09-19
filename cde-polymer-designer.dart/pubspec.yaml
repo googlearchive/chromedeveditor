@@ -1,0 +1,9 @@
+name: polymer_designer
+version: 0.0.1
+author: Spark Team
+description: A general purpose Polymer widget library (used by Spark IDE)
+homepage: https://github.com/dart-lang/spark/
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  polymer: '>=0.13.0+3 <0.14.0'

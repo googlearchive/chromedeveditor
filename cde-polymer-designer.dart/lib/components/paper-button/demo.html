@@ -1,0 +1,99 @@
+<!doctype html>
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <title>paper-button</title>
+
+  <script src="../platform/platform.js"></script>
+
+  <link href="../font-roboto/roboto.html" rel="import">
+  <link href="../core-icons/core-icons.html" rel="import">
+  <link href="paper-button.html" rel="import">
+
+  <style shim-shadowdom>
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      margin: 0;
+      padding: 24px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+
+    section {
+      padding: 20px 0;
+    }
+
+    section > div {
+      padding: 14px;:width;
+    }
+
+    paper-button {
+      margin: 1em;
+      width: 10em;
+    }
+
+    paper-button.colored {
+      color: #4285f4;
+      fill: #4285f4;
+    }
+
+    paper-button[raisedButton].colored {
+      background: #4285f4;
+      color: #fff;
+    }
+
+    paper-button[raisedButton].colored #ripple,
+    paper-button[raisedButton].colored::shadow #ripple {
+      color: #2a56c6;
+    }
+
+    paper-button[raisedButton].colored #focusBg,
+    paper-button[raisedButton].colored::shadow #focusBg {
+      background: #3367d6;
+    }
+
+  </style>
+</head>
+<body unresolved>
+
+  <section>
+
+    <div>Flat buttons</div>
+
+    <paper-button label="button"></paper-button>
+    <paper-button class="colored" label="colored"></paper-button>
+    <!-- <paper-button focused label="focused"></paper-button> -->
+    <paper-button disabled label="disabled" onclick="alert('should not be clickable');"></paper-button>
+
+  </section>
+
+  <br>
+
+  <section>
+
+    <div>Raised buttons</div>
+
+    <paper-button raisedButton label="button"></paper-button>
+    <paper-button raisedButton class="colored" label="colored"></paper-button>
+    <!-- <paper-button raisedButton focused label="focused"></paper-button> -->
+    <paper-button raisedButton disabled label="disabled" onclick="alert('should not be clickable');"></paper-button>
+
+  </section>
+
+</body>
+</html>

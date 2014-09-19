@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>element-inspector</title>
+  <script src="../platform/platform.js"></script>
+  <link rel="import" href="element-inspector.html">
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    element-inspector {
+      display: block;
+      position: relative;
+      border: 1px solid silver;
+      background-color: #f2f2f2;
+      width: 300px;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+
+  <template is="auto-binding">
+
+    <section id="selected" foo="bar" noggin>Hi, I'm inspected</section>
+
+    <br><br><br>
+
+    <element-inspector selected="{{$.selected}}" Xnobind></element-inspector>
+
+  </template>
+
+</body>
+</html>

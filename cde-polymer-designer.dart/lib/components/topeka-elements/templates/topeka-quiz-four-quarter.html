@@ -1,0 +1,105 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../topeka-quiz-base.html">
+<link rel="import" href="../../core-selector/core-selector.html">
+<link rel="import" href="../../paper-button/paper-button.html">
+
+<polymer-element name="topeka-quiz-four-quarter" extends="topeka-quiz-base" noscript relative>
+<template>
+
+  <style>
+  
+    :host-context(.wide) {
+      position: relative !important;
+      height: 424px;
+      max-height: calc(100vh - 328px);
+    }
+
+    :host {
+      display: block;
+      box-sizing: border-box;
+      position: absolute !important;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+    .item {
+      width: 50%;
+      height: 50%;
+      box-sizing: border-box;
+    }
+    
+    .item:nth-of-type(2n+1) {
+      border-right: 1px solid #9d9d9d;
+    }
+
+    .item:nth-of-type(1), .item:nth-of-type(2) {
+      border-bottom: 1px solid #9d9d9d;
+    }
+
+    paper-button {
+      background-color: none;
+      border-radius: 0;
+      -webkit-transition: background-color 1s, color 0.5s;
+      transition: background-color 1s, color 0.5s;
+      text-transform: capitalize;
+    }
+
+    .item.core-selected > paper-button {
+      /*background-color: lightblue;*/
+      background-color: #00bcd4;
+      color: #f1f1f1;
+    }
+
+    paper-button {
+      position: relative;
+    }
+
+    paper-button::shadow #clip {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      /* when layout attrs fail =( */
+      display: -ms-flexbox;
+      display: -webkit-flex;
+      display: flex;
+      -ms-flex-align: center;
+      -webkit-align-items: center;
+      align-items: center;
+      -ms-flex-pack: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+
+    paper-button::shadow #focusBg {
+      -webkit-animation: none !important;
+      animation: none !important;
+    }
+
+  </style>
+  
+  <div id="choices" fit horizontal wrap layout>
+      
+    <template repeat="{{quiz.options}}">
+      <div class="item" horizontal layout>
+        <paper-button label="{{}}" flex></paper-button>
+      </div>
+    </template>
+    
+  </div>
+  
+  <core-selector target="{{$.choices}}" selected="{{value}}"></core-selector>
+  
+</template>
+</polymer-element>

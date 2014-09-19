@@ -1,0 +1,192 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<polymer-element name="x-meta" attributes="label isContainer isHidden list map categories shouldPrepend hideSubtree isEditor">
+<script>
+
+  Polymer('x-meta', {
+    
+    // shared data
+    list: [],
+    map: {},
+    categories: [],
+    pathMap: {},
+    
+    // instance properties
+    alwaysPrepare: true,
+    isContainer: false,
+    isHidden: false,
+    properties: null,
+    shouldPrepend: false,
+    hideSubtree: false,
+    isEditor: false,
+    
+    ready: function() {
+      if (this.id && this.id !== 'meta') {
+        this.resolveImportPath();
+        this.resolveCategory();
+        this.register(this);
+      }
+      this.updateProperties();
+    },
+    
+    enteredView: function() {
+      this.updateProperties();
+    },
+    
+    resolveImportPath: function() {
+      this.importPath = (this.ownerDocument.baseURI || '').split('/').slice(0,-1).join('/');
+    },
+    
+    resolveCategory: function() {
+      this.category =  this.getAttribute('group');
+      if (!this.category) {
+        this.category = 'Components';
+      }
+      // add to path category collation as needed
+      var pm = this.pathMap[this.category];
+      if (!pm) {
+        pm = this.pathMap[this.category] = {
+          name: this.category.split('/').pop(),
+          list: []
+        }
+        // add to category list
+        this.categories.push(pm);
+        // sort
+        this.categories.sort(function(a, b) {
+          var aa = a.name.toLowerCase(), bb = b.name.toLowerCase();
+          return aa < bb ? -1 : (aa > bb ? 1 : 0);
+        });
+      }
+    },
+    
+    register: function(meta) {
+      if (meta.id) {
+        // add to id map
+        this.map[meta.id] = meta;
+        // pre|append to id list
+        if (meta.shouldPrepend) {
+          this.list.unshift(meta);
+        } else {
+          this.list.push(meta);
+        }
+        //
+        // function for case-insensitive sort by (label || id)
+        var sortfn = function(a, b) {
+        var aa = (a.label || a.id).toLowerCase(), bb = (b.label || b.id).toLowerCase();
+        return aa < bb ? -1 : (aa > bb ? 1 : 0);
+        };
+        // sort the master list
+        this.list.sort(sortfn);
+        //
+        // locate category collation
+        var catlist = this.pathMap[this.category].list;
+            // add to collation
+        catlist.push(meta);
+        // sort collation
+        catlist.sort(sortfn);
+      }
+    },
+    
+    unregister: function(meta, id) {
+      if (id) {
+        delete this.map[id || meta.id];
+        var i = this.list.indexOf(meta);
+        if (i >= 0) {
+          this.list.splice(i, 1);
+        }
+      }
+    },
+    
+    byId: function(id) {
+      return this.map[id];
+    },
+    
+    updateProperties: function() {
+      var props = {};
+      var ps = this.querySelectorAll('property');
+      ps && Array.prototype.forEach.call(ps, function(p) {
+        var o = {};
+        Array.prototype.forEach.call(p.attributes, function(a) {
+          var v = a.value;
+          v = v.indexOf(',') > 0 ? v.split(',') : v;
+          // handle boolean attribute
+          if (v === '') {
+            v = true;
+          }
+          o[a.name] = v;
+        });
+        props[o.name] = o;
+      });
+      this.properties = props;
+    },
+    
+    // TODO(sjmiles): functions below here don't necessarily belong
+    // in this object
+    get archetype() {
+      if (!this._archetype) {
+        this._archetype = this.querySelector('template');
+        if (this._archetype) { 
+          Polymer.urlResolver.resolveTemplate(this._archetype);
+        }
+      }  
+      return this._archetype;
+    },
+    
+    createElement: function() {
+      if (!this.importsLoaded) {
+        this.loadImports();
+      }
+      if (this.archetype) {
+        var node = this.archetype.createInstance().querySelector('*');
+      } else {
+        node = document.createElement(this.id);
+      }
+      this.ensureMeta(node);
+      return node;
+    },
+    
+    ensureMeta: function(node) {
+      if (node.localName) {
+        node._designMeta = node._designMeta || 
+            this.byId(node.getAttribute("designMeta")) ||
+            this.byId(node.getAttribute("is")) || this.byId(node.localName);
+      }
+      Array.prototype.forEach.call(node.children, function(n) {
+        this.ensureMeta(n);
+      }, this);
+    },
+    
+    getImports: function() {
+      var t = this.querySelector('#imports');
+      if (t && !t._resolved) {
+        t._resolved = true;
+        // resolve urls in template.
+        Polymer.urlResolver.resolveTemplate(t);
+      }
+      return t;
+    },
+    
+    loadImports: function(callback) {
+      var needsCallback = true;
+      if (!this.importsLoaded) {
+        this.importsLoaded = true;
+        var t = this.getImports();
+        if (t) {
+          Polymer.importElements(t.content.cloneNode(true), callback);
+          needsCallback = false;
+        }
+      }
+      if (needsCallback && callback) {
+        callback();
+      }
+    }
+    
+  });
+  
+</script>
+</polymer-element>

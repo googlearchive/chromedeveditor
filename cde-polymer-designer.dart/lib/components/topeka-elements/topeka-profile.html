@@ -1,0 +1,232 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../core-selector/core-selector.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-fab/paper-fab.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../core-icons/core-icons.html">
+<link rel="import" href="avatars.html">
+
+<polymer-element name="topeka-profile" attributes="user userDefaults wide" center layout vertical>
+
+<template>
+  
+  <style>
+  
+    core-toolbar {
+      background-color: none;
+    }
+
+    .hero {
+      background-color: white;
+    }
+
+    .card {
+      background-color: white;
+      padding: 20px 16px;
+      box-sizing: border-box;
+      -moz-box-sizing: border-box;
+    }
+
+    .wide.card {
+      margin-top: 64px;
+      max-height: 580px;
+      max-width: 512px;
+      box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+      border-radius: 2px;
+    }
+
+    .header {
+      font-size: 1.5em;
+      color: #00BCD4;
+      font-weight: lighter;
+    }
+    .header.spaced {
+      margin-top: 16px;
+    }
+
+    .indent {
+      padding: 0 2px;
+    }
+
+    .topeka-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: inline-block;
+      overflow: hidden;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+
+    .avatar-wrapper {
+      display: inline-block;
+      padding: 2px;
+      margin: 6px 0;
+    }
+
+    .avatar-wrapper.core-selected {
+      background-color: #00BCD4;
+      border-radius: 50%;
+    }
+
+    .avatar-dummy {
+      width: 68px;
+      height: 0px;
+    }
+
+    #avatarList {
+      margin: 16px 0 8px 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #check {
+      width: 56px;
+      height: 56px;
+      background-color: #f5f5f5;
+      fill: black;
+    }
+
+    paper-fab {
+      transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1) 500ms, background-color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-transition: -webkit-transform 500ms cubic-bezier(0.4, 0, 0.2, 1) 500ms, background-color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-transform: scale(0);
+      transform: scale(0);
+      -webkit-transform-origin: 50% 50%;
+      transform-origin: 50% 50%;
+    }
+
+    paper-fab[showing] {
+      -webkit-transform: none;
+      transform: none;
+    }
+
+    /* TODO(kschaaf): fix more generally */
+    paper-fab[disabled] {
+      pointer-events: none;
+    }
+    
+    .main {
+      position: relative;
+    }
+    
+    .bg {
+      background-color: #eee;
+    }
+
+    :host([animate]:not(.core-selected)) .bg {
+      z-index: -1;
+    }
+
+    paper-input {
+      max-width: 20em;
+      width: auto;
+    }
+
+  </style>
+  
+  <div class="bg" fit dummy cross-fade></div>
+
+  <div class="main" flex layout vertical cross-fade-delayed?="{{parentElement.lastSelected === 'splash'}}">
+    <div class="card {{ {wide: wide} | tokenList }}" flex layout vertical slide-up-offscreen?="{{parentElement.selected === 'profile'}}" cross-fade="{{!wide && parentElement.selected !== 'profile'}}">
+      <div layout vertical flex cross-fade-delayed?="{{parentElement.lastSelected !== 'splash' && wide}}" on-keypress="{{ keypressAction }}">
+        <div class="indent" layout vertical>
+          <div class="header">{{userDefaults ? 'Your Profile' : 'Sign In'}}</div>
+          <paper-input label="First Name" id="first"></paper-input>
+          <paper-input label="Last Initial" id="last" maxlength="1"></paper-input>
+          <div class="header spaced">Choose an Avatar</div>
+        </div>
+        <div id="avatarList" flex>
+          <core-selector selected="{{selectedAvatar}}" layout horizontal justified wrap>
+            <template repeat="{{i in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]}}">
+              <div class="avatar-wrapper">
+                <core-icon icon="avatars:avatar-{{i}}" class="topeka-avatar"></core-icon>
+              </div>
+            </template>
+            <template repeat="{{i in [1,2,3,4,5,6,7,8]}}">
+              <div class="avatar-dummy"></div>
+            </template>
+          </core-selector>
+        </div>
+        <div horizontal center layout>
+          <paper-button on-tap="{{handleLogout}}" label="Sign Out" hidden?="{{!user}}"></paper-button>
+          <div flex></div>
+          <paper-fab id="check" icon="check" showing?="{{$.first.inputValue.length && $.last.inputValue.length && selectedAvatar !== undefined}}" on-tap="{{handleLogin}}"></paper-fab>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</template>
+
+<script>
+
+  Polymer('topeka-profile', {
+
+    // tab through the input fields on "Enter"
+    keypressAction: function(ev) {
+      var code = ev.keyCode || ev.charCode;
+      var key = ev.keyIdentifier;
+      if (key === 'Enter' || code === 13) {
+        var target = ev.target;
+        if (target === this.$.first) {
+          // TODO(dfreedm): calling the focus event handler in lieu of a real api
+          this.$.last.focusAction();
+        } else if (target === this.$.last) {
+          // after "last" field, lower keyboard to show avatar list
+          this.$.last.blur();
+        }
+      }
+    },
+
+    ready: function() {
+      if (!this.user) {
+        this.selectRandomAvatar();
+      }
+    },
+
+    selectRandomAvatar: function() {
+      this.selectedAvatar = Math.floor(Math.random() * 16);
+    },
+
+    userDefaultsChanged: function() {
+      if (this.userDefaults) {
+        var n = this.userDefaults.name;
+        this.$.first.value = n.substring(0, n.length-2);
+        this.$.last.value = n[n.length-1];
+        this.selectedAvatar = this.userDefaults.avatar - 1;
+        this.score = this.userDefaults.score;
+      } else {
+        this.$.first.value = '';
+        this.$.last.value = '';
+        this.selectRandomAvatar();
+        this.score = 0;
+      }
+    },
+
+    handleLogin: function() {
+      this.user = {
+        name: this.$.first.value + ' ' + this.$.last.value.substring(0,1),
+        avatar: this.selectedAvatar + 1,
+        score: this.score || 0
+      };
+    },
+
+    handleLogout: function() {
+      this.user = null;
+      this.userDefaults = null;
+    }
+
+  });
+
+</script>
+
+</polymer-element>

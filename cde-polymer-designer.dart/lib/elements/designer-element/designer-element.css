@@ -1,0 +1,172 @@
+/*
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
+:host {
+  fill: #656565;
+  font-size: 15px;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#frameContainer {
+  height: 100%;
+  z-index: 0;
+}
+
+#appbar {
+  background-color: #f2f2f2;
+  border-bottom: 1px solid silver;
+}
+
+:host #appbar > .design-controls {
+  margin: 0;
+}
+
+.design-controls > * {
+  margin: 0 8px;
+}
+
+.separator {
+  border-left: #656565 solid 1px;
+  opacity: 0.8;
+  height: 24px;
+}
+
+#toast {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.5s;
+  -webkit-transition: opacity 0.5s;
+}
+
+#toast > div {
+  display: inline-block;
+  font-size: 0.8rem;
+  background-color: #ffff66;
+  padding: 4px 8px;
+  border: solid silver;
+  border-width: 0 1px 1px 1px;
+  border-radius: 0 0 2px 2px;
+}
+
+#toast.showing {
+  opacity: 1;
+}
+
+#code {
+  font-size: 16px;
+  /* ensure position absolute; necessary under SD polyfill */
+  position: absolute;
+}
+
+/*
+ * some icons need to be rotated 90deg because that direction is missing
+ * TODO(dfreedm): Get proper icons from designers
+ * */
+core-icon-button.rotate {
+  transform: rotate(90deg);
+  -webkit-transform: rotate(90deg);
+}
+
+:host /deep/ #tabs {
+  padding: 12px 12px 0;
+  background-color: #f2f2f2;
+  color: #a9a9a9;
+  border-bottom: 1px solid #ccc;
+  display: block;
+}
+
+:host /deep/ #tabs > * {
+  display: inline-block;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border-bottom: 0;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  cursor: default;
+}
+
+:host /deep/ #tabs > .core-selected {
+  color: #5d5d5d;
+  border-bottom: 1px solid #5d5d5d;
+}
+
+#tools {
+  -webkit-transition: -webkit-transform 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out;
+  position: fixed;
+  overflow: hidden;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 350px;
+  border-left: 1px solid silver;
+  -webkit-user-select: none;
+}
+
+#tools.maximized {
+  -webkit-transform: translate3d(350px, 0, 0);
+  transform: translate3d(350px, 0, 0);
+  box-shadow: none;
+}
+
+.toolsPlaceholder {
+  width: 350px;
+  -webkit-transition: width 0.3s ease-in-out;
+  transition: width 0.3s ease-in-out;
+}
+
+.toolsPlaceholder.maximized {
+  width: 0;
+}
+
+.splitterContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.inspectorControls {
+  background-color: white;
+}
+
+.designTools {
+  background-color: #f2f2f2;
+}
+
+.designTools::shadow ::content > * {
+  margin: 0;
+}
+
+.designTools {
+  padding: 0 8px;
+}
+
+.paletteTree {
+  background-color: white;
+  height: 50%;
+}
+
+#tree {
+  overflow: hidden;
+}

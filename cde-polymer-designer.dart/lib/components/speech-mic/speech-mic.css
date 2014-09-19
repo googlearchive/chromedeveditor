@@ -1,0 +1,109 @@
+/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  display: inline-block;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.mic-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.mic-container.recognizing {
+  z-index: 10;
+}
+
+.icon {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.icon > svg {
+  display: block;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.recognizing > .icon {
+  background-color: #d23f31;
+  fill: #fff;
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.ring {
+  display: none;
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  border-radius: 100%;
+}
+
+.recognizing > .ring {
+  display: block;
+  background-color: rgba(0, 0, 0 , 0.1);
+  -webkit-animation: ring 1.2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+}
+
+@-webkit-keyframes ring {
+  0% {
+    -webkit-transform: scale(0.5);
+  }
+  40% {
+    -webkit-transform: scale(0.8);
+  }
+  100% {
+    -webkit-transform: scale(1);
+  }
+}
+
+.ring2 {
+  display: none;
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  border-radius: 100%;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.recognizing > .ring2 {
+  display: block;
+  -webkit-animation: ring2 1.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+}
+
+@-webkit-keyframes ring2 {
+  0% {
+    -webkit-transform: scale(0.3);
+  }
+  40% {
+    -webkit-transform: scale(0.5);
+  }
+  100% {
+    -webkit-transform: scale(1);
+  }
+}

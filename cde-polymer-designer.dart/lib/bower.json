@@ -1,0 +1,7 @@
+{
+  "name": "designer",
+  "private": true,
+  "dependencies": {
+    "polymer-designer": "Polymer/designer#master"
+  }
+}

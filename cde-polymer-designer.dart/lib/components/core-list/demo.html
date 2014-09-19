@@ -1,0 +1,154 @@
+<!doctype html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+  <title>core-list</title>
+  <meta name="viewport" content="width=device-width">
+  <script src="../platform/platform.js"></script>
+  <link rel="import" href="core-list.html">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    
+    list-test {
+      display: block;
+      height: 100%;
+      margin: 0 auto;
+    }
+
+    .stuff {
+      min-height: 60px;
+      background: red !important;
+      border-bottom: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+
+<list-test></list-test>
+
+<polymer-element name="list-test">
+<template>
+  <style>
+    core-list {
+      height: 100%;
+    }
+
+    .item {
+      box-sizing: border-box;
+      height: 80px;
+      border-bottom: 1px solid #ddd;
+      padding: 4px;
+      cursor: default;
+      background-color: white;
+      overflow: hidden;
+    }
+
+    .selected {
+      background: silver;
+    }
+
+    .message {
+      padding-left: 77px;
+      line-height: 167%;
+      background-repeat: no-repeat;
+      background-position: 10px 10px;
+      background-size: 60px;
+    }
+    
+    .from {
+      display: inline;
+      font-weight: bold;
+    }
+    
+    .timestamp {
+      margin-left: 10px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    
+    .body {
+      font-size: 12px;
+    }
+  </style>
+  <core-list id="list" data="{{data}}" height="80">
+    <template>
+      <div class="item {{ {selected: selected} | tokenList }}">
+        <div class="message" style="background-image: url(images/{{index % 4}}.png);">
+          <span class="from">{{name}}</span>
+          <span class="timestamp">{{time}}</span>
+          <div class="subject">Infinite List. {{index}}</div>
+          <div class="body">{{details}}</div>
+        </div>
+      </div>
+    </template>
+  </core-list>
+
+</template>
+<script>
+(function() {
+  var strings = [
+    "PARKOUR!",
+    "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...",
+    "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+  ];
+
+  var namegen = {
+    generateString: function(inLength) {
+      var s = '';
+      for (var i=0; i<inLength; i++) {
+        s += String.fromCharCode(Math.floor(Math.random() * 26) + 97);
+      }
+      return s;
+    },
+    generateName: function(inMin, inMax) {
+      return this.generateString(Math.floor(Math.random() * (inMax - inMin + 1) + inMin));
+    }
+  };
+
+  Polymer('list-test', {
+    count: 50000,
+    ready: function() {
+      this.data = this.generateData();
+    },
+    generateData: function() {
+      var names = [], data = [];
+      for (var i=0; i<this.count; i++) {
+        names.push(namegen.generateName(4, 8));
+      }
+      names.sort();
+      for (var i=0; i<this.count; i++) {
+        var name = names[i];
+        var divider = name.charAt(0);
+        if (divider === (names[i-1] || '').charAt(0)) {
+          divider = null;
+        }
+        data.push({
+          index: i,
+          name: name,
+          divider: divider,
+          details: strings[i % 3],
+          time: '8:29pm'
+        });
+      }
+      return data;
+    },
+    tapAction: function(e) {
+      console.log('tap', e);
+    }
+  });
+})();  
+</script>
+</polymer-element>
+
+</body>
+</html>

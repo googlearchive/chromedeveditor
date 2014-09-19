@@ -1,0 +1,98 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="topeka-quiz-multi-select.html">
+<link rel="import" href="../../core-selector/core-selector.html">
+<link rel="import" href="../../paper-item/paper-item.html">
+<link rel="import" href="../../paper-toggle-button/paper-toggle-button.html">
+
+<polymer-element name="topeka-quiz-toggle-translate" extends="topeka-quiz-multi-select">
+<template>
+
+  <style>
+    :host {
+      padding: 40px 0px;
+    }
+    
+    :host-context(.wide) {
+      padding: 40px 0px 48px;
+    }
+
+    :host paper-item {
+      padding: 3px 28px;
+    }
+    
+    :host-context(.wide) paper-item {
+      padding: 3px 36px;
+    }
+
+    paper-item {
+      margin: 3px 0;
+      -webkit-transition: background-color 1s;
+      transition: background-color 1s;
+    }
+
+    paper-item.core-selected {
+      background-color: #b2ebf2;
+    }
+
+    paper-item::shadow #ripple {
+      color: #7cd9e6;
+    }
+    
+    paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
+      color: #00bad2;
+    }
+    
+    paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
+      background-color: #00bad2;
+    }
+    
+    paper-toggle-button::shadow #toggleBar[checked] {
+      background-color: #00bad2;
+    }
+
+    .icon {
+      transform: rotate(90deg);
+      -webkit-transform: rotate(90deg);
+      margin: 0 24px;
+    }
+
+    .option-left {
+      text-align: right;
+    }
+
+  </style>
+
+  <div id="choices">
+
+    <template repeat="{{item in quiz.options}}">
+
+      <paper-item justified horizontal layout>
+        <div class="option-left" flex>{{item[0]}}</div>
+        <core-icon class="icon" icon="unfold-more"></core-icon>
+        <div class="option-right" flex>{{item[1]}}</div>
+      </paper-item>
+
+    </template>
+
+  </div>
+
+  <core-selector target="{{$.choices}}" multi selected="{{selected}}"></core-selector>
+
+</template>
+<script>
+  Polymer({
+    // prevent selection
+    toggleTap: function(e) {
+      e.stopPropagation();
+    }
+  });
+</script>
+</polymer-element>

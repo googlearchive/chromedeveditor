@@ -1,0 +1,39 @@
+/*
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+*/
+
+#interior > * {
+  padding: 8px 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+core-icon-button {
+  fill: rgb(131, 131, 131);
+}
+
+#tabs {
+  padding: 10px 10px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+#tabs > * {
+  display: inline-block;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border-bottom: 0;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  cursor: default;
+}
+
+#tabs > .core-selected {
+  color: #5d5d5d;
+  border-bottom: 1px solid #5d5d5d;
+}

@@ -1,0 +1,43 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../polymer/polymer.html">
+<script src="coolclock.js"></script>
+<script src="moreskins.js"></script>
+
+<polymer-element name="cool-clock" attributes="skin">
+  <template>
+    <span id="clock"></span>
+  </template>
+  <script>
+    Polymer('cool-clock', {
+      skin: '', //'Babosa',
+      ready: function() {
+        
+      },
+      skinChanged: function() {
+        this.canvas.className = 'CoolClock:' + this.skin;
+      },
+      enteredView: function() {
+        // TODO(sorvell): create the canvas element manually becase ios 
+        // does not render the canvas element if it is not created in the
+        // main document (component templates are created in a 
+        // different document). See:
+        // https://bugs.webkit.org/show_bug.cgi?id=109073.
+        this.canvas = document.createElement('canvas');
+        this.$.clock.appendChild(this.canvas);
+        // if not specified, choose a random skin
+        if (!this.skin) {
+          var skins = Object.keys(CoolClock.config.skins);
+          var i = Math.floor(Math.random() * skins.length);
+          this.skin = skins[i];
+        }
+        this.async(function() {
+          CoolClock.findAndCreateClocks(this.$.clock);
+        });
+      }
+    });    
+  </script>
+</polymer-element>

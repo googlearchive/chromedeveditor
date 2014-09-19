@@ -1,0 +1,13 @@
+{
+  "name": "paper-dropdown-menu",
+  "private": false,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master",
+    "core-dropdown": "Polymer/core-dropdown#master",
+    "core-icon": "Polymer/core-icon#master",
+    "core-icons": "Polymer/core-icons#master",
+    "core-menu": "Polymer/core-menu#master",
+    "paper-item": "Polymer/paper-item#master",
+    "paper-shadow": "Polymer/paper-shadow#master"
+  }
+}

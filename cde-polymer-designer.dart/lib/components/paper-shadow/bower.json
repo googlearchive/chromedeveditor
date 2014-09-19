@@ -1,0 +1,7 @@
+{
+  "name": "paper-shadow",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master"
+  }
+}

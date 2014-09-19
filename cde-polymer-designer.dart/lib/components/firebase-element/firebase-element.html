@@ -1,0 +1,444 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="firebase-import.html">
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+Element wrapper for the Firebase Web API (http://firebase.com).
+
+`firebase-element` maps a firebase location to a `data` property. 
+
+    <firebase-element id="base" location="https://YOUR.firebaseio.com/" data="{{data}}" keys="{{keys}}"></firebase-element>
+
+    <h3>My Firebase Data</h3>
+    
+    <template repeat="{{key in keys}}">
+      <p>{{key}}: {{data[key]}}</p>
+    </template>
+    
+## Data Persistence
+
+- changes that occur on the remote data are automatically reflected back into 
+  the client-side data.
+- assignments to the `data` property, or modifications to `data`'s **own** properties, are 
+  automatically persisted back to the Firebase store.
+- changes to **sub-properties** of `data` are not generally observable and are **not** 
+  automatically persisted.
+- properties bound to the `data` property work just like `data` itself (all Polymer
+  bindings are like this).
+  
+Examples:
+
+    // assume `this.data` is bound to the firebase-element data as shown above
+    
+    resetData: function() {
+      // setting the data object directly will automatically also 
+      // set the firebase location 
+      this.data = {
+        name: 'anonymous',
+        info: 'none',
+        more: {
+          color: "yellow"
+        }
+      };
+    },
+
+    updateInfo: function(info) {
+      // setting top-level properties of the data object 
+      // will automatically update the database
+      // this works via binding also
+      this.data.info = info;
+    },
+
+    updateColor: function(color) {
+      // changes to deep properties of the data object 
+      // are not observed automatically, and must be
+      // commited to update the database
+      this.data.more.color = color;
+      // in this case, we use `commitProperty` to commit 
+      // the top-level property that has deep changes
+      this.$.base.commitProperty('more');
+    }
+
+## Observing Changes
+
+Whenever `firebase-element` detects a change in data, from either client or server side, it
+bubbles a `data-change` event. `data-change` events are frequency-limited (throttled).
+
+Changes in data objects are also observable directly, but you must observe relevant properties
+directly. Changes in sub-properties are not automatically observed, following normal Polymer rules.
+
+Examples:
+
+    observe: {
+      // dataChanged only called if data is pointed at a new object
+      // changes to data's _properties or sub-properites are not observed_
+      data: 'dataChanged',
+      // dataNameChanged called if `data.name` changes
+      'data.name': 'dataNameChanged'
+    } 
+
+## Arrays and Objects
+
+Firebase stores all data as Objects, even Arrays are stored as objects with numerical keys. 
+As a convenience, the Firebase Web API automatically converts Array-like Objects into Arrays
+for use JavaScript.
+
+Arrays are generally inconvenient for large data-storage. For example, if you delete an
+element from an array, all the subsequent elements need their indices (keys) updated.
+
+To support lists of data without using Arrays, Firebase supports a `push` method which 
+adds an entry to an Object using a string key instead of an index.
+
+    addEntry: function(value) {
+      this.$.base.push({foo: value});
+    }
+
+## Child Events
+
+Firebase supports notifications when properties on `data` are removed, added, or modified. 
+Any of these changes will cause firebase-element to fire `data-change` method as described 
+above. However, you can also listen for discrete child events, by setting `childEvents`
+property to true. The events are `child-added`, `child-removed`, and `child-changed`. Each
+`event` object has a `detail` property with `name` and `value` properties identifying the 
+modified item.
+
+Example:
+
+    <firebase-element childEvents on-child-added="{{childAdded}}" ...>
+    ...
+    childAdded: function(event) {
+      console.log('added ', event.detail.name, ':', event.detail.value);
+    }
+
+@class firebase-element
+@blurb Element wrapper for the Firebase Web API (http://firebase.com).
+@status alpha
+@snap snap.png
+-->
+<polymer-element name="firebase-element">
+<script>
+  /*
+    note: switching between Array and Object datatypes will mess up 
+    live firebase-element elements
+  */
+  Polymer('firebase-element', {
+    publish: {
+      /**
+       * Fired when properties on `data` are added, removed, or modified.
+       *
+       * @event data-change
+       */
+
+      /**
+       * Firebase location mapped to `data`.
+       * @attribute location
+       * @type String
+       */
+      location: null,
+      /**
+       * Firebase `ref` object corresponding to `location`.
+       * @attribute ref
+       * @type Object
+       */
+      ref: null,
+      /**
+       * Restricts the number of records reflected on the client.
+       * @attribute limit
+       * @type Number
+       */
+      limit: 0,
+      /**
+       * Specify a starting record for the set of records reflected on the client.
+       * @attribute start
+       * @type Any
+       */
+      start: null,
+      /**
+       * Specify an ending record for the set of records reflected on the client.
+       * @attribute end
+       * @type Any
+       */
+      end: null,
+      /**
+       * The `data` object mapped to `location`.
+       * @attribute data
+       * @type Object
+       */
+      data: null,
+      /**
+       * All keys in data (array of names, if you think of data as a set of name/value pairs).
+       * @attribute keys
+       * @type Array
+       */
+      keys: null,
+      /**
+       * If true, will fire `child-added`, `child-removed`, `child-changed` events.
+       * @attribute childEvents
+       * @type Boolean
+       */
+      childEvents: false,
+      /**
+       * When set, data will be stored with the given Firebase priority level.
+       * @attribute priority
+       * @type Number
+       */
+      priority: null,
+      /**
+       * Reflects whether the data at this locaation as been read at least once
+       * @attribute initialized
+       * @type Boolean
+       */
+      dataReady: false,
+      /**
+       * If true, will log various occurances to the console api.
+       * @attribute log
+       * @type Boolean
+       */
+      log: false
+    },
+    observe: {
+      'ref limit start end': 'requery'
+    },
+    locationChanged: function() {
+      // shut-down previous observers (if any)
+      this.closeQuery();
+      this.closeObserver();
+      // connect to db
+      if (this.location) {
+        this.ref = new Firebase(this.location);
+      } else {
+        this.ref = null;
+      }
+    },
+    requery: function() {
+      // shut-down previous observers (if any)
+      this.closeQuery();
+      this.closeObserver();
+      // construct new query
+      var query = this.ref;
+      if (query) {
+        if (this.start) {
+          query = query.startAt(this.start);
+        }
+        if (this.end) {
+          query = query.endAt(this.end);
+        }
+        if (this.limit > 0) {
+          query = query.limit(this.limit);
+        }
+        this.query = query;
+      }
+    },
+    queryChanged: function() {
+      // initialize
+      this._setData(null);
+      // data acquisition
+      this.dataReady = false;
+      this.valueLoading = true;
+      this.query.once('value', this.valueLoaded, this);
+      // observe server-side data
+      this.observeQuery();
+    },
+    valueLoaded: function(snapshot) {
+      this.valueLoading = false;
+      if (this.ref.name() !== snapshot.name()) {
+        this.log && console.warn('squelching stale response [%s]', snapshot.name());
+        return;
+      }
+      this.log && console.log('acquired value ' + this.location);
+      this.dataReady = true;
+      this._setData(snapshot.val());
+      if (this.data) {
+        this.dataChange();
+      }
+    },
+    _setData: function(data) {
+      this.closeObserver();
+      this.data = this._data = data;
+      this.observeData();
+    },
+    //
+    // server-side data-observation
+    //
+    observeQuery: function() {
+      // server side dynamics
+      this.query.on('child_added', this.childAdded, this);
+      this.query.on('child_changed', this.childChanged, this);
+      this.query.on('child_removed', this.childRemoved, this);
+    },
+    closeQuery: function() {
+      if (this.query) {
+        this.query.off();
+      }
+    },
+    //
+    // client-side data-observation
+    //
+    observeData: function() {
+      if (this.data instanceof Array) {
+        this.observer = new ArrayObserver(this.data);
+        this.observer.open(this.observeArray.bind(this));
+      } else if (this.data instanceof Object) {
+        this.observer = new ObjectObserver(this.data);
+        this.observer.open(this.observeObject.bind(this));
+      }
+    },
+    closeObserver: function() {
+      if (this.observer) {
+        this.observer.close();
+        this.observer = null;
+      }
+    },
+    dataChanged: function() {
+      if (this._data !== this.data) {
+        this._setData(this.data);
+        this.commit();
+      }
+    },
+    priorityChanged: function() {
+      if (this.ref && (this.priority != null)) {
+        this.ref.setPriority(this.priority);
+      }
+    },
+    discardObservations: function() {
+      if (this.observer) {
+        this.observer.discardChanges();
+      }
+    },
+    deliverObservations: function() {
+      if (this.observer) {
+        this.observer.deliver();
+      }
+    },
+    //
+    // server-side effects
+    //
+    childAdded: function(snapshot) {
+      if (this.data) {
+        // ignore initial adds, we'll take the 'value' instead
+        this.modulateData('updateData', snapshot);
+      } else if (!this.valueLoading) {
+        // if children are added to a previously null location, grab the whole value in one go
+        this.valueLoading = true;
+        this.query.once('value', this.valueLoaded, this);
+      }
+      this.childEvent('child-added', snapshot);
+    },
+    childChanged: function(snapshot) {
+      if (!this.valueLoading) {
+        this.modulateData('updateData', snapshot);
+      }
+      this.childEvent('child-changed', snapshot);
+    },
+    childRemoved: function(snapshot) {
+      if (!this.valueLoading) {
+        this.modulateData('removeData', snapshot);
+      }
+      this.childEvent('child-removed', snapshot);
+    },
+    childEvent: function(kind, snapshot) {
+      this.log && console.log(kind, snapshot.name());
+      if (this.childEvents) {
+        this.fire(kind, {name: snapshot.name(), value: snapshot.val()});
+      }
+    },
+    modulateData: function(operation, snapshot) {
+      // handle any pending observations
+      this.deliverObservations();
+      this[operation](snapshot);
+      this.dataChange();
+      // discard any observations so we don't send this value back to the
+      // server, it may already be stale from the server's perspective
+      this.discardObservations();      
+    },
+    updateData: function(snapshot) {
+      if (!this.data) {
+        this.data = {};
+      }
+      this.data[snapshot.name()] = snapshot.val();
+    },
+    removeData: function(snapshot) {
+      var key = snapshot.name();
+      if (this.data instanceof Array) {
+        this.data.splice(key, 1);
+        if (data.length == 0) {
+          this._setData(null);
+        }
+      } else if (this.data) {
+        delete this.data[key];
+        if (Object.keys(this.data).length === 0) {
+          this._setData(null);
+        }
+      }
+    },
+    dataChange: function() {
+      //this.job('change', function() {
+        if (this.data) {
+          this.keys = this.data ? Object.keys(this.data) : [];
+        }
+        this.fire('data-change');
+      //});
+    },
+    //
+    // client-side effects
+    //
+    observeArray: function(splices) {
+      //console.warn('observeArray');
+      // TODO(sjmiles): arrays are nasty because simple insertions/deletions
+      // cause changes to ripple through keys
+      this.commit();
+    },
+    observeObject: function(added, removed, changed, getOldValueFn) {
+      // client-side dynamics
+      var ctrlr = this;
+      Object.keys(added).forEach(function(property) {
+        ctrlr.commitProperty(property);
+      });
+      Object.keys(removed).forEach(function(property) {
+        ctrlr.remove(property);
+      });
+      Object.keys(changed).forEach(function(property) {
+        ctrlr.commitProperty(property);
+      });
+    },
+    // api for manual commits
+    commitProperty: function(key) {
+      this.log && console.log('commitProperty ' + key);
+      if (this.ref) {
+        this.ref.child(key).set(this.data[key]);
+      }
+    },
+    remove: function(key) {
+      this.ref.child(key).remove();
+    },
+    commit: function() {
+      this.log && console.log('commit');
+      if (this.ref) {
+        if (this.priority != null) {
+          this.ref.setWithPriority(this.data || {}, this.priority);
+        } else {
+          this.ref.set(this.data || {});
+        }
+      }
+    },
+    push: function(item) {
+      var neo;
+      if (this.data instanceof Array) {
+        this.ref.commitProperty(this.data.push(item)-1);
+      } else {
+        neo = this.ref.push(item);
+      }
+      this.dataChange();
+      return neo;
+    }
+  });
+</script>
+</polymer-element>
