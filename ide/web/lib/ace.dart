@@ -40,6 +40,7 @@ export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
+  static const int LARGE_FILE_SIZE = 500000;
 
   final AceManager aceManager;
   final workspace.File file;
@@ -209,8 +210,6 @@ class TextEditor extends Editor {
       });
     }
   }
-
-  static const int LARGE_FILE_SIZE = 30000;
 
   bool fileIsLarge(String text) {
     return (text.length > LARGE_FILE_SIZE);

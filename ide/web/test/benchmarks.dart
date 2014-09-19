@@ -57,7 +57,7 @@ defineTests() {
     test('git sha', () => runBenchmark(new GitShaBenchmark()));
     test('fast sha', () => runBenchmark(new FastShaBenchmark()));
     test('crc32', () => runBenchmark(new CRC32Benchmark()));
-    test('md5', () => runBenchmark(new md5Benchmark()));
+    test('MD5', () => runBenchmark(new MD5Benchmark()));
   });
 }
 
@@ -192,10 +192,10 @@ class FastShaBenchmark extends BenchmarkBase {
   }
 }
 
-class md5Benchmark extends BenchmarkBase {
+class MD5Benchmark extends BenchmarkBase {
   String data = _createLargeString(100000);
 
-  md5Benchmark() : super('md5', emitter: _emitter);
+  MD5Benchmark() : super('MD5', emitter: _emitter);
 
   void run() {
     crypto.MD5 md5 = new crypto.MD5();

@@ -18,7 +18,7 @@ dependencies:
   chrome_testing: '>=0.1.0 <0.2.0'
   cipher: '>=0.7.0 <0.8.0'
   compiler_unsupported: 0.7.2
-  crc32: any
+  crc32: '>=0.1.5 <0.2.0'
   crypto: any
   diff: '>=0.1.0 <0.2.0'
   html5lib: any
