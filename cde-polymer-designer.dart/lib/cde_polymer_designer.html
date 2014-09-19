@@ -8,13 +8,12 @@
 
 <polymer-element name="cde-polymer-designer" >
   <template>
-    <div id="container">
-      <webview id="webview"
-          src="src/polymer_designer/index.html"
-          partition="cde-polymer-designer"
-          autosize="on">
-      </webview>
-    </div>
+    <webview id="webview"
+        src="src/polymer_designer/index.html"
+        partition="persist:cde-polymer-designer"
+        autosize="on"
+        minheight="500">
+    </webview>
   </template>
 
   <script type="application/dart" src="cde_polymer_designer.dart"></script>

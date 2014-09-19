@@ -5,15 +5,12 @@
 :host {
   display: block;
   box-sizing: border-box;
-  outline: none;
-  width: 800px;
-  height: 600px;
-  border: 1px solid #ccc;
+  padding: 0;
+  margin: 0;
 }
 
-#container, #webview {
+#webview {
   display: block;
-  position: relative;
   width: 100%;
   height: 100%;
 }

@@ -39,8 +39,9 @@ spark-dialog#polymerDesignerDialog {
 }
 
 spark-dialog#polymerDesignerDialog #sparkPolymerDesigner {
-  width: 100px;
-  height: 700px;
+  display: block;
+  height: 600px;
+  border: 1px solid #ccc;
 }
 
 .toolbar {
