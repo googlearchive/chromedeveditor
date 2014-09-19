@@ -6,7 +6,8 @@
 
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
-<polymer-element name="spark-status" layout center horizontal
+<polymer-element name="spark-status" extends="spark-widget"
+    layout center horizontal
     attributes="spinning defaultMessage temporaryMessage progressMessage">
   <template>
     <link rel="stylesheet" href="spark_status.css">

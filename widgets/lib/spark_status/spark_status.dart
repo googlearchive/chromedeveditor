@@ -27,7 +27,7 @@ import '../common/spark_widget.dart';
  * * or default message, if any
  */
 @CustomTag('spark-status')
-class SparkStatus extends PolymerElement {
+class SparkStatus extends SparkWidget {
   bool _spinning = false;
   String _defaultMessage;
   String _progressMessage;
