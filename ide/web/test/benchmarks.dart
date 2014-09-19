@@ -216,7 +216,7 @@ class CRC32Benchmark extends BenchmarkBase {
 
 String _createLargeString(int size) {
   String res = "";
-  for (int i = 0; i<size; i++) res += "a";
+  for (int i = 0; i < size; i++) res += "a";
   return res;
 }
 
