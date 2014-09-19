@@ -12,6 +12,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:crc32/crc32.dart' as crc;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart';
@@ -55,6 +56,8 @@ defineTests() {
     test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
     test('git sha', () => runBenchmark(new GitShaBenchmark()));
     test('fast sha', () => runBenchmark(new FastShaBenchmark()));
+    test('crc32', () => runBenchmark(new CRC32Benchmark()));
+    test('MD5', () => runBenchmark(new MD5Benchmark()));
   });
 }
 
@@ -187,6 +190,34 @@ class FastShaBenchmark extends BenchmarkBase {
     sha.add(data);
     sha.close();
   }
+}
+
+class MD5Benchmark extends BenchmarkBase {
+  String data = _createLargeString(100000);
+
+  MD5Benchmark() : super('MD5', emitter: _emitter);
+
+  void run() {
+    crypto.MD5 md5 = new crypto.MD5();
+    md5.add(data.codeUnits);
+    crypto.CryptoUtils.bytesToHex(md5.close());
+  }
+}
+
+class CRC32Benchmark extends BenchmarkBase {
+  String data = _createLargeString(100000);
+
+  CRC32Benchmark() : super('crc32', emitter: _emitter);
+
+  void run() {
+    crc.CRC32.compute(data);
+  }
+}
+
+String _createLargeString(int size) {
+  String res = "";
+  for (int i = 0; i < size; i++) res += "a";
+  return res;
 }
 
 List _createData(int size) {
