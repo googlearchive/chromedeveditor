@@ -26,6 +26,53 @@ import 'services_common.dart' as common;
 import '../dart/sdk.dart' as sdk;
 
 /**
+ * Logger specific to this library.
+ */
+abstract class _DebugLogger {
+  /// Switch between `null` and [print] logger implementations.
+  static _DebugLogger instance = new _NullDebugLogger();
+  //static _DebugLogger instance = new _PrintDebugLogger();
+
+  void debug(String message);
+}
+
+/**
+ * Default `null` logger.
+ */
+class _NullDebugLogger implements _DebugLogger {
+  void debug(String message) => null;
+}
+
+/**
+ * Logger forwarding messages to the [print] method.
+ */
+class _PrintDebugLogger implements _DebugLogger {
+  void debug(String message) => print(message);
+}
+
+/**
+ * Logger for the analysis engine messages, forwards all calls to
+ * [_DebugLogger.instance].
+ */
+class _AnalysisEngineDebugLogger implements Logger {
+  @override
+  void logError(String message) =>
+    _DebugLogger.instance.debug("[analyzer] error: ${message}");
+
+  @override
+  void logError2(String message, Exception exception) =>
+    _DebugLogger.instance.debug("[analyzer] error: ${message} ${exception}");
+
+  @override
+  void logInformation(String message) =>
+    _DebugLogger.instance.debug("[analyzer] info: ${message}");
+
+  @override
+  void logInformation2(String message, Exception exception) =>
+    _DebugLogger.instance.debug("[analyzer] info: ${message} ${exception}");
+}
+
+/**
  * Create and return a ChromeDartSdk.
  */
 ChromeDartSdk createSdk(sdk.DartSdk dartSdk) {
@@ -74,9 +121,8 @@ class AnalyzerResult {
 
   List<AnalysisError> get errors => errorInfo.errors;
 
-  LineInfo_Location getLineInfo(AnalysisError error) {
-    return errorInfo.lineInfo.getLocation(error.offset);
-  }
+  LineInfo_Location getLineInfo(AnalysisError error) =>
+    errorInfo.lineInfo.getLocation(error.offset);
 
   String toString() => 'AnalyzerResult[${errorInfo.errors.length} issues]';
 }
@@ -118,27 +164,78 @@ class ChromeDartSdk extends DartSdk {
     context.sourceFactory = new SourceFactory([]);
   }
 
-  Source fromEncoding(UriKind kind, Uri uri) {
-    // TODO:
-    throw new UnimplementedError('fromEncoding');
-  }
+  /**
+   * Return a source representing the given `file:` URI if the file is in this SDK,
+   * or `null` if the file is not in this SDK.
+   */
+  @override
+  Source fromFileUri(Uri uri) => mapDartUri(uri.toString());
 
+  /**
+   * Return the library representing the library with the given `dart:` URI, or `null`
+   * if the given URI does not denote a library in this SDK.
+   * The [dartUri] string is expected to have a "dart:library_name" format, for example,
+   * "dart:core", "dart:html", etc.
+   */
+  @override
   SdkLibrary getSdkLibrary(String dartUri) => _libraryMap.getLibrary(dartUri);
 
   /**
-   * Return the source representing the library with the given `dart:` URI, or
-   * `null` if the given URI does not denote a library in this SDK.
+   * Return the source representing the library with the given `dart:`
+   * [dartUri], or `null` if the given URI does not denote a library
+   * in this SDK.
+   *
+   * Note: As of version 0.22 of the `analyzer` package, this method
+   * must support mapping a simple library uri (e.g "dart:html_common")
+   * as well as a libray uri + "/" + a relative path of a file
+   * in that library (e.g. "dart:html_common/metadata.dart").
+   * In any case, the first part of the URI string (up to the optional "/")
+   * is always a library name.
+   *
+   * Note: This method is mostly a copy-paste of the same method in
+   * [DirectoryBasedDartSdk] in the `analyzer` package.
    */
+  @override
   Source mapDartUri(String dartUri) {
-    SdkLibrary library = getSdkLibrary(dartUri);
+    // The URI scheme is always "dart"
+    Uri uri = parseUriWithException(dartUri);
+    assert(uri.scheme == DartUriResolver.DART_SCHEME);
 
-    return library == null ? null : new SdkSource(_sdk, library.path);
+    // The string up to "/" is the library name, the rest (optional)
+    // is the relative path of the source file in that library.
+    int index = dartUri.indexOf("/");
+    String libraryName;
+    String relativePath;
+    if (index < 0) {
+      libraryName = dartUri;
+      relativePath = "";
+    } else {
+      libraryName = dartUri.substring(0, index);
+      relativePath = dartUri.substring(index + 1);
+    }
+
+    SdkLibrary library = getSdkLibrary(libraryName);
+    if (library == null) {
+      return null;
+    }
+
+    // If we have a relative path, the actual path of the source file
+    // is the directory component of the main source file of the library
+    // concatenated to the relative path of this source file.
+    String path = library.path;
+    if (relativePath.isNotEmpty) {
+      path = dirname(path) + "/" + relativePath;
+    }
+    return new SdkSource(_sdk, uri, path);
   }
 
+  @override
   List<SdkLibrary> get sdkLibraries => _libraryMap.sdkLibraries;
 
+  @override
   String get sdkVersion => _sdk.version;
 
+  @override
   List<String> get uris => _libraryMap.uris;
 
   void _parseLibrariesFile() {
@@ -179,12 +276,13 @@ class ProjectContext {
 
   AnalysisContext context;
 
-  final Map<String, FileSource> _sources = {};
+  final Map<String, WorkspaceSource> _sources = {};
 
   ProjectContext(this.id, this.sdk, this.provider) {
+    AnalysisEngine.instance.logger = new _AnalysisEngineDebugLogger();
     context = AnalysisEngine.instance.createAnalysisContext();
     context.sourceFactory = new SourceFactory([
-        new DartUriResolver(sdk),
+        new DartSdkUriResolver(sdk),
         new PackageUriResolver(this),
         new FileUriResolver(this)
     ]);
@@ -197,7 +295,7 @@ class ProjectContext {
 
     // added
     for (String uuid in addedUuids) {
-      _sources[uuid] = new FileSource(this, uuid);
+      _sources[uuid] = new WorkspaceSource(this, uuid);
       changeSet.addedSource(_sources[uuid]);
     }
 
@@ -207,7 +305,7 @@ class ProjectContext {
         changeSet.changedSource(_sources[uuid]);
         _sources[uuid].setContents(null);
       } else {
-        _sources[uuid] = new FileSource(this, uuid);
+        _sources[uuid] = new WorkspaceSource(this, uuid);
         changeSet.addedSource(_sources[uuid]);
       }
     }
@@ -240,7 +338,7 @@ class ProjectContext {
     return completer.future;
   }
 
-  FileSource getSource(String uuid) {
+  WorkspaceSource getSource(String uuid) {
     return _sources[uuid];
   }
 
@@ -252,9 +350,9 @@ class ProjectContext {
 
       while (notices != null) {
         for (ChangeNotice notice in notices) {
-          if (notice.source is! FileSource) continue;
+          if (notice.source is! WorkspaceSource) continue;
 
-          FileSource source = notice.source;
+          WorkspaceSource source = notice.source;
           analysisResult.addErrors(
               source.uuid, _convertErrors(notice, notice.errors));
         }
@@ -272,12 +370,12 @@ class ProjectContext {
   }
 
   /**
-   * Populate the contents for the [FileSource]s.
+   * Populate the contents for the [WorkspaceSource]s.
    */
   Future _populateSources() {
     List<Future> futures = [];
 
-    _sources.forEach((String uuid, FileSource source) {
+    _sources.forEach((String uuid, WorkspaceSource source) {
       if (source.exists() && source._strContents == null) {
         Future f;
 
@@ -334,7 +432,7 @@ int _errorSeverityToInt(ErrorSeverity severity) {
 }
 
 /**
- * An implementation of [Source] that's based on an in-memory Dart string.
+ * An implementation of [Source] based on an in-memory Dart string.
  */
 class StringSource extends Source {
   final String _contents;
@@ -344,6 +442,7 @@ class StringSource extends Source {
   StringSource(this._contents, this.fullName)
       : modificationStamp = new DateTime.now().millisecondsSinceEpoch;
 
+  @override
   bool operator==(Object object) {
     if (object is StringSource) {
       return object._contents == _contents && object.fullName == fullName;
@@ -352,34 +451,38 @@ class StringSource extends Source {
     }
   }
 
+  @override
   bool exists() => true;
 
+  @override
   TimestampedData<String> get contents =>
       new TimestampedData<String>(modificationStamp, _contents);
 
   void getContentsToReceiver(Source_ContentReceiver receiver) =>
       receiver.accept(_contents, modificationStamp);
 
+  @override
   String get encoding => 'UTF-8';
 
+  @override
   String get shortName => fullName;
 
-  UriKind get uriKind => throw new UnsupportedError(
-      "StringSource doesn't support uriKind.");
+  @override
+  UriKind get uriKind =>
+      throw new UnsupportedError("StringSource doesn't support uriKind.");
 
+  @override
+  Uri get uri => new Uri(path: fullName);
+
+  @override
   int get hashCode => _contents.hashCode ^ fullName.hashCode;
 
+  @override
   bool get isInSystemLibrary => false;
 
-  Source resolveRelative(Uri relativeUri) {
-    int index = fullName.lastIndexOf('/');
-    if (index == -1) {
-      return new StringSource('', fullName + '/' + relativeUri.toString());
-    } else {
-      return new StringSource(
-          '', fullName.substring(0, index + 1) + relativeUri.toString());
-    }
-  }
+  @override
+  Uri resolveRelativeUri(Uri relativeUri) =>
+      resolveRelativeUriHelper(uri, relativeUri);
 }
 
 /**
@@ -387,10 +490,19 @@ class StringSource extends Source {
  */
 class SdkSource extends Source {
   final sdk.DartSdk _sdk;
+  /**
+   * The URI from which this source was originally derived.
+   * (e.g. "dart:core")
+   */
+  final Uri uri;
+  /**
+   * The path of the "main" source file of the library (e.g. "core/core.dart").
+   */
   final String fullName;
 
-  SdkSource(this._sdk, this.fullName);
+  SdkSource(this._sdk, this.uri, this.fullName);
 
+  @override
   bool operator==(Object object) {
     if (object is SdkSource) {
       return object.fullName == fullName;
@@ -399,12 +511,16 @@ class SdkSource extends Source {
     }
   }
 
+  @override
   bool exists() => true;
 
+  @override
   TimestampedData<String> get contents {
     String source = _sdk.getSourceForPath(fullName);
-    return source != null ?
-        new TimestampedData<String>(modificationStamp, source) : null;
+    if (source == null) {
+      return null;
+    }
+    return new TimestampedData<String>(modificationStamp, source);
   }
 
   void getContentsToReceiver(Source_ContentReceiver receiver) {
@@ -418,77 +534,101 @@ class SdkSource extends Source {
     }
   }
 
+  @override
   String get encoding => 'UTF-8';
 
+  @override
   String get shortName => basename(fullName);
 
+  @override
   UriKind get uriKind => UriKind.DART_URI;
 
+  @override
   int get hashCode => fullName.hashCode;
 
+  @override
   bool get isInSystemLibrary => true;
 
-  Source resolveRelative(Uri relativeUri) {
-    return new SdkSource(_sdk, '${dirname(fullName)}/${relativeUri.path}');
-  }
+  @override
+  Uri resolveRelativeUri(Uri relativeUri) =>
+      resolveRelativeUriHelper(uri, relativeUri);
 
+  @override
   int get modificationStamp => 0;
 
-  String toString() => fullName;
+  @override
+  String toString() => "SdkSource(uri='${uri}', fullName='${fullName}')";
 }
 
 /**
- * A [Source] implementation based on workspace uuids.
+ * A [Source] abstract base class based on workspace uuids.
  */
-class FileSource extends Source {
-  final ProjectContext context;
-  final String uuid;
+abstract class WorkspaceSource extends Source {
+  static final FILE_SCHEME = "file";
+  static final PACKAGE_SCHEME = "package";
+  ProjectContext context;
+  String uuid;
 
   int modificationStamp;
   bool _exists = true;
   String _strContents;
 
-  FileSource(this.context, this.uuid) {
+  /**
+   * Creates an concrete instance of [WorkspaceSource] according to the format
+   * of [uuid].
+   * For source files in packages, [uuid] follows a
+   * "package:package_name/source_path" format.
+   * For source files part of the application, [uuid] follows
+   * a "chrome-app-id:app-name/source_path" format.
+   */
+  factory WorkspaceSource(ProjectContext context, String uuid) {
     assert(uuid != null);
+    if (uuid.startsWith(PACKAGE_SCHEME + ":")) {
+      return new PackageSource(context, uuid);
+    } else {
+      return new FileSource(context, uuid);
+    }
+  }
+
+  WorkspaceSource._(this.context, this.uuid) {
     touchFile();
   }
 
+  @override
   bool operator==(Object object) {
-    return object is FileSource ? object.uuid == uuid : false;
+    return object is WorkspaceSource ? object.uuid == uuid : false;
   }
 
+  @override
   bool exists() => _exists;
 
-  TimestampedData<String> get contents {
-    return new TimestampedData(modificationStamp, _strContents);
-  }
+  @override
+  TimestampedData<String> get contents =>
+    new TimestampedData(modificationStamp, _strContents);
 
   void getContentsToReceiver(Source_ContentReceiver receiver) {
     TimestampedData cnts = contents;
     receiver.accept(cnts.data, cnts.modificationTime);
   }
 
+  @override
   String get encoding => 'UTF-8';
 
+  @override
   String get shortName => basename(uuid);
 
-  String get fullName {
-    int index = uuid.indexOf('/');
-    return index == -1 ? uuid : uuid.substring(index + 1);
-  }
+  @override
+  Uri get uri => new Uri(scheme: getScheme(), path: fullName);
 
-  UriKind get uriKind => UriKind.FILE_URI;
+  @override
+  int get hashCode => uuid.hashCode;
 
-  int get hashCode => fullName.hashCode;
-
+  @override
   bool get isInSystemLibrary => false;
 
-  Source resolveRelative(Uri relativeUri) {
-    Uri thisUri = new Uri(scheme: 'file', path: uuid);
-    Uri sourceUri = thisUri.resolveUri(relativeUri);
-
-    return context.getSource(sourceUri.path.substring(1));
-  }
+  @override
+  Uri resolveRelativeUri(Uri relativeUri) =>
+    resolveRelativeUriHelper(uri, relativeUri);
 
   void setContents(String newContents) {
     _strContents = newContents;
@@ -499,9 +639,84 @@ class FileSource extends Source {
     modificationStamp = new DateTime.now().millisecondsSinceEpoch;
   }
 
+  @override
   String toString() => uuid;
+
+  String getScheme();
+
+  @override
+  String get fullName;
+
+  @override
+  UriKind get uriKind;
 }
 
+/**
+ * A source file from a package.
+ */
+class PackageSource extends WorkspaceSource {
+  PackageSource(ProjectContext context, String uuid): super._(context, uuid) {
+    _DebugLogger.instance.debug("PackageSource(${uuid})");
+  }
+
+  @override
+  String getScheme() => WorkspaceSource.PACKAGE_SCHEME;
+
+  @override
+  String get fullName {
+    int index = uuid.indexOf(":");
+    return index == -1 ? uuid : uuid.substring(index + 1);
+  }
+
+  @override
+  UriKind get uriKind => UriKind.PACKAGE_URI;
+}
+
+/**
+ * A regular source file from the application.
+ */
+class FileSource extends WorkspaceSource {
+  FileSource(ProjectContext context, String uuid): super._(context, uuid) {
+    _DebugLogger.instance.debug("FileSource(${uuid})");
+  }
+
+  @override
+  String getScheme() => WorkspaceSource.FILE_SCHEME;
+
+  @override
+  String get fullName {
+    int index = uuid.indexOf('/');
+    return index == -1 ? uuid : uuid.substring(index + 1);
+  }
+
+  @override
+  UriKind get uriKind => UriKind.FILE_URI;
+}
+
+/**
+ * [UriResolver] implementation for the "dart" URI scheme.
+ */
+class DartSdkUriResolver extends DartUriResolver {
+  DartSdkUriResolver(DartSdk sdk) : super(sdk);
+
+  /**
+   * Return the source representing the SDK source file with the given `dart:`
+   * [uri], or `null` if the given URI does not denote a file in the SDK.
+   *
+   * Notes:
+   * * The scheme is expected to be "dart:".
+   * * The path is formed of the library name (e.g. "core") optionally followed
+   *   by a "/" and the path of the source file in the library (e.g. "core.dart",
+   *   "bool.dart").
+   * * This methods ends up calling [ChromeDartSdk.mapDartUri].
+   */
+  @override
+  Source resolveAbsolute(Uri uri) => super.resolveAbsolute(uri);
+}
+
+/**
+ * [UriResolver] implementation for the "file" URI scheme.
+ */
 class FileUriResolver extends UriResolver {
   static String FILE_SCHEME = "file";
 
@@ -511,23 +726,25 @@ class FileUriResolver extends UriResolver {
 
   FileUriResolver(this.context);
 
-  Source fromEncoding(UriKind kind, Uri uri) {
-    if (kind == UriKind.FILE_URI) {
-      return context.getSource(uri.path);
-    } else {
-      return null;
-    }
-  }
-
+  @override
   Source resolveAbsolute(Uri uri) {
     if (!isFileUri(uri)) {
       return null;
-    } else {
-      return context.getSource(uri.path);
     }
+
+    // TODO(rpaquay): This is somewhat brittle, as this relies on the specific
+    // format of [uuid] returned by the Workspace implementation.
+    // Example:
+    //   context.id = "chrome-app-id:application-name"
+    //   uri.path = "path-to-source-file-within-chrome-app"
+    String uuid = pathconcat(context.id, uri.path);
+    return context.getSource(uuid);
   }
 }
 
+/**
+ * [UriResolver] implementation for the "package" URI scheme.
+ */
 class PackageUriResolver extends UriResolver {
   static String PACKAGE_SCHEME = "package";
 
@@ -537,20 +754,17 @@ class PackageUriResolver extends UriResolver {
 
   PackageUriResolver(this.context);
 
-  Source fromEncoding(UriKind kind, Uri uri) {
-    if (kind == UriKind.PACKAGE_URI) {
-      return context.getSource(uri.path);
-    } else {
-      return null;
-    }
-  }
-
+  /**
+   * Resolve the given absolute URI. Return a [Source] representing the file to
+   * which it was resolved, whether or not the resulting source exists,
+   * or `null` if it could not be resolved because the URI is invalid.
+   */
+  @override
   Source resolveAbsolute(Uri uri) {
     if (!isPackageUri(uri)) {
       return null;
-    } else {
-      return context.getSource(uri.toString());
     }
+    return context.getSource(uri.toString());
   }
 }
 
@@ -559,17 +773,78 @@ class SimpleAnalysisErrorListener implements AnalysisErrorListener {
 
   SimpleAnalysisErrorListener();
 
+  @override
   void onError(AnalysisError error) {
     foundError = true;
   }
 }
 
-String basename(String str) {
-  int index = str.lastIndexOf('/');
-  return index == -1 ? str : str.substring(index + 1);
+/**
+ * Returns the filename part of [path].
+ */
+String basename(String path) {
+  int index = path.lastIndexOf('/');
+  return index == -1 ? path : path.substring(index + 1);
 }
 
-String dirname(String str) {
-  int index = str.lastIndexOf('/');
-  return index == -1 ? '' : str.substring(0, index);
+/**
+ * Returns the directory name part of [path].
+ */
+String dirname(String path) {
+  int index = path.lastIndexOf('/');
+  return index == -1 ? '' : path.substring(0, index);
+}
+
+String pathconcat(String path1, String path2) {
+  if (path1.isEmpty) {
+    return path2;
+  }
+  if (path2.isEmpty){
+    return path1;
+  }
+  if (path1.endsWith("/") || path2.startsWith("/")) {
+    return path1 + path2;
+  }
+  return path1 + "/" + path2;
+}
+
+/**
+ * Note: this code is mostly a copy-paste of
+ * `FileBasedSource.resolveRelativeUri` in the
+ * `package:analyzer/source_io.dart` file. We cannot re-use the
+ * implementation because we cannot use `dart:io`.
+ */
+Uri resolveRelativeUriHelper(Uri uri, Uri containedUri) {
+  Uri baseUri = uri;
+  bool isOpaque = uri.isAbsolute && !uri.path.startsWith('/');
+  if (isOpaque) {
+    String scheme = uri.scheme;
+    String part = uri.path;
+    if (scheme == DartUriResolver.DART_SCHEME && part.indexOf('/') < 0) {
+      part = "${part}/${part}.dart";
+    }
+    baseUri = parseUriWithException("${scheme}:/${part}");
+  }
+  Uri result = baseUri.resolveUri(containedUri);
+  if (isOpaque) {
+    result = parseUriWithException("${result.scheme}:${result.path.substring(1)}");
+  }
+  _DebugLogger.instance.debug("resolveRelativeUriHelper(${uri}, ${containedUri}): ${result}");
+  return result;
+}
+
+/**
+ * Note: this code is mostly a copy-paste of the function with
+ * the same name in `package:analyzer/generated/java_core.dart`.
+ */
+Uri parseUriWithException(String str) {
+  Uri uri = Uri.parse(str);
+  if (uri.path.isEmpty) {
+    throw new URISyntaxException();
+  }
+  return uri;
+}
+
+class URISyntaxException implements Exception {
+  String toString() => "URISyntaxException";
 }
