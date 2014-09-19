@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<link rel="import" href="../../../packages/polymer/polymer.html">
+
+<polymer-element name="cde-polymer-designer" >
+  <template>
+    <div id="container">
+      <webview id="webview"
+          src="index.html"
+          partition="cde-polymer-designer"
+          autosize="on">
+      </webview>
+    </div>
+  </template>
+
+  <script type="application/dart" src="cde_polymer_designer.dart"></script>
+</polymer-element>

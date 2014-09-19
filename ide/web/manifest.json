@@ -211,7 +211,7 @@
   "webview": {
     "partitions": [
       {
-        "name": "polymer-designer",
+        "name": "cde-polymer-designer",
         "accessible_resources": [
           "*"
         ]

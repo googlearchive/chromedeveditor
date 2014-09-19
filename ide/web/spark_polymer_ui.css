@@ -35,15 +35,13 @@ spark-dialog {
 spark-dialog#polymerDesignerDialog {
   top: 10%;
   width: 90%;
+  height: 700px;
   margin-left: -45%;
 }
 
-#polymerDesignerWebview {
-  display: block;
-  position: relative;
-  width: 100%;
-  height: 600px;
-  border: 1px solid #ccc;
+spark-dialog#polymerDesignerDialog #sparkPolymerDesigner {
+  width: 100px;
+  height: 700px;
 }
 
 .toolbar {

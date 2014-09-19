@@ -18,6 +18,8 @@
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
+<link rel="import" href="packages/cde_polymer_designer/cde_polymer_designer.html">
+
 <link rel="import" href="lib/ui/commit_message_view/commit_message_view.html">
 <link rel="import" href="lib/ui/goto_line_view/goto_line_view.html">
 
@@ -868,11 +870,7 @@
 
     <template if="{{polymerDesigner}}">
       <spark-dialog id="polymerDesignerDialog" headerTitle="Polymer Designer">
-        <webview id="polymerDesignerWebview"
-            src="packages/polymer_designer/index.html"
-            partition="polymer-designer"
-            autosize="on">
-        </webview>
+        <cde-polymer-designer id="sparkPolymerDesigner"></cde-polymer-designer>
       </spark-dialog>
     </template>
 

@@ -1,0 +1,19 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+:host {
+  display: block;
+  box-sizing: border-box;
+  outline: none;
+  width: 800px;
+  height: 600px;
+  border: 1px solid #ccc;
+}
+
+#container, #webview {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
