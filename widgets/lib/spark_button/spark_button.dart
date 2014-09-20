@@ -13,13 +13,13 @@ import '../common/spark_widget.dart';
 @CustomTag('spark-button')
 class SparkButton extends SparkWidget {
   // [flat] is the default.
-  @published bool flat;
-  @published bool raised;
+  @published bool flat = true;
+  @published bool raised = false;
   @published bool round;
   @published bool primary;
   @published_reflected String padding;
   @published_reflected String hoverStyle;
-  @published bool disabled;
+  @published bool disabled = false;
   @published bool active;
   @published String tooltip;
   @published String command;
@@ -33,7 +33,8 @@ class SparkButton extends SparkWidget {
     // Make sure at most one of [raised] or [flat] is defined by the client.
     // TODO(ussuri): This is really clumsy. Find a better way to provide
     // mutually exclusive flags.
-    assert(raised == null || flat == null);
+    assert(raised != true || flat != true);
+
     if (flat != null) {
       raised = !flat;
     } else if (raised != null) {
