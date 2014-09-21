@@ -1,0 +1,35 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../polymer/polymer.html">
+
+<!--
+Supports sharing a JSONP-based JavaScript library.
+
+    <core-shared-lib on-core-shared-lib-load="{{load}}" url="https://apis.google.com/js/plusone.js?onload=%%callback%%">
+
+Multiple components can request a library using a `core-shared-lib` component and only one copy of that library will
+loaded from the network.
+
+Currently, the library must support JSONP to work as a shared-lib. 
+
+Some libraries require a specific global function be defined. If this is the case, specify the `callbackName` property.
+
+Where possible, you should use an HTML Import to load library dependencies. Rather than using this element,
+create an import (`<link rel="import" href="lib.html">`) that wraps loading the .js file:
+
+lib.html:
+
+    <script src="lib.js"></script>
+
+@group Polymer Core Elements
+@element core-shared-lib
+-->
+<polymer-element name="core-shared-lib" attributes="url notifyEvent callbackName">
+<script src="core-shared-lib.js"></script>
+</polymer-element>

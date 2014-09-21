@@ -1,0 +1,18 @@
+{
+  "name": "paper-focusable",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.4.0"
+  },
+  "homepage": "https://github.com/Polymer/paper-focusable",
+  "version": "0.4.1",
+  "_release": "0.4.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.4.1",
+    "commit": "a0ca0812e5af9b3d6098742a13ef62756f59b5f6"
+  },
+  "_source": "git://github.com/Polymer/paper-focusable.git",
+  "_target": "^0.4.0",
+  "_originalSource": "Polymer/paper-focusable"
+}

@@ -1,0 +1,30 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!--
+@group Paper Elements
+@class paper-menu-button-transition
+@extends core-transition-css
+-->
+<link href="../../polymer/polymer.html" rel="import">
+<link href="../core-transition/core-transition-css.html" rel="import">
+<link href="../core-animation/web-animations.html" rel="import">
+
+<polymer-element name="paper-menu-button-transition" extends="core-transition-css" attributes="duration transformOrigin">
+  <template>
+    <link no-shim href="paper-menu-button-transition.css" rel="stylesheet">
+  </template>
+  <script src="paper-menu-button-transition.js"></script>
+</polymer-element>
+
+<paper-menu-button-transition id="paper-menu-button-transition-top-left" transformOrigin="0% 0%"></paper-menu-button-transition>
+<paper-menu-button-transition id="paper-menu-button-transition-top-right" transformOrigin="100% 0%"></paper-menu-button-transition>
+<paper-menu-button-transition id="paper-menu-button-transition-top-right-slow" transformOrigin="100% 0%" duration="10000"></paper-menu-button-transition>
+
+<paper-menu-button-transition id="paper-menu-button-transition-bottom-left" transformOrigin="0% 100%"></paper-menu-button-transition>
+<paper-menu-button-transition id="paper-menu-button-transition-bottom-right" transformOrigin="100% 100%"></paper-menu-button-transition>

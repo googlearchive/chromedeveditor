@@ -1,0 +1,39 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
+The complete set of authors may be found at http://polymer.github.io/AUTHORS
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
+-->
+<link rel="import" href="../../polymer/polymer.html">
+
+<!--
+`core-signals` provides basic publish-subscribe functionality.
+
+Note: avoid using `core-signals` whenever you can use
+a controller (parent element) to mediate communication
+instead.
+
+To send a signal, fire a custom event of type `core-signal`, with
+a detail object containing `name` and `data` fields.
+
+    this.fire('core-signal', {name: 'hello', data: null});
+    
+To receive a signal, listen for `core-signal-<name>` event on a 
+`core-signal` element.
+
+  <core-signal on-core-signal-hello="{{helloSignal}}">
+
+You can fire a signal event from anywhere, and all 
+`core-signal` elements will receive the event, regardless
+of where they are in DOM.
+
+@group Polymer Core Elements
+@element core-signals
+@status stable
+@homepage github.io
+-->
+<polymer-element name="core-signals">
+<script src="core-signals.js"></script>
+</polymer-element>

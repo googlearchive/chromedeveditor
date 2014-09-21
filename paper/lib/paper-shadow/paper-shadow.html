@@ -1,0 +1,65 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+The `paper-shadow` element is a helper to add shadows to elements.
+Paper shadows are composed of two shadows on top of each other. We
+mimic this effect by using two elements on top of each other, each with a
+different drop shadow. You can apply the shadow to an element by assigning
+it as the target. If you do not specify a target, the shadow is applied to
+the `paper-shadow` element's parent element or shadow host element if its
+parent is a shadow root. Alternatively, you can use the CSS classes included
+by this element directly.
+
+Example:
+
+    <div id="myCard" class="card"></div>
+    <paper-shadow id="myShadow" z="1"></div>
+
+    // Assign a target explicitly
+    myShadow.target = document.getElementById('myCard');
+
+    // Auto-assign the target.
+    <div class="card">
+      <paper-shadow z="1"></paper-shadow>
+    </div>
+
+    // Use the classes directly
+    <div class="card paper-shadow-top paper-shadow-top-z-1">
+      <div class="card-inner paper-shadow-bottom paper-shadow-bottom-z-1"></div>
+    </div>
+
+If you assign a target to a `paper-shadow` element, it creates two nodes and inserts
+them as the first children of the target, or the first children of the target's shadow
+root if there is one. This implies:
+
+  1. If the primary node that drops the shadow has styling that affects its shape,
+     the same styling must be applied to elements with class `paper-shadow`.
+     `border-radius` is a very common property and is inherited automatically.
+
+  2. The target's overflow property will be set to `overflow: visible` because the
+     shadow is rendered beyond the bounds of its container. Position the shadow as a
+     separate layer and use a different child element for clipping if needed.
+
+@group Paper Elements
+@class paper-shadow
+-->
+
+<link href="../../polymer/polymer.html" rel="import">
+
+<polymer-element name="paper-shadow">
+
+  <template>
+
+    <link no-shim href="paper-shadow.css" rel="stylesheet">
+
+  </template>
+
+  <script src="paper-shadow.js"></script>
+</polymer-element>

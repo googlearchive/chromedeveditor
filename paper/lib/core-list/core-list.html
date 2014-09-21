@@ -1,0 +1,42 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`core-list` displays a virtual, 'infinite' list. The template inside the 
+`core-list` element represents the dom to create for each list item. The
+`data` property specifies an array of list item data. The `height` property
+represents the height of a list item.
+
+By default, the list supports selection via tapping. Styling the selection 
+should be done via binding. The `selectedProperty` property is set on the 
+list view data for each selected item.
+
+`core-list` manages a viewport of data based on the current scroll position.
+For performance reasons, not every item in the list is rendered at once.
+
+    <core-list data="{{data}}" height="80">
+      <template>
+        <div class="{{ {selected: selected} | tokenList }}">List row: {{index}}</div>
+      </template>
+    </core-list>
+
+@group Polymer Core Elements
+@element core-list
+-->
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../core-selection/core-selection.html">
+
+<polymer-element name="core-list" on-tap="{{tapHandler}}">
+<template>
+  <core-selection id="selection" multi="{{multi}}" on-core-select="{{selectedHandler}}"></core-selection>
+  <link rel="stylesheet" href="core-list.css">
+  <div id="viewport" class="core-list-viewport"><content></content></div>
+</template>
+<script src="core-list.js"></script>
+</polymer-element>

@@ -1,0 +1,66 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!--
+
+The `core-icon` element displays an icon. By default an icon renders as a 24px square.
+
+Example using src:
+
+    <core-icon src="star.png"></core-icon>
+
+Example setting size to 32px x 32px:
+
+    <core-icon class="big" src="big_star.png"></core-icon>
+
+    <style>
+      .big {
+        height: 32px;
+        width: 32px;
+      }
+    </style>
+
+The core elements include several sets of icons. 
+To use the default set of icons, import  `core-icons.html` and use the `icon` attribute to specify an icon:
+
+    &lt;!-- import default iconset and core-icon --&gt;
+    <link rel="import" href="/components/core-icons/core-icons.html">
+
+    <core-icon icon="menu"></core-icon>
+    
+To use a different built-in set of icons, import  `core-icons/<iconset>-icons.html`, and
+specify the icon as `<iconset>:<icon>`. For example:
+
+    &lt;!-- import communication iconset and core-icon --&gt;
+    <link rel="import" href="/components/core-icons/communication-icons.html">
+
+    <core-icon icon="communication:email"></core-icon>
+    
+You can also create custom icon sets of bitmap or SVG icons. 
+
+Example of using an icon named `cherry` from a custom iconset with the ID `fruit`:
+
+    <core-icon icon="fruit:cherry"></core-icon>
+
+See [core-iconset](#core-iconset) and [core-iconset-svg](#core-iconset-svg) for more information about
+how to create a custom iconset.
+
+See [core-icons](http://www.polymer-project.org/components/core-icons/demo.html) for the default set of icons.
+
+@group Polymer Core Elements
+@element core-icon
+@homepage polymer.github.io
+-->
+<link rel="import" href="../core-iconset/core-iconset.html">
+
+<link rel="stylesheet" href="core-icon.css" shim-shadowdom>
+
+<polymer-element name="core-icon" attributes="src icon alt">
+<script src="core-icon.js"></script>
+
+</polymer-element>

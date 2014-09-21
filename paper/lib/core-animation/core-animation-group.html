@@ -1,0 +1,46 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="core-animation.html">
+
+<!--
+@group Polymer Core Elements
+
+`core-animation-group` combines `core-animation` or `core-animation-group` elements to
+create a grouped web animation. The group may be parallel (type is `par`) or sequential
+(type is `seq`). Parallel groups play all the children elements simultaneously, and
+sequential groups play the children one after another.
+
+Example of an animation group to rotate and then fade an element:
+
+    <core-animation-group type="seq">
+      <core-animation id="fadeout" duration="500">
+        <core-animation-keyframe>
+          <core-animation-prop name="transform" value="rotate(0deg)"></core-animation-prop>
+          <core-animation-prop name="transform" value="rotate(45deg)"></core-animation-prop>
+        </core-animation-keyframe>
+      </core-animation>
+      <core-animation id="fadeout" duration="500">
+        <core-animation-keyframe>
+          <core-animation-prop name="opacity" value="1"></core-animation-prop>
+        </core-animation-keyframe>
+        <core-animation-keyframe>
+          <core-animation-prop name="opacity" value="0"></core-animation-prop>
+        </core-animation-keyframe>
+      </core-animation>
+    </core-animation-group>
+
+@element core-animation-group
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation-group" constructor="CoreAnimationGroup" extends="core-animation" attributes="type">
+  <script src="core-animation-group.js"></script>
+</polymer-element>

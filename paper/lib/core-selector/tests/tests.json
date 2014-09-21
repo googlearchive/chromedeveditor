@@ -1,0 +1,7 @@
+{
+  "runner": "web-component-tester",
+  "tools": ["chai", "mocha-tdd"],
+  "tests": [
+    "js/htmltests.js"
+  ]
+}
