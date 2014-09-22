@@ -113,6 +113,8 @@ class MockAceEditor implements TextEditor {
 
   void restoreState() => null;
   void saveState() => null;
+
+  bool fileIsLarge(String text) => false;
 }
 
 class MockEditSession implements EditSession {
