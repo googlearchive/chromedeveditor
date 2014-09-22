@@ -6,13 +6,21 @@
 
 <link rel="import" href="../../../packages/polymer/polymer.html">
 
-<polymer-element name="goto-line-view">
+<link rel="import" href="../../../packages/spark_widgets/spark_button/spark_button.html">
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
+<polymer-element name="goto-line-view" extends="spark-widget">
   <template>
     <link rel="stylesheet" href="goto_line_view.css">
 
-    <div id="container">
-      <input id="queryText" type="text" size="40" placeholder="Goto line">
-      <button type="button" id="closeButton"></button>
+    <div id="container" layout horizontal center>
+      <input id="queryText" type="text" size="40" placeholder="Goto line" flex
+          on-keydown="{{handleKeyDown}}" on-keypress="{{handleKeyPress}}">
+      <spark-button on-click="{{hide}}" flat round padding="small">
+        <svg id="closingXGlyph" width="24px" height="24px" viewBox="0 0 24 24">
+          <path d="M17.369 8.037l-1.037-1.037-4.148 4.148-4.148-4.148-1.037 1.037 4.148 4.148-4.148 4.148 1.037 1.037 4.148-4.148 4.148 4.148 1.037-1.037-4.148-4.148 4.148-4.148z"/>
+        </svg>
+      </spark-button>
     </div>
   </template>
 
