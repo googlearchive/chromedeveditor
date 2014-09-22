@@ -27,22 +27,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <core-shared-lib url="https://apis.google.com/js/client.js?onload=%%callback%%"></core-shared-lib>
   </template>
 
-  <script>
-
-    var count = 0;
-    addEventListener("core-shared-lib-load", function(event) {
-      if (++count ===  2) {
-        done();
-      } else {
-        assert.isTrue(count < 2);
-        // request the api again
-        setTimeout(function() {
-          document.querySelector('#t').model = {};
-        }, 100);
-      }
-    });
-
-  </script>
+  <script src="core-shared-lib.js"></script>
 
 </body>
 </html>

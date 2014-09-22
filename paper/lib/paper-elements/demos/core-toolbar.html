@@ -97,14 +97,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   
   <core-media-query id="mediaQuery" query="max-width: 800px"></core-media-query>
   
-  <script>
-  
-    document.querySelector('#mediaQuery').addEventListener('core-media-change',
-      function(e) {
-        document.body.classList.toggle('core-narrow', e.detail.matches);
-      });
-  
-  </script>
+  <script src="core-toolbar.js"></script>
   
 </body>
 </html>

@@ -21,18 +21,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <core-localstorage id="localstorage" name="polymer-localstorage-test"></core-localstorage>
   
-  <script>
-    document.addEventListener('polymer-ready', function() {
-      var s = document.querySelector('#localstorage');
-      var m = 'hello wold';
-      window.localStorage.setItem(s.name, m);
-      s.load();
-      assert.equal(s.value, m);
-      s.value = 'goodbye';
-      assert.equal(window.localStorage.getItem(s.name), m);
-      done();
-    });
-  </script>
+  <script src="core-localstorage.js"></script>
   
 </body>
 </html>

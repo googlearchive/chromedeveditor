@@ -43,7 +43,8 @@ void process(GrinderContext context) {
 void vulcanize(GrinderContext context) {
   Iterable directories = LIB_DIR.listSync().where((dir) {
     String name = path.basename(dir.path);
-    return name.startsWith('core-') || name.startsWith('paper-');
+    return name.startsWith('core-') || name.startsWith('paper-')
+        || name.startsWith('context-');
   });
 
   Iterable files = directories.expand(_listFiles);
@@ -118,7 +119,7 @@ void _normalizeReferences(File file) {
 }
 
 Iterable _listFiles(Directory dir) {
-  return dir.listSync()
+  return dir.listSync(recursive: true, followLinks: false)
     .where((e) => e is File)
     .where((f) => f.path.endsWith('.html'));
 }

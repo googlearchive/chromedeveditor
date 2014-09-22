@@ -56,19 +56,7 @@
         </template>
       </div>
     </template>
-    <script>
-      Polymer('grid-toc', {
-        selectedChanged: function(old) {
-          this.lastSelected = old;
-        },
-        selectView: function(e) {
-          var item = e.target.templateInstance.model.item;
-          if (item !== undefined) {
-            this.fire('grid-toc-select', {item: item});
-          }
-        }
-      });
-    </script>
+    <script src="shadow.js"></script>
   </polymer-element>
 
   <polymer-element name="grid-item" attributes="item isHero">
@@ -83,11 +71,7 @@
         <span cross-fade>{{item}}</span>
       </div>
     </template>
-    <script>
-      Polymer('grid-item', {
-        isSelected: false
-      })
-    </script>
+    <script src="shadow-1.js"></script>
   </polymer-element>
 
 
@@ -108,35 +92,7 @@
     </core-animated-pages>
   </template>
 
-  <script>
-
-    addEventListener('template-bound', function(e) {
-      var scope = e.target;
-      var items = [], count=50;
-      for (var i=0; i < count; i++) {
-        items.push(i);
-      }
-
-      scope.items = items;
-
-      scope.selectView = function(e, detail) {
-        var i = detail.item;
-        this.$.pages.selected = i+1;
-      }
-
-      scope.back = function() {
-        this.lastSelected = this.$.pages.selected;
-        this.$.pages.selected = 0;
-      }
-
-      scope.transitionend = function() {
-        if (this.lastSelected) {
-          this.lastSelected = null;
-        }
-      }
-    })
-
-  </script>
+  <script src="shadow-2.js"></script>
 
 </body>
 </html>
