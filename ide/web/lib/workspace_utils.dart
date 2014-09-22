@@ -42,6 +42,14 @@ Future archiveContainerForBuild(Container container,
       appJson.codeUnits.length,
       appJson.codeUnits));
 
+  chrome.ChromeFileEntry manifest = container.getChild('manifest.json').entry;
+  manifest.readText().then((String manifestJson) {
+    Map<String, dynamic> map = JSON.decode(manifestJson);
+    map["mobile"] = appData.mobileAppManifest;
+    String newValue = JSON.encode(map);
+    manifest.writeText(newValue);
+  });
+
   return appData.publicKey.readBytes().then((chrome.ArrayBuffer bytes) {
     appInfo.addFile(new archive.ArchiveFile(appData.publicKey.name,
         bytes.getBytes().length,
