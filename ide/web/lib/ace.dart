@@ -976,8 +976,8 @@ class AceManager {
     gotoLineView.show();
   }
 
-  void _handleGotoLineViewEvent(int line) {
-    _aceEditor.gotoLine(line);
+  void _handleGotoLineViewEvent(_) {
+    _aceEditor.gotoLine(gotoLineView.lineNumber);
     gotoLineView.hide();
   }
 

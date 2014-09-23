@@ -46,10 +46,10 @@ class GotoLineView extends SparkWidget {
   }
 
   /**
-   * This event is fired when the user hits return. The event is line numer the
-   * user has entered.
+   * This event is fired when the user hits return. The event's `detail` field
+   * contains the line numer the user has entered.
    */
-  Stream<int> get onTriggered => on['triggered'].map((CustomEvent e) => e.detail);
+  Stream get onTriggered => on['triggered'];
 
   /**
    * Fires an event when the view is closed.
