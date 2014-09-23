@@ -2175,6 +2175,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     _privateKeyElement = getElement('#privateKey');
     _publicKeyElement = getElement('#publicKey');
     _privatePasswordElement = getElement('#privateKeyPassword');
+    _appInfo = new MobileBuildInfo();
     getElement('#choosePrivateKey').onClick.listen((_) {
       _selectKey('privateKey');
     });
@@ -2229,12 +2230,34 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     } else {
       _pushUrlElement = getElement('#buildTargetUrl');
       _toggleProgressVisible(false);
-      _appInfo = new MobileBuildInfo();
+      _updateViewFromManifest(deployContainer);
       _show();
     }
   }
 
   SparkDialogButton get _buildButton => getElement("#buildButton");
+
+  void _updateViewFromManifest(Container container) {
+    chrome.ChromeFileEntry manifest = container.getChild('manifest.json').entry;
+    manifest.readText().then((String manifestJson) {
+      Map<String, dynamic> map = JSON.decode(manifestJson);
+      _appNameElement.value = map["name"];
+      _packageNameElement.value = map["short_name"];
+      _versionNameElement.value = map["version"];
+    });
+  }
+
+  void _updateManifestFromView(Container container) {
+    chrome.ChromeFileEntry manifest = container.getChild('manifest.json').entry;
+    manifest.readText().then((String manifestJson) {
+      Map<String, dynamic> map = JSON.decode(manifestJson);
+      map["name"] = _appNameElement.value;
+      map["short_name"] = _packageNameElement.value;
+      map["version"] = _versionNameElement.value;
+      String newValue = JSON.encode(map);
+      manifest.writeText(newValue);
+    });
+  }
 
   void _commit() {
     super._commit();
@@ -2261,8 +2284,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
 
     MobileDeploy deployer = new MobileDeploy(deployContainer,
         spark.localPrefs, _appInfo);
-
-    // Invoke the deployer methods in Futures in order to capture exceptions.
+    _updateManifestFromView(deployContainer);
 
     Future f = new Future(() {
       return useAdb ?

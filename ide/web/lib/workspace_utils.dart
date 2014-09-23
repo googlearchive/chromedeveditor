@@ -42,14 +42,6 @@ Future archiveContainerForBuild(Container container,
       appJson.codeUnits.length,
       appJson.codeUnits));
 
-  chrome.ChromeFileEntry manifest = container.getChild('manifest.json').entry;
-  manifest.readText().then((String manifestJson) {
-    Map<String, dynamic> map = JSON.decode(manifestJson);
-    map["mobile"] = appData.mobileAppManifest;
-    String newValue = JSON.encode(map);
-    manifest.writeText(newValue);
-  });
-
   return appData.publicKey.readBytes().then((chrome.ArrayBuffer bytes) {
     appInfo.addFile(new archive.ArchiveFile(appData.publicKey.name,
         bytes.getBytes().length,
@@ -70,6 +62,32 @@ Future archiveContainerForBuild(Container container,
     });
   });
 }
+
+Future archiveDataForBuild(Container container,
+        MobileBuildInfo appData) {
+  String appJson = JSON.encode(appData.mobileAppManifest);
+  archive.ZipEncoder encoder = new archive.ZipEncoder();
+
+  archive.Archive arch = new archive.Archive();
+  archive.Archive appInfo = new archive.Archive();
+
+  appInfo.addFile(new archive.ArchiveFile('app.json',
+      appJson.codeUnits.length,
+      appJson.codeUnits));
+
+  return appData.publicKey.readBytes().then((chrome.ArrayBuffer bytes) {
+    appInfo.addFile(new archive.ArchiveFile(appData.publicKey.name,
+        bytes.getBytes().length,
+        bytes.getBytes()));
+    return appData.privateKey.readBytes().then((chrome.ArrayBuffer bytes) {
+      appInfo.addFile(new archive.ArchiveFile(appData.privateKey.name,
+          bytes.getBytes().length,
+          bytes.getBytes()));
+      return new archive.ZipEncoder().encode(appInfo);
+    });
+  });
+}
+
 
 
 /// The [toAddList] List contains the files that need to be mandatory

@@ -221,6 +221,11 @@ abstract class AbstractDeployer {
         payload: archivedData);
   }
 
+  List<int> _makeBuildRequest2(String target) {
+    return _buildHttpRequest("POST" ,target, "build?appId=${appContainer.project.name}");
+  }
+
+
   List<int> _buildDeleteRequest(String target, List<int> archivedData) {
     return _buildHttpRequest("POST" ,target,
         "deletefiles?appId=${appContainer.project.name}",
@@ -350,19 +355,50 @@ abstract class AbstractDeployer {
   void _doWhenComplete();
 
   Future build(ProgressMonitor monitor, MobileBuildInfo appInfo) {
-    return archiveContainerForBuild(appContainer, appInfo).then((List<int> archivedData) {
-      List<int> httpRequest = _buildPushRequest(_getTarget(), archivedData);
+    List<int> httpRequest;
+    List<int> ad;
 
+    httpRequest = _buildAssetManifestRequest(_getTarget());
+    return _setTimeout(_pushRequestToDevice(httpRequest, REGULAR_REQUEST_TIMEOUT))
+      .then((msg) {
+        return _expectHttpOkResponse(msg);
+    }).then((String result) {
+        return _deleteObsoleteFiles(result);
+    }).then((msg) {
+      if (msg != null) {
+        return _expectHttpOkResponse(msg);
+      }
+    }).then((_) {
+      return archiveModifiedFilesInContainer(appContainer, true, fileToAdd)
+      .then((List<int> archivedData) {
+          ad = archivedData;
+          httpRequest = _buildPushRequest(_getTarget(), archivedData);
+          return _setTimeout(_pushRequestToDevice(httpRequest, PUSH_REQUEST_TIMEOUT));
+     }).then((msg) {
+         return _expectHttpOkResponse(msg);
+    }).then((String response) {
+      _updateContainerEtag(response);
+      return archiveDataForBuild(appContainer, appInfo);
+    }).then((List<int> archivedData) {
+          ad = archivedData;
+          httpRequest = _makeBuildRequest(_getTarget(), archivedData);
+          //return _setTimeout(_pushRequestToDevice(httpRequest, BUILD_REQUEST_TIMEOUT));
+      return new Future.value("bla");
+    }).then((_) {
+      //need to prompt for save as to save the APK
       chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
               type: chrome.ChooseEntryType.SAVE_FILE);
       return chrome.fileSystem.chooseEntry(options).then(
           (chrome.ChooseEntryResult res) {
         chrome.ChromeFileEntry r = res.entry;
-        r.writeBytes(new chrome.ArrayBuffer.fromBytes(archivedData));
+        r.writeBytes(new chrome.ArrayBuffer.fromBytes(ad));
         return new Future.error("Not implemented");
       });
     });
-  }
+    }).whenComplete(() {
+      _doWhenComplete();
+    });
+}
 
   /// Implements the deployement flow
   Future deploy(ProgressMonitor monitor) {
