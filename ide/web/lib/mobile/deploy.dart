@@ -48,7 +48,6 @@ class MobileDeploy {
   final Container appContainer;
   final PreferenceStore _prefs;
 
-
   List<DeviceInfo> _knownDevices = [];
   MobileBuildInfo _appInfo;
 
@@ -221,11 +220,6 @@ abstract class AbstractDeployer {
         payload: archivedData);
   }
 
-  List<int> _makeBuildRequest2(String target) {
-    return _buildHttpRequest("POST" ,target, "build?appId=${appContainer.project.name}");
-  }
-
-
   List<int> _buildDeleteRequest(String target, List<int> archivedData) {
     return _buildHttpRequest("POST" ,target,
         "deletefiles?appId=${appContainer.project.name}",
@@ -380,9 +374,9 @@ abstract class AbstractDeployer {
       _updateContainerEtag(response);
       return archiveDataForBuild(appContainer, appInfo);
     }).then((List<int> archivedData) {
-          ad = archivedData;
-          httpRequest = _makeBuildRequest(_getTarget(), archivedData);
-          //return _setTimeout(_pushRequestToDevice(httpRequest, BUILD_REQUEST_TIMEOUT));
+      ad = archivedData;
+      httpRequest = _makeBuildRequest(_getTarget(), archivedData);
+      //return _setTimeout(_pushRequestToDevice(httpRequest, BUILD_REQUEST_TIMEOUT));
       return new Future.value("bla");
     }).then((_) {
       //need to prompt for save as to save the APK

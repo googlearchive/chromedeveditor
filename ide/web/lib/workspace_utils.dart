@@ -30,45 +30,11 @@ Future archiveContainer(Container container, [bool addZipManifest = false]) {
     });
 }
 
-Future archiveContainerForBuild(Container container,
-        MobileBuildInfo appData) {
-  String appJson = JSON.encode(appData.mobileAppManifest);
-  archive.ZipEncoder encoder = new archive.ZipEncoder();
-
-  archive.Archive arch = new archive.Archive();
-  archive.Archive appInfo = new archive.Archive();
-
-  appInfo.addFile(new archive.ArchiveFile('app.json',
-      appJson.codeUnits.length,
-      appJson.codeUnits));
-
-  return appData.publicKey.readBytes().then((chrome.ArrayBuffer bytes) {
-    appInfo.addFile(new archive.ArchiveFile(appData.publicKey.name,
-        bytes.getBytes().length,
-        bytes.getBytes()));
-    return appData.privateKey.readBytes().then((chrome.ArrayBuffer bytes) {
-      appInfo.addFile(new archive.ArchiveFile(appData.privateKey.name,
-          bytes.getBytes().length,
-          bytes.getBytes()));
-      List<int> encoded = encoder.encode(appInfo);
-      arch.addFile(new archive.ArchiveFile('app.zip',encoded.length, encoded));
-      return _recursiveArchive(arch, container, 'www/').then((_) {
-          String zipAssetManifestString = buildAssetManifest(container);
-          arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
-            zipAssetManifestString.codeUnits.length,
-            zipAssetManifestString.codeUnits));
-          return new archive.ZipEncoder().encode(arch);
-        });
-    });
-  });
-}
-
 Future archiveDataForBuild(Container container,
         MobileBuildInfo appData) {
   String appJson = JSON.encode(appData.mobileAppManifest);
   archive.ZipEncoder encoder = new archive.ZipEncoder();
 
-  archive.Archive arch = new archive.Archive();
   archive.Archive appInfo = new archive.Archive();
 
   appInfo.addFile(new archive.ArchiveFile('app.json',

@@ -42,4 +42,3 @@ Container getAppContainerFor(Resource resource) {
 bool _hasManifest(Container container) {
   return container.getChild('manifest.json') is File;
 }
-
