@@ -5,7 +5,7 @@
 library spark;
 
 import 'dart:async';
-import 'dart:convert' show JSON;
+import 'dart:convert';
 import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -2254,8 +2254,8 @@ class BuildApkAction extends SparkActionWithProgressDialog {
       map["name"] = _appNameElement.value;
       map["short_name"] = _packageNameElement.value;
       map["version"] = _versionNameElement.value;
-      String newValue = JSON.encode(map);
-      manifest.writeText(newValue);
+      var encoder = new JsonEncoder.withIndent("  ");
+      manifest.writeText(encoder.convert(map));
     });
   }
 
