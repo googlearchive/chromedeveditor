@@ -1,3 +1,0 @@
-
-    runTests('tests.json');
-  

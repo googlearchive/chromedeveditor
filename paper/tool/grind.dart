@@ -11,8 +11,8 @@ final Directory LIB_DIR = new Directory('lib');
 
 void main([List<String> args]) {
   defineTask('init', taskFunction: init);
-  defineTask('vulcanize', taskFunction: vulcanize, depends: ['init']);
-  //defineTask('process', taskFunction: process, depends: ['init']);
+  defineTask('deleteDemos', taskFunction: deleteDemos, depends: ['init']);
+  defineTask('vulcanize', taskFunction: vulcanize, depends: ['deleteDemos']);
   defineTask('clean', taskFunction: clean);
 
   startGrinder(args);
@@ -28,25 +28,28 @@ void init(GrinderContext context) {
   }
 }
 
-void process(GrinderContext context) {
-  // TODO:
-  // href="../polymer/polymer.html"
+/**
+ * TODO: doc
+ */
+void deleteDemos(GrinderContext context) {
+  Iterable directories = _directoriesInLib;
 
-//  deleteEntity(joinDir(LIB_DIR, ['platform']));
-//  deleteEntity(joinDir(LIB_DIR, ['polymer']));
+  var fn = (dir) {
+    if (dir is! Directory) return false;
+    String name = path.basename(dir.path);
+    return name == 'demos' || name == 'tests';
+  };
 
+  Iterable toDelete = directories.expand((d) => d.listSync().where(fn));
+  toDelete.forEach(
+      (FileSystemEntity entity) => entity.deleteSync(recursive: true));
 }
 
 /**
- * TODO:
+ * TODO: doc
  */
 void vulcanize(GrinderContext context) {
-  Iterable directories = LIB_DIR.listSync().where((dir) {
-    String name = path.basename(dir.path);
-    return name.startsWith('core-') || name.startsWith('paper-')
-        || name.startsWith('context-');
-  });
-
+  Iterable directories = _directoriesInLib;
   Iterable files = directories.expand(_listFiles);
 
   files.forEach((file) => _normalizeReferences(file));
@@ -136,3 +139,9 @@ bool _hasScript(File file) {
   String str = file.readAsStringSync().toLowerCase();
   return str.contains('<script>');
 }
+
+Iterable get _directoriesInLib => LIB_DIR.listSync().where((dir) {
+  String name = path.basename(dir.path);
+  return name.startsWith('core-') || name.startsWith('paper-')
+      || name.startsWith('context-');
+});
