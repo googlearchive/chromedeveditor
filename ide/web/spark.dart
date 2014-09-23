@@ -2211,6 +2211,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
 
 
   void _invoke([context]) {
+    print("test");
     if (context == null) {
       _resource = spark.focusManager.currentResource;
     } else {

@@ -376,9 +376,12 @@ abstract class AbstractDeployer {
     }).then((List<int> archivedData) {
       ad = archivedData;
       httpRequest = _makeBuildRequest(_getTarget(), archivedData);
+      //TODO(albualexandru): make the request and save the file
       //return _setTimeout(_pushRequestToDevice(httpRequest, BUILD_REQUEST_TIMEOUT));
       return new Future.value("bla");
-    }).then((_) {
+//    }).then((msg) {
+//          return _expectHttpOkResponse(msg);
+    }).then((String response) {
       //need to prompt for save as to save the APK
       chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
               type: chrome.ChooseEntryType.SAVE_FILE);
