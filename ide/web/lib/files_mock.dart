@@ -468,6 +468,7 @@ abstract class _MockBlob implements Blob {
   int get size;
   Blob slice([int start, int end, String contentType]);
   String get type;
+  void close();
 }
 
 class _MockFile extends _MockBlob implements File {
@@ -494,4 +495,6 @@ class _MockFile extends _MockBlob implements File {
     String _type = mime.lookupMimeType(name);
     return _type == null ? '' : _type;
   }
+
+  void close() { }
 }

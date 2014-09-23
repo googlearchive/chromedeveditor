@@ -1,0 +1,19 @@
+{
+  "name": "core-animation",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.4.0",
+    "web-animations-js": "web-animations/web-animations-js#master"
+  },
+  "homepage": "https://github.com/Polymer/core-animation",
+  "version": "0.4.1",
+  "_release": "0.4.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.4.1",
+    "commit": "c59966c6a3fa662b6a7475c7d5f48c3aa9de36c3"
+  },
+  "_source": "git://github.com/Polymer/core-animation.git",
+  "_target": "^0.4.0",
+  "_originalSource": "Polymer/core-animation"
+}

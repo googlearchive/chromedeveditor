@@ -134,13 +134,12 @@
 
         <content select="#leftPanel"></content>
 
-        <spark-toolbar id="bottom-toolbar"
-            class="toolbar"
-            horizontal
-            justify="right"
-            spacing="small">
+        <spark-toolbar id="bottom-toolbar" class="toolbar" spacing="small"
+            layout horizontal justify="right">
+          <spark-status id="sparkStatus" flex></spark-status>
           <spark-button id="settingsButton" flat round tooltip="Settings...">
             <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <!-- settings icon from core-icons -->
               <path d="M19.4 13c0-.3.1-.6.1-1s0-.7-.1-1l2.1-1.7c.2-.2.2-.4.1-.6l-2-3.5c-.1-.1-.3-.2-.6-.1l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c.1-.3-.2-.5-.4-.5h-4c-.2 0-.5.2-.5.4l-.4 2.7c-.6.2-1.1.6-1.7 1l-2.4-1c-.3-.1-.5 0-.7.2l-2 3.5c-.1.1 0 .4.2.6l2.1 1.6c0 .3-.1.6-.1 1s0 .7.1 1l-2.1 1.7c-.2.2-.2.4-.1.6l2 3.5c.1.1.3.2.6.1l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.2 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6l-2.3-1.6zm-7.4 2.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
             </svg>
           </spark-button>
@@ -164,14 +163,15 @@
               <path d="M12 4l-1.4 1.4 5.6 5.6h-12.2v2h12.2l-5.6 5.6 1.4 1.4 8-8z"/>
             </svg>
           </spark-button>
+          <spark-button command="toggle-outline" flat round
+              tooltip="Toggle outline">
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M9.067 15h11.933v-2h-11.933v2zm0 4h11.933v-2h-11.933v2zm0-8h11.933v-2h-11.933v2zm-5.067-6v2h17v-2h-17z"/>
+            </svg>
+          </spark-button>
         </spark-toolbar>
-
-        <div id="sparkStatusContainer">
-         <spark-status id="sparkStatus"></spark-status>
-        </div>
       </div>
     </spark-split-view>
-
 
     <!-- =========================== DIALOGS =============================== -->
 
@@ -196,7 +196,7 @@
       <label for="renameFileName">New name</label>
       <input id="renameFileName" type="text" class="form-control"
           required pattern="[\w\.-]+"
-          spellcheck="false" autosave focused>
+          spellcheck="false" autocomplete="on" focused>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Rename</spark-dialog-button>
@@ -230,7 +230,7 @@
         <label for="name">Project name</label>
         <input id="name" type="text" class="form-control"
             placeholder="HelloWorld" required pattern="[\w\.-]+"
-            spellcheck="false" autosave focused />
+            spellcheck="false" autocomplete="on" focused />
       </div>
       <div class="form-group">
         <label for="type">Project type</label>
@@ -242,7 +242,7 @@
         -->
         <template if="{{showWipProjectTemplates}}">
           <!-- TODO(ussuri): Rename "type" - too generic => dangerous. -->
-          <select name="type" class="form-control" autosave>
+          <select name="type" class="form-control" autocomplete="on">
             <optgroup label="Default">
               <option value="empty">
                 Blank project
@@ -262,7 +262,7 @@
                 JavaScript web app (using Polymer paper elements)
               </option>
               <option value="web/web_starter_kit">
-                Web Starter Kit (boilerplate & tooling for multi-device development)
+                Web Starter Kit (boilerplate &amp; tooling for multi-device development)
               </option>
             </optgroup>
             <optgroup label="Chrome Apps">
@@ -298,7 +298,7 @@
         </template>
 
         <template if="{{!showWipProjectTemplates}}">
-          <select name="type" class="form-control" autosave>
+          <select name="type" class="form-control" autocomplete="on">
             <optgroup label="Default">
               <option value="empty">
                 Blank project
@@ -318,7 +318,7 @@
                 JavaScript web app (using Polymer paper elements)
               </option>
               <option value="web/web_starter_kit">
-                Web Starter Kit (boilerplate & tooling for multi-device development)
+                Web Starter Kit (boilerplate &amp; tooling for multi-device development)
               </option>
             </optgroup>
             <optgroup label="Chrome apps">
@@ -363,19 +363,19 @@
           <label for="appName">App Name:</label>
           <input id="appName" type="text" class="form-control"
               placeholder="HelloWorld"
-              spellcheck="false" autosave>
+              spellcheck="false" autocomplete="on">
         </div>
         <div class="input-label">
           <label for="packageName">Package Name:</label>
           <input id="packageName" type="text" class="form-control"
               placeholder="com.example.helloworld"
-              spellcheck="false" autosave>
+              spellcheck="false" autocomplete="on">
         </div>
         <div class="input-label">
           <label for="versionName">Version:</label>
           <input id="versionName" type="text" class="form-control"
               placeholder="1.0"
-              spellcheck="false" autosave focused>
+              spellcheck="false" autocomplete="on" focused>
         </div>
         <div class="input-label">
           <label for="privateKeyPassword">Private Password:</label>
@@ -412,21 +412,25 @@
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="buildTargetADB" type="radio" name="mobileBuildType" value="build-target-adb" checked>
+          <input type="radio" id="buildTargetADB"
+              name="mobileBuildType" value="build-target-adb" checked>
           <label for="buildTargetADB">Build via USB</label>
         </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="buildTargetIP" type="radio" name="mobileBuildType" value="build-target-ip">
-          <label for="buildTargetIP">Build via a network host with this IP:</label>
+          <input type="radio" id="buildTargetIP"
+              name="mobileBuildType" value="build-target-ip">
+          <label for="buildTargetIP">
+            Build via a network host with this IP:
+          </label>
         </div>
         <div class="radio-button-dependency">
           <!-- TODO(devoncarew): Also, support IPv6 name patterns. -->
           <input id="buildTargetUrl" type="text" class="form-control"
               placeholder="e.g. 192.168.1.101"
               pattern="(\d{1,3}\.){3}\d{1,3}"
-              spellcheck="false" autosave>
+              spellcheck="false" autocomplete="on">
         </div>
       </div>
       <div id="buildProgressDescription"></div>
@@ -467,7 +471,7 @@
           <input id="pushUrl" type="text" class="form-control "
               placeholder="e.g. 192.168.1.101"
               pattern="(\d{1,3}\.){3}\d{1,3}"
-              spellcheck="false" autosave>
+              spellcheck="false" autocomplete="on">
         </div>
       </div>
       <template if="{{liveDeployMode}}">
@@ -492,7 +496,7 @@
         <!-- TODO(devoncarew): Swap this out for a sample application repo? -->
         <input id="gitRepoUrl" type="url" class="form-control"
             placeholder="https://github.com/dart-lang/chromedeveditor.git"
-            spellcheck="false" autosave focused>
+            spellcheck="false" autocomplete="on" focused>
         <input id="gitRepoUrlCopyInBuffer"/>
       </div>
 
@@ -508,12 +512,13 @@
             <label for="gitName">Your name</label>
             <input id="gitName" type="text" class="form-control"
                 placeholder="John Doe" pattern=".+"
-                spellcheck="false" autosave>
+                spellcheck="false" autocomplete="on">
           </div>
           <div class="input-label">
             <label for="gitEmail">Email</label>
             <input id="gitEmail" type="email" class="form-control"
-                placeholder="johndoe@gmail.com" spellcheck="false" autosave>
+                placeholder="johndoe@gmail.com"
+                spellcheck="false" autocomplete="on">
           </div>
         </div>
       </div>
@@ -528,7 +533,8 @@
       <div class="form-group">
         <label for="commitMessage">Commit message</label>
         <textarea id="commitMessage" type="text" class="form-control"
-            rows="3" wrap="soft" spellcheck autosave focused></textarea>
+            rows="3" wrap="soft" spellcheck autocomplete="on" focused>
+        </textarea>
         <span class="help-block">
           Enter a brief description of the changes.
         </span>
@@ -541,7 +547,8 @@
     <spark-dialog id="gitBranchDialog" headerTitle="Create Branch">
       <label for="gitBranchName">Create a new branch</label>
       <input id="gitBranchName" type="text" class="form-control"
-          required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
+          required pattern="[^~:?*\^\[\s]+"
+          spellcheck="false" autocomplete="on" focused>
       <div class="form-group">
         <label for="gitRemoteBranches">Checkout a branch</label>
         <select id="gitRemoteBranches" class="form-control"></select>
@@ -554,7 +561,8 @@
     <spark-dialog id="gitMergeDialog" headerTitle="Merge Branch">
       <label for="gitBranchName">Current branch</label>
       <input id="gitBranchName" type="text" class="form-control"
-          required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
+          required pattern="[^~:?*\^\[\s]+"
+          spellcheck="false" autocomplete="on" focused>
       <div class="form-group">
         <label for="gitBranches">Select branch to merge </label>
         <select id="gitBranches" class="form-control"></select>
@@ -606,8 +614,8 @@
             <input id="analyticsCheck" type="checkbox">
           </span>
           <label for="analyticsCheck">
-            Help make Chrome Dev Editor better by automatically sending usage statistics and
-            crash reports to Google
+            Help make Chrome Dev Editor better by automatically sending usage
+            statistics and crash reports to Google
           </label>
         </div>
       </div>
@@ -746,7 +754,7 @@
           <label for="gitUsername">User name</label>
           <input id="gitUsername" type="text" class="form-control"
               placeholder="johndoe" required pattern="\S+"
-              spellcheck="false" autosave focused>
+              spellcheck="false" autocomplete="on" focused>
         </div>
         <div class="input-label">
           <label for="gitPassword">Password</label>
@@ -765,23 +773,28 @@
     </spark-dialog>
 
     <!-- Publish on webstore -->
-    <spark-dialog id="webStorePublishDialog" headerTitle="Publish to Chrome Web Store">
+    <spark-dialog id="webStorePublishDialog"
+        headerTitle="Publish to Chrome Web Store">
       <div class="form-group">
         <div class="vert-align-box">
-          <input type="radio" name="webStorePublishType" value="new" id="new-app-radio" checked>
+          <input type="radio" id="new-app-radio"
+              name="webStorePublishType" value="new" checked>
           <label for="new-app-radio">Create a new application</label>
         </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input type="radio" name="webStorePublishType" value="existing" id="existing-app-radio">
-          <label for="existing-app-radio">Upload to an existing application with this ID:</label>
+          <input type="radio" id="existing-app-radio"
+              name="webStorePublishType" value="existing">
+          <label for="existing-app-radio">
+            Upload to an existing application with this ID:
+          </label>
         </div>
         <div class="radio-button-dependency">
           <input id="appID" type="text" class="form-control"
               placeholder="abcdefghijklmnopqrstuvwxyzabcdef"
               required pattern="[a-z]{32}"
-              spellcheck="false" autosave>
+              spellcheck="false" autocomplete="on">
         </div>
       </div>
       <spark-dialog-button cancel>Cancel</spark-dialog-button>

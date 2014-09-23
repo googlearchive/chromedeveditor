@@ -1,0 +1,13 @@
+name: paper
+version: 0.4.1
+description: A distribution of the Polymer Core and Paper elements.
+author: The Chrome Dev Editor team
+homepage: https://github.com/dart-lang/chromedeveditor/tree/master/paper
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  browser: any
+  polymer: any
+dev_dependencies:
+  grinder: any
+  path: any

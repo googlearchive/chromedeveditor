@@ -1,0 +1,90 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="web-animations.html">
+
+<!--
+@group Polymer Core Elements
+
+`core-animation` is a convenience element to use web animations with Polymer elements. It
+allows you to create a web animation declaratively. You can extend this class to create
+new types of animations and combine them with `core-animation-group`.
+
+Example to create animation to fade out an element over 500ms:
+
+    <core-animation id="fadeout" duration="500">
+      <core-animation-keyframe>
+        <core-animation-prop name="opacity" value="1"></core-animation-prop>
+      </core-animation-keyframe>
+      <core-animation-keyframe>
+        <core-animation-prop name="opacity" value="0"></core-animation-prop>
+      </core-animation-keyframe>
+    </core-animation>
+
+    <div id="el">Fade me out</div>
+
+    <script src="core-animation.js"></script>
+
+Or do the same imperatively:
+
+    var animation = new CoreAnimation();
+    animation.duration = 500;
+    animation.keyframes = [
+      {opacity: 1},
+      {opacity: 0}
+    ];
+    animation.target = document.getElementById('el');
+    animation.play();
+
+You can also provide a javascript function instead of keyframes to the animation. This
+behaves essentially the same as `requestAnimationFrame`:
+
+    var animation = new CoreAnimation();
+    animation.customEffect = function(timeFraction, target, animation) {
+      // do something custom
+    };
+    animation.play();
+
+Elements that are targets to a `core-animation` are given the `core-animation-target` class.
+
+@element core-animation
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation" constructor="CoreAnimation" attributes="target keyframes sample composite duration fill easing iterationStart iterationCount delay direction autoplay targetSelector">
+  <script src="core-animation-1.js"></script>
+</polymer-element>
+
+<!--
+`core-animation-keyframe` represents a keyframe in a `core-animation`. Use them as children of
+`core-animation` elements to create web animations declaratively. If the `offset` property is
+unset, the keyframes will be distributed evenly within the animation duration. Use
+`core-animation-prop` elements as children of this element to specify the CSS properties for
+the animation.
+
+@element core-animation-keyframe
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation-keyframe" attributes="offset">
+  <script src="core-animation-2.js"></script>
+</polymer-element>
+
+<!--
+`core-animation-prop` represents a CSS property and value pair to use with
+`core-animation-keyframe`.
+
+@element core-animation-prop
+@status beta
+@homepage github.io
+-->
+<polymer-element name="core-animation-prop" attributes="name value">
+  <script src="core-animation-3.js"></script>
+</polymer-element>

@@ -7,16 +7,20 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-status" extends="spark-widget"
+    layout center horizontal
     attributes="spinning defaultMessage temporaryMessage progressMessage">
   <template>
     <link rel="stylesheet" href="spark_status.css">
 
-    <div id="status-container">
-      <div id="label"></div>
-      <div id="throbber">
-        <div id="spinner"></div>
+    <div class="spinnerContainer" layout horizontal center>
+      <div id="spinner">
+        <svg width="24px" height="24px" viewBox="0 0 24 24">
+          <!-- cached icon from core-icons -->
+          <path d="M19,8l-4,4h3c0,3.3-2.7,6-6,6c-1,0-2-0.3-2.8-0.7l-1.5,1.5C9,19.5,10.4,20,12,20c4.4,0,8-3.6,8-8h3L19,8z M6,12c0-3.3,2.7-6,6-6c1,0,2,0.3,2.8,0.7l1.5-1.5C15,4.5,13.6,4,12,4c-4.4,0-8,3.6-8,8H1l4,4l4-4H6z"></path>
+        </svg>
       </div>
     </div>
+    <div id="label" flex></div>
   </template>
 
   <script type="application/dart" src="spark_status.dart"></script>
