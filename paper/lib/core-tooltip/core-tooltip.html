@@ -1,0 +1,80 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+The `core-tooltip` element creates a hover tooltip centered for the content
+it contains. It can be positioned on the top|bottom|left|right of content using
+the `position` attribute.
+
+To include HTML in the tooltip, include the `tip` attribute on the relevant
+content.
+
+<b>Example</b>:
+
+    <core-tooltip label="I'm a tooltip">
+      <span>Hover over me.</span>
+    </core-tooltip>
+
+<b>Example</b> - positioning the tooltip to the right:
+
+    <core-tooltip label="I'm a tooltip to the right" position="right">
+      <core-icon-button icon="drawer"></core-icon-button>
+    </core-tooltip>
+
+<b>Example</b> - no arrow and showing by default:
+
+    <core-tooltip label="Tooltip with no arrow and always on" noarrow show>
+      <img src="image.jpg">
+    </core-tooltip>
+
+<b>Example</b> - rich tooltip using the `tip` attribute:
+
+    <core-tooltip>
+      <div>Example of a rich information tooltip</div>
+      <div tip>
+        <img src="profile.jpg">Foo <b>Bar</b> - <a href="#">@baz</a>
+      </div>
+    </core-tooltip>
+
+By default, the `tip` attribute specifies the HTML content for a rich tooltip.
+You can customize this attribute with the `tipAttribute` attribute:
+
+    <core-tooltip tipAttribute="htmltooltip">
+      <div>Example of a rich information tooltip</div>
+      <div htmltooltip>
+        ...
+      </div>
+    </core-tooltip>
+
+@group Polymer Core Elements
+@element core-tooltip
+@homepage http://polymer.github.io/core-tooltip
+-->
+
+<link rel="import" href="../../polymer/polymer.html">
+
+<!-- TODO: would be nice to inherit from label to get .htmlFor, and .control,
+           but the latter is readonly. -->
+<!-- TODO: support off center arrows. -->
+<!-- TODO: detect mobile and apply the .large class, instead of manual
+           control. -->
+<!-- TODO: possibly reuse core-overlay. -->
+<polymer-element name="core-tooltip" attributes="noarrow position label show tipAttribute" tabindex="0">
+<template>
+
+  <link rel="stylesheet" href="core-tooltip.css">
+  <div id="tooltip" hidden?="{{!hasTooltipContent}}" class="polymer-tooltip {{position}} {{ {noarrow: noarrow, show: show} | tokenList}}">
+    <content id="c" select="[{{tipAttribute}}]">{{label}}</content>
+  </div>
+
+  <content></content>
+
+</template>
+<script src="core-tooltip.js"></script>
+</polymer-element>

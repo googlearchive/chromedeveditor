@@ -1,0 +1,109 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
+The complete set of authors may be found at http://polymer.github.io/AUTHORS
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
+-->
+
+<!--
+/**
+ * core-input is an unstyled single- or multi-line text field where user can
+ * enter input.
+ *
+ * Example:
+ *
+ *     <core-input placeholder="Placeholder text here"></core-input>
+ *
+ *     <core-input multiline placeholder="Enter multiple lines here"></core-input>
+ *
+ * The text input's value is considered "committed" if the user hits the "enter"
+ * key or blurs the input after changing the value. The `change` event is fired
+ * when the value becomes committed, and the committed value is stored in the
+ * `value` property. The current value of the input is stored in the `inputValue`
+ * property.
+ *
+ * Validation
+ * ----------
+ *
+ * core-input can optionally validate the value using the HTML5 constraints API,
+ * similar to native inputs. There are two methods to configure input validation:
+ *
+ * 1. By setting the `type` attribute. For example, setting it to `email` will
+ *    check the value is a valid email, and setting it to `number` will check
+ *    the input is a number.
+ *
+ * 2. By setting attributes related to validation. The attributes are `pattern`,
+ *    `min`, `max`, `step` and `required`.
+ *
+ * Only `required` is supported for multiline inputs currently.
+ *
+ * Example:
+ *
+ *     <core-input type="email" placeholder="enter your email"></core-input>
+ *
+ *     <core-input type="number" min="5" placeholder="enter a number greater than or equal to 5"></core-input>
+ *
+ *     <core-input pattern=".*abc.*" placeholder="enter something containing 'abc'"></core-input>
+ *
+ * See https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/Constraint_validation
+ * for more info on validation.
+ *
+ * @group Polymer Core Elements
+ * @element core-input
+ * @homepage github.io
+ */
+-->
+
+<!--
+Fired when the inputValue of is changed. This is the same event as the DOM
+"input" event.
+
+@event input
+-->
+
+<!--
+Fired when the user commits the value of the input, either by the hitting the
+`enter` key or blurring the input after the changing the inputValue. Also see the
+DOM "change" event.
+
+@event change
+-->
+
+<!--
+Fired when the inputValue of this text input changes and fails validation.
+
+@event input-invalid
+@param {Object} detail
+@param {string} value The text input's inputValue.
+-->
+
+<!--
+Fired when the inputValue of this text input changes and passes validation.
+
+@event input-valid
+@param {Object} detail
+@param {string} value The text input's inputValue.
+-->
+<link href="../../polymer/polymer.html" rel="import">
+
+<polymer-element name="core-input" on-focus="{{focusAction}}">
+
+  <template>
+
+    <link href="core-input.css" rel="stylesheet">
+
+    <template if="{{multiline}}">
+      <textarea id="input" value="{{inputValue}}" rows="{{rows}}" disabled?="{{disabled}}" placeholder="{{placeholder}}" autofocus?="{{autofocus}}" required?="{{required}}" readonly?="{{readonly}}" maxlength="{{maxlength}}" aria-label="{{label || placeholder}}" aria-invalid="{{invalid}}" on-change="{{inputChangeAction}}" on-focus="{{inputFocusAction}}" on-blur="{{inputBlurAction}}"></textarea>
+    </template>
+
+    <template if="{{!multiline}}">
+      <input id="input" value="{{inputValue}}" disabled?="{{disabled}}" type="{{type}}" placeholder="{{placeholder}}" autofocus?="{{autofocus}}" required?="{{required}}" readonly?="{{readonly}}" pattern="{{pattern}}" min="{{min}}" max="{{max}}" step="{{step}}" maxlength="{{maxlength}}" aria-label="{{label || placeholder}}" aria-invalid="{{invalid}}" on-keypress="{{keypressAction}}" on-change="{{inputChangeAction}}" on-focus="{{inputFocusAction}}" on-blur="{{inputBlurAction}}">
+    </template>
+
+  </template>
+
+  <script src="core-input.js"></script>
+
+</polymer-element>

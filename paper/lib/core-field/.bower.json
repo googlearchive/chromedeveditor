@@ -1,0 +1,18 @@
+{
+  "name": "core-field",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.4.0"
+  },
+  "homepage": "https://github.com/Polymer/core-field",
+  "version": "0.4.1",
+  "_release": "0.4.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.4.1",
+    "commit": "14eb1bf818b79935c5250b57a204fbeeed0347ea"
+  },
+  "_source": "git://github.com/Polymer/core-field.git",
+  "_target": "^0.4.0",
+  "_originalSource": "Polymer/core-field"
+}

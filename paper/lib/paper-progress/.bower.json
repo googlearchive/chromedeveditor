@@ -1,0 +1,19 @@
+{
+  "name": "paper-progress",
+  "private": true,
+  "dependencies": {
+    "core-range": "Polymer/core-range#^0.4.0",
+    "paper-button": "Polymer/paper-button#^0.4.0"
+  },
+  "homepage": "https://github.com/Polymer/paper-progress",
+  "version": "0.4.1",
+  "_release": "0.4.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.4.1",
+    "commit": "d8319669fa72cfd2eb51dab0c82b0ddffe72240c"
+  },
+  "_source": "git://github.com/Polymer/paper-progress.git",
+  "_target": "^0.4.0",
+  "_originalSource": "Polymer/paper-progress"
+}

@@ -1,0 +1,67 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+/**
+ * @group Polymer Core Elements
+ *
+ * The `core-iconset` element allows users to define their own icon sets. 
+ * The `src` property specifies the url of the icon image. Multiple icons may
+ * be included in this image and they may be organized into rows.
+ * The `icons` property is a space separated list of names corresponding to the
+ * icons. The names must be ordered as the icons are ordered in the icon image.
+ * Icons are expected to be square and are the size specified by the `iconSize`
+ * property. The `width` property corresponds to the width of the icon image 
+ * and must be specified if icons are arranged into multiple rows in the image.
+ *
+ * All `core-iconset` elements are available for use by other `core-iconset`
+ * elements via a database keyed by id. Typically, an element author that wants
+ * to support a set of custom icons uses a `core-iconset` to retrieve 
+ * and use another, user-defined iconset.
+ *
+ * Example:
+ *
+ *     <core-iconset id="my-icons" src="my-icons.png" width="96" iconSize="24"
+ *         icons="location place starta stopb bus car train walk">
+ *     </core-iconset>
+ *
+ * This will automatically register the icon set "my-icons" to the iconset
+ * database.  To use these icons from within another element, make a 
+ * `core-iconset` element and call the `byId` method to retrieve a
+ * given iconset. To apply a particular icon to an element, use the 
+ * `applyIcon` method. For example:
+ *
+ *     iconset.applyIcon(iconNode, 'car');
+ *
+ * Themed icon sets are also supported. The `core-iconset` can contain child
+ * `property` elements that specify a theme with an offsetX and offsetY of the
+ * theme within the icon resource. For example.
+ *
+ *     <core-iconset id="my-icons" src="my-icons.png" width="96" iconSize="24"
+ *         icons="location place starta stopb bus car train walk">
+ *       <property theme="special" offsetX="256" offsetY="24"></property>
+ *     </core-iconset>
+ *
+ * Then a themed icon can be applied like this:
+ *
+ *     iconset.applyIcon(iconNode, 'car', 'special');
+ *
+ * @element core-iconset
+ * @extends core-meta
+ * @homepage github.io
+ */
+-->
+
+<link rel="import" href="../core-meta/core-meta.html">
+
+<polymer-element name="core-iconset" extends="core-meta" attributes="src width icons iconSize">
+  
+  <script src="core-iconset.js"></script>
+
+</polymer-element>

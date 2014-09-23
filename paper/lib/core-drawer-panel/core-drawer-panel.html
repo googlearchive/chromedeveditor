@@ -1,0 +1,81 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`core-drawer-panel` contains a drawer panel and a main panel.  The drawer
+and the main panel are side-by-side with drawer on the left.  When browser
+window size is smaller than the `responsiveWidth`, `core-drawer-panel`
+changes to narrow layout.  In narrow layout, the drawer will be stacked on top
+of the main panel.  The drawer will be slided in/out to hide/reveal the main
+panel.
+
+Use the attribute `drawer` to indicate the element is a drawer panel and
+`main` to indicate is a main panel.
+
+Example:
+
+    <core-drawer-panel>
+      <div drawer> Drawer panel... </div>
+      <div main> Main panel... </div>
+    </core-drawer-panel>
+
+The drawer and the main panels are not scrollable.  You can set CSS overflow
+property on the elements to make them scrollable or use `core-header-panel`.
+
+Example:
+
+    <core-drawer-panel>
+      <core-header-panel drawer>
+        <core-toolbar></core-toolbar>
+        <div> Drawer content... </div>
+      </core-header-panel>
+      <core-header-panel main>
+        <core-toolbar></core-toolbar>
+        <div> Main content... </div>
+      </core-header-panel>
+    </core-drawer-panel>
+
+To position the drawer to the right, add `rightDrawer` attribute.
+
+    <core-drawer-panel rightDrawer>
+      <div drawer> Drawer panel... </div>
+      <div main> Main panel... </div>
+    </core-drawer-panel>
+
+@group Polymer Core Elements
+@element core-drawer-panel
+@homepage github.io
+-->
+
+<link rel="import" href="../core-media-query/core-media-query.html">
+<link rel="import" href="../core-selector/core-selector.html">
+
+<polymer-element name="core-drawer-panel" touch-action="auto">
+<template>
+
+  <link rel="stylesheet" href="core-drawer-panel.css">
+
+  <core-media-query query="max-width: {{responsiveWidth}}" queryMatches="{{queryMatches}}"></core-media-query>
+
+  <core-selector class="{{ {'narrow-layout' : queryMatches, transition : transition, dragging : dragging, 'right-drawer': rightDrawer} | tokenList }}" valueattr="id" selected="{{selected}}">
+
+    <div id="main" _style="left: {{ narrow || rightDrawer ? '0' : drawerWidth }}; right: {{ rightDrawer ? (narrow ? '' : drawerWidth) : '' }};">
+      <content select="[main]"></content>
+      <div id="scrim" on-tap="{{togglePanel}}"></div>
+    </div>
+
+    <div id="drawer" _style="width: {{ drawerWidth }}">
+      <content select="[drawer]"></content>
+    </div>
+
+  </core-selector>
+
+</template>
+<script src="core-drawer-panel.js"></script>
+</polymer-element>
