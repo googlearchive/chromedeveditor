@@ -437,7 +437,7 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
     }).then((String appId) {
       // TODO: Use the returned appId once it has the correct results.
       // TODO: Delay a bit - there's a race condition.
-      return new Future.delayed(new Duration(milliseconds: 100));
+      return new Future.delayed(new Duration(milliseconds: 500));
     }).then((_) {
       if (idToLaunch != null) return idToLaunch;
       // TODO(grv): This assumes that the loaded extension is directly loaded
