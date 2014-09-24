@@ -1110,7 +1110,7 @@ abstract class SparkAction extends Action {
         if (SparkFlags.developerMode) {
           throw e;
         }
-        spark.showErrorMessage('Error Invoking ${name}', exception: e);
+        spark.showErrorMessage('Error while invoking ${name}', exception: e);
       }
     }
   }
@@ -1442,7 +1442,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
             spark._aceManager.focus();
           });
         }).catchError((e) {
-          spark.showErrorMessage("Error Creating File", exception: e);
+          spark.showErrorMessage("Error while creating file", exception: e);
         });
       }
     }
@@ -1620,13 +1620,13 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
       if (children.any((ws.Resource r) => r.name == newName)) {
         spark.showErrorMessage(
-            'Error During Rename', message: 'File or folder already exists.');
+            'Error during rename', message: 'File or folder already exists.');
         return;
       }
       resource.rename(_nameElement.value).then((value) {
         spark._renameOpenEditor(resource);
       }).catchError((e) {
-        spark.showErrorMessage("Error During Rename", exception: e);
+        spark.showErrorMessage("Error during rename", exception: e);
       });
     }
   }
@@ -1776,7 +1776,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 
   void _invoke([context]) {
     if (!enabled) {
-      spark.showErrorMessage('Unable to Deploy',
+      spark.showErrorMessage('Unable to deploy',
           message: 'Unable to deploy the current selection; please select an '
           'application to deploy.');
       return;
@@ -1795,7 +1795,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
       completer.complete();
     }).catchError((e) {
       completer.complete();
-      spark.showErrorMessage('Error ${_launchText} Application', exception: e);
+      spark.showErrorMessage('Error ${_launchText} application', exception: e);
     });
   }
 
@@ -1942,7 +1942,7 @@ class CompileDartAction extends SparkAction implements ContextAction {
 
     spark.jobManager.schedule(
         new CompileDartJob(spark, resource, resource.name)).catchError((e) {
-      spark.showErrorMessage('Error Compiling ${resource.name}', exception: e);
+      spark.showErrorMessage('Error while compiling ${resource.name}', exception: e);
     });
   }
 
@@ -2047,7 +2047,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
           spark._filesController.selectFile(folder);
         });
       }).catchError((e) {
-        spark.showErrorMessage("Error Creating Folder", exception: e);
+        spark.showErrorMessage("Error while creating folder", exception: e);
       });
     }
   }
@@ -2293,7 +2293,7 @@ class NewProjectAction extends SparkActionWithDialog {
         });
       });
     }).catchError((e) {
-      spark.showErrorMessage('Error Creating Project', exception: e);
+      spark.showErrorMessage('Error while creating project', exception: e);
     });
   }
 }
@@ -2360,12 +2360,12 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
 
     if (deployContainer == null) {
       spark.showErrorMessage(
-          'Unable to Deploy',
+          'Unable to deploy',
           message: 'Unable to deploy the current selection; '
                    'please select a Chrome App to deploy.');
     } else if (!MobileDeploy.isAvailable()) {
       spark.showErrorMessage(
-          'Unable to Deploy', message: 'No USB devices available.');
+          'Unable to deploy', message: 'No USB devices available.');
     } else {
       _restoreDialog();
       _show();
@@ -2598,7 +2598,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     if (url.isEmpty) {
       _restoreDialog();
       spark.showErrorMessage(
-          'Error in Cloning', message: 'Repository url required.');
+          'Error in cloning', message: 'Repository url required.');
       return;
     }
 
@@ -2629,10 +2629,10 @@ class GitCloneAction extends SparkActionWithProgressDialog {
         spark.showSuccessMessage('Clone cancelled');
       } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
-        spark.showErrorMessage('Error cloning Git project',
+        spark.showErrorMessage('Error while cloning Git project',
             message: 'Could not clone "${projectName}": ' + e.message);
       } else {
-        spark.showErrorMessage('Error cloning Git project',
+        spark.showErrorMessage('Error while cloning Git project',
             message: 'Error while cloning "${projectName}".', exception: e);
       }
     }).whenComplete(() {
@@ -2795,7 +2795,7 @@ class GitBranchAction
       _hide();
     }).catchError((e) {
       spark.showErrorMessage(
-          'Error creating branch ${_branchNameElement.value}', exception: e);
+          'Error while creating branch ${_branchNameElement.value}', exception: e);
     });
     _branchNameElement.disabled = false;
   }
@@ -2888,7 +2888,7 @@ class GitMergeAction
       _hide();
     }).catchError((e) {
       spark.showErrorMessage(
-          'Error creating branch ${_branchNameElement.value}', exception: e);
+          'Error while creating branch ${_branchNameElement.value}', exception: e);
     });
     _branchNameElement.disabled = false;
   }
@@ -3072,7 +3072,7 @@ class GitCommitAction
       _restoreDialog();
       _hide();
     }).catchError((e) {
-      spark.showErrorMessage('Error committing changes', exception: e);
+      spark.showErrorMessage('Error while committing changes', exception: e);
     });
   }
 
@@ -3135,7 +3135,7 @@ class GitCheckoutAction
       _hide();
       spark.showSuccessMessage('Switched to branch ${branchName}');
     }).catchError((e) {
-      spark.showErrorMessage('Error switching to ${branchName}', exception: e);
+      spark.showErrorMessage('Error while switching to ${branchName}', exception: e);
     });
   }
 
@@ -3476,7 +3476,7 @@ class _GitPullJob extends Job {
             code: SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS);
       }).catchError((e) {
         e = SparkException.fromException(e);
-        spark.showErrorMessage('Git Pull Status', exception: e);
+        spark.showErrorMessage('Git pull status', exception: e);
       });
     });
   }
@@ -3528,7 +3528,7 @@ class _GitBranchJob extends Job {
         });
       }).catchError((e) {
         e = SparkException.fromException(e);
-        spark.showErrorMessage('Error creating branch ${_branchName}', exception : e);
+        spark.showErrorMessage('Error while creating branch ${_branchName}', exception : e);
       });
     });
   }
@@ -3562,7 +3562,7 @@ class _GitMergeJob extends Job {
       }).catchError((e) {
         e = SparkException.fromException(e);
         spark.showErrorMessage(
-            'Error in Merging branch ${_branchName}', exception : e);
+            'Error in merging branch ${_branchName}', exception : e);
       });
     });
   }
@@ -3631,7 +3631,7 @@ class _OpenFolderJob extends Job {
       return new SparkJobStatus(message: 'Opened folder ${_entry.fullPath}');
     }).catchError((e) {
       spark.showErrorMessage(
-          'Error opening folder ${_entry.fullPath}', exception: e);
+          'Error while opening folder ${_entry.fullPath}', exception: e);
     });
   }
 }
@@ -3890,7 +3890,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
 
     if (getAppContainerFor(_resource) == null) {
       spark.showErrorMessage(
-          'Unable to Publish',
+          'Unable to publish',
           message: 'Unable to publish the current selection; '
                    'please select a Chrome App or Extension to publish.');
       return;
@@ -4133,8 +4133,8 @@ class RunPythonAction extends SparkAction {
     if (selection.length == 0) return;
     ws.File file = selection.first;
     if (!file.name.endsWith('.py')) {
-      spark.showErrorMessage('Not a python script',
-          message: 'Please select a python script to run.');
+      spark.showErrorMessage('Not a Python script',
+          message: 'Please select a Python script to run.');
       return;
     }
     file.getContents().then((content) {
