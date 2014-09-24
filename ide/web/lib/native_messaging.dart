@@ -19,7 +19,6 @@ class NativeMassagingManager {
   static const KEY_PATH = 'path';
   static const KEY_URL = 'url';
 
-
   JsObject _port;
   Notifier _notifier;
 
