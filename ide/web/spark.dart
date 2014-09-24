@@ -4171,15 +4171,12 @@ class PolymerDesignerAction extends SparkActionWithStatusDialog {
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    _show();
-    // _designer.reload().then((_) {
+    //_designer.reload().then((_) {
     // TODO(ussuri): Restrict to HTML only and account for no file in editor.
     spark.currentEditedFile.getContents().then((String contents) {
-      new Timer(new Duration(milliseconds: 3000), () {
-        _designer.setCode(contents);
-      });
+      _designer.setCode(contents);
     });
-    // });
+    _show();
   }
 
   void _commit() {

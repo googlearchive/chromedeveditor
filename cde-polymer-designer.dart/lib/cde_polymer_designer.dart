@@ -13,6 +13,7 @@ import 'package:polymer/polymer.dart';
 @CustomTag('cde-polymer-designer')
 class CdePolymerDesigner extends PolymerElement {
   js.JsObject _webview;
+  Completer _webviewReady = new Completer();
   Completer<String> _code;
 
   CdePolymerDesigner.created() : super.created();
@@ -32,24 +33,30 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   Future<String> getCode() {
-    _code = new Completer<String>();
-    _executeScriptInWebview('''
-        window.postMessage({action: 'get_code'}, '*');
-    ''');
+    _webviewReady.future.then((_) {
+      _code = new Completer<String>();
+      _executeScriptInWebview('''
+          window.postMessage({action: 'get_code'}, '*');
+      ''');
+    });
     return _code.future;
   }
 
   Future setCode(String code) {
     code = code.replaceAll('"', r'\"').replaceAll('\n', r'\n');
-    return _executeScriptInWebview('''
-        window.postMessage({action: 'set_code', args: '$code'}, '*');
-    ''');
+    return _webviewReady.future.then((_) {
+      return new Timer(new Duration(milliseconds: 500), () {
+        return _executeScriptInWebview('''
+            window.postMessage({action: 'set_code', args: '$code'}, '*');
+        ''');
+      });
+    });
   }
 
   void _onContentLoad(_) {
     _tweakUI();
     _registerWebviewProxyListener();
-    _injectWebviewProxy();
+    _injectWebviewProxy().then((_) => _webviewReady.complete());
   }
 
   Future _tweakUI() {
@@ -68,9 +75,9 @@ class CdePolymerDesigner extends PolymerElement {
     });
   }
 
-  void _injectWebviewProxy() {
+  Future _injectWebviewProxy() {
     // TODO(ussuri): Check the sender.
-    _injectWebviewScriptingContextScript(r'''
+    return _injectWebviewScriptingContextScript(r'''
         window.addEventListener("message", function(event) {
           var designer = document.querySelector("#designer");
           if (event.data['action'] === 'get_code') {
