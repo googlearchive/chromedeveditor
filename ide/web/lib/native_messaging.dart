@@ -31,7 +31,7 @@ class NativeMassagingManager {
   }
 
   /**
-   * function for receiving messge
+   * function for receiving message
    */
   void _onNativeMessage(request, sender) {
     String message = context['JSON'].callMethod('stringify',[request]);
@@ -50,7 +50,6 @@ class NativeMassagingManager {
    * is done through the port of connection.
    */
   void _connect() {
-
     JsObject runtime = context['chrome']['runtime'];
     _port = runtime.callMethod('connectNative', [HOST_NAME]);
 
@@ -63,7 +62,6 @@ class NativeMassagingManager {
     dartOnMessageEvent = (jsOnMessageEvent is JsObject ?
           jsOnMessageEvent : new JsObject.fromBrowserObject(jsOnMessageEvent));
     dartOnMessageEvent.callMethod('addListener', [_onDisconnected]);
-
   }
 
   void launchDartium(Notifier notifier, String path, String url) {
