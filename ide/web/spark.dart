@@ -1328,6 +1328,7 @@ abstract class SparkActionWithDialog extends SparkAction {
       _dialog.show();
     });
   }
+
   void _hide() => _dialog.hide();
 
   void _showSuccessStatus(String message) {
@@ -4170,8 +4171,15 @@ class PolymerDesignerAction extends SparkActionWithStatusDialog {
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    _designer.reload();
     _show();
+    // _designer.reload().then((_) {
+    // TODO(ussuri): Restrict to HTML only and account for no file in editor.
+    spark.currentEditedFile.getContents().then((String contents) {
+      new Timer(new Duration(milliseconds: 3000), () {
+        _designer.setCode(contents);
+      });
+    });
+    // });
   }
 
   void _commit() {

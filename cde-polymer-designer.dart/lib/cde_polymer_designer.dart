@@ -12,8 +12,8 @@ import 'package:polymer/polymer.dart';
 
 @CustomTag('cde-polymer-designer')
 class CdePolymerDesigner extends PolymerElement {
-  Completer<String> _code;
   js.JsObject _webview;
+  Completer<String> _code;
 
   CdePolymerDesigner.created() : super.created();
 
@@ -33,10 +33,17 @@ class CdePolymerDesigner extends PolymerElement {
 
   Future<String> getCode() {
     _code = new Completer<String>();
-    _executeScriptInWebview(r'''
+    _executeScriptInWebview('''
         window.postMessage({action: 'get_code'}, '*');
     ''');
     return _code.future;
+  }
+
+  Future setCode(String code) {
+    code = code.replaceAll('"', r'\"').replaceAll('\n', r'\n');
+    return _executeScriptInWebview('''
+        window.postMessage({action: 'set_code', args: '$code'}, '*');
+    ''');
   }
 
   void _onContentLoad(_) {
@@ -65,9 +72,11 @@ class CdePolymerDesigner extends PolymerElement {
     // TODO(ussuri): Check the sender.
     _injectWebviewScriptingContextScript(r'''
         window.addEventListener("message", function(event) {
+          var designer = document.querySelector("#designer");
           if (event.data['action'] === 'get_code') {
-            var code = document.querySelector("#designer").html;
-            chrome.runtime.sendMessage({type: 'code', value: code});
+            chrome.runtime.sendMessage({type: 'code', value: designer.html});
+          } else if (event.data['action'] === 'set_code') {
+            designer.loadHtml(event.data['args']);
           }
         });
     ''');
