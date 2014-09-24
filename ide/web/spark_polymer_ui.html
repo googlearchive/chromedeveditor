@@ -870,7 +870,9 @@
 
     <template if="{{polymerDesigner}}">
       <spark-dialog id="polymerDesignerDialog" headerTitle="Polymer Designer">
-        <cde-polymer-designer id="sparkPolymerDesigner"></cde-polymer-designer>
+        <cde-polymer-designer id="polymerDesigner"></cde-polymer-designer>
+        <spark-dialog-button cancel>Cancel</spark-dialog-button>
+        <spark-dialog-button submit focused>Generate code</spark-dialog-button>
       </spark-dialog>
     </template>
 

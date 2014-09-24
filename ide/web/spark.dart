@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
+import 'package:cde_polymer_designer/cde_polymer_designer.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_testing/testing_app.dart';
 import 'package:intl/intl.dart';
@@ -4161,20 +4162,23 @@ class RunPythonAction extends SparkAction {
 }
 
 class PolymerDesignerAction extends SparkActionWithStatusDialog {
+  CdePolymerDesigner _designer;
+
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
-      : super(spark, "polymer-designer", "Open Polymer Designer…", dialog);
+      : super(spark, "polymer-designer", "Open Polymer Designer…", dialog) {
+    _designer = _dialog.getElement('#polymerDesigner');
+  }
 
   void _invoke([List<ws.Resource> resources]) {
-    // (spark.getUIElement('#polymerDesignerWebview') as dynamic).reload();
+    _designer.reload();
     _show();
   }
 
   void _commit() {
+    _designer.getCode().then((String code) {
+      spark.currentEditedFile.setContents(code);
+    });
     super._commit();
-  }
-
-  void _cancel() {
-    super._cancel();
   }
 }
 

@@ -38,7 +38,7 @@ spark-dialog#polymerDesignerDialog {
   margin-left: -45%;
 }
 
-spark-dialog#polymerDesignerDialog #sparkPolymerDesigner {
+spark-dialog#polymerDesignerDialog #polymerDesigner {
   display: block;
   height: 600px;
   border: 1px solid #ccc;
