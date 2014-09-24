@@ -3,6 +3,8 @@
 # All rights reserved. Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+# install into Chromium/Dartium for testing
+
 set -e
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
