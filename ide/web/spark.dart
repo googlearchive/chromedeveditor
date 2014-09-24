@@ -2404,8 +2404,9 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
         });
       }
     }).then((_) {
-      return _selectedResource.entry.getMetadata().then((meta) {
-        if (_selectedResource.entry is FileEntry) {
+      chrome.Entry entry = (_selectedResource as EntryBased).entry;
+      return entry.getMetadata().then((meta) {
+        if (entry is FileEntry) {
           final String size = _nf.format(meta.size);
           _addProperty(_propertiesElement, 'Size', '$size bytes');
         }

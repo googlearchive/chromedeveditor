@@ -650,7 +650,8 @@ abstract class Resource {
     }
   }
 
-  Future<Resource> _performRename => new Future.error("_performRename not implemented.”);
+  Future<Resource> _performRename(String name) =>
+      new Future.error("_performRename not implemented.");
 
   Future rename(String name) {
     List<String> originalUuids = _resourceUuids(this);
@@ -1045,12 +1046,14 @@ class Folder extends Container with EntryBased {
 }
 
 class EntryFile extends File with EntryBased {
-  EntryFile(Container parent, this._entry) : super(parent) {
+  EntryFile(Container parent, chrome.Entry entry) : super(parent) {
+    _entry = entry;
     entry.getMetadata().then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
     });
   }
 
+  int _timestamp;
   int get timestamp => _timestamp;
 
   /**

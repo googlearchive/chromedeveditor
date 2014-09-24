@@ -56,7 +56,7 @@ class BowerManager extends PackageManager {
 
   Future _installOrUpgradePackages(
       Folder container, FetchMode mode, ProgressMonitor monitor) {
-    final File specFile = container.getChild(properties.packageSpecFileName);
+    final EntryFile specFile = container.getChild(properties.packageSpecFileName);
 
     // The client is expected to call us only when the project has bower.json.
     if (specFile == null) {

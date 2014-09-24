@@ -277,7 +277,7 @@ class EditorArea extends TabView {
   }
 }
 
-Future<String> _calculateTooltip(File file) {
+Future<String> _calculateTooltip(EntryFile file) {
   if (file.entry == null) return new Future.value(file.path);
 
   return fileSystemAccess.getDisplayPath(file.entry);

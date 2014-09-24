@@ -126,7 +126,7 @@ class PubManager extends PackageManager {
       monitor.worked(1);
     }
 
-    Container projectDir = _getProjectDir(container);
+    Folder projectDir = _getProjectDir(container);
     return tavern.getDependencies(projectDir.entry, handleLog, isUpgrade).
         whenComplete(() {
       return container.project.refresh();

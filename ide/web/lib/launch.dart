@@ -417,7 +417,7 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
           'Unable to launch; the chrome.developerPrivate API is not available.');
     }
 
-    Container container = application.primaryResource;
+    Folder container = application.primaryResource;
 
     // TODO(grv): remove after chrome 38 is stable.
     final Pattern pattern = '/special/drive-';

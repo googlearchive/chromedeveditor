@@ -81,10 +81,10 @@ defineTests() {
       FileEntry fileEntry3 = fs.createFile('test3.txt', contents: 'foobar');
       FileEntry fileEntry4 = fs.createFile('test4.txt', contents: 'foobar');
 
-      NavigationLocation nav1 = _mockLocationWithFile(new File(workspace, fileEntry1));
-      NavigationLocation nav2 = _mockLocationWithFile(new File(workspace, fileEntry2));
-      NavigationLocation nav3 = _mockLocationWithFile(new File(workspace, fileEntry3));
-      NavigationLocation nav4 = _mockLocationWithFile(new File(workspace, fileEntry4));
+      NavigationLocation nav1 = _mockLocationWithFile(new EntryFile(workspace, fileEntry1));
+      NavigationLocation nav2 = _mockLocationWithFile(new EntryFile(workspace, fileEntry2));
+      NavigationLocation nav3 = _mockLocationWithFile(new EntryFile(workspace, fileEntry3));
+      NavigationLocation nav4 = _mockLocationWithFile(new EntryFile(workspace, fileEntry4));
 
       expect(manager.backLocation, isNull);
       expect(manager.forwardLocation, isNull);
@@ -119,10 +119,10 @@ defineTests() {
       FileEntry fileEntry3 = fs.createFile('test3.txt', contents: 'foobar');
       FileEntry fileEntry4 = fs.createFile('test4.txt', contents: 'foobar');
 
-      NavigationLocation nav1 = _mockLocationWithFile(new File(workspace, fileEntry1));
-      NavigationLocation nav2 = _mockLocationWithFile(new File(workspace, fileEntry2));
-      NavigationLocation nav3 = _mockLocationWithFile(new File(workspace, fileEntry3));
-      NavigationLocation nav4 = _mockLocationWithFile(new File(workspace, fileEntry4));
+      NavigationLocation nav1 = _mockLocationWithFile(new EntryFile(workspace, fileEntry1));
+      NavigationLocation nav2 = _mockLocationWithFile(new EntryFile(workspace, fileEntry2));
+      NavigationLocation nav3 = _mockLocationWithFile(new EntryFile(workspace, fileEntry3));
+      NavigationLocation nav4 = _mockLocationWithFile(new EntryFile(workspace, fileEntry4));
 
       manager.gotoLocation(nav1);
       locationProvider.navigationLocation = nav1;
@@ -158,10 +158,10 @@ defineTests() {
       FileEntry fileEntry3 = fs.createFile('test3.txt', contents: 'foobar');
       FileEntry fileEntry4 = fs.createFile('test4.txt', contents: 'foobar');
 
-      NavigationLocation nav1 = _mockLocationWithFile(new File(workspace, fileEntry1));
-      NavigationLocation nav2 = _mockLocationWithFile(new File(workspace, fileEntry2));
-      NavigationLocation nav3 = _mockLocationWithFile(new File(workspace, fileEntry3));
-      NavigationLocation nav4 = _mockLocationWithFile(new File(workspace, fileEntry4));
+      NavigationLocation nav1 = _mockLocationWithFile(new EntryFile(workspace, fileEntry1));
+      NavigationLocation nav2 = _mockLocationWithFile(new EntryFile(workspace, fileEntry2));
+      NavigationLocation nav3 = _mockLocationWithFile(new EntryFile(workspace, fileEntry3));
+      NavigationLocation nav4 = _mockLocationWithFile(new EntryFile(workspace, fileEntry4));
       locationProvider.navigationLocation = null;
       manager.gotoLocation(nav1);
       locationProvider.navigationLocation = nav1;
@@ -202,10 +202,10 @@ defineTests() {
       FileEntry fileEntry3 = fs.createFile('test3.txt', contents: 'foobar');
       FileEntry fileEntry4 = fs.createFile('test4.txt', contents: 'foobar');
 
-      NavigationLocation nav1 = _mockLocationWithFile(new File(workspace, fileEntry1));
-      NavigationLocation nav2 = _mockLocationWithFile(new File(workspace, fileEntry2));
-      NavigationLocation nav3 = _mockLocationWithFile(new File(workspace, fileEntry3));
-      NavigationLocation nav4 = _mockLocationWithFile(new File(workspace, fileEntry4));
+      NavigationLocation nav1 = _mockLocationWithFile(new EntryFile(workspace, fileEntry1));
+      NavigationLocation nav2 = _mockLocationWithFile(new EntryFile(workspace, fileEntry2));
+      NavigationLocation nav3 = _mockLocationWithFile(new EntryFile(workspace, fileEntry3));
+      NavigationLocation nav4 = _mockLocationWithFile(new EntryFile(workspace, fileEntry4));
 
       locationProvider.navigationLocation = null;
       manager.gotoLocation(nav1);

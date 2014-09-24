@@ -569,7 +569,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
         return Status.getFileStatuses(store).then((statuses) {
           resources.forEach((resource) {
             // TODO(grv): This should be handled by git status.
-            if (!GitIgnore.ignore(resource.entry.fullPath)) {
+            if (resource is EntryBased && !GitIgnore.ignore(resource.entry.fullPath)) {
               _setStatus(resource, statuses[resource.entry.fullPath]);
             }
           });
@@ -578,10 +578,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
       } else {
         // For each file, request the SCM status asynchronously.
         return Future.forEach(resources, (Resource resource) {
-          return Status.updateAndGetStatus(store, resource.entry).then((status) {
-            _updateStatusForAncestors(store, resource);
-            return new Future.value();
-          });
+          if (resource is EntryBased) {
+            chrome.Entry entry = (resource as EntryBased).entry;
+            return Status.updateAndGetStatus(store, entry).then((status) {
+              _updateStatusForAncestors(store, resource);
+              return new Future.value();
+            });
+          }
         });
       }
     }).catchError((e, st) {
@@ -590,9 +593,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   void _updateStatusForAncestors(ObjectStore store, Resource resource) {
-    _setStatus(resource, Status.getStatusForEntry(store, resource.entry));
-    if (resource.entry.fullPath != store.root.fullPath) {
-      _updateStatusForAncestors(store, resource.parent);
+    if (resource is EntryBased) {
+      chrome.Entry entry = (resource as EntryBased).entry;
+      _setStatus(resource, Status.getStatusForEntry(store, entry));
+      if (entry.fullPath != store.root.fullPath) {
+        _updateStatusForAncestors(store, resource.parent);
+      }
     }
   }
 
