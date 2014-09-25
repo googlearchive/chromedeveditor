@@ -14,7 +14,7 @@ import 'package:polymer/polymer.dart';
 class CdePolymerDesigner extends PolymerElement {
   js.JsObject _webview;
   Completer _webviewReady = new Completer();
-  Completer<String> _code;
+  Completer<String> _codeExported;
 
   CdePolymerDesigner.created() : super.created();
 
@@ -34,12 +34,12 @@ class CdePolymerDesigner extends PolymerElement {
 
   Future<String> getCode() {
     _webviewReady.future.then((_) {
-      _code = new Completer<String>();
+      _codeExported = new Completer<String>();
       _executeScriptInWebview('''
-          window.postMessage({action: 'get_code'}, '*');
+          window.postMessage({action: 'export_code'}, '*');
       ''');
     });
-    return _code.future;
+    return _codeExported.future;
   }
 
   Future setCode(String code) {
@@ -47,7 +47,7 @@ class CdePolymerDesigner extends PolymerElement {
     return _webviewReady.future.then((_) {
       return new Timer(new Duration(milliseconds: 500), () {
         return _executeScriptInWebview('''
-            window.postMessage({action: 'set_code', args: '$code'}, '*');
+            window.postMessage({action: 'import_code', args: '$code'}, '*');
         ''');
       });
     });
@@ -69,8 +69,8 @@ class CdePolymerDesigner extends PolymerElement {
   void _registerWebviewProxyListener() {
     chrome.runtime.onMessage.listen((OnMessageEvent event) {
       // TODO(ussuri): Check the sender.
-      if (event.message['type'] == 'code') {
-        _code.complete("${event.message['value']}");
+      if (event.message['type'] == 'export_code_response') {
+        _codeExported.complete("${event.message['payload']}");
       }
     });
   }
@@ -80,9 +80,11 @@ class CdePolymerDesigner extends PolymerElement {
     return _injectWebviewScriptingContextScript(r'''
         window.addEventListener("message", function(event) {
           var designer = document.querySelector("#designer");
-          if (event.data['action'] === 'get_code') {
-            chrome.runtime.sendMessage({type: 'code', value: designer.html});
-          } else if (event.data['action'] === 'set_code') {
+          var action = event.data['action'];
+          if (action === 'export_code') {
+            chrome.runtime.sendMessage(
+                {type: 'export_code_response', payload: designer.html});
+          } else if (action === 'import_code') {
             designer.loadHtml(event.data['args']);
           }
         });
