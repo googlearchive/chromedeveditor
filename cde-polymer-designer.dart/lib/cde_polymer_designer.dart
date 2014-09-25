@@ -33,8 +33,8 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   Future<String> getCode() {
+    _codeExported = new Completer<String>();
     _webviewReady.future.then((_) {
-      _codeExported = new Completer<String>();
       _executeScriptInWebview('''
           window.postMessage({action: 'export_code'}, '*');
       ''');
@@ -106,12 +106,12 @@ class CdePolymerDesigner extends PolymerElement {
     script = new js.JsObject.jsify({'code': script});
     final completer = new Completer();
     _webview.callMethod('executeScript', 
-        [script, (result) => completer.complete(result)]);
+        [script, ([result]) => completer.complete(result)]);
     return completer.future;
   }
 
   void _insertCssIntoWebview(String css) {
     css = new js.JsObject.jsify({'code': css});
-    _webview.callMethod('insertCSS', [css, (_) {}]);
+    _webview.callMethod('insertCSS', [css]);
   }
 }
