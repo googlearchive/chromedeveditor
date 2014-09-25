@@ -32,6 +32,19 @@ class CdePolymerDesigner extends PolymerElement {
     return completer.future;
   }
 
+  Future setCode(String code) {
+    code = code.replaceAll('"', r'\"').replaceAll('\n', r'\n');
+    return _webviewReady.future.then((_) {
+      // TODO(ussuri): This doesn't work without a delay:
+      // find some way to detect when PD and proxy/listener are fully ready.
+      return new Timer(new Duration(milliseconds: 300), () {
+        return _executeScriptInWebview('''
+            window.postMessage({action: 'import_code', code: '$code'}, '*');
+        ''');
+      });
+    });
+  }
+
   Future<String> getCode() {
     _codeExported = new Completer<String>();
     _webviewReady.future.then((_) {
@@ -40,17 +53,6 @@ class CdePolymerDesigner extends PolymerElement {
       ''');
     });
     return _codeExported.future;
-  }
-
-  Future setCode(String code) {
-    code = code.replaceAll('"', r'\"').replaceAll('\n', r'\n');
-    return _webviewReady.future.then((_) {
-      return new Timer(new Duration(milliseconds: 500), () {
-        return _executeScriptInWebview('''
-            window.postMessage({action: 'import_code', args: '$code'}, '*');
-        ''');
-      });
-    });
   }
 
   void _onContentLoad(_) {
@@ -68,24 +70,24 @@ class CdePolymerDesigner extends PolymerElement {
 
   void _registerWebviewProxyListener() {
     chrome.runtime.onMessage.listen((OnMessageEvent event) {
-      // TODO(ussuri): Check the sender.
+      // TODO(ussuri): Check the sender?
       if (event.message['type'] == 'export_code_response') {
-        _codeExported.complete("${event.message['payload']}");
+        _codeExported.complete("${event.message['code']}");
       }
     });
   }
 
   Future _injectWebviewProxy() {
-    // TODO(ussuri): Check the sender.
+    // TODO(ussuri): Check the sender?
     return _injectWebviewScriptingContextScript(r'''
         window.addEventListener("message", function(event) {
           var designer = document.querySelector("#designer");
           var action = event.data['action'];
           if (action === 'export_code') {
             chrome.runtime.sendMessage(
-                {type: 'export_code_response', payload: designer.html});
+                {type: 'export_code_response', code: designer.html});
           } else if (action === 'import_code') {
-            designer.loadHtml(event.data['args']);
+            designer.loadHtml(event.data['code']);
           }
         });
     ''');
