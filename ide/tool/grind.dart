@@ -31,28 +31,26 @@ final String refreshToken =
 final String buildBranchName = Platform.environment['DRONE_BRANCH'];
 
 void main([List<String> args]) {
-  defineTask('setup', taskFunction: setup);
+  task('setup', setup);
 
-  defineTask('mode-notest', taskFunction: (c) => _changeMode(useTestMode: false));
-  defineTask('mode-test', taskFunction: (c) => _changeMode(useTestMode: true));
+  task('mode-notest', (c) => _changeMode(useTestMode: false));
+  task('mode-test', (c) => _changeMode(useTestMode: true));
 
-  defineTask('lint', taskFunction: lint, depends: ['setup']);
+  task('lint', lint, ['setup']);
 
-  defineTask('deploy', taskFunction: deploy, depends: ['lint']);
+  task('deploy', deploy, ['lint']);
 
-  defineTask('docs', taskFunction: docs, depends : ['setup']);
-  defineTask('stats', taskFunction: stats);
-  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'deploy']);
-  defineTask('createSdk', taskFunction: createSdk);
+  task('stats', stats);
+  task('archive', archive, ['mode-notest', 'deploy']);
+  task('createSdk', createSdk);
 
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
-    defineTask('build-android-rsa', taskFunction: buildAndroidRSA);
-    defineTask('release-nightly', taskFunction : releaseNightly,
-        depends : ['mode-notest', 'deploy']);
+    task('build-android-rsa', buildAndroidRSA);
+    task('release-nightly', releaseNightly, ['mode-notest', 'deploy']);
   }
 
-  defineTask('clean', taskFunction: clean);
+  task('clean', clean);
 
   startGrinder(args);
 }
@@ -68,8 +66,7 @@ void setup(GrinderContext context) {
         "  e.g.: 'export DART_SDK=your/path/to/dart/dart-sdk'");
   }
 
-  PubTools pub = new PubTools();
-  pub.upgrade(context);
+  Pub.upgrade(context);
 
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
@@ -228,25 +225,6 @@ void archive(GrinderContext context, [String outputZip]) {
   _removeSymlinks(joinDir(BUILD_DIR, ['web']), ignoreTop : true);
   _zip(context, 'build/web', sparkZip);
   _printSize(context, getFile(sparkZip));
-}
-
-void docs(GrinderContext context) {
-  FileSet docFiles = new FileSet.fromDir(
-      new Directory('docs'), pattern: '*.html');
-  FileSet sourceFiles = new FileSet.fromDir(
-      new Directory('web'), pattern: '*.dart', recurse: true);
-
-  if (!docFiles.upToDate(sourceFiles)) {
-    runSdkBinary(context, 'dartdoc',
-        arguments: ['--omit-generation-time', '--no-code',
-                    '--mode', 'static',
-                    '--package-root', 'packages/',
-                    '--include-lib', 'spark,spark.ace,spark.utils,spark.preferences,spark.workspace,spark.sdk',
-                    '--include-lib', 'spark.server,spark.tcp',
-                    '--include-lib', 'git,git.objects,git.zlib',
-                    'web/spark_polymer.dart']);
-    _zip(context, 'docs', '${DIST_DIR.path}/spark-docs.zip');
-  }
 }
 
 void stats(GrinderContext context) {
