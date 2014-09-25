@@ -7,7 +7,6 @@
 @import url("third_party/roboto/roboto.css");
 
 body {
-  /* BUG #2629 */
   font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-size: 13px;
