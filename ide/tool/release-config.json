@@ -2,7 +2,7 @@
   "nightly": {
     "name": "Spark (nightly)",
     "branch": "master",
-    "version": "0.16",
+    "version": "0.17",
     "id": "kcjgcakhgelcejampmijgkjkadfcncjl",
     "description": "Chrome Dev Editor is a developer tool for building apps on the Chrome platform - nightly version",
     "oauth2-clientid": "450494089748-gp35cruaj31fchdh2423raf015luc82u.apps.googleusercontent.com"
