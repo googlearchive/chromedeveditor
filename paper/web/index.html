@@ -13,11 +13,15 @@ license that can be found in the LICENSE file.
 
   <title>paper-fab</title>
 
-  <script src="packages/paper/platform/platform.js"></script>
+  <script src="packages/paper/polymer/polymer.html"></script>
 
   <link href="packages/paper/font-roboto/roboto.html" rel="import">
   <link href="packages/paper/core-icons/core-icons.html" rel="import">
   <link href="packages/paper/paper-fab/paper-fab.html" rel="import">
+  <link href="packages/paper/paper-input/paper-input.html" rel="import">
+  <link href="packages/paper/paper-shadow/paper-shadow.html" rel="import">
+  <link href="packages/paper/core-transition/core-transition-css.html" rel="import">
+  <link href="packages/paper/core-toolbar/core-toolbar.html" rel="import">
 
   <style shim-shadowdom>
 
@@ -53,20 +57,42 @@ license that can be found in the LICENSE file.
       color: #000;
     }
 
+    #bar {
+      max-width: 500px;
+      background: white;
+      font-size: 1.0em;
+    }
+
+    #bar paper-shadow {
+      display: none;
+    }
   </style>
-
 </head>
-<body unresolved>
 
+<body unresolved>
   <h3>Regular</h3>
 
   <paper-fab icon="arrow-forward"></paper-fab>
   <paper-fab icon="create" class="blue"></paper-fab>
 
+  <br>
+
   <h3>Mini</h3>
 
-  <paper-fab icon="done" class="mini green"></paper-fab>
+  <paper-fab id="done" icon="done" class="mini green"></paper-fab>
   <paper-fab icon="reply" class="mini yellow"></paper-fab>
 
+  <br>
+  <br>
+
+  <!-- transition="core-transition-bottom" -->
+
+  <core-toolbar id="bar" transition="core-transition-bottom">
+    <paper-input flex></paper-input>
+    <paper-shadow z="1"></paper-shadow>
+    <paper-icon-button icon="close"></paper-icon-button>
+  </core-toolbar>
+
+  <script type="application/dart" src="main.dart"></script>
 </body>
 </html>
