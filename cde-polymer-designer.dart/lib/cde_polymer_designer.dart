@@ -13,7 +13,7 @@ import 'package:polymer/polymer.dart';
 @CustomTag('cde-polymer-designer')
 class CdePolymerDesigner extends PolymerElement {
   js.JsObject _webview;
-  Completer _webviewReady = new Completer();
+  Completer _webviewReady;
   Completer<String> _codeExported;
 
   CdePolymerDesigner.created() : super.created();
@@ -22,11 +22,13 @@ class CdePolymerDesigner extends PolymerElement {
   void attached() {
     super.attached();
 
+    _webviewReady = new Completer();
     _webview = new js.JsObject.fromBrowserObject($['webview']);
-    _webview.callMethod('addEventListener', ['contentload', _onContentLoad]);
+    _webview.callMethod('addEventListener', ['contentload', _onWebviewContentLoad]);
   }
 
   Future reload() {
+    _webviewReady = new Completer();
     final completer = new Completer();
     _webview.callMethod('reload', [(_) => completer.complete()]);
     return completer.future;
@@ -55,20 +57,28 @@ class CdePolymerDesigner extends PolymerElement {
     return _codeExported.future;
   }
 
-  void _onContentLoad(_) {
+  void _onWebviewContentLoad(_) {
     _tweakUI();
-    _registerWebviewProxyListener();
-    _injectWebviewProxy().then((_) => _webviewReady.complete());
+    _registerDesignerProxyListener();
+    _injectDesignerProxy().then((_) => _webviewReady.complete());
   }
 
   Future _tweakUI() {
+    // Hide some parts of the UI we don't want.
     _insertCssIntoWebview(r'''
-        #designer::shadow > #appbar > * { display: none; } 
-        #designer::shadow > #appbar > .design-controls { display: block; }
+        #designer::shadow > #appbar > * { 
+          display: none;
+        } 
+        #designer::shadow > #appbar > .design-controls {
+          display: block;
+        }
+        #designer::shadow > #appbar > .design-controls > .separator:first-child {
+          display: none;
+        }
     ''');
   }
 
-  void _registerWebviewProxyListener() {
+  void _registerDesignerProxyListener() {
     chrome.runtime.onMessage.listen((OnMessageEvent event) {
       // TODO(ussuri): Check the sender?
       if (event.message['type'] == 'export_code_response') {
@@ -77,9 +87,9 @@ class CdePolymerDesigner extends PolymerElement {
     });
   }
 
-  Future _injectWebviewProxy() {
+  Future _injectDesignerProxy() {
     // TODO(ussuri): Check the sender?
-    return _injectWebviewScriptingContextScript(r'''
+    return _injectScriptInWebviewMainWorld(r'''
         window.addEventListener("message", function(event) {
           var designer = document.querySelector("#designer");
           var action = event.data['action'];
@@ -93,7 +103,7 @@ class CdePolymerDesigner extends PolymerElement {
     ''');
   }
 
-  Future _injectWebviewScriptingContextScript(String script) {
+  Future _injectScriptInWebviewMainWorld(String script) {
     script = script.replaceAll('"', r'\"').replaceAll('\n', r'\n');
     return _executeScriptInWebview(r'''
         (function() {
