@@ -12,7 +12,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
 
-import 'package:uuid/uuid_client.dart';
+import 'package:uuid/uuid.dart';
 
 import 'treeview_cell.dart';
 import 'treeview_row.dart';

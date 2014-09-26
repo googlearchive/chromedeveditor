@@ -1,0 +1,16 @@
+{
+  "name": "polymer-test-tools",
+  "private": true,
+  "dependencies": {},
+  "homepage": "https://github.com/Polymer/polymer-test-tools",
+  "version": "0.4.1",
+  "_release": "0.4.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.4.1",
+    "commit": "1d08715541b3344e23d6d427dcdb1c25c2cd466e"
+  },
+  "_source": "git://github.com/Polymer/polymer-test-tools.git",
+  "_target": "^0.4.0",
+  "_originalSource": "Polymer/polymer-test-tools"
+}

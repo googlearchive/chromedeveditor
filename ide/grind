@@ -13,7 +13,7 @@ if [[ "$DART_VER" != Dart\ VM\ version:* ]] ; then
 fi
 
 if [ ! -d "packages" ]; then
-  echo "Unable to find dependency pacakges."
+  echo "Unable to find dependency packages."
   echo "Now running 'pub get'"
   pub get
 fi

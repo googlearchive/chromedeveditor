@@ -1,0 +1,79 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`core-scroll-header-panel` contains a header section and a content section.  The
+header is initially on the top part of the view but it scrolls away with the 
+rest of the scrollable content.  Upon scrolling slightly up at any point, the 
+header scrolls back into view.  This saves screen space and allows users to
+access important controls by easily moving them back to the view.
+
+__Important:__ The `core-scroll-header-panel` will not display if its parent does not have a height.
+
+Using [layout attributes](http://www.polymer-project.org/docs/polymer/layout-attrs.html), you can easily make the `core-scroll-header-panel` fill the screen
+
+    <body fullbleed layout vertical>
+      <core-scroll-header-panel flex>
+        <core-toolbar>
+          <div>Hello World!</div>
+        </core-toolbar>
+      </core-scroll-header-panel>
+    </body>
+
+or, if you would prefer to do it in CSS, just give `html`, `body`, and `core-scroll-header-panel` a height of 100%:
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    core-scroll-header-panel {
+      height: 100%;
+    }
+
+`core-scroll-header-panel` works well with `core-toolbar` but can use any element 
+that represents a header by adding a `core-header` class to it.  Use the attribute 
+or class `content` to delineate the content section.
+
+    <core-scroll-header-panel>
+      <core-toolbar>Header</core-toolbar>
+      <div content>Content goes here...</div>
+    </core-scroll-header-panel>
+
+@group Polymer Core Elements
+@element core-scroll-header-panel
+@homepage github.io
+-->
+
+<link rel="import" href="../../polymer/polymer.html">
+
+<polymer-element name="core-scroll-header-panel">
+<template>
+
+  <link rel="stylesheet" href="core-scroll-header-panel.css">
+
+  <div id="mainContainer">
+  
+    <content id="mainContent" select="[content], .content"></content>
+    
+  </div>
+  
+  <div id="headerContainer">
+  
+    <div class="bg-container">
+      <div id="condensedHeaderBg"></div>
+      <div id="headerBg"></div>
+    </div>
+    
+    <content id="headerContent" select="core-toolbar, .core-header"></content>
+    
+  </div>
+  
+</template>
+<script src="core-scroll-header-panel.js"></script>
+</polymer-element>

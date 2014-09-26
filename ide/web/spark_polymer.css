@@ -121,8 +121,7 @@ div.ace_search {
   padding-right: 4px;
   width: 305px;
   /* Can't use 'inherit' here: Ace overrides that. */
-  /* BUG #2629 */
-  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 500;
   font-size: 12px;
 }
@@ -589,22 +588,6 @@ button.ace_searchbtn.prev:hover {
   white-space: nowrap;
 }
 
-#toggleOutlineButton {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  bottom: 8px;
-  right: 15px;
-  z-index: 150;
-  fill: #7d7d7d;
-  background-color: #fafafa;
-  opacity: 0.7;
-}
-
-#toggleOutlineButton:hover {
-  opacity: 1;
-}
-
 #outlineContainer {
   display: flex;
   flex-flow: row;
@@ -680,7 +663,7 @@ button.ace_searchbtn.prev:hover {
   navigation buttons.
 */
 .tabview-tabbar {
-  margin-right: 95px;
+  margin-right: 131px;
 }
 
 /*

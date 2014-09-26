@@ -1,13 +1,13 @@
 name: spark_widgets
 version: 0.0.4
-author: Spark Team
-description: A general purpose Polymer widget library (used by Spark IDE)
-homepage: https://github.com/dart-lang/spark/
+author: The Chrome Dev Editor Team
+description: A general purpose Polymer widget library (used by Chrome Dev Editor)
+homepage: https://github.com/dart-lang/chromedeveditor/tree/master/widgets
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
   bootjack: '>=0.6.5 <0.7.0'
-  polymer: '>=0.13.0+3 <0.14.0'
+  polymer: '>=0.14.3 <0.15.0'
 
 dev_dependencies:
   unittest: '>=0.11.0 <0.12.0'

@@ -1,0 +1,103 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="elements/core-doc-page.html">
+<link rel="import" href="elements/core-doc-toc.html">
+<link rel="import" href="../core-icon/core-icon.html">
+
+<!--
+Displays formatted source documentation scraped from input urls.
+
+Documentation can be encoded into html comments (&lt;!-- ... --&gt;) or using JsDoc notation (/&#42;&#42; ... &#42;/).
+
+When using JsDoc notation, remember that the left-margin includes an asterisk and a single space.
+This is important for markdown constructs that count spaces. Code blocks for example, must be
+five spaces from the first asterisk.
+
+## Markdown
+
+Markdown format is supported.
+
+### Links
+
+Arbitrary links can be encoded using [standard markdown format](http://daringfireball.net/projects/markdown/syntax). 
+[GitHub Flavored Markdown](https://help.github.com/articles/github-flavored-markdown) is also supported.
+
+Links to other topics can be made with hash-links [core-doc-viewer](#core-doc-viewer).
+
+### Code
+
+Example
+
+    Four space indents indicate code blocks.
+    
+    <code>blocks are syntax highlighted</code>
+    
+    <script src="core-doc-viewer.js"></script>
+
+### Blockquote
+
+ > Blockquote is supported for long text that needs to wrap with a common left side indent.
+ > Blockquote is supported for long text that needs to wrap with a common left side indent.  
+
+### Lists
+ 
+1.  enumerated
+1.  lists
+ 
+Use - or + for bullet points:
+ 
+- bullet
+- lists
+
+### Tables
+
+| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
+
+### HTML
+
+Arbitrary HTML is also supported
+
+<input><button>Button</button><hr/>
+
+@class core-doc-viewer
+@homepage github.io
+-->
+
+<polymer-element name="core-doc-viewer" attributes="sources route url" horizontal layout>
+
+  <template>
+
+    <style>
+
+      core-doc-toc {
+        display: none;
+        width: 332px;
+        overflow-x: hidden;
+      }
+
+    </style>
+
+    <context-free-parser url="{{url}}" on-data-ready="{{parserDataReady}}"></context-free-parser>
+
+    <template repeat="{{sources}}">
+      <context-free-parser url="{{}}" on-data-ready="{{parserDataReady}}"></context-free-parser>
+    </template>
+
+    <core-doc-toc id="toc" data="{{classes}}" selected="{{selected}}"></core-doc-toc>
+    <core-doc-page flex data="{{data}}"></core-doc-page>
+
+  </template>
+
+  <script src="core-doc-viewer-1.js"></script>
+
+</polymer-element>

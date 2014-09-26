@@ -15,6 +15,7 @@ import 'dart:math' as math;
 import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:crc32/crc32.dart' as crc;
 
 import 'css/cssbeautify.dart';
 import 'dependency.dart';
@@ -39,6 +40,7 @@ export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
+  static const int LARGE_FILE_SIZE = 500000;
 
   final AceManager aceManager;
   final workspace.File file;
@@ -51,7 +53,7 @@ class TextEditor extends Editor {
   final SparkPreferences _prefs;
   ace.EditSession _session;
 
-  String _lastSavedHash;
+  int _lastSavedHash;
 
   bool _dirty = false;
 
@@ -199,7 +201,7 @@ class TextEditor extends Editor {
     if (_session != null) {
       // Check that we didn't cause this change event.
       file.getContents().then((String text) {
-        String fileContentsHash = _calcMD5(text);
+        int fileContentsHash = crc.CRC32.compute(text);
 
         if (fileContentsHash != _lastSavedHash) {
           _lastSavedHash = fileContentsHash;
@@ -207,6 +209,10 @@ class TextEditor extends Editor {
         }
       });
     }
+  }
+
+  bool fileIsLarge(String text) {
+    return (text.length > LARGE_FILE_SIZE);
   }
 
   Future save() {
@@ -218,10 +224,12 @@ class TextEditor extends Editor {
 
       // Remove the trailing whitespace if asked to do so.
       if (_prefs.stripWhitespaceOnSave.value) {
-        text = text.replaceAll(whitespaceRegEx, '');
+        if (!fileIsLarge(text)) {
+          text = text.replaceAll(whitespaceRegEx, '');
+        }
       }
 
-      _lastSavedHash = _calcMD5(text);
+      _lastSavedHash = crc.CRC32.compute(text);
 
       return file.setContents(text).then((_) {
         dirty = false;
@@ -968,8 +976,8 @@ class AceManager {
     gotoLineView.show();
   }
 
-  void _handleGotoLineViewEvent(int line) {
-    _aceEditor.gotoLine(line);
+  void _handleGotoLineViewEvent(_) {
+    _aceEditor.gotoLine(gotoLineView.lineNumber);
     gotoLineView.hide();
   }
 

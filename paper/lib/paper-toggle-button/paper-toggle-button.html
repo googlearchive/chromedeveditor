@@ -1,0 +1,79 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+`paper-toggle-button` provides a ON/OFF switch that user can toggle the state
+by tapping or by dragging the swtich.
+
+Example:
+
+    <paper-toggle-button></paper-toggle-button>
+
+Styling toggle button:
+
+To change the ink color for checked state:
+
+    paper-toggle-button::shadow paper-radio-button::shadow #ink[checked] {
+      color: #4285f4;
+    }
+    
+To change the radio checked color:
+    
+    paper-toggle-button::shadow paper-radio-button::shadow #onRadio {
+      background-color: #4285f4;
+    }
+    
+To change the bar color for checked state:
+
+    paper-toggle-button::shadow #toggleBar[checked] {
+      background-color: #4285f4;
+    }
+    
+To change the ink color for unchecked state:
+
+    paper-toggle-button::shadow paper-radio-button::shadow #ink {
+      color: #b5b5b5;
+    }
+    
+To change the radio unchecked color:
+    
+    paper-toggle-button::shadow paper-radio-button::shadow #offRadio {
+      border-color: #b5b5b5;
+    }
+
+To change the bar color for unchecked state:
+
+    paper-toggle-button::shadow #toggleBar {
+      background-color: red;
+    }
+
+@group Paper Elements
+@element paper-toggle-button
+@homepage github.io
+-->
+
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+
+<polymer-element name="paper-toggle-button" attributes="checked" role="button" aria-pressed="false" tabindex="0">
+<template>
+
+  <link rel="stylesheet" href="paper-toggle-button.css">
+
+  <div id="toggleContainer">
+  
+    <div id="toggleBar" checked?="{{checked}}"></div>
+  
+    <paper-radio-button id="toggleRadio" toggles checked="{{checked}}" on-change="{{changeAction}}" on-core-change="{{stopPropagation}}"
+        on-trackstart="{{trackStart}}" on-trackx="{{trackx}}" on-trackend="{{trackEnd}}"></paper-radio-button>
+    
+  </div>
+
+</template>
+<script src="paper-toggle-button.js"></script>
+</polymer-element>

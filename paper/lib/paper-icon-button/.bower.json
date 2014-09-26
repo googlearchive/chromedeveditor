@@ -1,0 +1,20 @@
+{
+  "name": "paper-icon-button",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.4.0",
+    "core-selector": "Polymer/core-selector#^0.4.0",
+    "paper-button": "Polymer/paper-button#^0.4.0"
+  },
+  "homepage": "https://github.com/Polymer/paper-icon-button",
+  "version": "0.4.1",
+  "_release": "0.4.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.4.1",
+    "commit": "8c53bb8fb97c948f2b21371a07bc574b6ef53651"
+  },
+  "_source": "git://github.com/Polymer/paper-icon-button.git",
+  "_target": "^0.4.0",
+  "_originalSource": "Polymer/paper-icon-button"
+}

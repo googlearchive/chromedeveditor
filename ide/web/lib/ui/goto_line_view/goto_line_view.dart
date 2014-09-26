@@ -12,13 +12,6 @@ import 'package:spark_widgets/common/spark_widget.dart';
 
 @CustomTag('goto-line-view')
 class GotoLineView extends SparkWidget {
-  Element _closeButton;
-  Element _container;
-  InputElement _queryText;
-
-  StreamController<int> _triggeredController = new StreamController.broadcast();
-  StreamController _closedController = new StreamController.broadcast();
-
   factory GotoLineView() => new Element.tag('goto-line-view');
 
   /**
@@ -48,50 +41,46 @@ class GotoLineView extends SparkWidget {
    */
   void hide() {
     if (!open) return;
-
     _container.classes.remove('showing');
-
-    _closedController.add(null);
+    asyncFire('closed');
   }
 
-  // TODO(ussuri): Look into using `fireAsync` for these event streams.
   /**
-   * This event is fired when the user hits return. The event is line numer the
-   * user has entered.
+   * This event is fired when the user hits return. The event's `detail` field
+   * contains the line numer the user has entered.
    */
-  Stream<int> get onTriggered => _triggeredController.stream;
+  Stream get onTriggered => on['triggered'];
 
   /**
    * Fires an event when the view is closed.
    */
-  Stream get onClosed => _closedController.stream;
+  Stream get onClosed => on['closed'];
 
-  GotoLineView.created() : super.created() {
-    _closeButton = $['closeButton'];
-    _container = $['container'];
-    _queryText = $['queryText'];
+  GotoLineView.created() : super.created();
 
-    // TODO(ussuri): Look into registering the event handlers in the html.
+  @reflectable
+  void handleKeyDown(KeyboardEvent event) {
     // Handle the escape key.
-    _queryText.onKeyDown.listen((event) {
-      if (event.keyCode == KeyCode.ESC) {
-        hide();
-      }
-    });
-
-    // Handle the enter key.
-    _queryText.onKeyPress.listen((event) {
-      if (event.keyCode == KeyCode.ENTER) {
-        try {
-          _triggeredController.add(lineNumber);
-        } catch (e) {
-          _selectQueryText();
-        }
-      }
-    });
-
-    _closeButton.onClick.listen((_) => hide());
+    if (event.keyCode == KeyCode.ESC) {
+      hide();
+    }
   }
+
+  @reflectable
+  void handleKeyPress(KeyboardEvent event) {
+    // Handle the enter key.
+    if (event.keyCode == KeyCode.ENTER) {
+      try {
+        asyncFire('triggered', detail: lineNumber);
+      } catch (e) {
+        _selectQueryText();
+      }
+    }
+  }
+
+  Element get _container => $['container'];
+
+  InputElement get _queryText => $['queryText'];
 
   void _selectQueryText() {
     Timer.run(() => _queryText.select());

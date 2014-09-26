@@ -1,0 +1,18 @@
+{
+  "name": "core-media-query",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.4.0"
+  },
+  "homepage": "https://github.com/Polymer/core-media-query",
+  "version": "0.4.1",
+  "_release": "0.4.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.4.1",
+    "commit": "7d2d326dc58756ec2077c5d2828f7de57900ba56"
+  },
+  "_source": "git://github.com/Polymer/core-media-query.git",
+  "_target": "^0.4.0",
+  "_originalSource": "Polymer/core-media-query"
+}
