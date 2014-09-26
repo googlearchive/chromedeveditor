@@ -6,8 +6,8 @@ homepage: https://github.com/dart-lang/chromedeveditor/tree/master/paper
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  browser: any
-  polymer: any
+  browser: '>=0.6.0 <0.7.0'
+#  polymer: any
 dev_dependencies:
   grinder: any
   path: any
