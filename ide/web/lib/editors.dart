@@ -100,6 +100,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
+
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
