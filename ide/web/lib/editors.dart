@@ -100,7 +100,6 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
-
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
@@ -320,6 +319,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   }
 
   void _saveAll({bool userAction: false}) {
+    this._aceContainer.delegate.updateSavedTab();
     if (_timer != null) {
       _timer.cancel();
       _timer = null;

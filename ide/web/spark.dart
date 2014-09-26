@@ -186,6 +186,10 @@ abstract class Spark
     this.editorArea.isFileNotSaved(saved);
   }
 
+  void updateSavedTab() {
+    this.editorArea.clearNotSaved();
+  }
+
   Future<chrome.ChromeFileEntry> chooseFileEntry() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_FILE);

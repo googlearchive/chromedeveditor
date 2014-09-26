@@ -153,17 +153,25 @@ class EditorArea extends TabView {
 
   void isFileNotSaved(bool saved) {
     if (selectedTab != null) {
+      EditorTab tab = (selectedTab as EditorTab);
       if (saved == true) {
-        if (!(selectedTab as EditorTab).label.startsWith("*")) {
-          (selectedTab as EditorTab).label = "*" +(selectedTab as EditorTab).label;
+        if (!tab.label.startsWith("*")) {
+          tab.label = "*" + tab.label;
         }
       } else {
-        if ((selectedTab as EditorTab).label.startsWith("*")) {
-          (selectedTab as EditorTab).label = (selectedTab as EditorTab).label.substring(1,
-              (selectedTab as EditorTab).label.length);
+        if (tab.label.startsWith("*")) {
+          tab.label = tab.label.substring(1, tab.label.length);
         }
       }
     }
+  }
+
+  void clearNotSaved() {
+    this._tabOfFile.forEach((Resource res, EditorTab tab) {
+      if (tab.label.startsWith("*")) {
+        tab.label = tab.label.substring(1, tab.label.length);
+      }
+    });
   }
 
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,

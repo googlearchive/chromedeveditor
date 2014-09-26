@@ -1177,6 +1177,7 @@ abstract class AceManagerDelegate {
   void openEditor(workspace.File file, {Span selection});
 
   void isFileNotSaved(bool saved);
+  void updateSavedTab();
 }
 
 String _calcMD5(String text) {
