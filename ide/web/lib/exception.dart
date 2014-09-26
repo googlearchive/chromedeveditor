@@ -202,7 +202,7 @@ class SparkErrorMessages {
       "Running 'pub get' and 'pub upgrade' is currently not supported on "
       "Windows, however you can use the pub command line tool to get the "
       "packages.\nYou can track the issue at: "
-      "https://github.com/dart-lang/chromedeveditor/issues/2743.";
+      "https://github.com/dart-lang/chromedeveditor/issues/2862.";
 
   static const String SYMLINKS_ERROR_MSG =
       "Operations on directories containing symlinks are not supported. Delete "
