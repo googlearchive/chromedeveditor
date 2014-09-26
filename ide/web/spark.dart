@@ -905,6 +905,22 @@ abstract class Spark
     return null;
   }
 
+  ws.Folder _getFile([List<ws.Resource> resources]) {
+    if (resources != null && resources.isNotEmpty) {
+      if (resources.first.isFile) {
+        return resources.first;
+      }
+    } else {
+      if (focusManager.currentResource != null) {
+        ws.Resource resource = focusManager.currentResource;
+        if (resource.isFile) {
+          return resource;
+        }
+      }
+    }
+    return null;
+  }
+
   void _closeOpenEditor(ws.Resource resource) {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorArea.closeFile(resource);
@@ -1193,12 +1209,17 @@ abstract class SparkAction extends Action {
    * Returns true if `object` is a list with a single item and this item is a
    * [Folder].
    */
-  bool _isSingleFolder(Object object) {
-    if (!_isSingleResource(object)) {
-      return false;
-    }
-    List<ws.Resource> resources = object as List;
-    return (object as List).first is ws.Folder;
+  bool _isSingleFolder(Object object) =>
+      _isSingleResource(object) && (object as List).first is ws.Folder;
+
+  /**
+   * Returns true if `object` is a list with a single [File] whose name matches
+   * [regex].
+   */
+  bool _isSingleFileMatchingRegex(Object object, RegExp regex) {
+    return _isSingleResource(object) && 
+           (object as List).first is ws.File &&
+           regex.hasMatch((object as List).first.name);
   }
 
   /**
@@ -4162,11 +4183,15 @@ class RunPythonAction extends SparkAction {
   }
 }
 
-class PolymerDesignerAction extends SparkActionWithStatusDialog {
+class PolymerDesignerAction 
+    extends SparkActionWithStatusDialog implements ContextAction {
+  static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
+  
   CdePolymerDesigner _designer;
+  File _file;
 
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
-      : super(spark, "polymer-designer", "Open Polymer Designer…", dialog) {
+      : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
     _designer = _dialog.getElement('#polymerDesigner');
   }
 
@@ -4181,10 +4206,21 @@ class PolymerDesignerAction extends SparkActionWithStatusDialog {
 
   void _commit() {
     _designer.getCode().then((String code) {
-      spark.currentEditedFile.setContents(code);
+      _file.setContents(code);
+      _file = null;
     });
     super._commit();
   }
+
+  void _cancel() {
+    _file = null;
+    super._cancel();
+  }
+
+  String get category => 'file';
+
+  bool appliesTo(Object object) =>
+      _isSingleFileMatchingRegex(object, _HTML_FNAME_RE);
 }
 
 // Analytics code.
