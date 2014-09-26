@@ -182,6 +182,10 @@ abstract class Spark
     });
   }
 
+  void isFileNotSaved(bool saved) {
+    this.editorArea.isFileNotSaved(saved);
+  }
+
   Future<chrome.ChromeFileEntry> chooseFileEntry() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_FILE);
@@ -1204,7 +1208,7 @@ abstract class SparkAction extends Action {
    * [regex].
    */
   bool _isSingleFileMatchingRegex(Object object, RegExp regex) {
-    return _isSingleResource(object) && 
+    return _isSingleResource(object) &&
            (object as List).first is ws.File &&
            regex.hasMatch((object as List).first.name);
   }

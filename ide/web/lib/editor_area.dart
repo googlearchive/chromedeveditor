@@ -151,6 +151,21 @@ class EditorArea extends TabView {
     }
   }
 
+  void isFileNotSaved(bool saved) {
+    if (selectedTab != null) {
+      if (saved == true) {
+        if (!(selectedTab as EditorTab).label.startsWith("*")) {
+          (selectedTab as EditorTab).label = "*" +(selectedTab as EditorTab).label;
+        }
+      } else {
+        if ((selectedTab as EditorTab).label.startsWith("*")) {
+          (selectedTab as EditorTab).label = (selectedTab as EditorTab).label.substring(1,
+              (selectedTab as EditorTab).label.length);
+        }
+      }
+    }
+  }
+
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
   /// [selectFile] will be called instead. Otherwise the editor provider is
   /// requested to switch the file to the editor in case the editor is shared.
