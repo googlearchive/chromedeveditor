@@ -884,7 +884,7 @@ abstract class Spark
     } else {
       ws.Resource resource = focusManager.currentResource;
       if (resource != null) {
-        if (resource.isFolder) {
+        if (resource is Folder) {
           return resource;
         } else if (resource.parent != null) {
           return resource.parent;
@@ -1204,7 +1204,7 @@ abstract class SparkAction extends Action {
    * [regex].
    */
   bool _isSingleFileMatchingRegex(Object object, RegExp regex) {
-    return _isSingleResource(object) && 
+    return _isSingleResource(object) &&
            (object as List).first is ws.File &&
            regex.hasMatch((object as List).first.name);
   }
