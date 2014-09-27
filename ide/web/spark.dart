@@ -1687,7 +1687,7 @@ class SpecificTabAction extends SparkAction {
   }
 
   void _invoke([Object context]) {
-    if (_binding.index < 1 && _binding.index > spark.editorArea.tabs.length) {
+    if (_binding.index < 1 || _binding.index > spark.editorArea.tabs.length) {
       return;
     }
 
