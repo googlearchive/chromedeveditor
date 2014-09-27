@@ -5,7 +5,7 @@
 - added the 'Live Deploy' mode when pushing to mobile: see your changes reflected on the device in real time!
 - added real-time validation for Chrome apps' manifests
 - enabled running Bower commands on project's subdirectories that contain bower.json
-- enabled 'Refactor for CSP' context menu for any folder(s) with HTMLs -- not only package directories
+- enabled 'Refactor for CSP' context menu for any HTML files or folder(s) with HTMLs -- not only package directories
 
 ### Other changes
 - adjusted the goto line component to be more in-line with material design
