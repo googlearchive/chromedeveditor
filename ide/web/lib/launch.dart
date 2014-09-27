@@ -445,7 +445,7 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
       // copied into apps_target directory. Remove this hack once the api returns
       // the appID on loading. The issue is tracked here
       // https://github.com/dart-lang/chromedeveditor/issues/3054
-      return _getAppId(container.path);
+      return _getAppId(getOsPath(container.path));
     }).then((String launchId) {
       _launchId(launchId);
     });
@@ -461,6 +461,13 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
           errorCode: SparkErrorConstants.RUN_APP_NOT_FOUND_IN_CHROME);
     }
     return management.launchApp(id);
+  }
+
+  String getOsPath(String path) {
+    if (PlatformInfo.isWin) {
+      path = path.replaceAll('/', '\\');
+    }
+    return path;
   }
 
   /**
