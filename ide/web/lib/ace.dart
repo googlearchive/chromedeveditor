@@ -99,7 +99,7 @@ class TextEditor extends Editor {
       _dirty = value;
       _dirtyController.add(value);
     }
-    this.aceManager.delegate.isFileNotSaved(value);
+    this.aceManager.delegate.setFileSavedState(value);
     _modificationController.add(dirty);
   }
 
@@ -1176,7 +1176,7 @@ abstract class AceManagerDelegate {
 
   void openEditor(workspace.File file, {Span selection});
 
-  void isFileNotSaved(bool saved);
+  void setFileSavedState(bool saved);
 
   void updateSavedTab();
 }

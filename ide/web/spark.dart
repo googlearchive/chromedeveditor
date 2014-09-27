@@ -182,7 +182,7 @@ abstract class Spark
     });
   }
 
-  void isFileNotSaved(bool saved) {
+  void setFileSavedState(bool saved) {
     this.editorArea.isFileNotSaved(saved);
   }
 

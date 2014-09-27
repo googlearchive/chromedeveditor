@@ -151,26 +151,29 @@ class EditorArea extends TabView {
     }
   }
 
-  void isFileNotSaved(bool saved) {
-    if (selectedTab != null) {
-      EditorTab tab = (selectedTab as EditorTab);
-      if (saved == true) {
-        if (!tab.label.startsWith("*")) {
-          tab.label = "*" + tab.label;
-        }
+  void isFileNotSaved(bool saved, [EditorTab tab]) {
+    if (tab == null) {
+      if (selectedTab != null) {
+        tab = (selectedTab as EditorTab);
       } else {
-        if (tab.label.startsWith("*")) {
-          tab.label = tab.label.substring(1, tab.label.length);
-        }
+        return;
+      }
+    }
+
+    if (saved) {
+      if (!tab.label.endsWith(" *")) {
+        tab.label = tab.label+" *";
+      }
+    } else {
+      if (tab.label.endsWith(" *")) {
+        tab.label = tab.label.substring(0, tab.label.length-2);
       }
     }
   }
 
   void clearNotSaved() {
     this._tabOfFile.forEach((Resource res, EditorTab tab) {
-      if (tab.label.startsWith("*")) {
-        tab.label = tab.label.substring(1, tab.label.length);
-      }
+      isFileNotSaved(false, tab);
     });
   }
 
