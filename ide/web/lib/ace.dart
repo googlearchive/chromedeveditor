@@ -176,6 +176,8 @@ class TextEditor extends Editor {
       new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
   void saveState() {
+    if (_session == null) return;
+
     html.Point p = aceManager.cursorPosition;
     state.setState(file.uuid, {
       'scrollTop': _session.scrollTop,
