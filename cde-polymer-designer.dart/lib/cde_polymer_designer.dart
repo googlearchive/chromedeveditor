@@ -5,6 +5,7 @@
 library cde_polymer_designer;
 
 import 'dart:async';
+import 'dart:html';
 import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -12,6 +13,12 @@ import 'package:polymer/polymer.dart';
 
 @CustomTag('cde-polymer-designer')
 class CdePolymerDesigner extends PolymerElement {
+  // Must use the full path as viewed by a client app.
+  static const String _ENTRY_POINT =
+      'packages/cde_polymer_designer/src/polymer_designer/index.html';
+  static const _STORAGE_PARTITION = 'persist:cde-polymer-designer';
+  
+  Element _webviewElt;
   js.JsObject _webview;
   Completer _webviewReady;
   Completer<String> _codeExported;
@@ -21,17 +28,38 @@ class CdePolymerDesigner extends PolymerElement {
   @override
   void attached() {
     super.attached();
+  }
 
+  Future load() {
     _webviewReady = new Completer();
-    _webview = new js.JsObject.fromBrowserObject($['webview']);
-    _webview.callMethod('addEventListener', ['contentload', _onWebviewContentLoad]);
+    
+    _webviewElt = new Element.tag('webview')..id = 'webview';
+    shadowRoot.append(_webviewElt);
+
+    _webview = new js.JsObject.fromBrowserObject(_webviewElt);
+    _webview.callMethod(
+        'addEventListener', ['contentload', _onWebviewContentLoad]);
+    _webview['partition'] = _STORAGE_PARTITION;
+    _webview['src'] = _ENTRY_POINT;
+
+    // _webviewReady.future.then((_) {
+    //   _webview.callMethod('setZoom', [0.8]);
+    // });
+
+    return _webviewReady.future;
   }
 
   Future reload() {
-    _webviewReady = new Completer();
-    final completer = new Completer();
-    _webview.callMethod('reload', [(_) => completer.complete()]);
-    return completer.future;
+    unload();
+    load();
+  }
+
+  void unload() {
+    if (_webview != null) {
+      _webview.callMethod('terminate'); 
+    }
+    if (_webviewElt != null) _webviewElt.remove();
+    _webview = _webviewElt = _webviewReady = _codeExported = null;
   }
 
   Future setCode(String code) {
@@ -39,7 +67,7 @@ class CdePolymerDesigner extends PolymerElement {
     return _webviewReady.future.then((_) {
       // TODO(ussuri): This doesn't work without a delay:
       // find some way to detect when PD and proxy/listener are fully ready.
-      return new Timer(new Duration(milliseconds: 300), () {
+      return new Timer(new Duration(milliseconds: 500), () {
         return _executeScriptInWebview('''
             window.postMessage({action: 'import_code', code: '$code'}, '*');
         ''');
@@ -64,7 +92,9 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   Future _tweakUI() {
-    // Hide some parts of the UI we don't want.
+        // html /deep/ *, html /deep/ #tabs > * {
+        //   font-size: 0.8rem;
+        // }
     _insertCssIntoWebview(r'''
         #designer::shadow > #appbar > * { 
           display: none;
@@ -82,6 +112,7 @@ class CdePolymerDesigner extends PolymerElement {
     chrome.runtime.onMessage.listen((OnMessageEvent event) {
       // TODO(ussuri): Check the sender?
       if (event.message['type'] == 'export_code_response') {
+        print("HERE <<<<<<<<<<<<<<<<<<<<<<<");
         _codeExported.complete("${event.message['code']}");
       }
     });
@@ -117,7 +148,7 @@ class CdePolymerDesigner extends PolymerElement {
   Future<dynamic> _executeScriptInWebview(String script) {
     script = new js.JsObject.jsify({'code': script});
     final completer = new Completer();
-    _webview.callMethod('executeScript', 
+    _webview.callMethod('executeScript',
         [script, ([result]) => completer.complete(result)]);
     return completer.future;
   }

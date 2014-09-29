@@ -573,14 +573,8 @@ abstract class Spark
     actionManager.registerAction(new ShowSearchView(this));
     actionManager.registerAction(new ShowFilesView(this));
     actionManager.registerAction(new RunPythonAction(this));
-    // TODO(ussuri): The current default is 'false'. This forces the action
-    // not to be created on startup. If later the value is overridden from
-    // <workspace>/.spark.json, the UI gets populated, but the action is still
-    // missing.
-    // if (SparkFlags.polymerDesigner) {
-      actionManager.registerAction(new PolymerDesignerAction(this,
-          getDialogElement("#polymerDesignerDialog")));
-    // }
+    actionManager.registerAction(new PolymerDesignerAction(this,
+        getDialogElement("#polymerDesignerDialog")));
 
     actionManager.registerKeyListener();
 
@@ -4189,34 +4183,46 @@ class PolymerDesignerAction
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
       : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
     _designer = _dialog.getElement('#polymerDesigner');
+    _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
+      _designer.reload();
+    });
   }
 
-  void _invoke([List<ws.Resource> resources]) {
-    //_designer.reload().then((_) {
-    // TODO(ussuri): Restrict to HTML only and account for no file in editor.
-    spark.currentEditedFile.getContents().then((String contents) {
-      _designer.setCode(contents);
-    });
+  void _invoke(List<ws.Resource> resources) {
     _show();
+    _file = spark._getFile(resources);
+    _designer.load().then((_) {
+      _file.getContents().then((String contents) {
+        _designer.setCode(contents);
+      });
+    });
   }
 
   void _commit() {
     _designer.getCode().then((String code) {
       _file.setContents(code);
       _file = null;
+      _designer.unload();
     });
+
     super._commit();
   }
 
   void _cancel() {
     _file = null;
+    _designer.unload();
+
     super._cancel();
   }
 
-  String get category => 'file';
+  String get category => 'refactor';
 
-  bool appliesTo(Object object) =>
-      _isSingleFileMatchingRegex(object, _HTML_FNAME_RE);
+  bool appliesTo(Object object) {
+    // NOTE: Flags can get updated from .spark.json after createActions()
+    // runs; therefore, can't conditionally create actions using flags there.
+    return  SparkFlags.polymerDesigner &&
+            _isSingleFileMatchingRegex(object, _HTML_FNAME_RE);
+  }
 }
 
 // Analytics code.

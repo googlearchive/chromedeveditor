@@ -8,10 +8,15 @@
 
 <polymer-element name="cde-polymer-designer">
   <template>
-    <webview id="webview"
-        src="src/polymer_designer/index.html"
-        partition="cde-polymer-designer">
-    </webview>
+    <!--TODO(ussuri): We have to (re-)create the webview dynamically every time,-->
+    <!--because right now setting "display:none" on a webview breaks it. A fix-->
+    <!--is almost ready (2014-09-26):-->
+    <!--https://code.google.com/p/chromium/issues/detail?id=399060.-->
+
+    <!--<webview id="webview"-->
+    <!--    src="src/polymer_designer/index.html"-->
+    <!--    partition="cde-polymer-designer">-->
+    <!--</webview>-->
   </template>
 
   <script type="application/dart" src="cde_polymer_designer.dart"></script>
