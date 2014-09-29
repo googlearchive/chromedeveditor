@@ -10,6 +10,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import '../lib/files_mock.dart';
+import '../lib/filesystem.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart' as ws;
 
@@ -469,6 +470,36 @@ defineTests() {
           workspace.resumeMarkerStream();
           return future2;
         });
+      });
+    });
+  });
+
+  group('test fileProvider', () {
+    test('read / write file', () {
+      ws.Workspace workspace = _createWorkspace();
+      MockFileSystem fs = new MockFileSystem();
+      FileEntry fileEntry = fs.createFile('test.txt', contents: "foo bar");
+      ws.File file = new ws.File(workspace, fileEntry);
+      FileContentProvider provider = new FileContentProvider(file);
+      return provider.read().then((String text) {
+        expect(text, 'foo bar');
+        return provider.write("new bar");
+      }).then((_) => provider.read()).then((String text) {
+        expect(text, 'new bar');
+      });
+    });
+
+    test('read / write empty file', () {
+      ws.Workspace workspace = _createWorkspace();
+      MockFileSystem fs = new MockFileSystem();
+      FileEntry fileEntry = fs.createFile('test.txt', contents: "");
+      ws.File file = new ws.File(workspace, fileEntry);
+      FileContentProvider provider = new FileContentProvider(file);
+      return provider.read().then((String text) {
+        expect(text, '');
+        return provider.write("foo bar");
+      }).then((_) => provider.read()).then((String text) {
+        expect(text, 'foo bar');
       });
     });
   });
