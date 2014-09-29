@@ -182,23 +182,6 @@ abstract class Spark
     });
   }
 
-  void setFileSavedState(bool saved) {
-    this.editorArea.isFileNotSaved(saved);
-  }
-
-  void updateSavedTab() {
-    this.editorArea.clearNotSaved();
-  }
-
-  Future<chrome.ChromeFileEntry> chooseFileEntry() {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_FILE);
-    return chrome.fileSystem.chooseEntry(options).then(
-        (chrome.ChooseEntryResult res) {
-      return res.entry;
-    });
-  }
-
   /**
    * This method shows the root directory path in the UI element.
    */

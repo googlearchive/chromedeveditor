@@ -109,6 +109,11 @@
   background: url(../../../images/close.svg);
 }
 
+.tabview-tablabel-dirty {
+  font-style: italic;
+  /*background: red;*/
+}
+
 /* NOTE: These 4 rules also create stacking contexts, which affects the entire
    tabview layout. */
 .tabview-tablabel-active .tabview-tablabel-closebutton {

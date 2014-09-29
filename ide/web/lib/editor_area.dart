@@ -47,6 +47,7 @@ class AceEditorTab extends EditorTab {
       : super(parent, file) {
     page = editor.element;
     editor.onModification.listen((_) => parent.persistTab(file));
+    editor.onDirtyChange.listen((_) => dirty = editor.dirty);
   }
 
   void activate() {
@@ -149,32 +150,6 @@ class EditorArea extends TabView {
     if (selectedTab != null) {
       (selectedTab as EditorTab).resize();
     }
-  }
-
-  void isFileNotSaved(bool saved, [EditorTab tab]) {
-    if (tab == null) {
-      if (selectedTab != null) {
-        tab = (selectedTab as EditorTab);
-      } else {
-        return;
-      }
-    }
-
-    if (saved) {
-      if (!tab.label.endsWith(" *")) {
-        tab.label = tab.label+" *";
-      }
-    } else {
-      if (tab.label.endsWith(" *")) {
-        tab.label = tab.label.substring(0, tab.label.length-2);
-      }
-    }
-  }
-
-  void clearNotSaved() {
-    this._tabOfFile.forEach((Resource res, EditorTab tab) {
-      isFileNotSaved(false, tab);
-    });
   }
 
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,

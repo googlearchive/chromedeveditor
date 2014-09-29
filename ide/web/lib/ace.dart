@@ -99,7 +99,6 @@ class TextEditor extends Editor {
       _dirty = value;
       _dirtyController.add(value);
     }
-    this.aceManager.delegate.setFileSavedState(value);
     _modificationController.add(dirty);
   }
 
@@ -1175,10 +1174,6 @@ abstract class AceManagerDelegate {
   bool canShowFileAsText(String filename);
 
   void openEditor(workspace.File file, {Span selection});
-
-  void setFileSavedState(bool saved);
-
-  void updateSavedTab();
 }
 
 String _calcMD5(String text) {

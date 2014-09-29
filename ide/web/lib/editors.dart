@@ -320,7 +320,6 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   }
 
   void _saveAll({bool userAction: false}) {
-    this._aceContainer.delegate.updateSavedTab();
     if (_timer != null) {
       _timer.cancel();
       _timer = null;
