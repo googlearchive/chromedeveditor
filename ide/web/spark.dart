@@ -897,7 +897,7 @@ abstract class Spark
     return null;
   }
 
-  ws.Folder _getFile([List<ws.Resource> resources]) {
+  ws.File _getFile([List<ws.Resource> resources]) {
     if (resources != null && resources.isNotEmpty) {
       if (resources.first.isFile) {
         return resources.first;
@@ -4173,10 +4173,10 @@ class RunPythonAction extends SparkAction {
   }
 }
 
-class PolymerDesignerAction 
+class PolymerDesignerAction
     extends SparkActionWithStatusDialog implements ContextAction {
   static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
-  
+
   CdePolymerDesigner _designer;
   File _file;
 
@@ -4188,7 +4188,7 @@ class PolymerDesignerAction
     });
   }
 
-  void _invoke(List<ws.Resource> resources) {
+  void _invoke([List<ws.Resource> resources]) {
     _show();
     _file = spark._getFile(resources);
     _designer.load().then((_) {

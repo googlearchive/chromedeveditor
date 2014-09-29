@@ -17,7 +17,7 @@ class CdePolymerDesigner extends PolymerElement {
   static const String _ENTRY_POINT =
       'packages/cde_polymer_designer/src/polymer_designer/index.html';
   static const _STORAGE_PARTITION = 'cde-polymer-designer';
-  
+
   Element _webviewElt;
   js.JsObject _webview;
   Completer _webviewReady;
@@ -46,6 +46,7 @@ class CdePolymerDesigner extends PolymerElement {
       shadowRoot.append(_webviewElt);
     });
 
+    // TODO(ussuri): BUG #3467.
     // _webviewReady.future.then((_) {
     //   _webview.callMethod('setZoom', [0.8]);
     // });
@@ -55,12 +56,12 @@ class CdePolymerDesigner extends PolymerElement {
 
   Future reload() {
     unload();
-    load();
+    return load();
   }
 
   void unload() {
     if (_webview != null) {
-      _webview.callMethod('terminate'); 
+      _webview.callMethod('terminate');
     }
     if (_webviewElt != null) {
       _webviewElt.remove();
@@ -97,7 +98,7 @@ class CdePolymerDesigner extends PolymerElement {
     _injectDesignerProxy().then((_) => _webviewReady.complete());
   }
 
-  Future _tweakUI() {
+  void _tweakUI() {
     _insertCssIntoWebview(r'''
         /* Reduce default font sizes */
         html /deep/ *, html /deep/ #tabs > * {
@@ -153,15 +154,15 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   Future<dynamic> _executeScriptInWebview(String script) {
-    script = new js.JsObject.jsify({'code': script});
+    final js.JsObject jsScript = new js.JsObject.jsify({'code': script});
     final completer = new Completer();
     _webview.callMethod('executeScript',
-        [script, ([result]) => completer.complete(result)]);
+        [jsScript, ([result]) => completer.complete(result)]);
     return completer.future;
   }
 
   void _insertCssIntoWebview(String css) {
-    css = new js.JsObject.jsify({'code': css});
-    _webview.callMethod('insertCSS', [css]);
+    final js.JsObject jsCss = new js.JsObject.jsify({'code': css});
+    _webview.callMethod('insertCSS', [jsCss]);
   }
 }
