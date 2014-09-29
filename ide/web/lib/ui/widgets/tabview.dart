@@ -81,6 +81,10 @@ class Tab {
   set closable(bool closable) =>
       _label.classes.toggle('tabview-tablabel-closable', closable);
 
+  bool get dirty => _label.classes.contains('tabview-tablabel-dirty');
+  set dirty(bool value) =>
+       _label.classes.toggle('tabview-tablabel-dirty', value);
+
   Stream<Tab> get onClose =>
       tabView._onCloseStreamController.stream.where((t) => t == this);
   Stream<TabBeforeCloseEvent> get onBeforeClose =>

@@ -47,6 +47,7 @@ class AceEditorTab extends EditorTab {
       : super(parent, file) {
     page = editor.element;
     editor.onModification.listen((_) => parent.persistTab(file));
+    editor.onDirtyChange.listen((_) => dirty = editor.dirty);
   }
 
   void activate() {

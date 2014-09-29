@@ -44,7 +44,7 @@
   display: inline-flex;
   border-right: 1px solid #dadada;
   line-height: 48px;
-  padding: 0 20px 0 8px;
+  padding: 0 20px 0 10px;
 }
 
 .tabview-tablabel.hide-close-button:not(.tabview-tablabel-active) {
@@ -107,6 +107,10 @@
 .tabview-tablabel-closable .tabview-tablabel-closebutton {
   display: block;
   background: url(../../../images/close.svg);
+}
+
+.tabview-tablabel-dirty {
+  font-style: italic;
 }
 
 /* NOTE: These 4 rules also create stacking contexts, which affects the entire
