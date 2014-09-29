@@ -1678,3 +1678,31 @@ Future _runInTimer(var closure) {
 
   return completer.future;
 }
+
+/**
+ * Defines an abstract provider of data (content) from an unknown source,
+ * provides an event to fire upon content changes, and allows the content to be
+ * written to / read from source.
+ */
+abstract class ContentProvider {
+  Stream<String> get onContentChange;
+  Future write(String content);
+  Future<String> read();
+}
+
+/**
+ * Defines a provider of content from a [File].
+ */
+class FileContentProvider implements ContentProvider {
+  File file;
+
+  // TODO(ericarnold): Implement onContentChange.
+  Stream<String> get onContentChange => null;
+
+  FileContentProvider(this.file);
+
+  Future<String> read() => file.getContents();
+
+  Future write(String content) => file.setContents(content);
+}
+
