@@ -16,7 +16,7 @@ class CdePolymerDesigner extends PolymerElement {
   // Must use the full path as viewed by a client app.
   static const String _ENTRY_POINT =
       'packages/cde_polymer_designer/src/polymer_designer/index.html';
-  static const _STORAGE_PARTITION = 'persist:cde-polymer-designer';
+  static const _STORAGE_PARTITION = 'cde-polymer-designer';
   
   Element _webviewElt;
   js.JsObject _webview;
@@ -33,14 +33,18 @@ class CdePolymerDesigner extends PolymerElement {
   Future load() {
     _webviewReady = new Completer();
     
-    _webviewElt = new Element.tag('webview')..id = 'webview';
-    shadowRoot.append(_webviewElt);
+     // TODO(ussuri): BUG #3466.
+    new Timer(new Duration(milliseconds: 500), () {
+      _webviewElt = new Element.tag('webview');
 
-    _webview = new js.JsObject.fromBrowserObject(_webviewElt);
-    _webview.callMethod(
-        'addEventListener', ['contentload', _onWebviewContentLoad]);
-    _webview['partition'] = _STORAGE_PARTITION;
-    _webview['src'] = _ENTRY_POINT;
+      _webview = new js.JsObject.fromBrowserObject(_webviewElt);
+      _webview.callMethod(
+          'addEventListener', ['contentload', _onWebviewContentLoad]);
+      _webview['partition'] = _STORAGE_PARTITION;
+      _webview['src'] = _ENTRY_POINT;
+
+      shadowRoot.append(_webviewElt);
+    });
 
     // _webviewReady.future.then((_) {
     //   _webview.callMethod('setZoom', [0.8]);
@@ -58,7 +62,9 @@ class CdePolymerDesigner extends PolymerElement {
     if (_webview != null) {
       _webview.callMethod('terminate'); 
     }
-    if (_webviewElt != null) _webviewElt.remove();
+    if (_webviewElt != null) {
+      _webviewElt.remove();
+    }
     _webview = _webviewElt = _webviewReady = _codeExported = null;
   }
 
@@ -92,10 +98,12 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   Future _tweakUI() {
-        // html /deep/ *, html /deep/ #tabs > * {
-        //   font-size: 0.8rem;
-        // }
     _insertCssIntoWebview(r'''
+        /* Reduce default font sizes */
+        html /deep/ *, html /deep/ #tabs > * {
+          font-size: 0.8rem;
+        }
+        /* Hide some UI elements we don't need */
         #designer::shadow > #appbar > * { 
           display: none;
         } 
@@ -112,7 +120,6 @@ class CdePolymerDesigner extends PolymerElement {
     chrome.runtime.onMessage.listen((OnMessageEvent event) {
       // TODO(ussuri): Check the sender?
       if (event.message['type'] == 'export_code_response') {
-        print("HERE <<<<<<<<<<<<<<<<<<<<<<<");
         _codeExported.complete("${event.message['code']}");
       }
     });
@@ -120,7 +127,7 @@ class CdePolymerDesigner extends PolymerElement {
 
   Future _injectDesignerProxy() {
     // TODO(ussuri): Check the sender?
-    return _injectScriptInWebviewMainWorld(r'''
+    return _injectScriptIntoWebviewMainWorld(r'''
         window.addEventListener("message", function(event) {
           var designer = document.querySelector("#designer");
           var action = event.data['action'];
@@ -134,12 +141,12 @@ class CdePolymerDesigner extends PolymerElement {
     ''');
   }
 
-  Future _injectScriptInWebviewMainWorld(String script) {
+  Future _injectScriptIntoWebviewMainWorld(String script) {
     script = script.replaceAll('"', r'\"').replaceAll('\n', r'\n');
     return _executeScriptInWebview(r'''
         (function() {
-          var script = document.createElement("script");
-          script.innerHTML = "(function() { ''' + script + r'''; })()";
+          var script = document.createElement('script');
+          script.innerHTML = '(function() { ''' + script + r'''; })()';
           document.body.appendChild(script);
         })();
     ''');
