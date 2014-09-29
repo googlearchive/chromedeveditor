@@ -32,8 +32,8 @@ class CdePolymerDesigner extends PolymerElement {
 
   Future load() {
     _webviewReady = new Completer();
-    
-     // TODO(ussuri): BUG #3466.
+
+    // TODO(ussuri): BUG #3466.
     new Timer(new Duration(milliseconds: 500), () {
       _webviewElt = new Element.tag('webview');
 
@@ -118,7 +118,7 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   void _registerDesignerProxyListener() {
-    chrome.runtime.onMessage.listen((OnMessageEvent event) {
+    chrome.runtime.onMessage.listen((event) {
       // TODO(ussuri): Check the sender?
       if (event.message['type'] == 'export_code_response') {
         _codeExported.complete("${event.message['code']}");
@@ -130,7 +130,7 @@ class CdePolymerDesigner extends PolymerElement {
     // TODO(ussuri): Check the sender?
     return _injectScriptIntoWebviewMainWorld(r'''
         window.addEventListener("message", function(event) {
-          var designer = document.querySelector("#designer");
+          var designer = document.querySelector('#designer');
           var action = event.data['action'];
           if (action === 'export_code') {
             chrome.runtime.sendMessage(
@@ -143,12 +143,14 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   Future _injectScriptIntoWebviewMainWorld(String script) {
-    script = script.replaceAll('"', r'\"').replaceAll('\n', r'\n');
+    script = script.replaceAll('"', r'\"')
+                   .replaceAll("'", r"\'")
+                   .replaceAll('\n', r'\n');
     return _executeScriptInWebview(r'''
         (function() {
-          var script = document.createElement('script');
-          script.innerHTML = '(function() { ''' + script + r'''; })()';
-          document.body.appendChild(script);
+          var scriptTag = document.createElement('script');
+          scriptTag.innerHTML = '(function() { ''' + script + r'''; })()';
+          document.body.appendChild(scriptTag);
         })();
     ''');
   }
