@@ -10,10 +10,10 @@ import 'package:path/path.dart' as path;
 final Directory LIB_DIR = new Directory('lib');
 
 void main([List<String> args]) {
-  defineTask('init', taskFunction: init);
-  defineTask('deleteDemos', taskFunction: deleteDemos, depends: ['init']);
-  defineTask('vulcanize', taskFunction: vulcanize, depends: ['deleteDemos']);
-  defineTask('clean', taskFunction: clean);
+  task('init', init);
+  task('deleteDemos', deleteDemos, ['init']);
+  task('vulcanize', vulcanize, ['deleteDemos']);
+  task('clean', clean);
 
   startGrinder(args);
 }
@@ -52,7 +52,7 @@ void vulcanize(GrinderContext context) {
   Iterable directories = _directoriesInLib;
   Iterable files = directories.expand(_listFiles);
 
-  files.forEach((file) => _normalizeReferences(file));
+  //files.forEach((file) => _normalizeReferences(file));
 
   files = files.where(_isNotDemo);
   files = files.where(_hasScript);

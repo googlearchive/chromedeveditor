@@ -1,0 +1,22 @@
+
+<link href="../packages/paper/polymer/polymer.html" rel="import">
+
+<link href="../packages/paper/core-toolbar/core-toolbar.html" rel="import">
+<link href="../packages/paper/paper-input/paper-input.html" rel="import">
+<link href="../packages/paper/paper-shadow/paper-shadow.html" rel="import">
+<link href="../packages/paper/paper-icon-button/paper-icon-button.html" rel="import">
+
+<polymer-element name="inline-dialog" attributes="placeholder">
+
+  <template>
+    <link href="inline-dialog.css" rel="stylesheet">
+
+    <core-toolbar id="bar">
+      <paper-input placeholder="{{placeholder}}" flex></paper-input>
+      <paper-shadow z="1"></paper-shadow>
+      <paper-icon-button icon="close"></paper-icon-button>
+    </core-toolbar>
+  </template>
+
+  <script src="inline-dialog.js"></script>
+</polymer-element>

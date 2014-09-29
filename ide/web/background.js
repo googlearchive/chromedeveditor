@@ -3,28 +3,13 @@
 // license that can be found in the LICENSE file.
 
 // App class. Implements the windowless top part of Spark app that
-// caches/saves/restores settings, manages app's window(s), and performs UI
-// switching when requested.
+// manages app's window(s).
 var App = function() {
-  this.uis_ = [ "spark_polymer.html", "spark.html" ];
-  this.DEFAULT_UI_ = 0;
-  this.CAN_SWITCH_UIS_ = 0;
-  this.settings = { ui: this.uis_[this.DEFAULT_UI_] };
-
+  this.ui = "spark_polymer.html";
   this.editorWin_ = null;
 };
 
-App.prototype.updateSettings = function(changedSettings) {
-  for (var key in changedSettings) {
-    this.settings[key] = changedSettings[key];
-  }
-};
-
-App.prototype.launch = function(ui_opt) {
-  if (ui_opt !== undefined) {
-    this.updateSettings({ ui: ui_opt });
-  }
-
+App.prototype.launch = function() {
   if (this.editorWin_) {
     this.editorWin_.destroy();
     delete this.editorWin_;
@@ -33,21 +18,15 @@ App.prototype.launch = function(ui_opt) {
   this.editorWin_ = new EditorWindow(this);
 };
 
-App.prototype.switchUi = function() {
-  var nextSkinIdx =
-      (this.uis_.indexOf(this.settings.ui) + 1) % this.uis_.length;
-  this.launch(this.uis_[nextSkinIdx]);
-};
-
 // EditorWindow class. Encapsulates the state of a Spark app's main window.
 var EditorWindow = function(app) {
   this.app_ = app;
   this.window = null;
 
   chrome.app.window.create(
-    this.app_.settings.ui,
+    this.app_.ui,
     {
-      id: 'main_editor_window' + this.app_.settings.ui,
+      id: 'main_editor_window',
       frame: 'chrome',
       // Bounds will have effect only on the first start after app installation
       // in a given Chromium instance. After that, size & position will be
@@ -66,24 +45,6 @@ var EditorWindow = function(app) {
 // A listener called after Chrome app window has been created.
 EditorWindow.prototype.onCreated_ = function(win) {
   this.window = win;
-  this.window.contentWindow.addEventListener(
-      'DOMContentLoaded', this.onLoad_.bind(this));
-};
-
-// A listener called after the DOM has been constructed for the content window.
-EditorWindow.prototype.onLoad_ = function() {
-  if (this.app_.CAN_SWITCH_UIS_) {
-    chrome.contextMenus.create({
-      title: "Spark: Switch UI",
-      id: 'switch_ui',
-      contexts: [ 'all' ]
-    });
-    chrome.contextMenus.onClicked.addListener(function(info) {
-      if (info.menuItemId == 'switch_ui') {
-        this.app_.switchUi();
-      }
-    }.bind(this));
-  }
 };
 
 // Destroy the window, if any.

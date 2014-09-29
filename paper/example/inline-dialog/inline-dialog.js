@@ -1,0 +1,4 @@
+
+    Polymer('inline-dialog', {
+
+    });

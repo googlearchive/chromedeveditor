@@ -41,6 +41,7 @@
       ]
     },
     "management",
+    "nativeMessaging",
     "syncFileSystem",
     "system.network",
     "storage",

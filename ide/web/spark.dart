@@ -891,14 +891,12 @@ abstract class Spark
         return resources.first;
       }
     } else {
-      if (focusManager.currentResource != null) {
-        ws.Resource resource = focusManager.currentResource;
-        if (resource.isFile) {
-          if (resource.project != null) {
-            return resource.parent;
-          }
-        } else {
+      ws.Resource resource = focusManager.currentResource;
+      if (resource != null) {
+        if (resource is Folder) {
           return resource;
+        } else if (resource.parent != null) {
+          return resource.parent;
         }
       }
     }
@@ -911,11 +909,9 @@ abstract class Spark
         return resources.first;
       }
     } else {
-      if (focusManager.currentResource != null) {
-        ws.Resource resource = focusManager.currentResource;
-        if (resource.isFile) {
-          return resource;
-        }
+      ws.Resource resource = focusManager.currentResource;
+      if (resource != null && resource.isFile) {
+        return resource;
       }
     }
     return null;
@@ -1217,7 +1213,7 @@ abstract class SparkAction extends Action {
    * [regex].
    */
   bool _isSingleFileMatchingRegex(Object object, RegExp regex) {
-    return _isSingleResource(object) && 
+    return _isSingleResource(object) &&
            (object as List).first is ws.File &&
            regex.hasMatch((object as List).first.name);
   }
@@ -1718,7 +1714,7 @@ class SpecificTabAction extends SparkAction {
   }
 
   void _invoke([Object context]) {
-    if (_binding.index < 1 && _binding.index > spark.editorArea.tabs.length) {
+    if (_binding.index < 1 || _binding.index > spark.editorArea.tabs.length) {
       return;
     }
 
