@@ -44,7 +44,7 @@
   display: inline-flex;
   border-right: 1px solid #dadada;
   line-height: 48px;
-  padding: 0 20px 0 8px;
+  padding: 0 20px 0 10px;
 }
 
 .tabview-tablabel.hide-close-button:not(.tabview-tablabel-active) {
@@ -111,9 +111,10 @@
 
 .tabview-tablabel-dirty {
   font-style: italic;
-  background-image:url(../../../images/black.svg);
+  background-image:url(../../../images/bullet.png);
   background-repeat: no-repeat;
-  background-position: right center;
+  background-position: 1px 18px;
+  /*background-position: left center;*/
   /*background: red;*/
 }
 
