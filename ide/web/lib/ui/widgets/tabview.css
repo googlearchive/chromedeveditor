@@ -111,11 +111,6 @@
 
 .tabview-tablabel-dirty {
   font-style: italic;
-  background-image:url(../../../images/bullet.png);
-  background-repeat: no-repeat;
-  background-position: 1px 18px;
-  /*background-position: left center;*/
-  /*background: red;*/
 }
 
 /* NOTE: These 4 rules also create stacking contexts, which affects the entire
