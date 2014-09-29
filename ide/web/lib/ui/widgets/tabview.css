@@ -111,6 +111,9 @@
 
 .tabview-tablabel-dirty {
   font-style: italic;
+  background-image:url(../../../images/black.svg);
+  background-repeat: no-repeat;
+  background-position: right center;
   /*background: red;*/
 }
 
