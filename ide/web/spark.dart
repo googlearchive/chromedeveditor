@@ -894,7 +894,7 @@ abstract class Spark
     return null;
   }
 
-  ws.Folder _getFile([List<ws.Resource> resources]) {
+  ws.File _getFile([List<ws.Resource> resources]) {
     if (resources != null && resources.isNotEmpty) {
       if (resources.first.isFile) {
         return resources.first;
