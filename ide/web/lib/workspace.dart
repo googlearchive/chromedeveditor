@@ -1053,12 +1053,13 @@ class File extends Resource {
 
   Future<chrome.ArrayBuffer> getBytes() => _fileEntry.readBytes();
 
-  Future setContents(String contents) {
+  Future<String> setContents(String contents) {
     return _fileEntry.writeText(contents).then((_) {
       return entry.getMetadata();
     }).then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
       workspace._fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
+      return contents;
     });
   }
 
@@ -1696,13 +1697,19 @@ abstract class ContentProvider {
 class FileContentProvider implements ContentProvider {
   File file;
 
-  // TODO(ericarnold): Implement onContentChange.
-  Stream<String> get onContentChange => null;
+  StreamController<String> _contentChangeController =
+      new StreamController.broadcast();
+
+  // TODO(ericarnold): Implement onContentChange for external file changes.
+  Stream<String> get onContentChange => _contentChangeController.stream;
 
   FileContentProvider(this.file);
 
   Future<String> read() => file.getContents();
 
-  Future write(String content) => file.setContents(content);
+  Future write(String content) => file.setContents(content).then((String content) {
+    _contentChangeController.add(content);
+    return content;
+  });
 }
 

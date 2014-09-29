@@ -480,11 +480,19 @@ defineTests() {
       FileEntry fileEntry = fs.createFile('test.txt', contents: "foo bar");
       ws.File file = new ws.File(workspace, fileEntry);
       FileContentProvider provider = new FileContentProvider(file);
+      Completer<String> contentCompleter = new Completer();
+      provider.onContentChange.listen((String content) {
+        contentCompleter.complete(content);
+      });
+
       return provider.read().then((String text) {
         expect(text, 'foo bar');
         return provider.write("new bar");
       }).then((_) => provider.read()).then((String text) {
         expect(text, 'new bar');
+        return contentCompleter.future;
+      }).then((String streamContent) {
+        expect(streamContent, 'new bar');
       });
     });
 
