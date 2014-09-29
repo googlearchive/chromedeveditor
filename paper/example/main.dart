@@ -6,4 +6,7 @@ void main() {
   e.onClick.listen((_) {
     print(_);
   });
+
+  Element dialog = querySelector('#dialog');
+  dialog.on['close'].listen((_) =>print('Closed!'));
 }

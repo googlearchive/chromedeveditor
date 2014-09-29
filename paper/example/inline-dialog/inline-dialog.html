@@ -6,15 +6,15 @@
 <link href="../packages/paper/paper-shadow/paper-shadow.html" rel="import">
 <link href="../packages/paper/paper-icon-button/paper-icon-button.html" rel="import">
 
-<polymer-element name="inline-dialog" attributes="placeholder">
+<polymer-element name="inline-dialog">
 
   <template>
     <link href="inline-dialog.css" rel="stylesheet">
 
     <core-toolbar id="bar">
-      <paper-input placeholder="{{placeholder}}" flex></paper-input>
+      <content flex layout horizontal></content>
       <paper-shadow z="1"></paper-shadow>
-      <paper-icon-button icon="close"></paper-icon-button>
+      <paper-icon-button icon="close"on-click="{{handleClose}}"></paper-icon-button>
     </core-toolbar>
   </template>
 
