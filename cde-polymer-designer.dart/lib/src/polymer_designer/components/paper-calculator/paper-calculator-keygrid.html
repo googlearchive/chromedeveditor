@@ -1,0 +1,79 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="paper-calculator-key.html">
+
+<polymer-element name="paper-calculator-keygrid" attributes="keys">
+
+  <template>
+  
+    <style>
+    
+      :host {
+        position: relative;
+      }
+      
+      #keys {
+        width: 100%;
+        height: 100%;
+      }
+      
+      .handle-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 24px;
+      }
+    
+    </style>
+    
+    <div id="keys" horizontal layout>
+    
+      <template repeat="{{col in keys}}">
+      
+        <div flex vertical layout>
+        
+          <template repeat="{{col}}">
+          
+            <paper-calculator-key flex label="{{}}" on-tap="{{keyTap}}"></paper-calculator-key>
+            
+          </template>
+          
+        </div>
+        
+      </template>
+      
+    </div>
+    
+    <div class="handle-bar" on-tap="{{handleBarTap}}"></div>
+    
+  </template>
+  
+  <script>
+  
+    Polymer('paper-calculator-keygrid', {
+      
+      keyTap: function(e) {
+        this.fire('cal-keytap', {key: e.target.templateInstance.model});
+      },
+      
+      handleBarTap: function(e) {
+        e.preventDefault();
+      },
+      
+      findKey: function(label) {
+        return this.$.keys.querySelector('[label="' + label + '"]');
+      }
+      
+    });
+    
+  </script>
+  
+</polymer-element>

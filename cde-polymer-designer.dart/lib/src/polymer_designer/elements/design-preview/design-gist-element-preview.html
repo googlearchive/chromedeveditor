@@ -1,0 +1,40 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+
+<link rel="import" href="../../components/github-elements/github-elements.html">
+<link rel="import" href="design-preview.html">
+<link rel="import" href="design-github-info.html">
+
+<polymer-element name="design-gist-element-preview" extends="design-preview-iframe">
+<template>
+  <github-element id="github" on-files-loaded="{{documentLoaded}}"></github-element>
+  <design-github-info id="info"></design-github-info>
+  <shadow></shadow>
+</template>
+<script>
+(function() {
+
+Polymer({
+  
+  open: function(id) {
+    this.$.github.load(id);
+  },
+
+  documentLoaded: function(e, detail) {
+    var doc = detail && detail[this.$.info.fileName];
+    var re = /<polymer-element[^>]*name=(?:'|")([^'"]*)(?:'|")/;
+    var match = doc && doc.content && doc.content.match(re);
+    if (match) {
+      var name = match[1];
+      this.htmlContent = doc.content + '\n\n<' + name +'></' + name + '>';
+    }
+  }
+
+});
+
+})();
+</script>
+</polymer-element>

@@ -1,0 +1,499 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../components/core-selector/core-selector.html">
+<link rel="import" href="../../components/core-pages/core-pages.html">
+<link rel="import" href="../../components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../../components/core-icons/core-icons.html">
+<link rel="import" href="../../components/core-icons/social-icons.html">
+<link rel="import" href="../../components/core-icon-button/core-icon-button.html">
+<link rel="import" href="../../components/core-menu-button/core-menu-button.html">
+<link rel="import" href="../../components/core-item/core-item.html">
+<link rel="import" href="../../components/core-splitter/core-splitter.html">
+
+
+<link rel="import" href="../../components/github-elements/github-elements.html">
+
+<link rel="import" href="../dom-serializer/dom-serializer.html">
+<link rel="import" href="../../components/inspector-elements/element-inspector.html">
+<link rel="import" href="../design-palette/design-palette.html">
+<link rel="import" href="../design-tree/design-tree.html">
+<link rel="import" href="../design-preview/design-github-info.html">
+<link rel="import" href="../design-state/design-state.html">
+<link rel="import" href="../design-code/design-code.html">
+
+<polymer-element name="designer-element" vertical layout>
+<template>
+
+  <link rel="stylesheet" href="designer-element.css">
+
+  <core-toolbar id="appbar" class="narrow">
+
+    <core-icon-button title="Toggle Code/Design" icon="unfold-more" class="rotate {{ {selected: selected === 'code'} | tokenList }}" name="code" on-tap="{{codeToggleAction}}"></core-icon-button>
+    
+    <span class="separator"></span>
+
+    <core-icon-button title="Save" icon="save" on-tap="{{saveAction}}"></core-icon-button>
+    <!-- shareAction must be triggered from click to allow opening a tab (otherwise can only open a floating window) -->
+    <core-icon-button title="Share Gist" icon="social:share" on-click="{{shareAction}}"></core-icon-button>
+    <core-icon-button title="Launch Preview" icon="launch" on-click="{{previewAction}}"></core-icon-button>
+
+    <div class="design-controls" horizontal center layout hidden?="{{selected == 'code'}}">
+      <span class="separator"></span>
+      <core-icon-button title="Undo" disabled?="{{!$.state.canBack}}" icon="rotate-left" on-tap="{{undoAction}}"></core-icon-button>
+      <core-icon-button title="Redo" disabled?="{{!$.state.canForward}}" icon="rotate-right" on-tap="{{redoAction}}"></core-icon-button>
+      <span class="separator" hidden?="{{selected == 'code'}}"></span>
+      <core-icon-button title="Toggle Fullwidth" icon="drawer" class="{{ {selected: maximized} | tokenList}}" on-tap="{{fullscreenAction}}"></core-icon-button>
+    </div>
+
+  </core-toolbar>
+
+  <core-pages flex selected="{{selected}}">
+   
+    <section name="design" horizontal layout>
+   
+      <div id="frameContainer" flex>
+        <iframe id="frame" src="frame.html"></iframe>
+      </div>
+
+      <!-- we want to constrain the design space so tools are not on top of it;
+      at the same time, we want tools to take up the vertical space -->
+      <div class="toolsPlaceholder {{ {maximized: maximized} | tokenList}}"></div>
+
+      <div id="tools" class="{{ {maximized: maximized} | tokenList}}">
+        <div class="splitterContainer" vertical layout>
+          <div class="inspectorControls" flex vertical layout>
+            <core-toolbar class="designTools narrow">
+              <div id="selectedElement" flex>
+                <core-icon-button title="Select Parent" icon="arrow-back" on-click="{{selectParentElement}}" hidden?="{{!selectedName}}"></core-icon-button>
+                {{selectedName}}
+              </div>
+
+              <core-icon-button icon="fullscreen" on-tap="{{maximizeElement}}" title="Auto-size"></core-icon-button>
+              
+              <core-menu-button title="More..." icon="more-vert" halign="right">
+                <style>
+                  .core-selected {
+                    font-weight: normal;
+                  }
+
+                  core-item.rotate::shadow core-icon {
+                    transform: rotate(90deg);
+                    -webkit-transform: rotate(90deg);
+                  }
+                </style>
+                <core-item icon="arrow-back" class="rotate" label="Move Up" on-tap="{{moveoutElement}}"></core-item>
+                <core-item icon="arrow-back" label="Move Back" on-tap="{{promoteElement}}"></core-item>
+                <core-item icon="arrow-forward" label="Move Forward" on-tap="{{demoteElement}}"></core-item>
+                <core-item icon="delete" label="Delete" on-tap="{{deleteElement}}"></core-item>
+              </core-menu-button>
+            </core-toolbar>
+            <element-inspector flex id="inspector" on-bind-property="{{applyPropertyBinding}}"></element-inspector>
+          </div>
+          
+          <core-splitter direction="down"></core-splitter>
+          
+          <div class="paletteTree" vertical layout>
+            <core-selector id="tabs" valueAttr="name" selected="{{selectedTool}}">
+              <span name="palette">Palette</span>
+              <span name="tree">Tree</span>
+            </core-selector>
+      
+            <core-pages id="interior" flex valueAttr="id" selected="{{selectedTool}}">
+              <design-palette id="palette" on-palette-drag="{{paletteDrag}}" mode="{{paletteMode}}"></design-palette>
+              <design-tree id="tree" on-node-select="{{treeNodeSelected}}"></design-tree>
+            </core-pages>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <design-code id="code" name="code"></design-code>
+
+  </core-pages>
+
+  <dom-serializer id="serializer"></dom-serializer>
+  <design-state id="state" on-state-change="{{undoStateChange}}"></design-state>
+  <design-github-info id="githubInfo" token="{{githubToken}}"></design-github-info>
+  <github-element id="github" token="{{githubToken}}" on-files-loaded="{{documentLoaded}}" on-files-saved="{{documentSaved}}" on-files-updated="{{documentSaved}}" on-token-changed="{{tokenChangeHandler}}"></github-element>
+
+  <div id="toast"  class="{{ {showing: toastShowing } | tokenList }}">
+    <div>{{toast}}</div>
+  </div>
+
+</template>
+<script>
+
+Polymer({
+  selected: 'design',
+  paletteMode: 'menu',
+  selectedTool: 'palette',
+  remoteHtml: '',
+
+  ready: function() {
+    window.onbeforeunload = this.warnUnload.bind(this);
+    document.addEventListener('keydown', 
+        this.keydown.bind(this, window));
+    window.designWindowLoaded = this.designWindowLoaded.bind(this);
+    this.firstLoad = true;
+  },
+
+  designWindowLoaded: function() {
+    this.$.frame.style.display = null;
+    window.designWindow = this.$.frame.contentWindow;
+    designWindow.addEventListener('designer-ready', this.designerReady.bind(this));
+    designWindow.addEventListener('design-change', this.designChange.bind(this));
+    designWindow.document.addEventListener('keydown', 
+      this.keydown.bind(this, designWindow));
+  },
+
+  keydown: function(w, e) {
+    switch(e.keyCode) {
+      // save
+      case 83:
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.saveAction();
+          return false;
+        }
+        break;
+    }
+  },
+
+  designerReady: function(event) {
+    this.designer = event.target;
+    this.$.tree.canvas = this.designer.$.designCanvas;
+    this.$.palette.categories = this.designer.categories;
+    this.designer.import(window.metadata, this.importsLoaded.bind(this));
+  },
+
+   designChange: function(event) {
+    this.$.inspector.selected = this.designer.selected;
+    this.$.tree.selected = this.designer.selected;
+    this.$.inspector.forceUpdate();
+    this.$.tree.forceUpdate();
+    this.selectedName = this.makeSelectedName(this.designer.selected);
+    this.recordChange();
+  },
+
+  makeSelectedName: function(element) {
+    if (element) {
+      return (element.treeInfo && element.treeInfo.name) || element.localName;
+    }
+  },
+
+  importsLoaded: function() {
+    if (this.firstLoad) {
+      this.firstLoad = false;
+      this.loadRemoteContent();
+      return;
+    }
+    if (this.pendingHtml) {
+      this.loadHtml(this.pendingHtml);
+      this.pendingHtml = null;
+    } else {
+      var tag = Platform.flags.element;
+      if (tag) {
+        this.designer.createElement(tag);
+      }
+    }
+  },
+
+  // TODO(sorvell): forward drag to iframe; not yet a thing of beauty;
+  // review with dfreedm
+  paletteDrag: function(event, dragInfo) {
+    // allow dragging over iframe
+    var frameStyle = this.$.frame.style;
+    frameStyle.pointerEvents = 'none';
+    // adjust event frame of reference
+    var rect = this._frameRect = this._frameRect || 
+        this.$.frame.getBoundingClientRect();
+    dragInfo.origin.top -= this._frameRect.top;
+    // get searchRoot from frame window.
+    var targetFinding = this.$.frame.contentWindow.PolymerGestures.targetFinding;
+    var searchRoot = targetFinding.searchRoot.bind(targetFinding, this.$.frame.contentDocument);
+    targetFinding = null;
+    // forward event to designer
+    this.designer.paletteDrag(event, dragInfo);
+    // cleanup coordinates
+    var drag = dragInfo.drag;
+    dragInfo.drag = function() {
+      this.event.clientY -= rect.top;
+      return drag.apply(this, arguments);
+    }
+
+    // cleanup in drop
+    var drop = dragInfo.drop;
+    dragInfo.drop = function() {
+      frameStyle.pointerEvents = '';
+      this.event.clientY -= rect.top;
+      this.event.relatedTarget = searchRoot(this.event.clientX, this.event.clientY);
+      return drop.apply(this, arguments);
+    }
+  },
+
+  //
+  // turn abstract events into concrete actions
+  //
+
+  treeNodeSelected: function(event) {
+    this.designer.selected = event.target.selected;
+  },
+
+  deleteElement: function(event) {
+    this.designer.deleteElement();
+  },
+
+  promoteElement: function(event) {
+    this.designer.promoteElement();
+  },
+
+  demoteElement: function(event) {
+    this.designer.demoteElement();
+  },
+
+  moveoutElement: function(event) {
+    this.designer.moveoutElement();
+  },
+
+  maximizeElement: function(event) {
+    this.designer.maximizeElement();
+  },
+
+  selectParentElement: function(event) {
+    this.designer.selectParentElement();
+  },
+
+  selectedChanged: function() {
+    if (this.selected == 'code') {
+      this.designToCode();
+    } else {
+      this.codeToDesign();
+    }
+  },
+
+  inspectTarget: function(event) {
+    var t = event.target;
+    if (t) {
+      if (t === this.designer.$.designCanvas) {
+        this.selected = null;
+      } else {
+        // don't allow selection within a node with meta.hideSubtree
+        var n = t;
+        while (n) {
+          if (n._designMeta && n._designMeta.hideSubtree) {
+            t = n;
+            break;
+          }
+          n = n.parentNode;
+        }
+        this.selected = t;
+      }
+      Platform.flush();
+    }
+  },
+
+  get html() {
+    return this.$.serializer.dumpElement(this.designer.$.designCanvas);
+  },
+
+  get code() {
+    return this.$.code.getValue();
+  },
+
+  designToCode: function() {
+    this.$.code.beginEditing(this.html);
+  },
+
+  codeToDesign: function() {
+    this.loadHtml(this.$.code.finishEditing());
+  },
+
+  reloadDesigner: function() {
+    designWindow.location.reload();
+  },
+
+  fullscreenAction: function() {
+    this.maximized = !this.maximized;
+  },
+
+  applyPropertyBinding: function(event, detail) {
+    this.designer.applyPropertyBinding(
+        detail.obj, detail.name, detail.path);  
+  },
+
+  codeToggleAction: function() {
+    this.selected = this.selected === 'design' ? 'code' : 'design';
+  },
+
+  saveAction: function() {
+    if (!this.ensureSignedIn(this.saveAction)) {
+      return;
+    }
+    this.toast = 'Saving...';
+    this.toastShowing = true;
+    this.save(function() {
+      this.toastShowing = false;
+    });
+  },
+
+  shareAction: function() {
+    if (!this.ensureSignedIn(this.shareAction)) {
+      return;
+    }
+    // must open window immediately so that it opens in a tab, not a window
+    if (this.shareWindow) {
+      this.shareWindow.close();
+    }
+    this.shareWindow = window.open('', 'gist');
+    this.save(function() {
+      this.shareWindow.location.href = 'https://gist.github.com/' + 
+          this.fileId;
+    });
+  },
+
+  previewAction: function() {
+    if (!this.ensureSignedIn(this.previewAction)) {
+      return;
+    }
+    if (this.previewWindow) {
+      this.previewWindow.close();
+    }
+    this.previewWindow = window.open('', 'preview');
+
+    this.save(function() {
+      this.previewWindow.location.href = 'preview.html#' + this.fileId;
+    });
+  },
+
+  save: function(callback) {
+    var self = this;
+    var saveCb = function() {
+      if (callback) {
+        callback.call(self);
+      }
+    };
+    var updateCb = function(response) {
+      // update fails if gist is some other user's
+      // if this happens perform a save.
+      if (response && response.error === 404) {
+        self.fileId = null;
+        self.save(callback);
+      } else {
+        saveCb();
+      }
+    };
+    var options = {};
+    options[this.$.githubInfo.fileName] = {content: this.getContent()};
+    if (this.fileId) {
+      this.$.github.update(this.fileId, 'designer', true, options, updateCb);
+    } else {
+      this.$.github.save('designer', true, options, saveCb);
+    }
+  },
+
+  documentSaved: function(event, detail) {
+    this.fileId = detail.id; 
+    this._savedHtml = this.getContent();
+  },
+
+  loadRemoteContent: function() {
+    var id = window.location.hash.replace('#', '');
+    if (id) {
+      this.fileId = id;
+      this.$.github.load(id);
+    }
+  },
+
+  documentLoaded: function(event, detail) {
+    var doc = detail && detail[this.$.githubInfo.fileName];
+    if (doc) {
+      this.remoteHtml = doc.content;
+    }
+  },
+
+  remoteHtmlChanged: function() {
+    this.loadHtml(this.remoteHtml);
+    this._savedHtml = this.remoteHtml;
+    this.$.state.reset();
+  },
+
+  loadHtml: function(html) {
+    this.designer.loadHtml(html);
+  },
+
+  // support callback after logging in
+  ensureSignedIn: function(signInCallback) {
+    if (!this.$.github.token) {
+      this._signInCallback = signInCallback;
+      this.$.github.signIn();
+    } else {
+      return true;
+    }
+  },
+
+  tokenChangeHandler: function(e) {
+    if (this.$.github.token && this._signInCallback) {
+      this._signInCallback.call(this);
+      this._signInCallback = null;
+    }
+  },
+
+  undoAction: function() {
+    this.$.state.back();
+  },
+
+  redoAction: function() {
+    this.$.state.forward();
+  },
+
+  undoStateChange: function(e, detail) {
+    this._preventStateChange = true;
+    this.loadHtml(detail.state);
+  },
+
+  recordChange: function() {
+    if (!this._preventStateChange) {
+      this.job('record-state', function() {
+        var n = this.html;
+        if (this._lastHtml !== n) {
+          this._lastHtml = n;
+          //console.log('recordChange, push');
+          this.$.state.push(n);
+        }
+      }, 100);
+    } else {
+      this.async(function() {
+        this._preventStateChange = false;
+      });
+    }
+  },
+
+  getContent: function() {
+    return this.selected === 'code' ? this.code : this.html;
+  },
+
+  isDirty: function() {
+    return (this._savedHtml !== this.getContent());
+  },
+
+  warnUnload: function() {
+    if (this.isDirty()) {
+      return 'Unsaved changes detected.';
+    }
+  }
+
+});
+
+</script>
+</polymer-element>
+

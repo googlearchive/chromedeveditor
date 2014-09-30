@@ -1,0 +1,209 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="editors/property-editor.html">
+<link rel="import" href="binding.html">
+<link rel="import" href="../core-icons/core-icons.html">
+<link rel="import" href="../core-animation/core-animation.html">
+
+<polymer-element name="property-inspector" vertical layout attributes="property nobind" 
+    on-editor-value-changed="{{valueChangedEvent}}">
+<template>
+
+  <style>
+    :host {
+      display: block;
+      white-space: nowrap;
+      margin-bottom: 0.5rem;
+    }
+    .property-name {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      color: #919191;
+      /*font-weight: bold;*/
+      margin-bottom: 0.5em;
+    }
+    
+    core-icon#icon {
+      opacity: 0.3;
+      cursor: pointer;
+      margin-left: 16px;
+    }
+
+    #iconContainer {
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    
+    #icon.binding {
+      opacity: 0.6;
+      border-radius: 12px;
+      background-color: lightblue;
+      -webkit-box-shadow: 0px 0px 14px 3px lightblue;
+    }
+    [nodisplay] {
+      display: none !important;
+    }
+  </style>
+  <div class="property-name">{{property.meta.label || property.name}}</div>
+  <span id="container" flex auto horizontal center layout>
+    <content></content>
+    <core-icon id="icon" icon="link" on-tap="{{linkTap}}" size="20" nodisplay?="{{nobind}}"></core-icon>
+  </span>
+  <flip-out id="animOut" target="{{$.container}}" on-core-animation-finish="{{animOutComplete}}"></flip-out>
+  <flip-in id="animIn" target="{{$.container}}"></flip-in>
+
+</template>
+<script>
+
+Polymer({
+
+  property: null,
+  editor: null,
+  propertyValue: null,
+  bindingMode: null,
+  binding: null,
+  nobind: false,
+
+  editorTags: {
+    'boolean': 'boolean-editor',
+    'string': 'string-editor',
+    'number': 'number-editor',
+    'select': 'select-editor',
+    'color': 'color-editor',
+    'text': 'text-editor',
+    'json': 'json-editor',
+    'id-select': 'id-select-editor',
+    'target-select': 'target-select-editor',
+    'speech': 'speech-editor',
+    'range': 'range-editor',
+    any: 'string-editor'
+  },
+
+  propertyChanged: function() {
+    this.updateBinding();
+    // discover editorTag
+    var type = (this.property.meta || 0).kind || typeof this.property.value;
+    this.editorTag = this.editorTags[type || typeof this.property.value] 
+        || type;
+    // update binding mode
+    this.updateBindingMode();
+  },
+
+  updateBinding: function() {
+    // discover binding
+    this.binding = Bindings.getBinding(this.property);
+    // special handling for textContent
+    if (this.property.name == 'textContent') {
+      this.binding = Bindings.getBinding(this.property.obj.firstChild,
+        this.property.name);
+    }
+  },
+
+  updateBindingMode: function() {
+    this.bindingMode = Boolean(this.binding);
+  },
+
+  bindingModeChanged: function(old) {
+    if (old && this.editor) {
+      this.editor.unbind();
+      this.updateBinding();
+    }
+    this.$.icon.classList.toggle('binding', this.bindingMode);
+    this.makeEditor(this.bindingMode ? 'binding-editor' 
+        : 'property-editor');
+  },
+
+  makeEditor: function(tag) {
+    this.editor = document.createElement(tag);
+    this.editor.setAttribute('flex', '');
+    this.editor.cancelUnbindAll();
+    this.editor.meta = {
+      property: this.property,
+      editorTag: this.editorTag,
+      binding: this.binding
+    };
+  },
+
+  editorChanged: function(inOld) {
+    if (inOld) {
+      inOld.parentNode.removeChild(inOld);
+    }
+    this.appendChild(this.editor);
+  },
+
+  // it's critical to have an event from the editor UI so we know when
+  // a user has changed a value vs some other form of alteration
+  // for the same reason, we float our own changed event
+  valueChangedEvent: function(event) {
+    event.stopPropagation();
+    this.fire('property-changed');
+  },
+
+  linkTap: function() {
+    // start animation
+    this.$.animOut.play();
+    //this.animOutComplete();
+  },
+
+  animOutComplete: function() {
+    // after the first animation, effect the changes
+    this.$.container.selected = this.bindingMode ? 1 : 0;
+    this.bindingMode = !this.bindingMode;
+    // we are animating, flush now
+    Platform.flush();
+    // ending animation
+    this.$.animIn.play();
+  }
+
+});
+
+</script>
+</polymer-element>
+
+<polymer-element name="flip-out" extends="core-animation">
+<script>
+
+Polymer('flip-out', {
+
+  duration: 0.2,
+  fillMode: 'none',
+
+  keyframes: [{
+    easing: 'ease-in',
+    offset: 0,
+    transform: 'perspective(400px) translateZ(0px) rotateX(0deg) scale(1)'
+  }, {
+    offset: 1,
+    transform: 'perspective(400px) translateZ(0px) rotateX(90deg) scale(1)'
+  }]
+
+});
+
+</script>
+</polymer-element>
+
+<polymer-element name="flip-in" extends="flip-out">
+<script>
+
+Polymer('flip-in', {
+
+  keyframes: [{
+    easing: 'ease-out',
+    offset: 0,
+    transform: 'perspective(400px) translateZ(0px) rotateY(270deg) scale(1)'
+  }, {
+    offset: 1,
+    transform: 'perspective(400px) translateZ(0px) rotateY(360deg) scale(1)'
+  }]
+
+});
+  
+</script>
+</polymer-element>

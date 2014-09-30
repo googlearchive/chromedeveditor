@@ -1,0 +1,17 @@
+{
+  "name": "more-elements",
+  "private": true,
+  "dependencies": {
+    "ace-element": "Polymer/ace-element#master",
+    "chart-js": "Polymer/chart-js#master",
+    "code-mirror": "Polymer/code-mirror#master",
+    "cool-clock": "Polymer/cool-clock#master",
+    "flatiron-director": "Polymer/flatiron-director#master",
+    "google-map": "GoogleWebComponents/google-map#master",
+    "smoothie-chart": "Polymer/smoothie-chart#master",
+    "speech-mic": "Polymer/speech-mic#master",
+    "x-meta": "Polymer/x-meta#master",
+    "yt-video": "Polymer/yt-video#master",
+    "notification-elements": "PolymerLabs/notification-elements#master"
+  }
+}

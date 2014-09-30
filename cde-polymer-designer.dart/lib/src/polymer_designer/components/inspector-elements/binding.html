@@ -1,0 +1,25 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<script>
+  (function() {
+   function getBinding(element, name) {
+      if (arguments.length === 1) {
+        name = arguments[0].name;
+        element = arguments[0].obj;
+      }
+      if (element && element.bindings_) {
+        var binding = element.bindings_[name];
+        if (binding) {
+          binding = binding.observable_ || binding;
+          return binding.path || binding.path_;
+        }
+      }
+    }
+    window.Bindings = {
+      getBinding: getBinding
+    }
+  })();
+</script>

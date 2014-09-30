@@ -1,0 +1,148 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="editors.html">
+<link rel="import" href="specialized-editors.html">
+
+<polymer-element name="property-editor" attributes="editorTag propertyValue value">
+<template>
+
+  <style>
+    :host {
+      display: block;
+      white-space: nowrap;
+    }
+  </style>
+  <content></content>
+
+</template>
+<script>
+  
+Polymer({
+
+  meta: null,
+
+  metaChanged: function(type) {
+    // create polymorphic editor
+    this.editor = document.createElement(this.meta.editorTag);
+    this.appendChild(this.editor);
+    // bind propertyValue to property
+    var p = this.meta.property;
+    this.bindProperty('propertyValue', new PathObserver(p.obj, p.name));
+    // bind this.editor.value to propertyValue
+    // (imperative form of <editor value="{{editorValue}}">)
+    this.editor.bindProperty('value', new PathObserver(this, 'propertyValue'));
+    // update editor meta from property
+    this.updateEditorMeta();
+  },
+
+  updateEditorMeta: function() {
+    if (this.editor) {
+      this.editor.meta = this.meta.property.meta || {};
+      this.editor.meta.obj = this.meta.property.obj;
+    }
+  }
+
+});
+
+</script>
+</polymer-element>
+
+<polymer-element name="binding-editor" horizontal center layout extends="abstract-editor">
+<template>
+  
+  <style>
+    :host {
+      display: block;
+      white-space: nowrap;
+    }
+
+    #idSelect {
+      margin-right: 8px;
+    }
+  </style>
+  <id-select-editor id="idSelect" style="width: 112px;" options="{{elements}}" value="{{target}}" on-editor-value-changed="{{editorValueChanged}}" ></id-select-editor>
+  <!-- <select-editor style="width: 145px;" options="{{properties}}"></select-editor> -->
+  <string-editor flex auto value="{{workingValue}}" on-editor-value-changed="{{editorValueChanged}}" ></string-editor>
+
+</template>
+<script>
+
+Polymer({
+
+  target: null,
+  meta: null,
+
+  metaChanged: function() {
+    this.$.idSelect.meta = {obj: this.meta.property.obj };
+    this.value = this.meta.binding || '';
+  },
+
+  editorValueChanged: function(event) {
+    event.stopPropagation();
+    this.commit();
+  },
+
+  format: function(value) {
+    // can't bind to nothing
+    if (!value) {
+      return '';
+    }
+    var path = [];
+    // can't bind to self
+    if (this.target == this.meta.property.obj.id) {
+      this.target = '';
+    }
+    if (this.target) {
+      path.push('$', this.target);
+    }
+    path.push(value);
+    path = path.join('.');
+    return path;
+  },
+
+  valueChanged: function() {
+    if (this.value[0] == '$') {
+      var values = this.value.splice ? this.value.slice(0) : 
+          this.value.split('.');
+      values.shift(); // remove $
+      this.target = values.shift() // get object id
+      this.workingValue = values.join('.');
+    } else {
+      this.workingValue = this.value;
+    }
+  },
+
+  commit: function() {
+    this.super();
+    if (!this.value) {
+      return;
+    }
+    //console.log('binding-editor.bind-property: %s - %s', this.meta.property.name, this.value);
+    this.fire('bind-property', {
+      obj: this.meta.property.obj,
+      name: this.meta.property.name,
+      path: this.value
+    });
+  },
+
+  /* commit an empty binding value when detached */
+  unbind: function() {
+    this.value = '';
+    this.fire('bind-property', {
+      obj: this.meta.property.obj,
+      name: this.meta.property.name,
+      path: ''
+    });
+  }
+
+});
+
+</script>
+</polymer-element>

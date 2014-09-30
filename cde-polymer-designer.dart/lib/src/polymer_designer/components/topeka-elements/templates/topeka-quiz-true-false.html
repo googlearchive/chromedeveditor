@@ -1,0 +1,91 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../topeka-quiz-base.html">
+<link rel="import" href="../../core-selector/core-selector.html">
+<link rel="import" href="../../paper-button/paper-button.html">
+
+<polymer-element name="topeka-quiz-true-false" extends="topeka-quiz-base" noscript>
+<template>
+
+  <style>
+  
+    paper-button[raisedButton] {
+      font-size: 14px;
+      font-weight: 400;
+      width: 80px;
+      height: 40px;
+      margin: 58px 12px;
+      fill: #616161;
+      background: #f5f5f5;
+      color: #616161;
+      position: relative;
+    }
+
+    paper-button[raisedButton].core-selected.false {
+      background: #ff5252;
+      color: #f1f1f1;
+    }
+    
+    paper-button[raisedButton].core-selected.true {
+      background: #00e676;
+      color: #f1f1f1;
+    }
+
+    paper-button[raisedButton]::shadow #ripple {
+      /*color: #03a9f4;*/
+    }
+
+    paper-button[raisedButton]::shadow #focusBg {
+      /*background: #3367d6;*/
+    }
+
+    paper-button[raisedButton][label=False] {
+      -webkit-order: 1;
+      order: 1;
+    }
+
+    paper-button[raisedButton]::shadow #clip {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: -ms-flexbox;
+      display: -webkit-flex;
+      display: flex;
+      -ms-flex-align: center;
+      -webkit-align-items: center;
+      align-items: center;
+      -ms-flex-pack: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+
+    paper-button[raisedButton]::shadow #content > span {
+      /*margin-top: 10px;*/
+    }
+
+    paper-button::shadow #focusBg {
+      -webkit-animation: none !important;
+      animation: none !important;
+    }
+  
+  </style>
+  
+ 
+  <div horizontal layout center center-justified layout>
+    <core-selector selected="{{value}}" horizontal layout>
+      <paper-button raisedButton isToggle label="False" class="false"></paper-button>
+      <paper-button raisedButton isToggle label="True" class="true"></paper-button>
+    </core-selector>
+  </div>
+  
+</template>
+</polymer-element>

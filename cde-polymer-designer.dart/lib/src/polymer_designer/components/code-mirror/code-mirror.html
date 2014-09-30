@@ -1,0 +1,90 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="codemirror-import.html">
+
+<polymer-element name="code-mirror" attributes="value mode theme tabSize lineNumbers">
+  <template>
+    <link rel="stylesheet" href="codemirror-4.0/lib/codemirror.css">
+    <link href="codemirror-4.0/theme/ambiance.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/ambiance-mobile.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/blackboard.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/cobalt.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/eclipse.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/elegant.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/erlang-dark.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/lesser-dark.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/midnight.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/monokai.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/neat.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/night.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/rubyblue.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/solarized.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/twilight.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/vibrant-ink.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/xq-dark.css" rel="stylesheet">
+    <link href="codemirror-4.0/theme/xq-light.css" rel="stylesheet">
+    <link href="codemirror-4.0/addon/fold/foldgutter.css" rel="stylesheet">
+
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+      .CodeMirror {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </template>
+  <script>
+    Polymer('code-mirror', {
+      value: '',
+      mode: 'htmlmixed',
+      theme: 'xq-light',
+      tabSize: 2,
+      lineNumbers: true,
+      ready: function() {
+        if (!this.value) {
+          this.value = this.textContent;
+        }
+        this.mirror = CodeMirror(this.shadowRoot, {
+          value: this.value || this.textContent,
+          mode: this.mode,
+          theme: this.theme,
+          tabSize: this.tabSize,
+          lineNumbers: this.lineNumbers,
+          foldGutter: true,
+          gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+        });
+      },
+      refresh: function() {
+        this.mirror.refresh();
+      },
+      valueChanged: function() {
+        this.mirror.setValue(this.value);
+      },
+      modeChanged: function() {
+        this.mirror.setOption('mode', this.mode);
+      },
+      themeChanged: function() {
+        this.mirror.setOption('theme', this.theme);
+      },
+      tabSizeChanged: function() {
+        this.mirror.setOption('tabSize', this.tabSize);
+      },
+      lineNumbersChanged: function() {
+        this.mirror.setOption('lineNumbers', this.lineNumbers);
+      },
+      focus: function() {
+        this.mirror.focus();
+      }
+    });
+  </script>
+</polymer-element>

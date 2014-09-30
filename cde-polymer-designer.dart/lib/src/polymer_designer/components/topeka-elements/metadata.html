@@ -1,0 +1,339 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<x-meta id="topeka-avatar" label="Avatar" group="Topeka" hideSubtree>
+
+  <template>
+    <core-icon icon="avatars:avatar-1" style="height: 64px; width: 64px;" designMeta="topeka-avatar"></core-icon>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="avatars.html">
+    <link rel="import" href="../core-icon/core-icon.html">
+  </template>
+
+  <property name="icon" kind="select" options="avatars:avatar-1,avatars:avatar-2,avatars:avatar-3,avatars:avatar-4,avatars:avatar-5,avatars:avatar-6,avatars:avatar-7,avatars:avatar-8,avatars:avatar-9,avatars:avatar-10,avatars:avatar-11,avatars:avatar-12,avatars:avatar-13,avatars:avatar-14,avatars:avatar-15,avatars:avatar-16"></property>
+
+</x-meta>
+
+<x-meta id="topeka-avatar-selector" label="Avatar Selector" group="Topeka">
+
+  <template>
+    <core-selector selected="0" flex layout horizontal>
+      <core-icon icon="avatars:avatar-1" style="height: 64px; width: 64px; border-radius: 50%; overflow: hidden;" designMeta="topeka-avatar"></core-icon>
+      <core-icon icon="avatars:avatar-2" style="height: 64px; width: 64px; margin: 0 8px; border-radius: 50%; overflow: hidden;" designMeta="topeka-avatar"></core-icon>
+      <core-icon icon="avatars:avatar-3" style="height: 64px; width: 64px; border-radius: 50%; overflow: hidden;" designMeta="topeka-avatar"></core-icon>
+    </core-selector>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="avatars.html">
+    <link rel="import" href="../core-icon/core-icon.html">
+    <link rel="import" href="../core-selector/core-selector.html">
+  </template>
+
+</x-meta>
+
+<x-meta id="topeka-icon" label="Icon" group="Topeka" hideSubtree>
+
+  <template>
+    <core-icon icon="category-icons:food" style="height: 128px; width: 128px;" designMeta="topeka-icon"></core-icon>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="category-icons.html">
+    <link rel="import" href="../core-icon/core-icon.html">
+  </template>
+
+  <property name="icon" kind="select" options="category-icons:food,category-icons:knowledge,category-icons:history,category-icons:geography,category-icons:science,category-icons:tvmovies,category-icons:music,category-icons:entertainment,category-icons:sports"></property>
+
+</x-meta>
+
+<x-meta id="topeka-image" label="Background" group="Topeka" hideSubtree>
+
+  <template>
+    <core-icon icon="category-images:food" style="height: 256px; width: 256px;" designMeta="topeka-image"></core-icon>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="category-images.html">
+    <link rel="import" href="../core-icon/core-icon.html">
+  </template>
+
+   <property name="icon" kind="select" options="category-images:food,category-images:knowledge,category-images:history,category-images:geography,category-images:science,category-images:tvmovies,category-images:music,category-images:entertainment,category-images:sports"></property>
+
+</x-meta>
+
+<x-meta id="topeka-app" label="App" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-app style="width: 300px; height: 300px; min-height: 450px;"></topeka-app>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="theme.html">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-app.html">
+  </template>
+
+  <property name="user" kind="json"></property>
+  <property name="categories" kind="json"></property>
+
+</x-meta>
+
+
+<x-meta id="topeka-demo" label="Demo" group="Topeka" hideSubtree>
+
+  <template>
+    <div style="height: 100%; width: 100%; overflow: hidden;">
+      <topeka-app fit id="app" connected="{{$.datasource.connected}}"></topeka-app>
+      <topeka-datasource id="datasource" url="categories.json"></topeka-datasource>
+    </div>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="theme.html">
+    <link rel="import" href="topeka-datasource.html">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-app.html">
+  </template>
+
+  <property name="user" kind="json"></property>
+  <property name="categories" kind="json"></property>
+
+</x-meta>
+
+<x-meta id="topeka-categories" label="Categories" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-categories style="width: 300px; height: 300px;"></topeka-categories>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="theme.html">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-categories.html">
+  </template>
+
+</x-meta>
+
+<x-meta id="topeka-category" label="Category" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-category style="width: 300px; height: 300px;"></topeka-category>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="theme.html">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-category.html">
+  </template>
+
+</x-meta>
+
+<x-meta id="topeka-datasource" label="Datasource" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-datasource url="categories.json"></topeka-datasource>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="topeka-datasource.html">
+  </template>
+
+</x-meta>
+
+<x-meta id="topeka-profile" label="Profile" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-profile style="width: 300px; height: 300px;"></topeka-profile>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-profile.html">
+  </template>
+
+</x-meta>
+
+<x-meta id="topeka-leaderboard" label="Leaderboard" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-leaderboard style="width: 300px; height: 300px;"></topeka-leaderboard>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-leaderboard.html">
+  </template>
+
+</x-meta>
+
+<x-meta id="topeka-quizzes" label="Quizzes" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-quizzes style="width: 300px; height: 300px;"></topeka-quizzes>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="theme.html">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-quizzes.html">
+  </template>
+
+  <property name="category" kind="json"></property>
+</x-meta>
+
+<x-meta id="topeka-quiz-view" label="Quiz View" group="Topeka" hideSubtree>
+
+  <template>
+    <topeka-quiz-view style="width: 300px; height: 300px;"></topeka-quiz-view>
+  </template>
+
+  <template id="imports">
+    <link rel="import" href="theme.html">
+    <link rel="import" href="topeka-resources.html">
+    <link rel="import" href="topeka-quiz-view.html">
+  </template>
+
+  <property name="quiz" kind="json"></property>
+
+</x-meta>
+
+<x-meta id="quiz-demo-grid" label="Quiz Demo Grid" group="Demo">
+<template>
+  <section layout vertical designMeta="quiz-demo-grid" style="box-sizing:border-box;width:420px;height:582px;">
+
+    <div class="tall-toolbar categories" id="toolbar" horizontal center-justified center layout style="box-sizing:border-box;height:15%;position:relative;color:#fff;font-size:48px;background-color:#00bbd3;">
+      <span>Quiz Demo</span>
+    </div>
+
+    <div class="tiles-container" id="tiles-container" layout wrap horizontal around-justified center relative style="padding-left:3px;height:85%;">
+
+      <div class="tile" id="tile-profile" style="background-color:#ccc;box-sizing:border-box;float:left;height:30%;width:48%;margin:3px;" layout vertical relative>
+        <section class="tile-top" flex layout horizontal center center-justified>
+          <core-icon icon="category-icons:food" style="height: 128px; width: 128px;" designMeta="topeka-icon"></core-icon>
+        </section>
+        <div class="tile-bottom" style="background-color:#aaa;padding:8px;color:#fff;">
+          Category 1
+        </div>
+      </div>
+
+      <div class="tile" id="tile-general" style="box-sizing:border-box;float:left;height:30%;width:48%;margin:3px;" layout vertical relative>
+        <section class="tile-top" flex layout horizontal center center-justified hero hero-id="top" style="background-color:#ffff8d">
+          <core-icon cross-fade-delayed icon="category-icons:knowledge" style="height: 128px; width: 128px;" designMeta="topeka-icon"></core-icon>
+        </section>
+        <div class="tile-bottom" hero hero-id="bottom" style="background-color:#ffeb3b;padding:8px;color:#fff;">
+          <span>General Knowledge</span>
+        </div>
+      </div>
+
+      <div class="tile" style="background-color:#b9f6ca;box-sizing:border-box;float:left;height:30%;width:48%;margin:3px;" layout vertical relative>
+        <section class="tile-top" flex layout horizontal center center-justified>
+          <core-icon icon="category-icons:history" style="height: 128px; width: 128px;" designMeta="topeka-icon"></core-icon>
+        </section>
+        <div class="tile-bottom" style="background-color:#0f9d58;padding:8px;color:#fff;">
+          Category 2
+        </div>
+      </div>
+
+      <div class="tile" style="background-color:#ff8a80;box-sizing:border-box;float:left;height:30%;width:48%;margin:3px;" layout vertical relative>
+        <section class="tile-top" flex layout horizontal center center-justified>
+          <core-icon icon="category-icons:geography" style="height: 128px; width: 128px;" designMeta="topeka-icon"></core-icon>
+        </section>
+        <div class="tile-bottom" style="background-color:#db4437;padding:8px;color:#fff;">
+          Category 3
+        </div>
+      </div>
+
+      <div class="tile" style="background-color:#82b1ff;box-sizing:border-box;float:left;height:30%;width:48%;margin:3px;" layout vertical relative>
+        <section class="tile-top" flex layout horizontal center center-justified>
+          <core-icon icon="category-icons:entertainment" style="height: 128px; width: 128px;" designMeta="topeka-icon"></core-icon>
+        </section>
+        <div class="tile-bottom" style="background-color:#4285f4;padding:8px;color:#fff;">
+          Category 4
+        </div>
+      </div>
+
+      <div class="tile" style="background-color:#b388ff;box-sizing:border-box;float:left;height:30%;width:48%;margin:3px;" layout vertical relative>
+        <section class="tile-top" flex layout horizontal center center-justified>
+          <core-icon icon="category-icons:music" style="height: 128px; width: 128px;" designMeta="topeka-icon"></core-icon>
+        </section>
+        <div class="tile-bottom" style="background-color:#7e57c2;padding:8px;color:#fff;">
+          Category 5
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+</template>
+
+<template id="imports">
+  <link rel="import" href="category-icons.html">
+  <link rel="import" href="../core-icon/core-icon.html">
+</template>
+</x-meta>
+
+<x-meta id="quiz-demo-front-page" label="Quiz Demo Front Page" group="Demo">
+<template>
+
+  <section layout vertical style="box-sizing:border-box;width:420px;height:582px;">
+
+    <section class="top" flex layout horizontal center center-justified hero hero-id="top" style="background-color:#ffff8d;">
+      <core-icon cross-fade-delayed icon="category-images:knowledge" style="height: 256px; width: 256px; z-index: 100;" designMeta="topeka-image"></core-icon>
+    </section>
+    <div class="bottom" hero hero-id="bottom" style="box-sizing:border-box;position:relative;height:80px;background-color:#ffeb3b;padding:24px;color:#fff;font-size:32px;">
+      <span>General Knowledge</span>
+    </div>
+    <div hero class="dummy"></div>
+    <div class="fab fab-0" style="position:absolute;color:#fff;bottom:50px;right:24px;">
+      <paper-fab cross-fade-delayed icon="av:play-arrow" style="background-color:#ff4081;"></paper-fab>
+    </div>
+  </section>
+
+</template>
+
+<template id="imports">
+  <link rel="import" href="category-images.html">
+  <link rel="import" href="../core-icon/core-icon.html">
+  <link rel="import" href="../core-icons/core-icons.html">
+  <link rel="import" href="../core-icons/av-icons.html">
+  <link rel="import" href="../paper-fab/paper-fab.html">
+</template>
+</x-meta>
+
+<x-meta id="quiz-demo-question" label="Quiz Demo Question" group="Demo">
+<template>
+
+  <section layout vertical style="box-sizing:border-box;width:420px;height:630px;">
+
+    <div hero style="box-sizing:border-box;position:relative;height:240px;background-color:#ffeb3b;padding:24px;color:#fff;font-size:32px;">
+      <span>Question</span>
+    </div>
+    <section hero flex style="background-color:#eee;padding:24px;font-size:16px;">
+      <span>Answer here</span>
+    </section>
+  </section>
+
+</template>
+</x-meta>
+
+<x-meta id="quiz-demo-score" label="Quiz Demo Score" group="Demo">
+<template>
+
+  <section layout vertical style="box-sizing:border-box;width:420px;height:630px;background-color:#ffff8d;" center center-justified>
+
+    <div hero style="box-sizing:border-box;position:relative;height:150px;width:150px;background-color:#ffeb3b;color:#fff;font-size:100px;" layout vertical center center-justified>
+      <span>+8</span>
+    </div>
+  </section>
+
+</template>
+</x-meta>

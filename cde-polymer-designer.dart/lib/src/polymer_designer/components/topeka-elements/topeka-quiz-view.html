@@ -1,0 +1,40 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="templates/topeka-quiz-fill-blank.html">
+<link rel="import" href="templates/topeka-quiz-fill-two-blanks.html">
+<link rel="import" href="templates/topeka-quiz-single-select.html">
+<link rel="import" href="templates/topeka-quiz-single-select-item.html">
+<link rel="import" href="templates/topeka-quiz-multi-select.html">
+<link rel="import" href="templates/topeka-quiz-picker.html">
+<link rel="import" href="templates/topeka-quiz-alpha-picker.html">
+<link rel="import" href="templates/topeka-quiz-true-false.html">
+<link rel="import" href="templates/topeka-quiz-four-quarter.html">
+<link rel="import" href="templates/topeka-quiz-toggle-translate.html">
+
+<polymer-element name="topeka-quiz-view" attributes="quiz" block>
+<script>
+
+  Polymer('topeka-quiz-view', {
+    
+    quizChanged: function() {
+      this.textContent = '';
+      this.view = document.createElement('topeka-quiz-' + this.quiz.type);
+      this.appendChild(this.view);
+      this.view.quiz = this.quiz;
+    },
+    
+    getScore: function() {
+      return this.view.getScore();
+    }
+    
+  });
+
+</script>
+</polymer-element>

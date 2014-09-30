@@ -1,0 +1,11 @@
+{
+  "name": "core-scroll-header-panel",
+  "private": true,
+  "dependencies": {
+    "core-field": "Polymer/core-field#master",
+    "core-icon-button": "Polymer/core-icon-button#master",
+    "core-input": "Polymer/core-input#master",
+    "core-media-query": "Polymer/core-media-query#master",
+    "core-toolbar": "Polymer/core-toolbar#master"
+  }
+}

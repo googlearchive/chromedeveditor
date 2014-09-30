@@ -1,0 +1,51 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="topeka-status-bar.html">
+
+<polymer-element name="topeka-quiz-score" attributes="selectedPage scores category avatar quizScore wide" vertical layout noscript>
+<template>
+
+  <style>
+  
+    .score {
+      width: 176px;
+      height: 176px;
+      font-size: 76px;
+      margin: 100px auto 0;
+      box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+    }
+
+    .dummy {
+      margin-bottom: 100px;
+    }
+    
+    topeka-status-bar {
+      position: relative;
+      box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.16);
+    }
+    
+    topeka-status-bar.wide {
+      width: 512px;
+      margin: 0 auto;
+    }
+
+  </style>
+  
+  <div flex slide-down?="{{selectedPage === 'quizzes'}}">
+    <div class="score theme-bg font-light" vertical center center-justified layout hero-id="punch-bottom" hero?="{{selectedPage !== 'quizzes'}}">
+      <span cross-fade-delayed>+{{quizScore || 0}}</span>
+    </div>
+    <div class="dummy" hero-id="quizzes-content" hero?="{{selectedPage !== 'quizzes'}}"></div>
+  </div>
+
+  <topeka-status-bar class="{{ {wide: wide} | tokenList }}" avatar="{{avatar}}" scores="{{scores}}" category="{{category}}" wide="{{wide}}"></topeka-status-bar>
+  
+</template>
+</polymer-element>

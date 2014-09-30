@@ -1,0 +1,149 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="topeka-status-bar.html">
+<link rel="import" href="templates/topeka-quiz-fill-blank.html">
+<link rel="import" href="templates/topeka-quiz-fill-two-blanks.html">
+<link rel="import" href="templates/topeka-quiz-single-select.html">
+<link rel="import" href="templates/topeka-quiz-single-select-item.html">
+<link rel="import" href="templates/topeka-quiz-multi-select.html">
+<link rel="import" href="templates/topeka-quiz-picker.html">
+<link rel="import" href="templates/topeka-quiz-alpha-picker.html">
+<link rel="import" href="templates/topeka-quiz-true-false.html">
+<link rel="import" href="templates/topeka-quiz-four-quarter.html">
+<link rel="import" href="templates/topeka-quiz-toggle-translate.html">
+<link rel="import" href="../core-toolbar/core-toolbar.html">
+<link rel="import" href="../core-selector/core-selector.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-fab/paper-fab.html">
+
+<!-- note: .question element has flex for IE10 compatibility -->
+<polymer-element name="topeka-quizzes" attributes="scores category avatar wide" vertical layout>
+<template>
+
+  <link rel="stylesheet" href="topeka-quizzes.css">
+
+  <div id="quizzesPanel" class="quizzes-panel {{ {wide: wide} | tokenList }}" flex vertical layout?="{{!wide}}" slide-up?="{{parentElement.selected !== 'empty'}}" slide-down?="{{parentElement.selected === 'empty'}}">
+  
+    <div class="card {{ {answered: answered} | tokenList }}" flex?="{{!wide}}" vertical layout?="{{!wide}}" hero-p>
+    
+      <core-toolbar class="theme-bg" hero-id="punch-bottom" hero?="{{parentElement.selected !== 'empty'}}">
+      
+        <div class="question" flex cross-fade-delayed>{{quiz.question}}</div>
+        
+      </core-toolbar>
+
+      <div id="quizzesContent" class="quizzes-content" hidden?="{{!category}}" flex hero-id="quizzes-content" hero?="{{parentElement.selected !== 'empty'}}">
+      
+        <core-selector id="quizViews" notap selected="{{quiz.type}}" cross-fade-delayed on-quiz-answered="{{quizAnswered}}" on-quiz-next="{{quizDone}}">
+        
+          <topeka-quiz-alpha-picker name="alpha-picker"></topeka-quiz-alpha-picker>
+          <topeka-quiz-fill-blank name="fill-blank"></topeka-quiz-fill-blank>
+          <topeka-quiz-fill-two-blanks name="fill-two-blanks"></topeka-quiz-fill-two-blanks>
+          <topeka-quiz-four-quarter name="four-quarter"></topeka-quiz-four-quarter>
+          <topeka-quiz-multi-select name="multi-select"></topeka-quiz-multi-select>
+          <topeka-quiz-picker name="picker"></topeka-quiz-picker>
+          <topeka-quiz-single-select-item name="single-select-item"></topeka-quiz-single-select-item>
+          <topeka-quiz-single-select name="single-select"></topeka-quiz-single-select>
+          <topeka-quiz-toggle-translate name="toggle-translate"></topeka-quiz-toggle-translate>
+          <topeka-quiz-true-false name="true-false"></topeka-quiz-true-false>
+          
+        </core-selector>
+
+      </div>
+      
+      <paper-fab class="check-button {{ {correct: scores[index] > 0, incorrect: scores[index] === 0} | tokenList }}" icon="{{icon}}" on-tap="{{quizDone}}"></paper-fab>
+      
+    </div>
+    
+  </div>
+
+  <topeka-status-bar class="{{ {wide: wide} | tokenList }}" avatar="{{avatar}}" scores="{{scores}}" category="{{category}}" wide="{{wide}}" slide-up?="{{parentElement.selected === 'quizzes'}}"></topeka-status-bar>
+  
+</template>
+<script>
+
+  Polymer('topeka-quizzes', {
+    
+    wide: false,
+    answered: false,
+    icon: 'check',
+    avatar: 1,
+    
+    observe: {
+      'category': 'update'
+    },
+
+    created: function() {
+      this.category = {};
+      this.scores = [];
+    },
+    
+    resetScrollTop: function() {
+      this.$.quizzesPanel.scrollTop = 0;
+      this.$.quizzesContent.scrollTop = 0;
+    },
+
+    next: function() {
+      this.index++;
+      this.answered = false;
+      this.icon = 'check';
+      if (this.quizView) {
+       this.quizView.reset();
+      }
+    },
+
+    update: function() {
+      if (this.scores && this.category) {
+        this.index = this.scores.length;
+        this.indexChanged();
+      }
+    },
+    
+    indexChanged: function() {
+      if (this.category.quizzes) {
+        this.quiz = this.category.quizzes[this.index];
+      }
+    },
+    
+    quizChanged: function() {
+      if (this.quizView) {
+        this.quizView.reset();
+      }
+      if (this.quiz) {
+        this.quizView = this.$.quizViews.querySelector(
+            '[name="' + this.quiz.type + '"]');
+        if (this.quizView) {
+          this.quizView.quiz = this.quiz;
+        }
+      }
+    },
+    
+    quizDone: function() {
+      var s = this.quizView.getScore();
+      if (s > 0) {
+        this.icon = 'social:mood';
+      } else {
+        this.icon = 'close';
+      }
+      this.scores[this.index] = s;
+
+      this.async(function() {
+        this.fire('quiz-done', {score: s});
+      }, null, parseInt(CoreStyle.g.transitions.duration));
+    },
+    
+    quizAnswered: function() {
+      this.answered = true;
+    }
+    
+  });
+
+</script>
+</polymer-element>

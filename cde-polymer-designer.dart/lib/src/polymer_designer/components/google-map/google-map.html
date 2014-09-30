@@ -1,0 +1,652 @@
+<!-- Copyright (c) 2014 Google Inc. All rights reserved. -->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../google-apis/google-apis.html">
+
+<!--
+The `google-map-marker` element represents a map marker. It is used as a
+child of `google-map`.
+
+<b>Example</b>:
+
+    <google-map latitude="37.77493" longitude="-122.41942">
+      <google-map-marker latitude="37.779" longitude="-122.3892"
+          title="Go Giants!"></google-map-marker>
+    </google-map>
+
+<b>Example</b> - marker with info window (children create the window content):
+
+    <google-map-marker latitude="37.77493" longitude="-122.41942">
+      <img src="image.png">
+    </google-map-marker>
+
+<b>Example</b> - a draggable marker:
+
+    <google-map-marker latitude="37.77493" longitude="-122.41942"
+         draggable="true"></google-map-marker>
+
+<b>Example</b> - hide a marker:
+
+    <google-map-marker latitude="37.77493" longitude="-122.41942"
+        hidden></google-map-marker>
+
+@element google-map-marker
+@status alpha
+@homepage http://googlewebcomponents.github.io/google-map
+-->
+<polymer-element name="google-map-marker" attributes="icon">
+<template>
+  <style>
+    :host {
+      display: none;
+    }
+  </style>
+</template>
+<script>
+  (function() {
+
+    Polymer({
+
+      /**
+       * A Google Maps marker object.
+       *
+       * @property marker
+       * @type google.maps.Marker
+       * @default null
+       */
+      marker: null,
+
+      /**
+       * The Google map object.
+       *
+       * @property map
+       * @type google.maps.Map
+       * @default null
+       */
+      map: null,
+
+      /**
+       * A Google Map Infowindow object.
+       *
+       * @property info
+       * @type google.map.InfoWindow
+       * @default null
+       */
+      info: null,
+
+      /**
+       * Image URL for the marker icon.
+       *
+       * @attribute icon
+       * @type string
+       * @default null
+       */
+      icon: null,
+
+      publish: {
+        /**
+         * The marker's longitude coordinate.
+         *
+         * @attribute longitude
+         * @type number
+         * @default null
+         */
+        longitude: {value: null, reflect: true},
+
+        /**
+         * The marker's latitude coordinate.
+         *
+         * @attribute latitude
+         * @type number
+         * @default null
+         */
+        latitude: {value: null, reflect: true}
+      },
+
+      observe: {
+        latitude: 'updatePosition',
+        longitude: 'updatePosition',
+      },
+
+      updatePosition: function() {
+        if (this.marker && this.latitude != null && this.longitude != null) {
+          this.marker.setPosition({
+            lat: parseFloat(this.latitude),
+            lng: parseFloat(this.longitude)
+          });
+        }
+      },
+
+      iconChanged: function() {
+        if (this.marker) {
+          this.marker.setIcon(this.icon);
+        }
+      },
+
+      mapChanged: function() {
+        if (this.map && this.map instanceof google.maps.Map) {
+          this.mapReady();
+        }
+      },
+
+      contentChanged: function() {
+        this.onMutation(this, this.contentChanged); // Watch for future updates.
+
+        var content = this.innerHTML;
+        if (content) {
+          if (!this.info) {
+            // Create a new infowindow
+            this.info = new google.maps.InfoWindow();
+            this.infoHandler_ = google.maps.event.addListener(this.marker, 'click', function() {
+              this.info.open(this.map, this.marker);
+            }.bind(this));
+          }
+          this.info.setContent(content);
+        } else {
+          if (this.info) {
+            // Destroy the existing infowindow.  It doesn't make sense to have an empty one.
+            google.maps.event.removeListener(this.infoHandler_);
+            this.info = null;
+          }
+        }
+      },
+
+      mapReady: function() {
+        this.marker = new google.maps.Marker({
+          map: this.map,
+          position: new google.maps.LatLng(this.latitude, this.longitude),
+          title: this.title,
+          draggable: this.draggable,
+          visible: !this.hidden,
+          icon: this.icon
+        });
+        this.contentChanged();
+        setupDragHandler_.bind(this)();
+      },
+
+      attributeChanged: function(attrName, oldVal, newVal) {
+        if (!this.marker) {
+          return;
+        }
+
+        // Cannot use *Changed watchers for native properties.
+        switch (attrName) {
+          case 'hidden':
+            this.marker.setVisible(!this.hidden);
+            break;
+          case 'draggable':
+            this.marker.setDraggable(this.draggable);
+            setupDragHandler_.bind(this)();
+            break;
+          case 'title':
+            this.marker.setTitle(this.title);
+            break;
+        }
+      }
+
+    });
+
+    function onDragEnd_(e, details, sender) {
+      this.latitude = e.latLng.lat();
+      this.longitude = e.latLng.lng();
+    }
+
+    function setupDragHandler_() {
+      if (this.draggable) {
+        this.dragHandler_ = google.maps.event.addListener(
+            this.marker, 'dragend', onDragEnd_.bind(this));
+      } else {
+        google.maps.event.removeListener(this.dragHandler_);
+        this.dragHandler_ = null;
+      }
+    }
+
+  })();
+
+</script>
+</polymer-element>
+
+<!--
+The `google-map` element renders a Google Map.
+
+<b>Example</b>:
+
+    <style>
+      google-map {
+        display: block;
+        height: 600px;
+      }
+    </style>
+    <google-map latitude="37.77493" longitude="-122.41942"></google-map>
+
+<b>Example</b> - add markers to the map and ensure they're in view:
+
+    <google-map latitude="37.77493" longitude="-122.41942" fitToMarkers>
+      <google-map-marker latitude="37.779" longitude="-122.3892"
+          draggable="true" title="Go Giants!"></google-map-marker>
+      <google-map-marker latitude="37.777" longitude="-122.38911"></google-map-marker>
+    </google-map>
+
+<b>Example</b>:
+
+    <google-map disableDefaultUI showCenterMarker zoom="15"></google-map>
+    <script>
+      var map = document.querySelector('google-map');
+      map.latitude = 37.77493;
+      map.longitude = -122.41942;
+      map.addEventListener('google-map-ready', function(e) {
+        alert('Map loaded!');
+      });
+    </script>
+
+<b>Example</b> - with Google directions, using data-binding inside another Polymer element
+
+    <google-map map="{{map}}"></google-map>
+    <google-map-directions map="{{map}}"
+        startAddress="San Francisco" endAddress="Mountain View">
+    </google-map-directions>
+
+<b>Example</b> - not all map options are included as attributes out of the box.
+To add custom map options, you can extend this element:
+
+    <polymer-element name="my-google-map" extends="google-map">
+      <script>
+        Polymer({
+
+          getMapOptions: function() {
+            var mapOptions = this.super();
+            mapOptions["streetViewControl"] = false;
+            return mapOptions;
+          }
+
+        });
+      </script>
+    </polymer-element>
+
+@element google-map
+@homepage http://googlewebcomponents.github.io/google-map
+@blurb Element wrapper around Google Maps API.
+-->
+<!--
+Fired when the Maps API has fully loaded.
+
+@event google-map-ready
+-->
+
+<!-- TODO(ericbidelman):
+- Handle removals and support .innerHTML = ''.
+- Use <google-maps-api>.api instead of google.maps namespace.
+-->
+<polymer-element name="google-map" attributes="apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries">
+<template>
+
+  <style>
+
+    :host {
+      position: relative;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+  </style>
+
+  <google-maps-api apiKey="{{apiKey}}" version="{{version}}" on-api-load="{{mapApiLoaded}}" libraries="{{libraries}}"></google-maps-api>
+
+  <div id="map"></div>
+
+  <content id="markers" select="google-map-marker"></content>
+
+</template>
+<script>
+
+  Polymer({
+
+    /**
+     * A Maps API key. To obtain an API key, see developers.google.com/maps/documentation/javascript/tutorial#api_key.
+     *
+     * @property apiKey
+     * @type string
+     */
+    apiKey: null,
+
+    /**
+     * A latitude to center the map on.
+     *
+     * @attribute latitude
+     * @type number
+     * @default 37.77493
+     */
+    latitude: 37.77493,
+
+    /**
+     * A comma separated list (e.g. "places,geometry") of libraries to load
+     * with this map. Defaults to "places". For more information see
+     * https://developers.google.com/maps/documentation/javascript/libraries.
+     *
+     * @attribute libraries
+     * @type string
+     * @default "places"
+     */
+    libraries: "places",
+
+    /**
+     * A longitude to center the map on.
+     *
+     * @attribute longitude
+     * @type number
+     * @default -122.41942
+     */
+    longitude: -122.41942,
+
+    /**
+     * A zoom level to set the map to.
+     *
+     * @attribute zoom
+     * @type number
+     * @default 10
+     */
+    zoom: 10,
+
+    /**
+     * When set, displays a map marker at the center point.
+     *
+     * @attribute showCenterMarker
+     * @type boolean
+     * @default false
+     */
+    showCenterMarker: false,
+
+    /**
+     * Map type to display. One of 'roadmap', 'satellite', 'hybrid', 'terrain'.
+     *
+     * @attribute mapType
+     * @type string
+     * @default roadmap
+     */
+    mapType: 'roadmap', // roadmap, satellite, hybrid, terrain
+
+    /**
+     * Version of the Google Maps API to use.
+     *
+     * @attribute version
+     * @type string
+     * @default 3.exp
+     */
+    version: '3.exp',
+
+    /**
+     * If set, removes the map's default UI controls.
+     *
+     * @attribute disableDefaultUI
+     * @type boolean
+     * @default false
+     */
+    disableDefaultUI: false,
+
+    /**
+     * If set, the zoom level is set such that all markers (google-map-marker children) are brought into view.
+     *
+     * @attribute fitToMarkers
+     * @type boolean
+     * @default false
+     */
+    fitToMarkers: false,
+
+    /**
+     * If false, prevent the user from zooming the map interactively.
+     *
+     * @attribute zoomable
+     * @type boolean
+     * @default true
+     */
+    zoomable: true,
+
+    /**
+     * If set, custom styles can be applied to the map.
+     * For style doucmentation see developers.google.com/maps/documentation/javascript/reference#MapTypeStyle
+     *
+     * @attribute styles
+     * @type JSON encoded array
+     * @default null
+     */
+    styles: {},
+
+    /**
+     * A maximum zoom level which will be displayed on the map.
+     *
+     * @attribute maxZoom
+     * @type number
+     * @default null
+     */
+    maxZoom: null,
+
+    /**
+     * A minimum zoom level which will be displayed on the map.
+     *
+     * @attribute minZoom
+     * @type number
+     * @default null
+     */
+    minZoom: null,
+
+    observe: {
+      latitude: 'updateCenter',
+      longitude: 'updateCenter'
+    },
+
+    created: function() {
+      this.markers = [];
+    },
+
+    attached: function() {
+      this.resize();
+    },
+
+    mapApiLoaded: function() {
+      this.map = new google.maps.Map(this.$.map, this.getMapOptions());
+
+      this.updateCenter();
+      this.updateMarkers();
+      this.addMapListeners();
+
+      this.fire('google-map-ready');
+    },
+
+    getMapOptions: function() {
+      var mapOptions = {
+        zoom: this.zoom,
+        mapTypeId: this.mapType,
+        disableDefaultUI: this.disableDefaultUI,
+        disableDoubleClickZoom: !this.zoomable,
+        scrollwheel: this.zoomable,
+        styles: this.styles,
+        maxZoom: Number(this.maxZoom),
+        minZoom: Number(this.minZoom)
+      };
+
+      // Only override the default if set.
+      // We use getAttribute here because the default value of this.draggable = false even when not set.
+      if (this.getAttribute("draggable") != null) {
+        mapOptions.draggable = this.draggable
+      }
+      return mapOptions;
+    },
+
+    updateMarkers: function() {
+      this.markers = Array.prototype.slice.call(
+          this.$.markers.getDistributedNodes());
+
+      if (this.centerMarker) {
+        this.markers.push(this.centerMarker);
+      }
+
+      this.onMutation(this, this.updateMarkers); // Watch for future updates.
+
+      // Set the map on each marker and zoom viewport to ensure they're in view.
+      if (this.markers.length && this.map) {
+        for (var i = 0, m; m = this.markers[i]; ++i) {
+          m.map = this.map;
+        }
+
+        if (this.fitToMarkers) {
+          this.fitToMarkersChanged();
+        }
+      }
+    },
+
+    /**
+     * Clears all markers from the map.
+     *
+     * @method clear
+     */
+    clear: function() {
+      for (var i = 0, m; m = this.markers[i]; ++i) {
+        m.marker.setMap(null);
+      }
+    },
+
+    resize: function() {
+      if (this.map) {
+        google.maps.event.trigger(this.map, 'resize');
+        this.updateCenter();
+      }
+    },
+
+    updateCenter: function() {
+      if (!this.map) {
+        return;
+      } else if (typeof this.latitude !== 'number' || isNaN(this.latitude)) {
+        throw new TypeError('latitude must be a number');
+      } else if (typeof this.longitude !== 'number' || isNaN(this.longitude)) {
+        throw new TypeError('longitude must be a number');
+      }
+
+      var newCenter = new google.maps.LatLng(this.latitude, this.longitude);
+      var oldCenter = this.map.getCenter();
+
+      if (!oldCenter) {
+        // If the map does not have a center, set it right away.
+        this.map.setCenter(newCenter);
+      } else {
+        // Using google.maps.LatLng returns corrected lat/lngs.
+        oldCenter = new google.maps.LatLng(oldCenter.lat(), oldCenter.lng());
+
+        // If the map currently has a center, slowly pan to the new one.
+        if (!oldCenter.equals(newCenter)) {
+          this.map.panTo(newCenter);
+        }
+      }
+      this.showCenterMarkerChanged();
+    },
+
+    zoomChanged: function() {
+      if (this.map) {
+        this.map.setZoom(Number(this.zoom));
+      }
+    },
+
+    maxZoomChanged: function() {
+      if (this.map) {
+        this.map.setOptions({maxZoom: Number(this.maxZoom)});
+      }
+    },
+
+    minZoomChanged: function() {
+      if (this.map) {
+        this.map.setOptions({minZoom: Number(this.minZoom)});
+      }
+    },
+
+    mapTypeChanged: function() {
+      if (this.map) {
+        this.map.setMapTypeId(this.mapType);
+      }
+    },
+
+    showCenterMarkerChanged: function() {
+      if (!this.map) {
+        return;
+      }
+      if (this.showCenterMarker) {
+        if (!this.centerMarker) {
+          this.centerMarker = document.createElement('google-map-marker');
+        }
+        var center = this.map.getCenter();
+        this.centerMarker.latitude = center.lat();
+        this.centerMarker.longitude = center.lng();
+      } else {
+        if (this.centerMarker) {
+          //TODO(bamnet): Clean up markers so they can be removed easier from a map.
+          this.centerMarker.marker.setMap(null);
+          this.centerMarker = null;
+        }
+      }
+      this.updateMarkers();
+    },
+
+    disableDefaultUIChanged: function() {
+      if (!this.map) {
+        return;
+      }
+      this.map.setOptions({disableDefaultUI: this.disableDefaultUI});
+    },
+
+    zoomableChanged: function() {
+      if (!this.map) {
+        return;
+      }
+      this.map.setOptions({
+        disableDoubleClickZoom: !this.zoomable,
+        scrollwheel: this.zoomable
+      });
+    },
+
+    attributeChanged: function(attrName, oldVal, newVal) {
+      if (!this.map) {
+        return;
+      }
+      // Cannot use *Changed watchers for native properties.
+      switch (attrName) {
+        case 'draggable':
+          this.map.setOptions({draggable: this.draggable});
+          break;
+      }
+    },
+
+    fitToMarkersChanged: function() {
+      // TODO(ericbidelman): respect user's zoom level.
+
+      if (this.map && this.fitToMarkers) {
+        var latLngBounds = new google.maps.LatLngBounds();
+        for (var i = 0, m; m = this.markers[i]; ++i) {
+          latLngBounds.extend(
+              new google.maps.LatLng(m.latitude, m.longitude));
+        }
+
+        // For one marker, don't alter zoom, just center it.
+        if (this.markers.length > 1) {
+          this.map.fitBounds(latLngBounds);
+        }
+
+        this.map.setCenter(latLngBounds.getCenter());
+      }
+    },
+
+    addMapListeners: function() {
+      google.maps.event.addListener(this.map, 'center_changed', function() {
+        var center = this.map.getCenter();
+        this.latitude = center.lat();
+        this.longitude = center.lng();
+      }.bind(this));
+    }
+
+  });
+
+</script>
+</polymer-element>

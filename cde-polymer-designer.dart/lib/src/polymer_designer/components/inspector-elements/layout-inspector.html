@@ -1,0 +1,113 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../x-meta/x-meta.html">
+<link rel="import" href="property-inspector.html">
+
+<polymer-element name="layout-inspector" attributes="selected dirty">
+<template>
+  <style>
+    property-inspector {
+      width: 33%;
+      box-sizing: border-box;
+      padding: 4px;
+    }
+  </style>
+  <div horizontal start wrap layout>
+    <template repeat="{{property in properties}}">
+      <property-inspector property="{{property}}" on-property-changed="{{editorChange}}" nobind></property-inspector>
+    </template>
+  </div>
+  <x-meta id="meta">
+    <property name="layout" kind="select" options=" ,horizontal,vertical" suffix="layout"></property>
+    <property name="reverse" kind="boolean"></property>
+    <property name="align" kind="select" options=" ,start,center,end"></property>
+    <property name="justify" kind="select" options=" ,start-justified,center-justified,end-justified,around-justified,justified"></property>
+    <property name="wrap" kind="select" options=" ,wrap,wrap-reverse"></property>
+    <property name="flex" kind="select" options=" ,one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve" suffix="flex"></property>
+  </x-meta>
+</template>
+<script>
+
+Polymer('layout-inspector', {
+
+  properties: null,
+
+  observe: {
+    'selected dirty': 'update'
+  },
+
+  update: function() {
+    if (this.selected) {
+      this.layoutProperties = this.makeLayoutObject(this.selected);
+      this.properties = Reflection.object(Object.create(this.layoutProperties),
+          this.$.meta.properties);
+    }
+  },
+
+  makeLayoutObject: function(element) {
+    var p$ = this.$.meta.properties, a$ = element.attributes;
+    var o = {};
+    for (var i in p$) {
+      o[i] = this.calcLayoutProperty(p$[i], a$);
+    }
+    //console.log(o);
+    return o;
+  },
+
+  calcLayoutProperty: function(meta, a$) {
+    if (meta.options) {
+      for (var i=0, o$=meta.options, o; (o=o$[i]); i++) {
+        if (a$[o]) {
+          return o;
+        }
+      }
+    }
+    if (meta.kind === 'boolean') {
+      return Boolean(a$[meta.name]);
+    }
+    return '';
+  },
+
+  editorChange: function(e) {
+    var p = e.target.property;
+    var oldValue = this.layoutProperties[p.name], newValue = p.obj[p.name];
+    if (typeof p.value === 'boolean') {
+      this.selected.removeAttribute(p.name);
+      if (newValue) {
+        this.selected.setAttribute(p.name, '');
+      }
+    } else {
+      this.selected.removeAttribute(oldValue);
+      if (p.meta.suffix) {
+        this.selected.removeAttribute(p.meta.suffix);
+      }
+      if (newValue) {
+        this.selected.setAttribute(newValue, '');
+        if (p.meta.suffix) {
+          this.selected.setAttribute(p.meta.suffix, '');
+        }
+        this.updateStyle(p);
+      }
+    }
+    this.dirty++;
+  },
+
+  updateStyle: function(property) {
+    var s$ = this.selected.__styleRule ? 
+        this.selected.__styleRule.style : this.selected.style;
+    s$.display = null;
+    if (property.name === 'flex') {
+      s$.position = s$.width = s$.height = s$.left = s$.top = null;
+    }
+  }
+
+});
+
+</script>
+</polymer-element>

@@ -1,0 +1,16 @@
+{
+  "name": "designer",
+  "private": true,
+  "dependencies": {
+    "platform": "Polymer/platform#master",
+    "code-mirror": "PolymerLabs/code-mirror#master",
+    "github-elements": "PolymerLabs/github-elements#master",
+    "x-meta": "PolymerLabs/x-meta#master",
+    "inspector-elements": "PolymerLabs/inspector-elements#master",
+    "core-elements": "Polymer/core-elements#master",
+    "paper-elements": "Polymer/paper-elements#master",
+    "paper-calculator": "Polymer/paper-calculator#master",
+    "topeka-elements": "Polymer/topeka-elements#master",
+    "more-elements": "Polymer/more-elements#master"
+  }
+}

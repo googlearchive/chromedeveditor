@@ -1,0 +1,98 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../x-meta/x-meta.html">
+<link rel="import" href="property-inspector.html">
+
+<polymer-element name="attributes-inspector" attributes="selected dirty">
+<template>
+  <template bind="{{property}}">
+    <property-inspector property="{{}}" on-property-changed="{{editorChange}}" nobind></property-inspector>
+  </template>
+  <x-meta id="meta"></x-meta>
+</template>
+<script>
+
+Polymer('attributes-inspector', {
+
+  blackList: ['id', 'class', 'style', 'designmeta', 'role', 'tabindex'],
+  observe: {
+    'selected dirty': 'update'
+  },
+
+  update: function() {
+    if (!this.selected) {
+      this.property = null;
+      return;
+    }
+    var attrs = {};
+    var a$ = this.selected.attributes;
+    for (var i=0, a; (a=a$[i]); i++) {
+      if (!this.shouldExcludeAttribute(a.name, a.value)) {
+        attrs[a.name] = a.value;
+      }
+    }
+    this.selectedAttributes = attrs; 
+  },
+
+  shouldExcludeAttribute: function(name, value) {
+    return this.blackList.indexOf(name) >= 0 || 
+        (this.selected.propertyForAttribute &&
+        this.selected.propertyForAttribute(name)) ||
+        name.match(/^(on-)|(aria)/);
+  },
+
+  selectedAttributesChanged: function() {
+    var parts = [], a$ = this.selectedAttributes;
+    for (var i in a$) {
+      parts.push(i + (a$[i] ? '="' + a$[i] + '"' : ''));
+    }
+    var value = parts.join(' ');
+    this.property = {
+      obj: {attributes: value},
+      name: 'attributes',
+      value: value
+    }
+  },
+
+  editorChange: function(e) {
+    var p = e.target.property;
+    var obj = this.valueToObject(p.obj.attributes);
+    // apply changes carefully to avoid extra setAttributes
+    for (var i in this.selectedAttributes) {
+      if (!(i in obj)) {
+        this.selected.removeAttribute(i);
+      }
+    }
+    var o;
+    for (var i in obj) {
+      o = this.selectedAttributes[i];
+      if (!o || o !== obj[i]) {
+        this.selected.setAttribute(i, obj[i]);
+      }
+    }
+    this.dirty++;
+  },
+
+  valueToObject: function(value) {
+    var o = {};
+    if (!value) {
+      return o;
+    }
+    var parts = value.trim().split(/\s/);
+    for (var i=0, p, s; (p=parts[i]); i++) {
+      s = p.split('=');
+      o[s[0]] = s[1] ? s[1].replace(/(^['"]+)|([\'"]+$)/g, '') : '';
+    }
+    return o;
+  }
+
+});
+
+</script>
+</polymer-element>
