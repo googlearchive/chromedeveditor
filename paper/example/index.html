@@ -13,7 +13,7 @@ license that can be found in the LICENSE file.
 
   <title>paper-fab</title>
 
-  <script src="packages/paper/polymer/polymer.html"></script>
+  <script src="packages/paper/platform/platform.js"></script>
 
   <link href="packages/paper/font-roboto/roboto.html" rel="import">
   <link href="packages/paper/core-icons/core-icons.html" rel="import">
@@ -95,7 +95,9 @@ license that can be found in the LICENSE file.
 
   <br>
 
-  <inline-dialog placeholder="Goto line"></inline-dialog>
+  <inline-dialog placeholder="Goto line" id="dialog">
+    <paper-input flex placeholder="Goto line"></paper-input>
+  </inline-dialog>
 
   <script type="application/dart" src="main.dart"></script>
 </body>
