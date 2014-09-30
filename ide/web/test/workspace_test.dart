@@ -473,44 +473,6 @@ defineTests() {
       });
     });
   });
-
-  group('test fileProvider', () {
-    test('read / write file', () {
-      ws.Workspace workspace = _createWorkspace();
-      MockFileSystem fs = new MockFileSystem();
-      FileEntry fileEntry = fs.createFile('test.txt', contents: "foo bar");
-      ws.File file = new ws.File(workspace, fileEntry);
-      FileContentProvider provider = new FileContentProvider(file);
-      Completer<String> contentCompleter = new Completer();
-      provider.onChange.listen((String content) {
-        contentCompleter.complete("onChange");
-      });
-
-      return provider.read().then((String text) {
-        expect(text, 'foo bar');
-        return provider.write("new bar");
-      }).then((_) => provider.read()).then((String text) {
-        expect(text, 'new bar');
-        return contentCompleter.future;
-      }).then((String changed) {
-        expect(changed, 'onChange');
-      });
-    });
-
-    test('read / write empty file', () {
-      ws.Workspace workspace = _createWorkspace();
-      MockFileSystem fs = new MockFileSystem();
-      FileEntry fileEntry = fs.createFile('test.txt', contents: "");
-      ws.File file = new ws.File(workspace, fileEntry);
-      FileContentProvider provider = new FileContentProvider(file);
-      return provider.read().then((String text) {
-        expect(text, '');
-        return provider.write("foo bar");
-      }).then((_) => provider.read()).then((String text) {
-        expect(text, 'foo bar');
-      });
-    });
-  });
 }
 
 DirectoryEntry _createSampleProject([String projectName = 'sample_project']) {

@@ -1053,13 +1053,12 @@ class File extends Resource {
 
   Future<chrome.ArrayBuffer> getBytes() => _fileEntry.readBytes();
 
-  Future<String> setContents(String contents) {
+  Future setContents(String contents) {
     return _fileEntry.writeText(contents).then((_) {
       return entry.getMetadata();
     }).then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
       workspace._fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
-      return contents;
     });
   }
 

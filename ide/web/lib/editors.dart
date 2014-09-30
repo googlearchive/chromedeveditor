@@ -489,7 +489,7 @@ class _EditorState {
  * written to / read from source.
  */
 abstract class ContentProvider {
-  Stream<String> get onChange;
+  Stream get onChange;
   Future write(String content);
   Future<String> read();
 }
@@ -498,27 +498,19 @@ abstract class ContentProvider {
  * Defines a provider of content from a [File].
  */
 class FileContentProvider implements ContentProvider {
-  bool _listening;
-
   final File file;
   StreamController _changeController;
+  StreamSubscription _changeSubscription;
 
-  // TODO(ericarnold): Implement onContentChange for external file changes.
   Stream get onChange => _changeController.stream;
 
   FileContentProvider(this.file) {
     _changeController = new StreamController.broadcast(onListen: () {
-      if (!_listening) {
-        _listening = true;
-        file.workspace.onResourceChange.listen((ResourceChangeEvent event) {
-          if (event.changes.firstWhere((ChangeDelta delta) {
-            return delta.type == EventType.CHANGE;
-          }) != null) {
-            _changeController.add(null);
-          }
-        });
-      }
-    });
+      _changeSubscription = file.workspace.onResourceChange.listen(
+          (ResourceChangeEvent event) {
+            if (event.modifiedFiles.contains(file)) _changeController.add(null);
+          });
+    }, onCancel: () => _changeSubscription.cancel());
   }
 
   Future<String> read() => file.getContents();
