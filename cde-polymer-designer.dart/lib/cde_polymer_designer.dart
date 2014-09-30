@@ -14,9 +14,13 @@ import 'package:polymer/polymer.dart';
 @CustomTag('cde-polymer-designer')
 class CdePolymerDesigner extends PolymerElement {
   // Must use the full path as viewed by a client app.
-  static const String _ENTRY_POINT =
+  static const String _LOCAL_ENTRY_POINT =
       'packages/cde_polymer_designer/src/polymer_designer/index.html';
+  static const String _ONLINE_ENTRY_POINT =
+      'https://www.polymer-project.org/tools/designer/';
   static const _STORAGE_PARTITION = 'cde-polymer-designer';
+
+  @published String entryPoint = 'local';
 
   Element _webviewElt;
   js.JsObject _webview;
@@ -44,7 +48,8 @@ class CdePolymerDesigner extends PolymerElement {
       _webview.callMethod(
           'addEventListener', ['contentload', _onWebviewContentLoad]);
       _webview['partition'] = _STORAGE_PARTITION;
-      _webview['src'] = _ENTRY_POINT;
+      _webview['src'] =
+          entryPoint == 'local'  ? _LOCAL_ENTRY_POINT : _ONLINE_ENTRY_POINT;
 
       shadowRoot.append(_webviewElt);
     });
