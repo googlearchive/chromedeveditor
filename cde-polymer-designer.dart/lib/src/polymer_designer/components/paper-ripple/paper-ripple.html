@@ -17,7 +17,7 @@ Example:
     <paper-ripple></paper-ripple>
 
 `paper-ripple` listens to "down" and "up" events so it would display ripple
-effect when touches on it.  You can also defeat the default behavior and 
+effect when touches on it.  You can also defeat the default behavior and
 manually route the down and up actions to the ripple element.  Note that it is
 important if you call downAction() you will have to make sure to call upAction()
 so that `paper-ripple` would end the animation loop.
@@ -67,6 +67,8 @@ Apply `circle` class to make the rippling effect within a circle.
     :host {
       display: block;
       position: relative;
+      border-radius: inherit;
+      overflow: hidden;
     }
 
     :host-context([noink]) {
@@ -411,7 +413,7 @@ Apply `circle` class to make the rippling effect within a circle.
           // Ripple gravitational pull to the center of the canvas.
           if (wave.endPosition) {
 
-            // This translates from the origin to the center of the view  based on the max dimension of  
+            // This translates from the origin to the center of the view  based on the max dimension of
             var translateFraction = Math.min(1, radius / wave.containerSize * 2 / Math.sqrt(2) );
 
             x += translateFraction * (wave.endPosition.x - wave.startPosition.x);
@@ -432,7 +434,8 @@ Apply `circle` class to make the rippling effect within a circle.
           var maximumWave = waveAtMaximum(wave, radius, anim);
           var waveDissipated = waveDidFinish(wave, radius, anim);
           var shouldKeepWave = !waveDissipated || maximumWave;
-          var shouldRenderWaveAgain = !waveDissipated && !maximumWave;
+          // keep rendering dissipating wave when at maximum radius on upAction
+          var shouldRenderWaveAgain = wave.mouseUpStart ? !waveDissipated : !maximumWave;
           shouldRenderNextFrame = shouldRenderNextFrame || shouldRenderWaveAgain;
           if (!shouldKeepWave || this.cancelled) {
             deleteTheseWaves.push(wave);

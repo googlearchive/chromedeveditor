@@ -147,7 +147,13 @@ Arbitrary HTML is also supported
       validateRoute: function() {
         if (this.route) {
           this.classes.some(function(c) {
-            if (c.name === this.route) {
+            // The URL fragment might be just a class name,
+            // or it might be a class name followed by a '.' and then
+            // a section of the page.
+            // We want to match on class names here, so split on '.'.
+            // E.g.: 'core-ajax.properties.xhrArgs' -> 'core-ajax'
+            //       'core-xhr' -> 'core-xhr'
+            if (c.name === this.route.split('.')[0]) {
               this.data = c;
               this.route = '';
               return;

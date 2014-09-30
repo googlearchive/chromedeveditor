@@ -9,21 +9,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   box-sizing: border-box;
   position: relative;
   display: inline-block;
+  outline: none;
 }
 
-:host(:hover) .polymer-tooltip {
+:host(:hover:not([disabled])) .core-tooltip {
   visibility: visible !important;
 }
 
-:host(:focus) .polymer-tooltip {
+:host([focused]) .core-tooltip {
   visibility: visible !important;
 }
 
-.polymer-tooltip:not(.show) {
+.core-tooltip:not(.show) {
   visibility: hidden;
 }
 
-.polymer-tooltip {
+.core-tooltip {
   position: absolute;
   font-size: 10px;
   font-family: sans-serif;
@@ -39,17 +40,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   user-select: none;
 }
 
-:host([large]) .polymer-tooltip {
+:host([large]) .core-tooltip {
   line-height: 14px;
   font-size: 14px;
   padding: 16px;
 }
 
-.polymer-tooltip.noarrow::after {
+.core-tooltip.noarrow::after {
   display: none;
 }
 
-.polymer-tooltip::after {
+.core-tooltip::after {
   position: absolute;
   border: solid transparent;
   content: '';
@@ -78,25 +79,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   right: 100%;
 }
 
-.polymer-tooltip.bottom::after {
+.core-tooltip.bottom::after {
   bottom: 100%;
   left: calc(50% - 4px);
   border-bottom-color: rgba(0,0,0,0.8);
 }
 
-.polymer-tooltip.left::after {
+.core-tooltip.left::after {
   left: 100%;
   top: calc(50% - 4px);
   border-left-color: rgba(0,0,0,0.8);
 }
 
-.polymer-tooltip.top::after {
+.core-tooltip.top::after {
   top: 100%;
   left: calc(50% - 4px);
   border-top-color: rgba(0,0,0,0.8);
 }
 
-.polymer-tooltip.right::after {
+.core-tooltip.right::after {
   right: 100%;
   top: calc(50% - 4px);
   border-right-color: rgba(0,0,0,0.8);

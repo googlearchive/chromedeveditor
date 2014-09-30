@@ -44,30 +44,30 @@ Displays formatted source documentation scraped from input urls.
 
         <template if="{{data.extends}}">
           <section class="top">
-            <h3>Extends: <a href="#{{data.extends}}">{{data.extends}}</a></h3>
+            <h3 id="{{data.name}}.extends">Extends: <a href="#{{data.extends}}">{{data.extends}}</a></h3>
           </section>
         </template>
 
         <template if="{{data.description}}">
           <section class="box top">
-            <h3>Summary</h3>
+            <h3 id="{{data.name}}.summary">Summary</h3>
             <marked-element text="{{data.description}}"></marked-element>
           </section>
         </template>
 
         <template if="{{data.attributes.length}}">
           <section class="box attribute-box">
-            <h3>Attributes</h3>
-            <template repeat="{{data.attributes}}">
+            <h3 id="{{data.name}}.attributes">Attributes</h3>
+            <template repeat="{{attribute in data.attributes}}">
               <div class="details" horizontal layout>
-                <div class="details-name" flex>
-                  <p><code>{{name}}</code></p>
+                <div class="details-name" flex id="{{data.name}}.attributes.{{attribute.name}}">
+                  <p><code>{{attribute.name}}</code></p>
                 </div>
                 <div class="details-info" flex three>
                   <p layout horizontal center justified>
-                    <code>{{type}}</code><span class="default" hidden?="{{!default}}">default: <code>{{default}}</code></span>
+                    <code>{{attribute.type}}</code><span class="default" hidden?="{{!attribute.default}}">default: <code>{{attribute.default}}</code></span>
                   </p>
-                  <marked-element text="{{description}}"></marked-element>
+                  <marked-element text="{{attribute.description}}"></marked-element>
                 </div>
               </div>
             </template>
@@ -76,17 +76,17 @@ Displays formatted source documentation scraped from input urls.
 
         <template if="{{data.properties.length}}">
           <section class="box property-box">
-            <h3>Properties</h3>
-            <template repeat="{{data.properties}}">
+            <h3 id="{{data.name}}.properties">Properties</h3>
+            <template repeat="{{property in data.properties}}">
               <div class="details" horizontal layout>
-                <div class="details-name" flex>
-                  <p><code>{{name}}</code></p>
+                <div class="details-name" flex id="{{data.name}}.properties.{{property.name}}">
+                  <p><code>{{property.name}}</code></p>
                 </div>
                 <div class="details-info" flex three>
                   <p layout horizontal center justified>
-                    <code>{{type}}</code><span class="default" hidden?="{{!default}}">default: <code>{{default}}</code></span>
+                    <code>{{property.type}}</code><span class="default" hidden?="{{!property.default}}">default: <code>{{property.default}}</code></span>
                   </p>
-                  <marked-element text="{{description}}"></marked-element>
+                  <marked-element text="{{property.description}}"></marked-element>
                 </div>
               </div>
             </template>
@@ -95,20 +95,20 @@ Displays formatted source documentation scraped from input urls.
 
         <template if="{{data.events.length}}">
           <section class="box event-box">
-            <h3>Events</h3>
-            <template repeat="{{data.events}}">
+            <h3 id="{{data.name}}.events">Events</h3>
+            <template repeat="{{event in data.events}}">
               <div class="details" horizontal layout>
-                <div class="details-name" flex>
-                  <p><code>{{name}}</code></p>
+                <div class="details-name" flex id="{{data.name}}.events.{{event.name}}">
+                  <p><code>{{event.name}}</code></p>
                 </div>
                 <div class="details-info" flex three>
-                  <marked-element text="{{description}}"></marked-element>
-                  <template if="{{params.length}}">
+                  <marked-element text="{{event.description}}"></marked-element>
+                  <template if="{{event.params.length}}">
                     <div class="params">
                       <p>Event details:</p>
-                      <template repeat="{{params}}">
-                        <p><code>{{name}}</code><span> <code>( {{type}} )</code></span></p>
-                        <p><span>{{description}}</span></p>
+                      <template repeat="{{param in event.params}}">
+                        <p><code>{{param.name}}</code><span> <code>( {{param.type}} )</code></span></p>
+                        <p><span>{{param.description}}</span></p>
                       </template>
                     </div>
                   </template>
@@ -120,20 +120,20 @@ Displays formatted source documentation scraped from input urls.
 
         <template if="{{data.methods.length}}">
           <section class="box method-box">
-            <h3>Methods</h3>
-            <template repeat="{{data.methods}}">
+            <h3 id="{{data.name}}.methods">Methods</h3>
+            <template repeat="{{method in data.methods}}">
               <div class="details" horizontal layout>
-                <div class="details-name" flex>
-                  <p><code>{{name}}</code></p>
+                <div class="details-name" flex id="{{data.name}}.methods.{{method.name}}">
+                  <p><code>{{method.name}}</code></p>
                 </div>
                 <div class="details-info" flex three>
-                  <marked-element text="{{description}}"></marked-element>
-                  <template if="{{params.length}}">
+                  <marked-element text="{{method.description}}"></marked-element>
+                  <template if="{{method.params.length}}">
                     <div class="params">
                       <p>Method parameters:</p>
-                      <template repeat="{{params}}">
-                        <p><code>{{name}}</code><span> <code>( {{type}} )</code></span></p>
-                        <p><span>{{description}}</span></p>
+                      <template repeat="{{param in method.params}}">
+                        <p><code>{{param.name}}</code><span> <code>( {{param.type}} )</code></span></p>
+                        <p><span>{{param.description}}</span></p>
                       </template>
                     </div>
                   </template>
@@ -166,6 +166,17 @@ Displays formatted source documentation scraped from input urls.
         } else {
           return data.homepage;
         }
+      },
+
+      dataChanged: function() {
+        // Wrap in async() to delay execution until the next animation frame,
+        // since the <template> contents won't be stamped at the time this is executed.
+        this.async(function() {
+          var elementToFocus = this.shadowRoot.getElementById(window.location.hash.slice(1));
+          if (elementToFocus) {
+            elementToFocus.scrollIntoView();
+          }
+        });
       }
 
     });

@@ -10,15 +10,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <title>core-scroll-header-panel: demo9</title>
-  
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
   <script src="../../platform/platform.js"></script>
-  
+
   <link rel="import" href="../core-scroll-header-panel.html">
-  <link rel="import" href="lorem-ipsum.html">
+  <link rel="import" href="sample-content.html">
   <link rel="import" href="../../core-icons/core-icons.html">
   <link rel="import" href="../../core-icons/av-icons.html">
   <link rel="import" href="../../core-toolbar/core-toolbar.html">
@@ -43,18 +43,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       right: 0;
       bottom: 0;
       left: 0;
+      background-color: #eee;
     }
-    
+
     /* background for toolbar when it is at its full size */
     core-scroll-header-panel::shadow #headerBg {
       background-image: url(images/bg9.jpg);
     }
-    
+
     /* background for toolbar when it is condensed */
     core-scroll-header-panel::shadow #condensedHeaderBg {
       background-color: transparent;
     }
-    
+
     core-field {
       background-color: #fff;
       border: 1px solid #eee;
@@ -64,9 +65,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     core-toolbar {
       background-color: transparent;
     }
-    
+
     .content {
-      padding: 10px 30px;
+      padding: 8px;
     }
 
   </style>
@@ -79,22 +80,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <core-scroll-header-panel condenses condensedHeaderHeight="64">
 
     <core-toolbar class="medium-tall">
-    
+
       <core-field flex class="bottom">
         <core-icon icon="menu"></core-icon>
         <core-input flex></core-input>
         <core-icon icon="av:mic"></core-icon>
       </core-field>
-      
+
     </core-toolbar>
-    
+
     <div class="content">
-    
-      <lorem-ipsum paragraphs="100"></lorem-ipsum>
-      
+
+      <sample-content size="100"></sample-content>
+
     </div>
-    
+
   </core-scroll-header-panel>
-  
+
 </body>
 </html>

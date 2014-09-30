@@ -17,7 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   overflow: hidden;
 }
 
-#drawer {
+core-selector > #drawer {
   position: absolute;
   top: 0;
   left: 0;
@@ -27,7 +27,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   -mox-box-sizing: border-box;
 }
 
-.transition #drawer {
+.transition > #drawer {
   transition: -webkit-transform ease-in-out 0.3s, width ease-in-out 0.3s;
   transition: transform ease-in-out 0.3s, width ease-in-out 0.3s;
 }
@@ -35,12 +35,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 /*
 right-drawer: make drawer on the right side
 */
-.right-drawer #drawer {
+.right-drawer > #drawer {
   left: auto;
   right: 0;
 }
 
-.right-drawer.transition #drawer {
+.right-drawer.transition > #drawer {
   transition: -webkit-transform ease-in-out 0.3s, width ease-in-out 0.3s;
   transition: transform ease-in-out 0.3s, width ease-in-out 0.3s;
 }
@@ -56,22 +56,22 @@ polyfill-next-selector { content: ':host [drawer]'; }
   -moz-box-sizing: border-box;
 }
 
-#main {
+core-selector > #main {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
 }
 
-.transition #main {
+.transition > #main {
   transition: left ease-in-out 0.3s, padding ease-in-out 0.3s;
 }
 
-.right-drawer #main {
+.right-drawer > #main {
   left: 0;
 }
 
-.right-drawer.transition #main {
+.right-drawer.transition > #main {
   transition: right ease-in-out 0.3s, padding ease-in-out 0.3s;
 }
 
@@ -130,7 +130,7 @@ polyfill-next-selector { content: ':host .narrow-layout > #drawer > [drawer]'; }
   padding: 0;
 }
 
-.narrow-layout > #main:not(.core-selected) #scrim,
+.narrow-layout > #main:not(.core-selected) > #scrim,
 .dragging #scrim {
   visibility: visible;
   opacity: 1;

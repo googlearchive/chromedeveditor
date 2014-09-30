@@ -95,9 +95,19 @@ Use `mode` to control the header and scrolling behavior.
   Polymer('core-header-panel', {
 
     /**
-     * Fired when the content has been scrolled.  `details.target` returns
+     * Fired when the content has been scrolled.  `event.detail.target` returns
      * the scrollable element which you can use to access scroll info such as
      * `scrollTop`.
+     *
+     *     <core-header-panel on-scroll="{{scrollHandler}}">
+     *       ...
+     *     </core-header-panel>
+     *
+     *
+     *     scrollHandler: function(event) {
+     *       var scroller = event.detail.target;
+     *       console.log(scroller.scrollTop);
+     *     }
      *
      * @event scroll
      */

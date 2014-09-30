@@ -10,15 +10,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <title>core-scroll-header-panel: demo2</title>
-  
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
   <script src="../../platform/platform.js"></script>
-  
+
   <link rel="import" href="../core-scroll-header-panel.html">
-  <link rel="import" href="lorem-ipsum.html">
+  <link rel="import" href="sample-content.html">
   <link rel="import" href="../../core-toolbar/core-toolbar.html">
   <link rel="import" href="../../core-icon-button/core-icon-button.html">
 
@@ -41,15 +41,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       bottom: 0;
       left: 0;
     }
-    
+
     core-toolbar {
       background-color: #4285f4;
       color: #f1f1f1;
       fill: #f1f1f1;
     }
-    
+
     .content {
-      padding: 10px 30px;
+      padding: 8px;
+      background-color: #eee;
     }
 
   </style>
@@ -60,23 +61,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <core-scroll-header-panel condenses>
 
     <core-toolbar class="tall">
-    
+
       <core-icon-button icon="arrow-back"></core-icon-button>
       <div flex></div>
       <core-icon-button icon="search"></core-icon-button>
       <core-icon-button icon="more-vert"></core-icon-button>
-      
+
       <div class="bottom indent">Title</div>
-      
+
     </core-toolbar>
-    
+
     <div class="content">
-    
-      <lorem-ipsum paragraphs="100"></lorem-ipsum>
-      
+
+      <sample-content size="100"></sample-content>
+
     </div>
-    
+
   </core-scroll-header-panel>
-  
+
 </body>
 </html>

@@ -51,11 +51,14 @@ To change the radio unchecked color:
 -->
 
 <link rel="import" href="../paper-ripple/paper-ripple.html">
+<link rel="import" href="../core-a11y-keys/core-a11y-keys.html">
 
 <polymer-element name="paper-radio-button" role="radio" tabindex="0" aria-checked="false">
 <template>
 
   <link rel="stylesheet" href="paper-radio-button.css">
+
+  <core-a11y-keys target="{{}}" keys="space" on-keys-pressed="{{tap}}"></core-a11y-keys>
   
   <div id="radioContainer" class="{{ {labeled: label} | tokenList }}">
   

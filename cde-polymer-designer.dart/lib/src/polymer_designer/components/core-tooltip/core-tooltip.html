@@ -33,6 +33,12 @@ content.
       <img src="image.jpg">
     </core-tooltip>
 
+<b>Example</b> - disable the tooltip.
+
+    <core-tooltip label="Disabled label never shows" disabled>
+      ...
+    </core-tooltip>
+
 <b>Example</b> - rich tooltip using the `tip` attribute:
 
     <core-tooltip>
@@ -54,10 +60,12 @@ You can customize this attribute with the `tipAttribute` attribute:
 
 @group Polymer Core Elements
 @element core-tooltip
-@homepage http://polymer.github.io/core-tooltip
+@extends paper-focusable
+@homepage http://www.polymer-project.org/components/core-tooltip/index.html
 -->
 
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-focusable/paper-focusable.html">
 
 <!-- TODO: would be nice to inherit from label to get .htmlFor, and .control,
            but the latter is readonly. -->
@@ -65,11 +73,12 @@ You can customize this attribute with the `tipAttribute` attribute:
 <!-- TODO: detect mobile and apply the .large class, instead of manual
            control. -->
 <!-- TODO: possibly reuse core-overlay. -->
-<polymer-element name="core-tooltip" attributes="noarrow position label show tipAttribute" tabindex="0">
+<polymer-element name="core-tooltip" extends="paper-focusable" attributes="noarrow position label show tipAttribute" role="tooltip">
 <template>
 
   <link rel="stylesheet" href="core-tooltip.css">
-  <div id="tooltip" hidden?="{{!hasTooltipContent}}" class="polymer-tooltip {{position}} {{ {noarrow: noarrow, show: show} | tokenList}}">
+  <div id="tooltip" hidden?="{{!hasTooltipContent}}"
+       class="core-tooltip {{position}} {{ {noarrow: noarrow, show: show && !disabled} | tokenList}}">
     <content id="c" select="[{{tipAttribute}}]">{{label}}</content>
   </div>
 
@@ -99,7 +108,7 @@ You can customize this attribute with the `tipAttribute` attribute:
 
     publish: {
       /**
-       * If true, the tooltip displays by default.
+       * Forces the tooltip to display. If `disabled` is set, this property is ignored.
        *
        * @attribute show
        * @type boolean

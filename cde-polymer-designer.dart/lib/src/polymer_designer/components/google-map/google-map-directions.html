@@ -34,17 +34,17 @@ Fired whenever the directions service returns a result.
   @param {object} detail.response The directions service response.
 -->
 
-<polymer-element name="google-map-directions" attributes="map startAddress endAddress travelMode response">
+<polymer-element name="google-map-directions" attributes="map startAddress endAddress travelMode response libraries">
   <template>
     <style>
       :host {
         display: none;
       }
     </style>
-    <google-maps-api on-api-load="{{mapApiLoaded}}"></google-maps-api>
+    <google-maps-api on-api-load="{{mapApiLoaded}}" libraries="{{libraries}}"></google-maps-api>
   </template>
   <script>
-    Polymer('google-map-directions', {
+    Polymer({
 
       /**
        * The Google map object.
@@ -81,6 +81,21 @@ Fired whenever the directions service returns a result.
        * @default 'DRIVING'
        */
       travelMode: 'DRIVING',
+
+      /**
+       * A comma separated list (e.g. "places,geometry") of libraries to load
+       * with this map. Defaults to "places". For more information see
+       * https://developers.google.com/maps/documentation/javascript/libraries.
+       *
+       * Note, this needs to be set to the same value as the one used on <google-map>.
+       * If you're overriding that element's `libraries` property, this one also
+       * needs to be set to the Maps API loads the library code.
+       *
+       * @attribute libraries
+       * @type string
+       * @default "places"
+       */
+      libraries: "places",
 
       /**
        * The response from the directions service.

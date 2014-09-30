@@ -8,9 +8,9 @@
     subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 <polymer-element name="lorem-ipsum" attributes="paragraphs">
+<script>
 
-  <script>
-
+  (function() {
     var strings = [
       'Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea, id minim maiestatis incorrupte duo. Dolorum verterem ad ius, his et nullam verterem. Eu alia debet usu, an doming tritani est. Vix ad ponderum petentium suavitate, eum eu tempor populo, graece sententiae constituam vim ex. Cu torquatos reprimique neglegentur nec, voluptua periculis has ut, at eos discere deleniti sensibus.',
       'Ut labores minimum atomorum pro. Laudem tibique ut has. No nam ipsum lorem aliquip, accumsan quaerendum ei usu. Maiestatis vituperatoribus qui at, ne suscipit volutpat tractatos nam. Nonumy semper mollis vis an, nam et harum detracto. An pri dolor percipitur, vel maluisset disputationi te.',
@@ -23,20 +23,20 @@
       'Detracto suavitate repudiandae no eum. Id adhuc minim soluta nam, novum denique ad eum. At mucius malorum meliore his, te ferri tritani cum, eu mel legendos ocurreret. His te ludus aperiam malorum, mundi nominati deseruisse pro ne, mel discere intellegat in. Vero dissentiunt quo in, vel cu meis maiestatis adversarium. In sit summo nostrum petentium, ea vix amet nullam minimum, ornatus sensibus theophrastus ex nam.',
       'Iisque perfecto dissentiet cum et, sit ut quot mandamus, ut vim tibique splendide instructior. Id nam odio natum malorum, tibique copiosae expetenda mel ea. Mea melius malorum ut. Ut nec tollit vocent timeam. Facer nonumy numquam id his, munere salutatus consequuntur eum et, eum cotidieque definitionem signiferumque id. Ei oblique graecis patrioque vis, et probatus dignissim inciderint vel. Sed id paulo erroribus, autem semper accusamus in mel.'
     ];
-  
+
     Polymer('lorem-ipsum', {
-      
-      paragraphs: 1,
-      
+
+      paragraphs: 0,
+
       paragraphsChanged: function() {
         this.innerHTML = '';
         for (var i = 0; i < this.paragraphs; i++) {
           this.innerHTML += '<p>' + strings[Math.floor(Math.random() * strings.length)] + '</p>';
         }
       }
-      
-    });
-    
-  </script>
 
+    });
+  })();
+
+</script>
 </polymer-element>

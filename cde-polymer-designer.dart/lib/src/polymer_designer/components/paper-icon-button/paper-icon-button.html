@@ -9,79 +9,130 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <!--
 @group Paper Elements
-`paper-icon-button` is a button with an image placed at the center.
 
-Example:
+Material Design: <a href="https://spec.googleplex.com/quantum/components/buttons.html">Buttons</a>
 
-    <paper-icon-button iconSrc="star.png"></paper-icon-button>
+`paper-icon-button` is a button with an image placed at the center. When the user touches
+the button, a ripple effect emanates from the center of the button.
 
-`paper-icon-button` includes a default icon set.  Use `icon` to specify 
-which icon from the icon set to use.
-
-Example:
-
-    <paper-icon-button icon="menu"></paper-icon-button>
-
-The icons provided by `core-icons` are SVG, and you can style them with CSS.
-
-Example:
-
-    <paper-icon-button icon="favorite" style="fill:red;"></paper-icon-button>
-
+You may import `core-icons` to use with this element, or provide an URL to a custom icon.
 See `core-iconset` for more information about how to use a custom icon set.
 
+Example:
+
+    <link href="path/to/core-icons/core-icons.html" rel="import">
+
+    <paper-icon-button icon="favorite"></paper-icon-button>
+    <paper-icon-button src="star.png"></paper-icon-button>
+
+Styling
+-------
+
+Style the button with CSS as you would a normal DOM element. If you are using the icons
+provided by `core-icons`, they will inherit the foreground color of the button.
+
+    /* make a red "favorite" button */
+    <paper-icon-button icon="favorite" style="color: red;"></paper-icon-button>
+
+By default, the ripple is the same color as the foreground at 25% opacity. You may
+customize the color using this selector:
+
+    /* make #my-button use a blue ripple instead of foreground color */
+    #my-button::shadow #ripple {
+      color: blue;
+    }
+
+The opacity of the ripple is not customizable via CSS.
+
+Accessibility
+-------------
+
+The button is accessible by default if you use the `icon` property. By default, the
+`aria-label` attribute will be set to the `icon` property. If you use a custom icon,
+you should ensure that the `aria-label` attribute is set.
+
+    <paper-icon-button src="star.png" aria-label="star"></paper-icon-button>
+
 @element paper-icon-button
-@extends paper-button
+@extends paper-button-base
 @homepage github.io
 -->
 
+<link href="../polymer/polymer.html" rel="import">
 <link href="../core-icon/core-icon.html" rel="import">
-<link href="../paper-button/paper-button.html" rel="import">
+<link href="../paper-button/paper-button-base.html" rel="import">
+<link href="../paper-ripple/paper-ripple.html" rel="import">
 
-<polymer-element name="paper-icon-button" extends="paper-button" attributes="fill">
+<polymer-element name="paper-icon-button" extends="paper-button-base" attributes="src icon" role="button">
 
   <template>
 
-    <link href="paper-icon-button.css" rel="stylesheet">
+    <style>
+      :host {
+        display: inline-block;
+        position: relative;
+        padding: 8px;
+        outline: none;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: pointer;
+        z-index: 0;
+      }
 
-    <shadow></shadow>
+      :host([disabled]) {
+        color: #c9c9c9;
+        pointer-events: none;
+        cursor: auto;
+      }
+
+      #ripple {
+        pointer-events: none;
+        z-index: -1;
+      }
+    </style>
+
+    <!-- to position to ripple behind the icon -->
+    <core-icon relative id="icon" src="{{src}}" icon="{{icon}}"></core-icon>
 
   </template>
 
   <script>
-  
-    Polymer('paper-icon-button', {
+    Polymer({
 
       publish: {
 
         /**
-         * If true, the ripple expands to a square to fill the containing box.
+         * The URL of an image for the icon. If the src property is specified,
+         * the icon property should not be.
          *
-         * @attribute fill
-         * @type boolean
-         * @default false
+         * @attribute src
+         * @type string
+         * @default ''
          */
-        fill: {value: false, reflect: true}
+        src: '',
 
-      },
+        /**
+         * Specifies the icon name or index in the set of icons available in
+         * the icon's icon set. If the icon property is specified,
+         * the src property should not be.
+         *
+         * @attribute icon
+         * @type string
+         * @default ''
+         */
+        icon: '',
 
-      ready: function() {
-        this.$.ripple.classList.add('recenteringTouch');
-        this.fillChanged();
-      },
+        recenteringTouch: true,
+        fill: false
 
-      fillChanged: function() {
-        this.$.ripple.classList.toggle('circle', !this.fill);
       },
 
       iconChanged: function(oldIcon) {
-        if (!this.label) {
-          this.setAttribute('aria-label', this.icon);
-        }
+        this.setAttribute('aria-label', this.icon);
       }
 
     });
-    
+
   </script>
-  
+
 </polymer-element>

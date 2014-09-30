@@ -10,13 +10,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <title>core-list</title>
-  <meta name="viewport" content="width=device-width">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <script src="../platform/platform.js"></script>
   <link rel="import" href="core-list.html">
   <style>
     html, body {
-      height: 100%;
       margin: 0;
+      -webkit-tap-highlight-color: transparent;
+      overflow: hidden;
     }
     
     list-test {
@@ -32,17 +33,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </style>
 </head>
-<body>
+<body fit>
 
 <list-test></list-test>
 
-<polymer-element name="list-test">
+<polymer-element name="list-test" layout vertical>
 <template>
   <style>
-    core-list {
-      height: 100%;
-    }
-
     .item {
       box-sizing: border-box;
       height: 80px;
@@ -79,15 +76,58 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     .body {
       font-size: 12px;
     }
+
+    .spaced {
+      margin: 10px;
+    }
+
+    .selection-display {
+      background: lightgray;
+      padding: 0 5px;
+      margin: 0 5px;
+    }
+
+    .narrow {
+      width: 40px;
+    }
+
   </style>
-  <core-list id="list" data="{{data}}" height="80">
+
+  <div class="spaced">
+    <button on-tap="{{addRecord}}">Add row at index:</button>
+    <input value="{{addIdx}}" class="narrow" type="number">
+    <br>
+    <button on-tap="{{deleteRecord}}">Delete row at index:</button>
+    <input value="{{deleteIdx}}" class="narrow" type="number">
+    <br>
+    <button on-tap="{{deleteAll}}">Delete all</button>
+    <button on-tap="{{deleteArray}}">Delete data array</button>
+    <button on-tap="{{initArrayEmpty}}">Init empty array</button>
+    <button on-tap="{{initArrayFull}}">Init full array</button>
+    <br>
+    <label><input type="checkbox" checked="{{selectionEnabled}}">Selection enabled</label>
+    <label><input type="checkbox" checked="{{multi}}">Multiple selection</label>
+    <br>
+    <button on-tap="{{clearSelection}}">Clear selection</button>
+    <button on-tap="{{deleteSelection}}">Delete selection</button>
+  </div>
+  <div layout horizontal wrap class="spaced">
+    Selected values: 
+    <template repeat="{{multi ? selection: [selection]}}">
+      <div class="selection-display">Id {{id}}: {{checked}} {{value}} {{['a','b','c'][type]}}</div>
+    </template>
+  </div>
+  <core-list id="list" data="{{data}}" selectionEnabled="{{selectionEnabled}}"
+    selection="{{selection}}" height="80" flex multi?={{multi}}>
     <template>
       <div class="item {{ {selected: selected} | tokenList }}">
-        <div class="message" style="background-image: url(images/{{index % 4}}.png);">
-          <span class="from">{{name}}</span>
-          <span class="timestamp">{{time}}</span>
-          <div class="subject">Infinite List. {{index}}</div>
-          <div class="body">{{details}}</div>
+        <div class="message" style="background-image: url(images/{{model.image}}.png);">
+          <span class="from">{{model.name}}</span>
+          <div class="subject">Row: {{index}}, Record ID: {{model.id}}</div>
+          <input type="checkbox" checked="{{model.checked}}">
+          <input type="number" value="{{model.value}}" class="narrow">
+          <select selectedIndex="{{model.type}}"><option>a</option><option>b</option><option>c</option></select>
+          <span class="body">{{model.details}}</span>
         </div>
       </div>
     </template>
@@ -116,9 +156,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   Polymer('list-test', {
+    addIdx: 0,
+    deleteIdx: 0,
     count: 50000,
     ready: function() {
-      this.data = this.generateData();
+      this.initArrayFull();
     },
     generateData: function() {
       var names = [], data = [];
@@ -126,24 +168,62 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         names.push(namegen.generateName(4, 8));
       }
       names.sort();
-      for (var i=0; i<this.count; i++) {
-        var name = names[i];
-        var divider = name.charAt(0);
-        if (divider === (names[i-1] || '').charAt(0)) {
-          divider = null;
-        }
+      for (i=0; i<this.count; i++) {
         data.push({
-          index: i,
-          name: name,
-          divider: divider,
+          id: i,
+          name: names[i],
           details: strings[i % 3],
-          time: '8:29pm'
+          image: i % 4,
+          value: 0,
+          type: 0,
+          checked: false
         });
       }
       return data;
     },
-    tapAction: function(e) {
-      console.log('tap', e);
+    addRecord: function() {
+      this.data.splice(this.addIdx, 0, {
+        id: ++this.count,
+        name: namegen.generateName(4, 8),
+        details: strings[this.count % 3],
+        image: this.count % 4,
+        value: 0,
+        type: 0,
+        checked: false
+      });
+    },
+    deleteRecord: function() {
+      this.data.splice(this.deleteIdx, 1);
+    },
+    deleteSelection: function() {
+      var i, idx;
+      if (this.multi) {
+        if (this.selection.length) {
+          for (i=0; i<this.selection.length; i++) {
+            idx = this.data.indexOf(this.selection[i]);
+            this.data.splice(idx, 1);
+          }
+        }
+      } else {
+        idx = this.data.indexOf(this.selection);
+        this.data.splice(idx, 1);
+      }
+    },
+    clearSelection: function() {
+      this.$.list.clearSelection();
+    },
+    deleteAll: function() {
+      this.data.splice(0,this.data.length);
+      // this.data.length = 0;
+    },
+    deleteArray: function() {
+      this.data = null;
+    },
+    initArrayEmpty: function() {
+      this.data = [];
+    },
+    initArrayFull: function() {
+      this.data = this.generateData();
     }
   });
 })();  

@@ -325,8 +325,9 @@ Fired when the Maps API has fully loaded.
     latitude: 37.77493,
 
     /**
-     * The libraries to load with this map. Defaults to "places". For more information
-     * https://developers.google.com/maps/documentation/javascript/libraries
+     * A comma separated list (e.g. "places,geometry") of libraries to load
+     * with this map. Defaults to "places". For more information see
+     * https://developers.google.com/maps/documentation/javascript/libraries.
      *
      * @attribute libraries
      * @type string
@@ -518,10 +519,12 @@ Fired when the Maps API has fully loaded.
     },
 
     updateCenter: function() {
-      if (!this.map || this.latitude == null || this.longitude == null ||
-          typeof this.latitude === 'object' ||
-          typeof this.longitude === 'object') {
+      if (!this.map) {
         return;
+      } else if (typeof this.latitude !== 'number' || isNaN(this.latitude)) {
+        throw new TypeError('latitude must be a number');
+      } else if (typeof this.longitude !== 'number' || isNaN(this.longitude)) {
+        throw new TypeError('longitude must be a number');
       }
 
       var newCenter = new google.maps.LatLng(this.latitude, this.longitude);

@@ -11,6 +11,7 @@
 :host {
   display: block;
   overflow: auto;
+  outline: none;
 }
 
 .core-list-viewport > * {

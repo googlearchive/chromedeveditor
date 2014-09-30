@@ -100,12 +100,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <core-list id="list" data="{{data}}" height="80">
     <template repeat>
       <div class="item {{ {selected: selected} | tokenList }}">
-        <div class="divider {{ {hidden: !divider} |tokenList}}">{{divider}}</div>
-        <div class="message {{ {hidden: divider} |tokenList}}" style="background-image: url(images/{{index % 4}}.png);">
-          <span class="from">{{name}}</span>
-          <span class="timestamp">{{time}}</span>
+        <div class="divider {{ {hidden: !model.divider} |tokenList}}">{{model.divider}}</div>
+        <div class="message {{ {hidden: model.divider} |tokenList}}" style="background-image: url(images/{{index % 4}}.png);">
+          <span class="from">{{model.name}}</span>
+          <span class="timestamp">{{model.time}}</span>
           <div class="subject">Infinite List. {{index}}</div>
-          <div class="body">{{details}}</div>
+          <div class="body">{{model.details}}</div>
         </div>
       </div>
     </template>

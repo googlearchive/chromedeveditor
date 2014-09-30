@@ -148,6 +148,7 @@ or class `content` to delineate the content section.
        *
        * @attribute headerHeight
        * @type number
+       * @default 0
        */
       headerHeight: 0,
 
@@ -159,6 +160,7 @@ or class `content` to delineate the content section.
        *
        * @attribute condensedHeaderHeight
        * @type number
+       * @default 0
        */
       condensedHeaderHeight: 0,
       
@@ -211,9 +213,15 @@ or class `content` to delineate the content section.
       return this.$.mainContainer;
     },
     
+    /**
+     * Invoke this to tell `core-scroll-header-panel` to re-measure the header's
+     * height.
+     *
+     * @method measureHeaderHeight
+     */
     measureHeaderHeight: function() {
       var header = this.header;
-      if (this.header) {
+      if (header && header.offsetHeight) {
         this.headerHeight = header.offsetHeight;
       }
     },

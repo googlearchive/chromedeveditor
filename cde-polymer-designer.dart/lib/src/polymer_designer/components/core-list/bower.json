@@ -4,5 +4,13 @@
   "dependencies": {
     "polymer": "Polymer/polymer#master",
     "core-selection": "Polymer/core-selection#master"
-  }
+  },
+  "devDependencies": {
+  	"web-component-tester": "Polymer/web-component-tester#master"
+  },
+  "ignore": [
+  	"/*",
+  	"!core-list.css",
+  	"!core-list.html"
+  ]
 }

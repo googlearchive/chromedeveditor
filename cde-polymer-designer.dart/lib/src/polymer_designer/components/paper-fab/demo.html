@@ -23,6 +23,7 @@ license that can be found in the LICENSE file.
 
     body {
       font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      font-size: 14px;
       margin: 0;
       padding: 24px;
       -webkit-user-select: none;
@@ -31,12 +32,19 @@ license that can be found in the LICENSE file.
       user-select: none;
       -webkit-tap-highlight-color: rgba(0,0,0,0);
       -webkit-touch-callout: none;
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
+    }
+
+    section {
+      padding: 20px 0;
+    }
+
+    section > div {
+      padding: 14px;
+      font-size: 16px;
     }
 
     paper-fab {
-      color: #FFF;
+      color: #fff;
       margin-right:2em;
     }
 
@@ -50,7 +58,6 @@ license that can be found in the LICENSE file.
 
     paper-fab.yellow {
       background: #ffeb3b;
-      color: #000;
     }
 
   </style>
@@ -58,15 +65,23 @@ license that can be found in the LICENSE file.
 </head>
 <body unresolved>
 
-  <h3>Regular</h3>
+  <section>
 
-  <paper-fab icon="arrow-forward"></paper-fab>
-  <paper-fab icon="create" class="blue"></paper-fab>
+    <div>Regular</div>
 
-  <h3>Mini</h3>
+    <paper-fab icon="arrow-forward"></paper-fab>
+    <paper-fab icon="create" class="blue"></paper-fab>
 
-  <paper-fab icon="done" class="mini green"></paper-fab>
-  <paper-fab icon="reply" class="mini yellow"></paper-fab>
+  </section>
+
+  <section>
+
+    <div>Mini</div>
+
+    <paper-fab mini icon="done" class="green"></paper-fab>
+    <paper-fab mini icon="reply" class="yellow"></paper-fab>
+
+  </section>
 
 </body>
 </html>
