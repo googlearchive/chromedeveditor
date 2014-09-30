@@ -111,7 +111,7 @@ class TextEditor extends Editor {
     _outline.visible = supportsOutline;
     // TODO(devoncarew): Instead of ace.dart knowing about the toggle outline
     // button, the button should instead listen to the enablement of the
-    // 'toggle-outline' command.
+    // 'toggle-outline' command (#3478).
     _toggleOutlineButton.disabled = !supportsOutline;
     aceManager._aceEditor.readOnly = readOnly;
   }
@@ -140,9 +140,7 @@ class TextEditor extends Editor {
       _outline.visible = false;
     }
 
-    if (!_toggleOutlineButton.disabled) {
-      _toggleOutlineButton.disabled = true;
-    }
+    _toggleOutlineButton.disabled = true;
 
     saveState();
   }
