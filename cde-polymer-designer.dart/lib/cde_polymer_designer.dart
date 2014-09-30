@@ -151,17 +151,22 @@ class CdePolymerDesigner extends PolymerElement {
    * Polymer Designer.
    */
   Future<String> getCode() {
-    _codeExported = new Completer<String>();
-    // Just in case we are called too early, wait until the webview is ready.
-    _webviewReady.future.then((_) {
-      // The request is received and handled by [_designerProxy], which
-      // asynchronously returns the result via a chrome.runtime.sendMessage,
-      // received and handled by [_designProxyListener], which completes the
-      // [_codeExported] completer with the code string.
-      _executeScriptInWebview(r'''
-          window.postMessage({action: 'export_code'}, '*');
-      ''');
-    });
+    if (_codeExported == null) {
+      _codeExported = new Completer<String>();
+      // Just in case we are called too early, wait until the webview is ready.
+      _webviewReady.future.then((_) {
+        // The request is received and handled by [_designerProxy], which
+        // asynchronously returns the result via a chrome.runtime.sendMessage,
+        // received and handled by [_designProxyListener], which completes the
+        // [_codeExported] completer with the code string.
+        _executeScriptInWebview(r'''
+            window.postMessage({action: 'export_code'}, '*');
+        ''');
+      });
+    } else {
+      // There already is a pending [getCode] request: just fall through
+      // to returning the same future to the new caller.
+    }
     return _codeExported.future;
   }
 
@@ -215,6 +220,8 @@ class CdePolymerDesigner extends PolymerElement {
     // TODO(ussuri): Check the sender?
     if (event.message['type'] == 'export_code_response') {
       _codeExported.complete("${event.message['code']}");
+      // Null the completer so new [getCode] requests can work properly. 
+      _codeExported = null;
     }
   }
 
