@@ -1,0 +1,3 @@
+[submodule "x-tags/x-tag"]
+	path = x-tags/x-tag
+	url = git://github.com/pennyfx/x-tag-demo.git

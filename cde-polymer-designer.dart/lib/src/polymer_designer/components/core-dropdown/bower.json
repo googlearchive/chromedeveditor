@@ -1,0 +1,11 @@
+{
+  "name": "core-dropdown",
+  "private": false,
+  "dependencies": {
+  	"polymer": "Polymer/polymer#master",
+  	"core-icon": "Polymer/core-icon#master",
+  	"core-icon-button": "Polymer/core-icon-button#master",
+  	"core-icons": "Polymer/core-icons#master",
+    "core-overlay": "Polymer/core-overlay#master"
+  }
+}

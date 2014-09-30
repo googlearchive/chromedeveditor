@@ -1,0 +1,12 @@
+{
+    "name": "core-dropdown-menu",
+    "private": false,
+    "dependencies": {
+        "polymer": "Polymer/polymer#master",
+        "core-dropdown": "Polymer/core-dropdown#master",
+        "core-icon": "Polymer/core-icon#master",
+        "core-icons": "Polymer/core-icons#master",
+        "core-item": "Polymer/core-item#master",
+        "core-menu": "Polymer/core-menu#master"
+    }
+}

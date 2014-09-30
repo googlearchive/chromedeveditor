@@ -1,0 +1,11 @@
+{
+  "name": "core-tooltip",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master",
+    "paper-focusable": "Polymer/paper-focusable#master",
+
+    "core-icon-button": "Polymer/core-icon-button#master",
+    "paper-fab": "Polymer/paper-fab#master"
+  }
+}

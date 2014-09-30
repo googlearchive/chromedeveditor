@@ -1,0 +1,75 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../topeka-quiz-base.html">
+<link rel="import" href="../../core-selector/core-selector.html">
+<link rel="import" href="../../paper-item/paper-item.html">
+
+<polymer-element name="topeka-quiz-single-select-item" extends="topeka-quiz-base">
+<template>
+
+  <style>
+    :host {
+      padding: 40px 0px;
+    }
+    
+    :host-context(.wide) {
+      padding: 40px 0px 48px;
+    }
+
+    :host paper-item {
+      padding: 3px 28px;
+    }
+    
+    :host-context(.wide) paper-item {
+      padding: 3px 36px;
+    }
+
+    paper-item {
+      margin: 3px 0;
+      -webkit-transition: background-color 1s;
+      transition: background-color 1s;
+    }
+
+    paper-item.core-selected {
+      background-color: #b2ebf2;
+    }
+
+    paper-item::shadow #ripple {
+      color: #7cd9e6;
+    }
+
+    .letter {
+      padding-right: 24px;
+    }
+    
+
+  </style>
+
+  <div id="choices">
+
+    <template repeat="{{item, i in quiz.options}}">
+
+      <paper-item><span class="letter">{{i | computeLetter}}.</span> {{item}}</paper-item>
+
+    </template>
+
+  </div>
+
+  <core-selector target="{{$.choices}}" selected="{{value}}"></core-selector>
+
+</template>
+<script>
+  Polymer({
+    computeLetter: function(i) {
+      return String.fromCharCode(65 + i);
+    }
+  });
+</script>
+</polymer-element>

@@ -1,0 +1,117 @@
+/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  overflow: hidden;
+}
+
+.results-panel {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+:host([animate]) .results-panel {
+  overflow: visible;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  position: relative;
+}
+
+.results-panel.wide > .card {
+  width: 512px;
+  margin: 64px auto 64px;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+}
+
+.card > core-toolbar {
+  height: 176px;
+  font-size: 24px;
+  line-height: 26px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.card > core-toolbar::shadow #topBar {
+  height: 176px;
+}
+
+.results-panel.wide core-toolbar > .title {
+  padding: 0 8px;
+}
+
+.results-content {
+  background-color: #fff;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  padding-top: 24px;
+}
+
+.results-panel.wide .results-content {
+  overflow: inherit;
+}
+
+.result-item {
+  border-bottom: 1px solid #ddd;
+  padding: 16px;
+  line-height: 22px;
+}
+
+.result-item:last-of-type {
+  border: 0;
+}
+
+.wide .result-item {
+  padding: 24px;
+}
+
+.result-item > core-icon {
+  padding-right: 32px;
+  color: #00c853;
+}
+
+.result-item > core-icon.fail {
+  color: #f50057;
+}
+
+.answer {
+  font-weight: bold;
+}
+
+paper-fab {
+  position: absolute;
+  top: 148px;
+  right: 16px;
+  background-color: #f5f5f5;
+  color: #626262;
+}
+
+:host([animate]) paper-fab {
+  visibility: hidden;
+}
+
+.results-panel.wide paper-fab {
+  right: 24px;
+}
+
+topeka-status-bar {
+  position: relative;
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.16);
+}
+
+topeka-status-bar.wide {
+  width: 512px;
+  margin: 0 auto;
+}

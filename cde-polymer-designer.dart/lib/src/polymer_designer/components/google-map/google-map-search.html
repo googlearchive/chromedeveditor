@@ -1,0 +1,83 @@
+<!-- Copyright (c) 2014 Google Inc. All rights reserved. -->
+
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+Provides Google Maps Places API functionality.
+
+See https://developers.google.com/maps/documentation/javascript/places for more
+information on the API.
+
+#### Example:
+
+    <template is="auto-binding">
+      <google-map-search map="{{map}}" query="Pizza"
+                         result="{{result}}"></google-map-search>
+      <google-map map="{{map}}" latitude="37.779"
+                  longitude="-122.3892"></google-map>
+      <div>Result: {{result.latitude}}, {{result.longitude}}</div>
+    </template>
+    <script>
+      document.querySelector('google-map-search').search();
+    </script>
+
+@element google-map-search
+@status alpha
+@homepage http://googlewebcomponents.github.io/google-map/
+-->
+
+<polymer-element name="google-map-search" attributes="query result map">
+  <script>
+    Polymer('google-map-search', {
+
+      /**
+       * The Google map object.
+       *
+       * @attribute map
+       * @type google.maps.Map
+       * @default null
+       */
+      map: null,
+
+      /**
+       * The search query.
+       *
+       * @attribute query
+       * @type string
+       * @default null
+       */
+      query: null,
+
+      /**
+       * The search result.
+       *
+       * @attribute result
+       * @type object
+       */
+
+      observe: {
+        query: 'search',
+        map: 'search'
+      },
+
+      /**
+       * Performance a search using for `query` for the search term.
+       *
+       * @method search
+       */
+      search: function() {
+        if (this.query && this.map) {
+          var places = new google.maps.places.PlacesService(this.map);
+          places.textSearch({query: this.query}, this.gotResults.bind(this));
+        }
+      },
+      gotResults: function(results, status) {
+        this.result = {
+          latitude: results[0].geometry.location.lat(),
+          longitude: results[0].geometry.location.lng(),
+          show: true
+        }
+      }
+    });
+  </script>
+</polymer-element>

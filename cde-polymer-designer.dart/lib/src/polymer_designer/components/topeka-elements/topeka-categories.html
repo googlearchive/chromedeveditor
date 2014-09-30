@@ -1,0 +1,132 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="avatars.html">
+<link rel="import" href="category-images.html">
+<link rel="import" href="category-icons.html">
+<link rel="import" href="../core-toolbar/core-toolbar.html">
+<link rel="import" href="../core-selector/core-selector.html">
+<link rel="import" href="../core-icon/core-icon.html">
+
+<polymer-element name="topeka-categories" attributes="user categories category wide allScores" vertical layout>
+<template>
+
+  <link rel="stylesheet" href="topeka-categories.css">
+  <link rel="stylesheet" href="topeka-category-themes.css">
+
+  <div class="categories-panel" flex auto>
+  
+    <core-toolbar class="category-toolbar" slide-down?="{{parentElement.selected !== 'category' && parentElement.lastSelected !== 'category'}}">
+    
+      <core-icon icon="avatars:avatar-{{user.avatar}}" class="topeka-avatar"></core-icon>
+      <div flex class="user-name">{{user.name}}</div>
+      <div>{{user.score}} pts</div>
+      
+    </core-toolbar>
+    
+    <core-selector class="category-list content {{ {wide: wide} | tokenList }}" selected="{{selected}}" tile-cascade?="{{parentElement.selected !== 'category' && parentElement.lastSelected !== 'category'}}" fade?="{{parentElement.lastSelected === 'splash'}}">
+      
+      <div class="category-item leaderboard" vertical layout>
+        <div class="tile theme-bg-a" dummy fit></div>
+        <div class="tile" flex vertical layout>
+          <div flex relative>
+            <!-- sizing wrapper -->
+            <div fit layout vertical center center-justified>
+              <div class="category-bg-wrapper" relative>
+                <core-icon icon="category-icons:leaderboard" class="category-tile-bg" fit></core-icon>
+              </div>
+            </div>
+          </div>
+          <div class="cat-name" horizontal center layout>
+            <div flex>Leaderboard</div>
+            <core-icon class="category-icon" icon="arrow-forward"></core-icon>
+          </div>
+        </div>
+      </div>
+    
+      <template repeat="{{cat, i in categories}}">
+      
+        <template bind="{{allScores[cat.name] as scores}}">
+          <div class="category-item {{cat.theme}}-theme {{ {completed: scores.length == cat.quizzes.length} | tokenList }}" vertical layout needZ?="{{category.name === cat.name}}">
+            <div class="tile theme-bg-a" dummy fit hero-id="{{category.name === cat.name ? 'punch' : ''}}" hero?="{{category.name === cat.name}}"></div>
+            <div class="tile" flex auto vertical layout>
+              <div flex auto relative>
+                <!-- sizing wrapper -->
+                <div fit layout vertical center center-justified>
+                  <div class="category-bg-wrapper" relative>
+                    <core-icon class="category-tile-bg {{ {'theme-icon': scores.length === cat.quizzes.length} | tokenList }}" icon="{{scores.length === cat.quizzes.length ? 'check' : 'category-icons:' + cat.id}}" cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}" fit></core-icon>
+                  </div>
+                </div>
+              </div>
+              <div class="cat-name theme-bg" horizontal center layout hero-id="{{category.name === cat.name ? 'punch-bottom' : ''}}" hero?="{{category.name === cat.name}}">
+                <div flex>
+                  <span cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}">{{cat.name}}</span>
+                </div>
+                <core-icon class="category-icon theme-bg" icon="av:play-arrow" hidden?="{{scores.length === cat.quizzes.length}}" cross-fade-delayed?="{{category.name === cat.name && parentElement.lastSelected === 'category'}}"></core-icon>
+              </div>
+            </div>
+          </div>
+        </template>
+      
+      </template>
+      
+      <div class="category-item profile" vertical layout>
+        <div class="tile theme-bg-a" dummy fit></div>
+        <div class="tile" flex auto vertical layout>
+          <div flex auto relative>
+            <!-- sizing wrapper -->
+            <div fit layout vertical center center-justified>
+              <div class="category-bg-wrapper" relative>
+                <core-icon icon="category-icons:profile" class="category-tile-bg" fit></core-icon>
+              </div>
+            </div>
+          </div>
+          <div class="cat-name" horizontal center layout>
+            <div flex>Profile</div>
+            <core-icon class="category-icon" icon="arrow-forward"></core-icon>
+          </div>
+        </div>
+      </div>
+      
+      <div class="category-item polymer-logo" hidden?="{{wide}}" vertical layout>
+        <div class="tile" fit>
+          <core-icon icon="category-icons:polymer"></core-icon>
+        </div>
+      </div>
+    
+    </core-selector>
+    
+  </div>
+    
+</template>
+<script>
+
+  Polymer('topeka-categories', {
+    
+    wide: false,
+
+    created: function() {
+      this.categories = [];
+    },
+
+    selectedChanged: function() {
+      // first one is leaderboard, last one is profile
+      if (this.selected === 0) {
+        this.category = {name: 'leaderboard'};
+      } else if (this.selected === this.categories.length + 1) {
+        this.category = {name: 'profile'};
+      } else {
+        this.category = this.categories[this.selected - 1];
+      }
+    }
+    
+  });
+
+</script>
+</polymer-element>

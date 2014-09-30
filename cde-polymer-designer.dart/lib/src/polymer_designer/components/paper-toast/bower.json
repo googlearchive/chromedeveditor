@@ -1,0 +1,10 @@
+{
+  "name": "paper-toast",
+  "private": true,
+  "dependencies": {
+    "core-media-query": "Polymer/core-media-query#master",
+    "core-overlay": "Polymer/core-overlay#master",
+    "font-roboto": "Polymer/font-roboto#master",
+    "paper-button": "Polymer/paper-button#master"
+  }
+}

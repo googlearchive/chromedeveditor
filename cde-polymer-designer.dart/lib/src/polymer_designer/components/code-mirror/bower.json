@@ -1,0 +1,7 @@
+{
+  "name": "code-mirror",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master"
+  }
+}

@@ -1,0 +1,88 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="avatars.html">
+<link rel="import" href="topeka-status-bar.html">
+<link rel="import" href="../core-toolbar/core-toolbar.html">
+<link rel="import" href="../paper-fab/paper-fab.html">
+
+<polymer-element name="topeka-user-score" attributes="user scores category wide" vertical layout>
+<template>
+
+  <link rel="stylesheet" href="topeka-user-score.css">
+  
+  <div class="{{ {wide: wide} | tokenList }}" flex vertical layout>
+
+    <div class="score-panel" slide-up?="{{parentElement.selected === 'score'}}" slide-down?="{{parentElement.selected === 'empty'}}" flex vertical layout?="{{!wide}}">
+  
+      <div class="card" flex vertical layout>
+      
+        <topeka-status-bar avatar="{{user.avatar}}" scores="{{scores}}" category="{{category}}" wide="{{wide}}"></topeka-status-bar>
+      
+        <div class="main font-light" flex auto layout vertical>
+        
+          <div class="category-info">
+            <div>{{correct}} / {{scores.length}} correct!</div>
+            <div class="big">+{{pts}}</div>
+          </div>
+          
+          <div class="total-info">
+            <div>Total:</div>
+            <div class="big">{{user.score}}</div>
+          </div>
+
+          <div flex></div>
+          
+          <div class="check-button-container" horizontal center end-justified layout>
+            <paper-fab id="check" icon="arrow-forward" on-tap="{{nextAction}}"></paper-fab>
+          </div>
+        
+        </div>
+
+      </div>
+  
+    </div>
+    
+    <div class="bottom-bar theme-bg" horizontal center layout>
+      <div flex>{{category.name}}</div>
+      <core-icon icon="check"></core-icon>
+    </div>
+  
+  </div>
+  
+</template>
+<script>
+
+  Polymer('topeka-user-score', {
+    
+    wide: false,
+    
+    scoresChanged: function() {
+      this.pts = 0;
+      this.correct = 0;
+      if (this.scores) {
+        for (var i = 0; i < this.scores.length; i++) {
+          var s = this.scores[i] || 0;
+          this.pts += s;
+          if (s) {
+            this.correct++;
+          }
+        }
+      }
+      this.fire('score-update');
+    },
+    
+    nextAction: function() {
+      this.fire('next');
+    }
+    
+  });
+
+</script>
+</polymer-element>

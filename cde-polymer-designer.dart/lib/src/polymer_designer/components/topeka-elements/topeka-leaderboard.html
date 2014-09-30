@@ -1,0 +1,396 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../core-toolbar/core-toolbar.html">
+<link rel="import" href="../core-icons/core-icons.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../core-animated-pages/core-animated-pages.html">
+<link rel="import" href="../firebase-element/firebase-element.html">
+<link rel="import" href="theme.html">
+<link rel="import" href="avatars.html">
+
+<polymer-element name="topeka-leaderboard" vertical layout>
+<template>
+
+  <style>
+  
+    .card {
+      background-color: white;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .wide.card:not(.tvmode) {
+      width: 512px;
+      margin-top: 64px;
+    }
+
+    .wide.card.multi-column {
+      width: 100%;
+      height: 100%;
+    }
+
+    .main-button {
+      position: absolute;
+      top: 12px;
+      left: 8px;
+      color: white;
+    }
+
+    .main-button.wide {
+      position: fixed;
+      top: 12px;
+      left: 16px;
+      color: #424242;
+    }
+
+    .title {
+      padding-left: 56px;
+      font-size: 16px;
+    }
+    
+    .wide .title {
+      padding: 0;
+    }
+    
+    .tvmode .title {
+      font-size: 24px;
+    }
+
+    .scroll {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .multi-column .list {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-flow: column wrap;
+      flex-flow: column wrap;
+      -webkit-align-content: stretch;
+      align-content: stretch;
+    }
+
+    .item {
+      background-color: white;
+      height: 56px;
+      padding: 8px 24px;
+      box-sizing: border-box;
+      position: relative;
+      font-size: 18px;
+      transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.28s;
+    }
+    .multi-column .item {
+      padding: 16px 32px;
+    }
+
+    [animate] .item.rising {
+      box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+      z-index: 10001 !important;
+      background-color: white;
+    }
+
+    [animate] .item.rising .rankNo {
+      display: none;
+    }
+    .multi-column [animate] .item.rising {
+    }
+
+    .delta {
+      display: none;
+      padding-right: 32px;
+      color: #00bbd3;
+      font-weight: bold;
+    }
+
+    [animate] .item.rising .delta {
+      display: inline-block;
+    }
+
+    .arrow {
+      display: none;
+      margin-left: -4px;
+      -webkit-transform: rotate(90deg);
+    }
+
+    [animate] .item.rising .arrow {
+      display: inline-block;
+    }
+
+    .rank {
+      width: 56px;
+    }
+
+    .avatar {
+      height: 40px;
+      width: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .name {
+      padding-left: 48px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 16px;
+    }
+
+    .main {
+      position: relative;
+    }
+
+    .main::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .bg {
+      background-color: #eee;
+    }
+
+    :host([animate]:not(.core-selected)) .bg {
+      z-index: -1;
+    }
+
+  </style>
+
+  <firebase-element id="fbLeaderboard" location="{{offline ? null : 'https://polymer-topeka.firebaseio.com/users'}}" on-data-change="{{leaderboardChange}}" data="{{leaderboard}}" limit="{{limit}}"></firebase-element>
+
+  <div class="bg" fit dummy cross-fade></div>
+
+  <div class="main {{ {scroll: wide} | tokenList }}" flex center layout vertical hero-p>
+    <div flex vertical layout slide-up-offscreen?="{{parentElement.selected === 'leaderboard'}}" cross-fade="{{!wide && parentElement.selected !== 'leaderboard'}}" class="card {{ {wide: wide, 'multi-column': columns>1, tvmode: tvmode} | tokenList }}" relative>
+      <core-toolbar>
+        <div class="title">Leaderboard</div>
+      </core-toolbar>
+
+      <div class="{{ {scroll: !wide} | tokenList }}" layout vertical flex>
+        <core-animated-pages id="pages" selected="{{selected}}" on-core-animated-pages-transition-end="{{done}}" transitions="hero-transition" layout flex no-transition?="{{disabled}}">
+          <section class="list" layout>
+            <template repeat="{{u,i in items1}}">
+              <div hero hero-id="{{u.uid}}" class="item {{u.rising ? 'rising':''}}" style="{{ columns>1 ? 'width:' + (1/columns*100) + '%' : '' }}" layout horizontal center>
+                <div class="rank">
+                  <div class="rankNo">{{i+1}}</div>
+                  <core-icon class="arrow" icon="arrow-back"></core-icon>
+                </div>
+                <core-icon class="avatar" icon="avatars:avatar-{{u.avatar}}"></core-icon>
+                <div layout flex class="name">{{u.name}}</div>
+                <div class="delta" hidden?="{{!u.delta || !u.rising}}">{{u.delta}}</div>
+                <div>{{u.score}}</div>
+              </div>
+            </template>
+          </section>
+
+          <section class="list" layout>
+            <template repeat="{{u,i in items2}}">
+              <div hero hero-id="{{u.uid}}" class="item {{u.rising ? 'rising':''}}" style="{{ columns>1 ? 'width:' + (1/columns*100) + '%' : '' }}" layout horizontal center>
+                <div class="rank">
+                  <div class="rankNo">{{i+1}}</div>
+                  <core-icon class="arrow" icon="arrow-back"></core-icon>
+                </div>
+                <core-icon class="avatar" icon="avatars:avatar-{{u.avatar}}"></core-icon>
+                <div layout flex class="name">{{u.name}}</div>
+                <div class="delta" hidden?="{{!u.delta || !u.rising}}">{{u.delta}}</div>
+                <div>{{u.score}}</div>
+              </div>
+            </template>
+          </section>
+
+        </core-animated-pages>
+      </div>
+    </div>
+    <paper-icon-button hidden?="{{tvmode}}" class="main-button {{ {wide: wide} | tokenList }}" icon="arrow-back" on-tap="{{mainAction}}" cross-fade-delayed?="{{!disabled}}" hero?="{{!disabled}}"></paper-icon-button>
+  </div>
+
+</template>
+<script>
+
+  Polymer('topeka-leaderboard', {
+
+    publish: {
+      disabled: false,
+      limit: 20,
+      columns: 1,
+      tvmode: false,
+      duration: -1,
+      user: null,
+      wide: false,
+      offline: false
+    },
+
+    observe: {
+      'limit offline': 'updateLeaderboard'
+    },
+    
+    selected: 0,
+    MAX: 1800,
+
+    names: ['James','John','Robert','Michael','William','David','Richard','Joseph','Charles','Thomas','Christopher','Daniel','Matthew','Donald','Anthony','Paul','Mark','George','Steven','Kenneth','Andrew','Edward','Joshua','Brian','Kevin','Ronald','Timothy','Jason','Jeffrey','Gary','Ryan','Nicholas','Eric','Jacob','Stephen','Jonathan','Larry','Frank','Scott','Justin','Brandon','Raymond','Gregory','Samuel','Benjamin','Patrick','Jack','Dennis','Jerry','Alexander','Tyler','Henry','Douglas','Peter','Aaron','Walter','Jose','Adam','Zachary','Harold','Nathan','Kyle','Carl','Arthur','Gerald','Roger','Lawrence','Keith','Albert','Jeremy','Terry','Joe','Sean','Willie','Jesse','Austin','Christian','Ralph','Billy','Bruce','Bryan','Roy','Eugene','Ethan','Louis','Wayne','Jordan','Harry','Russell','Alan','Juan','Philip','Randy','Dylan','Howard','Vincent','Bobby','Johnny','Phillip','Shawn','Mary','Patricia','Jennifer','Elizabeth','Linda','Barbara','Susan','Margaret','Jessica','Dorothy','Sarah','Karen','Nancy','Betty','Lisa','Sandra','Helen','Ashley','Donna','Kimberly','Carol','Michelle','Emily','Amanda','Melissa','Deborah','Laura','Stephanie','Rebecca','Sharon','Cynthia','Kathleen','Ruth','Anna','Shirley','Amy','Angela','Virginia','Brenda','Pamela','Catherine','Katherine','Nicole','Christine','Janet','Debra','Samantha','Carolyn','Rachel','Heather','Maria','Diane','Frances','Joyce','Julie','Emma','Evelyn','Martha','Joan','Kelly','Christina','Lauren','Judith','Alice','Victoria','Doris','Ann','Jean','Cheryl','Marie','Megan','Kathryn','Andrea','Jacqueline','Gloria','Teresa','Janice','Sara','Rose','Hannah','Julia','Theresa','Judy','Grace','Beverly','Denise','Marilyn','Mildred','Amber','Danielle','Brittany','Olivia','Diana','Jane','Lori','Madison','Tiffany','Kathy','Tammy','Crystal'],
+
+    ready: function() {
+      this.lastScores = {};
+      if (!this.offline) {
+        this.offline =
+            window.location.search.indexOf('offline') >= 0 ||
+            window.location.search.indexOf('test') >= 0;
+      }
+    },
+
+    updateLeaderboard: function() {
+      if (this.offline) {
+        this.generateLeaderboard();
+      } else {
+        if (this.bumpTimeout) {
+          clearTimeout(this.bumpTimeout);
+        }
+        this.items1 = this.items2 = this.queuedItems = null;
+      }
+    },
+
+    generateLeaderboard: function() {
+      var lb = {};
+      var n = this.names.slice();
+      for (var i=0; i<this.limit; i++) {
+        var f = Math.floor(Math.random()*n.length);
+        var l = Math.floor(Math.random()*26);
+        lb['u'+i] = { 
+          name: n.splice(f, 1)[0] + ' ' + String.fromCharCode(65 + l),
+          avatar: Math.floor(Math.random()*16)+1,
+          score: 0};
+      }
+      this.leaderboard = lb;
+      this.bumpScores();
+    },
+
+    disabledChanged: function() {
+      if (!this.disabled) {
+        this.holdoff = true;
+        setTimeout(function() {
+          this.holdoff = false;
+        }.bind(this), 2000);
+        if (this.offline) {
+          this.bumpScores();
+        }
+        if (this.queuedItems) {
+          this.items1 = this.items2 = this.queuedItems;
+          this.queuedItems = null;
+        }
+      } else {
+        this.selected = 0;
+      }
+    },
+
+    userChanged: function() {
+      if (this.offline && this.user) {
+        this.leaderboard.me = this.user;
+      }
+    },
+
+    bumpScores: function() {
+      for (uid in this.leaderboard) {
+        var u = this.leaderboard[uid];
+        if ((Math.random() > (1-1/this.limit)) && (!this.user || uid != 'me')) {
+          u.score += 8;
+        }
+      }
+      this.leaderboardChange();
+      this.bumpTimeout = setTimeout(function() {
+        if (!this.disabled) {
+          this.bumpScores();
+        }
+      }.bind(this), Math.random() * 5000);
+    },
+
+    leaderboardChange: function() {
+      if (!this.leaderboard) {
+        // Leaderboard was nuked
+        this.items1 = this.items2 = this.queuedItems = null;
+        return;
+      }
+      var data = this.leaderboard;
+      var uids = Object.keys(data);
+      this.newScores = {};
+      var items = uids.map(function(u) {
+        this.newScores[u] = data[u].score;
+        return { uid: u, name: data[u].name, avatar: data[u].avatar, score: data[u].score};
+      }.bind(this)).sort(function(a, b) {
+        return b.score - a.score || a.name && b.name && a.name.localeCompare(b.name);
+      });
+      if (this.holdoff) {
+        if (!this.items1) {
+          this.items1 = items;
+        } else {
+          this.items2 = items;
+        }
+      } else if (this.$.pages.transitioning.length || this.disabled) {
+        this.queuedItems = items;
+      } else {
+        this.flipPages(items);
+      }
+    },
+
+    flipPages: function(newItems) {
+      var order = newItems.map(function(u) {
+        return u.uid;
+      });
+      if (this.lastOrder) {
+        newItems.forEach(function(u, i) {
+          var idx = this.lastOrder.indexOf(u.uid);
+          if (idx < -1 || idx > i) {
+            u.delta = this.newScores[u.uid] - this.lastScores[u.uid] || 0;
+            u.rising = true;
+            if (u.delta > 0) {
+              u.delta = "+" + u.delta;
+            }
+          }
+        }.bind(this));
+      }
+      this.lastOrder = order;
+      if (this.selected || !this.items1) {
+        this.items1 = newItems;
+      }
+      if (!this.selected || !this.items2) {
+        this.items2 = newItems;
+      }
+      this.selected = this.selected ? 0 : 1;
+    },
+
+    done: function() {
+      this.lastScores = this.newScores;
+      if (this.queuedItems) {
+        this.flipPages(this.queuedItems);
+        this.queuedItems = null;
+      } else {
+        if (this.selected) {
+          this.items1 = this.items2;
+        } else {
+          this.items2 = this.items1;
+        }
+      }
+    },
+
+    mainAction: function() {
+      if (this.$.pages.transitioning.length > 0) {
+        this.$.pages.complete();
+      }
+      this.disabled = true;
+      this.fire('main');
+    },
+
+    durationChanged: function() {
+      if (this.duration > 0) {
+        CoreStyle.g.transitions.duration = this.duration;
+      }
+    }
+    
+  });
+
+</script>
+</polymer-element>

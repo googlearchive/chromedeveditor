@@ -1,0 +1,31 @@
+<x-meta id="google-map" label="Google Map">
+  <template>
+    <google-map style="width: 400px; height: 400px; display: block;"></google-map>
+  </template>
+  <property name="mapType" kind="select" options="roadmap,satellite,hybrid,terrain"></property>
+  <template id="imports">
+    <link rel="import" href="google-map.html">
+  </template>
+</x-meta>
+
+<x-meta id="google-map-directions" label="Google Map Directions">
+  <template>
+    <google-map-directions></google-map-directions>
+  </template>
+  <property name="map" kind="string"></property>
+  <property name="travelMode" kind="select" options="DRIVING,TRANSIT,WALKING,BICYCLING"></property>
+  <template id="imports">
+    <link rel="import" href="google-map-directions.html">
+  </template>
+</x-meta>
+
+<x-meta id="google-map-search" label="Google Map Search">
+	<template>
+		<google-map-search></google-map-search>
+	</template>
+  <property name="map" kind="string"></property>
+	<property name="query" kind="string"></property>
+  <template id="imports">
+    <link rel="import" href="google-map-search.html">
+  </template>
+</x-meta>

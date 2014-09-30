@@ -1,0 +1,9 @@
+{
+  "name": "core-iconset",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master",
+    "core-meta": "Polymer/core-meta#master",
+    "core-icon": "Polymer/core-icon#master"
+  }
+}

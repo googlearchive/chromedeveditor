@@ -1,0 +1,31 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../core-shared-lib/core-shared-lib.html">
+
+<!--
+Dynamically loads the Google+ JavaScript API, firing the `api-load` event when ready.
+
+Any number of components can use `<google-plusone-api>` elements, and the library will only be loaded once.
+
+@element google-plusone-api
+@extends core-shared-lib
+-->
+<polymer-element name="google-plusone-api" extends="core-shared-lib">
+<script>
+  Polymer({
+    defaultUrl: 'https://apis.google.com/js/plusone.js?onload=%%callback%%',
+    notifyEvent: 'api-load',
+    get api() {
+      return gapi;
+    }
+  });
+</script>
+</polymer-element>

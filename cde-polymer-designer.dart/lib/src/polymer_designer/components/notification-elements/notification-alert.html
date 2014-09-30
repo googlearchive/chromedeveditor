@@ -1,0 +1,125 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+The `notification-alert` element sends a notification alert.
+
+##### Example
+
+    <notification-alert message="Hi there!"></notification-alert>
+
+    <script>
+      document.querySelector('notification-alert').notify();
+    </script>
+
+@element notification-alert
+@blurb The `notification-alert` element sends a notification alert.
+@status alpha
+@url github.io
+-->
+<polymer-element name="notification-alert">
+
+  <script>
+
+    Polymer({
+      /**
+       * The `notificaiton-dismissed` event is fired when the notification
+       * is dismissed.,
+       * 
+       * @event notificaiton-dismissed
+       */
+
+      publish: {
+        /**
+         * The `header` property sets the title of the notification.
+         * 
+         * @attribute header
+         * @type string
+         * @default ''
+         */
+         header: '',
+         /**
+         * The `message` property sets the content of the notification.
+         * 
+         * @attribute message
+         * @type string
+         * @default ''
+         */
+         message: '',
+         /**
+         * The `icon` property sets an icon url for the notification.
+         * 
+         * @attribute icon
+         * @type string
+         * @default ''
+         */
+         icon: '',
+         /**
+          * The `name` property sets a name for the notification.
+          *
+          * Named notifications will replace older notifications with the same name.
+          * @attribute tag
+          * @type string
+          * @default ''
+          */
+         name: '',
+         /**
+          * The `autoClose` property will close the notification after `N` milliseconds
+          * @attribute autoClose
+          * @type Number
+          * @default 0
+          */
+         autoClose: 0
+      },
+
+      /**
+       * The `notify` method issues the notification.
+       * 
+       * @method notify
+       * @return {Object} Returns undefined.
+       */
+      notify: function() {
+        if (window.Notification) {
+          // requestPermission asks the user to allow permissions never, once or forever
+          Notification.requestPermission(function(perm) {
+            if (perm === 'granted') {
+              // the act of making a Notification object causes it to display
+              var n = new Notification(this.header, {
+                body: this.message,
+                icon: this.resolvePath(this.icon),
+                tag: this.name
+              });
+
+              // TODO(dfreedm): work around Notification.tag not working on android chrome build
+              if (this.name) {
+                if (this._notification) {
+                  this._notification.close();
+                }
+                this._notification = n;
+              }
+
+              n.onclose = function() {
+                this.asyncFire('notification-dismissed');
+              }.bind(this);
+
+              if (this.autoClose) {
+                setTimeout(n.close.bind(n), this.autoClose);
+              }
+            }
+          }.bind(this));
+        }
+      }
+
+    });
+
+  </script>
+
+</polymer-element>

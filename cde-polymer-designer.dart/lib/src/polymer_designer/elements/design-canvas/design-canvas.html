@@ -1,0 +1,681 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../design-host/design-host.html">
+<link rel="import" href="../../components/core-drag-drop/core-drag-drop.html">
+
+<polymer-element name="design-canvas" attributes="selected" designer>
+
+<template>
+
+  <style>
+
+    :host {
+      position: relative;
+      outline: none;
+      display: block;
+      background-image: url(grid.png);
+      -webkit-user-select: none
+    }
+
+    polyfill-next-selector { content: '.drag-element'; }
+    ::content .drag-element {
+      position: absolute;
+      pointer-events: none !important;
+      transition: none;
+      -webkit-transition: none;
+      cursor: pointer;
+    }
+
+    polyfill-next-selector { content: '.drag-element *'; }
+    ::content .drag-element /deep/ * {
+      pointer-events: none !important;
+    }
+
+  </style>
+
+  <core-drag-drop></core-drag-drop>
+
+  <content></content>
+
+</template>
+<script>
+(function() {
+
+// turn on binding reflection;
+Platform.enableBindingsReflection = true;
+
+Polymer({
+
+  eventDelegates: {
+    up: 'pointerUp',
+    keydown: 'keydown',
+    'drag-start': 'drag'
+  },
+
+  observe: {
+    'dragInfo.dropTarget': 'updateDropTarget'
+  },
+
+  resizeNubSize: 10,
+  grid: 10,
+  selected: null,
+
+  ready: function() {
+    this.meta = document.createElement('x-meta');
+  },
+
+  attached: function() {
+    this.makeDesignHost();
+    this.styleDesignHost();
+    this.selected = this.designHost;
+  },
+
+  // communication
+
+  notifyChange: function() {
+    // force polyfill rendering.
+    this.offsetHeight;
+    this.fire('design-change', this);
+  },
+
+  // state
+
+  selectedChanged: function(old) {
+    this.classFollows(this.selected, old, 'selected-element');
+    if (this.selected) {
+      this.ruleForElement(this.selected);
+    }
+    // focus to get keyboard events
+    var active = getScopeActiveElement(this);
+    if (active && !this.contains(active)) {
+      this.focus();
+    }
+    this.notifyChange();
+  },
+
+  // commands
+
+  deleteElement: function() {
+    var e = this.selected;
+    if (e && e !== this && e !== this.designHost) {
+      var parent = e.parentNode;
+      parent.removeChild(e);
+      forSubtree(e, this.removeElementRule.bind(this));
+      this.selected = parent === this ? this.designHost : parent;
+    }
+  },
+
+  promoteElement: function() {
+    var e = this.selected;
+    if (e && e !== this) {
+      e.parentNode.insertBefore(e, e.previousElementSibling);
+    }
+    this.notifyChange();
+  },
+
+  demoteElement: function() {
+    var e = this.selected;
+    if (e && e !== this) {
+      var n = e.nextElementSibling;
+      if (n) {
+        n = n.nextElementSibling;
+        if (n) {
+          e.parentNode.insertBefore(e, n);
+        } else {
+          e.parentNode.appendChild(e);
+        }
+      }
+    }
+    this.notifyChange();
+  },
+
+  moveoutElement: function() {
+    var e = this.selected;
+    if (e) {
+      var n = e.parentNode.parentNode;
+      if (!this.designHost.contains(n)) {
+        return;
+      }
+      n.appendChild(e);
+    }
+    this.notifyChange();
+  },
+
+  selectParentElement: function() {
+    var e = this.selected;
+    if (e && e.parentNode) {
+      e = e.parentNode;
+      if (e === this) {
+        e = null;
+      }
+      this.selected = e;
+    }
+  },
+
+  // 'fit' unless we're inside a core-layout and then 'flex'
+  maximizeElement: function() {
+    var e = this.selected;
+    if (!e) {
+      return;
+    }
+    var r = this.ruleForElement(this.selected);
+    if (e.parentNode.localName === 'core-layout') {
+      r.style.position = null;
+      r.style.left = r.style.top = r.style.width = r.style.height = null;
+      e.className += ' core-flex';
+    } else {
+      r.style.position = 'absolute';
+      r.style.left = r.style.top = '0px';
+      r.style.height = r.style.width = '100%';
+    }
+    // fire a fake resize event so elements that listen to it
+    // can update their size
+    this.fire('resize', {}, window);
+  },
+
+  // events
+
+  pointerUp: function(event) {
+    var element = this.findSelectableElement(event.target);
+    this.selected = (element === this) ? this.designHost : element;
+  },
+
+  findSelectableElement: function(node) {
+    var target = node;
+    while (node && node !== this) {
+      if (node._designMeta && node._designMeta.hideSubtree) {
+        return node;
+      }
+      node = node.parentNode;
+    }
+    return target;
+  },
+
+  keydown: function(event) {
+    switch(event.keyCode) {
+      // ESC
+      case 27:
+        // context handling for esc based on drag state
+        if (this.dragInfo) {
+          this.selectParentDropHint();
+        } else {
+          this.selectParentElement();          
+        }
+        break;
+      // backspace? delete?
+      case 8:
+      case 46:
+        if (!this.nodeIsEditor(event.target)) {
+          this.deleteElement();
+          event.preventDefault();
+        }
+        break;
+    }
+  },
+
+  drag: function(event, dragInfo) {
+    // generate dragInfo
+    dragInfo.element = this.findDraggableElement(dragInfo.event.target);
+    if (!dragInfo.element) {
+      return;
+    }
+    dragInfo.origin = dragInfo.element.getBoundingClientRect();
+    // delegate to size API
+    if (this.dragShouldSize(dragInfo.event, dragInfo.origin)) {
+      this.sizeStart(dragInfo);
+      return;
+    }
+    // delegate to drag API
+    this.dragStart(dragInfo);
+    // multiplex drop
+    dragInfo.delegateDrop = dragInfo.drop;
+    dragInfo.drop = function() {
+      if (!dragInfo.delegateDrop(dragInfo)) {
+        this.deleteElement();
+      }
+    }.bind(this);
+    // TODO(sjmiles): why select here?
+    this.selected = dragInfo.element;
+  },
+
+  dragShouldSize: function(event, rect) {
+    return (Math.abs(rect.right - event.clientX) < this.resizeNubSize) &&
+      (Math.abs(rect.bottom - event.clientY) < this.resizeNubSize);
+  },
+
+  sizeStart: function(dragInfo) {
+    this.classList.add('sizing');
+    this.selected = dragInfo.element;
+    //
+    // contextualize utilities
+    //
+    var snap = this.snap.bind(this);
+    var rule = this.ruleForElement(dragInfo.element);
+    //
+    // attach handlers to the dragInfo
+    //
+    dragInfo.drag = function() {
+      var p = snap(this.origin.width + this.event.dx, this.origin.height + this.event.dy);
+      rule.style.width = p.x + 'px';
+      rule.style.height = p.y + 'px';
+    };
+    var canvas = this;
+    dragInfo.drop = function() {
+      canvas.classList.remove('sizing');
+      canvas.notifyChange();
+    };
+  },
+
+  //
+  // abstracted drag API
+  //
+  // `track` events are triggered at the source of the drag, so 
+  // any object that wants to support dragging 'designable' objects
+  // implements the 'track' events but delegates the work to 
+  // callbacks that 'drag' populates on the drag object (dragInfo).
+  //
+  // drag-sources are designpalette and design-canvas
+  //
+
+  dragStart: function(dragInfo) {
+    // ensure focused so that when dragging from palette, keys (e.g. esc for
+    // drop to parent) go here
+    this.focus();
+    this.dragInfo = dragInfo;
+    // TODO(sjmiles): if this is an element from the design-canvas, it's immediately
+    // pulled out of it's original context
+    if (dragInfo.element.parentNode != this) {
+      // promote to top level
+      this.appendChild(dragInfo.element);
+    }
+    //
+    // make the element draggable (e.g. absolutely positioned) in this context
+    //
+    this.setDraggableStyleRules(dragInfo.element);
+    //
+    // calculate a starting origin in the frame of 'this'
+    //
+    var local = this.getBoundingClientRect();
+    var origin = dragInfo.origin; 
+    dragInfo.start = {x: origin.left - local.left, y: origin.top - local.top};
+    //
+    // contextualize utilities
+    //
+    var snap = this.snap.bind(this);
+    var rule = this.ruleForElement(dragInfo.element);
+    var drop = this.drop.bind(this);
+    var dropHint = this.dropHint.bind(this);
+    var scope = function(target) {
+      return this.scopedTarget(this, target)
+    }.bind(this);
+    //
+    // attach handlers to the dragInfo
+    //
+    dragInfo.drag = function() {
+      var p = snap(this.start.x + this.event.dx, this.start.y + this.event.dy);
+      rule.style.left = p.x + 'px';
+      rule.style.top = p.y + 'px';
+      dropHint(this);
+    };
+    dragInfo.drop = function() {
+      this.dropTarget = this.dropTarget || scope(this.event.relatedTarget);
+      return drop(this);
+    };
+  },
+
+  drop: function(dragInfo) {
+    this.dragInfo = null;
+    // remove dragging affordances (e.g. absolutely positioned)
+    this.unsetDraggableStyleRules(dragInfo.element);
+    // locate drop target
+    var container = this.findContainer(dragInfo.element, dragInfo.dropTarget);
+    if (container && this.canContain(container, dragInfo.element)) {
+      // don't manipulate parentNode if not necessary
+      var sameParent = (container === dragInfo.element.parentNode);
+      if (!sameParent) {
+        // install element in container
+        container.appendChild(dragInfo.element);
+      }
+      this.decorateElement(dragInfo.element);
+      // ideally we only notify once on drop.
+      // the selection changing will cause a notify.
+      // if the selection is not changing, but we
+      // did change the hierarchy, notify manually.
+      if (!sameParent && this.selected === dragInfo.element) {
+        this.notifyChange();
+      }
+      this.selected = dragInfo.element;
+      return true;
+    }
+  },
+
+  dropHint: function(dragInfo) {
+    this.job('hint-job', function() {
+      if (!this.dragInfo) {
+        return;
+      }
+      var event = {
+        clientX: dragInfo.event.clientX,
+        clientY: dragInfo.event.clientY,
+        target: dragInfo.dropTarget
+      }
+      var target = PolymerGestures.targetFinding.findTarget(event);
+      target = this.scopedTarget(this, target);
+      dragInfo.dropTarget = this.findContainer(this.dragInfo.element, target);
+    });
+  },
+
+  selectParentDropHint: function() {
+    var hint = this.dragInfo && this.dragInfo.dropTarget;
+    if (hint) {
+      var parent = this.findContainer(this.dragInfo.element, hint.parentNode);
+      if (parent) {
+        this.dragInfo.dropTarget = parent;
+      }
+    }
+  },
+
+  updateDropTarget: function(old) {
+    if (old) {
+      old.classList.remove('drop-target');
+    }
+    var target = this.dragInfo && this.dragInfo.dropTarget;
+    if (target) {
+      target.classList.add('drop-target');
+    }
+  },
+
+  // utility
+
+  update: function() {
+    this.designHost.marshalNodeReferences(this.designHost);
+  },
+
+  decorateElement: function(element) {
+    var s = this.ruleForElement(element).style;
+    // designer is absolutely positioned, ad-hoc
+    s.position = 'absolute';
+    if (element.parentNode !== this.designHost) {
+      // allow abs positioning if parent has no `layout` attribute
+      if (!element.parentNode.hasAttribute('layout')) {
+        var r = element.parentNode.getBoundingClientRect();
+        s.left = (element.offsetLeft - r.left) + 'px';
+        s.top = (element.offsetTop - r.top) + 'px';
+      } else {
+        s.left = s.top = s.position = '';
+      }
+    }
+    //
+    var decorate = function(element) {
+      if (element.localName === 'style') {
+        return;
+      }
+      this.applyUniqueId(element);
+      this.ruleForElement(element);
+    }.bind(this);
+    //
+    forSubtree(element, decorate);
+  },
+
+  // stuffs required for making binding to work, ad-hoc
+  applyUniqueId: function(node) {
+    if (!node.id) {
+      node.id = this.makeUniqueId(this, node.localName
+        .replace(/^g-/, '').replace(/-/g, '_'));
+    }
+  },
+
+  makeUniqueId: function(node, id, suffix) {
+    var uId = id + (suffix || '');
+    return this.querySelector('#' + uId) ?
+      this.makeUniqueId(node, id, suffix ? ++suffix : 1) :
+        uId;    
+  },
+
+  applyPropertyBinding: function(target, name, path) {
+    if (name === 'textContent') {
+      if (path) {
+        target.textContent = ' ';
+        target = target.firstChild;
+      } else {
+        target.firstChild.unbind(name);
+      }
+    } else {
+      name = name.toLowerCase();
+      this.unbindElementProperty(target, name);
+    }
+    if (path) {
+      target.bind(name, new PathObserver(this.designHost.model, path));
+    }
+  },
+
+  // Node.bind no longer provides unbinding but we need this concept
+  // here so we unbind by closing the bound observer.
+  unbindElementProperty: function(target, name) {
+    if (target.bindings_ && target.bindings_[name]) {
+      target.bindings_[name].close();
+      target.bindings_[name] = null;
+      //target.removeAttribute(name);
+    }
+  },
+
+  setDraggableStyleRules: function(element) {
+    element.classList.add('drag-element');
+  },
+
+  unsetDraggableStyleRules: function(element) {
+    element.classList.remove('drag-element');
+  },
+
+  findScope: function(element) {
+    while (element.parentNode) {
+      element = element.parentNode;
+    }
+    return element.host || element;
+  },
+
+  scopedTarget: function(scopedElement, target) {
+    // find the scope containing scopedElement
+    var hostScope = this.findScope(scopedElement);
+    // find the nearest ancestor of target that's in hostScope
+    while (target) {
+      var targetScope = this.findScope(target);
+      if (targetScope === hostScope || targetScope === target) {
+        return target;
+      }
+      target = targetScope;
+    }
+    return target;
+  },
+
+  findContainer: function(element, container) {
+    if (container === this) {
+      container = this.designHost;
+    }
+    while (container) {
+      if (container === this.designHost || element !== container && container._designMeta && container._designMeta.isContainer) {
+        return container;
+      }
+      container = container.parentNode;
+    }
+  },
+
+  canContain: function(container, element) {
+    var filter = container._designMeta && container._designMeta.childFilter;
+    return (!filter || filter(elt));
+  },
+
+  findDraggableElement: function(target) {
+    // nominal target
+    var elt = target;
+    // try to match selection on drag
+    if (this.selected) {
+      while (elt && elt !== this && elt !== this.selected) {
+        elt = elt.parentNode;
+      }
+    }
+    // when no selection match, auto-select top-level element
+    if (elt !== this.selected) {
+      // nominal target
+      elt = target;
+      // find top level parent
+      while (elt && elt.parentNode !== this.designHost) {
+        elt = elt.parentNode;
+      }
+    }
+    // don't drag designer itself
+    if (elt === this || elt === this.designHost) {
+      elt = null;
+    }
+    // return result
+    return elt;
+  },
+
+  snap: function(inX, inY) {
+    return {
+      x: Math.round(inX / this.grid) * this.grid,
+      y: Math.round(inY / this.grid) * this.grid
+    }
+  },
+
+  nodeIsEditor: function(node) {
+    return (node._designMeta && node._designMeta.isEditor) || this.editorElements[node.localName];
+  },
+
+  editorElements: {input: 1, select: 1, textarea: 1},
+
+  loadHtml: function(html) {
+    this.innerHTML = '';
+    this.makeDesignHost();
+    this.designHost.loadHtml(html, function() {
+      this.notifyChange();
+      this.selected = this.designHost;
+    }.bind(this));
+  },
+
+  makeDesignHost: function() {
+    this.styleElement = null;
+    this.designHost = document.createElement('design-host');
+    this.applyUniqueId(this.designHost);
+    this.designHost._designMeta = this.meta;
+    this.appendChild(this.designHost);
+  },
+
+  styleDesignHost: function() {
+    var s = this.ruleForElement(this.designHost).style;
+    if (!s.position) {
+      s.position = 'absolute';
+    }
+    var size = '100%';
+    if (!s.width) {
+      s.width = size;
+    }
+    if (!s.height) {
+      s.height = size;
+    }
+    s.boxSizing = 'border-box';
+  },
+
+  setupStyleElement: function() {
+    var s = this.querySelector('style');
+    if (!s) {
+      s = document.createElement('style');
+      s.textContent = ' ';
+      this.designHost.insertBefore(s, this.designHost.firstElementChild);
+      // force polyfill rendering
+      if (window.ShadowDOMPolyfill) {
+        ShadowDOMPolyfill.renderAllPending();
+      }
+    }
+    this.styleElement = s;
+  },
+
+  ruleForElement: function(element) {
+    return element.__styleRule || (element.__styleRule = 
+        this.findElementRule(element));
+  },
+
+  findElementRule: function(element) {
+    if (!this.styleElement) {
+      this.setupStyleElement();
+    }
+    if (!element.id) {
+      this.applyUniqueId(element);
+    }
+    var re = new RegExp('#' + element.id + '(\\s|{)');
+    var sheet = this.styleElement.sheet;
+    var rules = sheet.cssRules;
+    var i = this.indexOfRule(rules, '#' + element.id);
+    if (i < 0) {
+      i = rules.length;
+    }
+    if (!rules[i]) {
+      sheet.insertRule('#' + element.id + '{' + element.style.cssText + '}',
+        i);
+      element.style.cssText = '';
+    }
+    return rules[i];
+  },
+
+  removeElementRule: function(element) {
+    var sheet = this.styleElement.sheet, rules = sheet.cssRules;
+    var i = this.indexOfRule(rules, '#' + element.id);
+    if (i >= 0) {
+      sheet.deleteRule(i);
+    }
+  },
+
+  indexOfRule: function(rules, selector) {
+    for (var i=0, l=rules.length; i < l; i++) {
+      if (rules[i].selectorText == selector) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+});
+
+function cssTextFromStyle(style) {
+  var sheet = style && style.sheet;
+  if (sheet) {
+    var rules = sheet.cssRules;
+    for (var i=0, css=[]; i < rules.length; i++) {
+      css.push(rules[i].cssText);
+    }
+    return css.join('\n\n');
+  }
+}
+
+function forSubtree(element, callback) {
+  if (callback) {
+    callback(element);
+    if (element._designMeta && element._designMeta.hideSubtree) {
+      return;
+    }
+    var element = element.firstElementChild;
+    while (element) {
+      forSubtree(element, callback);
+      element = element.nextElementSibling;
+    }
+  }
+}
+
+function getScopeActiveElement(node) {
+  while (node.parentNode) {
+    node = node.parentNode;
+  }
+  return node.activeElement || document.activeElement;
+}
+
+})();
+</script>
+
+</polymer-element>
