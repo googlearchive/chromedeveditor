@@ -28,6 +28,9 @@ class CdePolymerDesigner extends PolymerElement {
   @override
   void attached() {
     super.attached();
+    assert(['local', 'inline'].contains(entryPoint));
+
+    _registerDesignerProxyListener();
   }
 
   Future load() {
@@ -93,16 +96,15 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   void _onWebviewContentLoad(_) {
-    _tweakUI();
-    _registerDesignerProxyListener();
+    _tweakDesignerUI();
     _injectDesignerProxy().then((_) => _webviewReady.complete());
   }
 
-  void _tweakUI() {
+  void _tweakDesignerUI() {
     // TODO(ussuri): Some of this will become unnecessary once BUG #3467 is
     // resolved.
     _insertCssIntoWebview(r'''
-        /* Reduce default font sizes */
+        /* Reduce the initial font sizes */
         html /deep/ *, html /deep/ #tabs > * {
           font-size: 13px;
         }
@@ -128,7 +130,7 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   void _registerDesignerProxyListener() {
-    chrome.runtime.onMessage.listen((event) {
+    chrome.runtime.onMessage.listen((chrome.OnMessageEvent event) {
       // TODO(ussuri): Check the sender?
       if (event.message['type'] == 'export_code_response') {
         _codeExported.complete("${event.message['code']}");
