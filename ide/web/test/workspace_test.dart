@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
+import '../lib/editors.dart';
 import '../lib/files_mock.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart' as ws;
@@ -481,7 +482,7 @@ defineTests() {
       ws.File file = new ws.File(workspace, fileEntry);
       FileContentProvider provider = new FileContentProvider(file);
       Completer<String> contentCompleter = new Completer();
-      provider.onContentChange.listen((String content) {
+      provider.onChange.listen((String content) {
         contentCompleter.complete(content);
       });
 

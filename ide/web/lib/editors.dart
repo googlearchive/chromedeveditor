@@ -482,3 +482,34 @@ class _EditorState {
     session = null;
   }
 }
+
+/**
+ * Defines an abstract provider of data (content) from an unknown source,
+ * provides an event to fire upon content changes, and allows the content to be
+ * written to / read from source.
+ */
+abstract class ContentProvider {
+  Stream<String> get onChange;
+  Future write(String content);
+  Future<String> read();
+}
+
+/**
+ * Defines a provider of content from a [File].
+ */
+class FileContentProvider implements ContentProvider {
+  final File file;
+
+  StreamController _changeController =
+      new StreamController.broadcast();
+
+  // TODO(ericarnold): Implement onContentChange for external file changes.
+  Stream get onChange => _changeController.stream;
+
+  FileContentProvider(this.file);
+
+  Future<String> read() => file.getContents();
+
+  Future write(String content) => file.setContents(content);
+}
+
