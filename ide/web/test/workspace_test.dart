@@ -483,7 +483,7 @@ defineTests() {
       FileContentProvider provider = new FileContentProvider(file);
       Completer<String> contentCompleter = new Completer();
       provider.onChange.listen((String content) {
-        contentCompleter.complete(content);
+        contentCompleter.complete("onChange");
       });
 
       return provider.read().then((String text) {
@@ -492,8 +492,8 @@ defineTests() {
       }).then((_) => provider.read()).then((String text) {
         expect(text, 'new bar');
         return contentCompleter.future;
-      }).then((String streamContent) {
-        expect(streamContent, 'new bar');
+      }).then((String changed) {
+        expect(changed, 'onChange');
       });
     });
 

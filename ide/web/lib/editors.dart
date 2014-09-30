@@ -498,15 +498,28 @@ abstract class ContentProvider {
  * Defines a provider of content from a [File].
  */
 class FileContentProvider implements ContentProvider {
-  final File file;
+  bool _listening;
 
-  StreamController _changeController =
-      new StreamController.broadcast();
+  final File file;
+  StreamController _changeController;
 
   // TODO(ericarnold): Implement onContentChange for external file changes.
   Stream get onChange => _changeController.stream;
 
-  FileContentProvider(this.file);
+  FileContentProvider(this.file) {
+    _changeController = new StreamController.broadcast(onListen: () {
+      if (!_listening) {
+        _listening = true;
+        file.workspace.onResourceChange.listen((ResourceChangeEvent event) {
+          if (event.changes.firstWhere((ChangeDelta delta) {
+            return delta.type == EventType.CHANGE;
+          }) != null) {
+            _changeController.add(null);
+          }
+        });
+      }
+    });
+  }
 
   Future<String> read() => file.getContents();
 
