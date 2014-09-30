@@ -1686,7 +1686,7 @@ Future _runInTimer(var closure) {
  * written to / read from source.
  */
 abstract class ContentProvider {
-  Stream<String> get onContentChange;
+  Stream<String> get onChange;
   Future write(String content);
   Future<String> read();
 }
@@ -1697,18 +1697,18 @@ abstract class ContentProvider {
 class FileContentProvider implements ContentProvider {
   File file;
 
-  StreamController<String> _contentChangeController =
+  StreamController _changeController =
       new StreamController.broadcast();
 
   // TODO(ericarnold): Implement onContentChange for external file changes.
-  Stream<String> get onContentChange => _contentChangeController.stream;
+  Stream get onChange => _changeController.stream;
 
   FileContentProvider(this.file);
 
   Future<String> read() => file.getContents();
 
   Future write(String content) => file.setContents(content).then((String content) {
-    _contentChangeController.add(content);
+    _changeController.add(content);
     return content;
   });
 }
