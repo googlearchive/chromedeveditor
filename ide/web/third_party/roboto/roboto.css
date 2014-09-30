@@ -1,27 +1,32 @@
+/*
+ * When changing this file, keep the
+ * widgets/lib/resources/roboto/roboto.css file in sync.
+ */
+
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 200;
-  src: url('Roboto-Light.ttf') format('truetype');
+  src: url('Roboto-Light.woff') format('woff');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: url('Roboto-Regular.ttf') format('truetype');
+  src: url('Roboto-Regular.woff') format('woff');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 500;
-  src: url('Roboto-Medium.ttf') format('truetype');
+  src: url('Roboto-Medium.woff') format('woff');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 700;
-  src: url('Roboto-Bold.ttf') format('truetype');
+  src: url('Roboto-Bold.woff') format('woff');
 }
