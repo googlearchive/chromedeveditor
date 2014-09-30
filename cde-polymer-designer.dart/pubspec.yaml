@@ -1,0 +1,10 @@
+name: cde_polymer_designer
+version: 0.0.1
+author: Spark Team
+description: A general purpose Polymer widget library (used by Spark IDE)
+homepage: https://github.com/dart-lang/spark/
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+dependencies:
+  chrome: '>=0.6.1 <0.7.0'
+  polymer: '>=0.14.3 <0.15.0'

@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
+import 'package:cde_polymer_designer/cde_polymer_designer.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_testing/testing_app.dart';
 import 'package:intl/intl.dart';
@@ -572,6 +573,8 @@ abstract class Spark
     actionManager.registerAction(new ShowSearchView(this));
     actionManager.registerAction(new ShowFilesView(this));
     actionManager.registerAction(new RunPythonAction(this));
+    actionManager.registerAction(new PolymerDesignerAction(this,
+        getDialogElement("#polymerDesignerDialog")));
 
     actionManager.registerKeyListener();
 
@@ -1336,6 +1339,7 @@ abstract class SparkActionWithDialog extends SparkAction {
       _dialog.show();
     });
   }
+
   void _hide() => _dialog.hide();
 
   void _showSuccessStatus(String message) {
@@ -4166,6 +4170,58 @@ class RunPythonAction extends SparkAction {
         });
       });
     });
+  }
+}
+
+class PolymerDesignerAction
+    extends SparkActionWithStatusDialog implements ContextAction {
+  static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
+
+  CdePolymerDesigner _designer;
+  File _file;
+
+  PolymerDesignerAction(Spark spark, SparkDialog dialog)
+      : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
+    _designer = _dialog.getElement('#polymerDesigner');
+    _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
+      _designer.reload();
+    });
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+    _show();
+    _file = spark._getFile(resources);
+    _designer.load().then((_) {
+      _file.getContents().then((String contents) {
+        _designer.setCode(contents);
+      });
+    });
+  }
+
+  void _commit() {
+    _designer.getCode().then((String code) {
+      _file.setContents(code);
+      _file = null;
+      _designer.unload();
+    });
+
+    super._commit();
+  }
+
+  void _cancel() {
+    _file = null;
+    _designer.unload();
+
+    super._cancel();
+  }
+
+  String get category => 'refactor';
+
+  bool appliesTo(Object object) {
+    // NOTE: Flags can get updated from .spark.json after createActions()
+    // runs; therefore, can't conditionally create actions using flags there.
+    return  SparkFlags.polymerDesigner &&
+            _isSingleFileMatchingRegex(object, _HTML_FNAME_RE);
   }
 }
 

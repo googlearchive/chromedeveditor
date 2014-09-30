@@ -13,6 +13,8 @@ dependencies:
   benchmark_harness: '>=1.0.4 <2.0.0'
   bignum: '>=0.0.5 <0.1.0'
   bootjack: '>=0.6.0 < 0.7.0'
+  cde_polymer_designer:
+    path: ../cde-polymer-designer.dart
   chrome: '>=0.6.1 <0.7.0'
   chrome_net: '>=0.1.0 <0.2.0'
   chrome_testing: '>=0.1.0 <0.2.0'
