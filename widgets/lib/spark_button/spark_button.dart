@@ -19,7 +19,10 @@ class SparkButton extends SparkWidget {
   @published bool primary;
   @published_reflected String padding;
   @published_reflected String hoverStyle;
-  @published bool disabled = false;
+
+  @published bool get disabled => attributes.containsKey('disabled');
+  @published set disabled(bool value) => _toggleAttribute('disabled', value);
+
   @published bool active;
   @published String tooltip;
   @published String command;
@@ -61,6 +64,24 @@ class SparkButton extends SparkWidget {
       event.preventDefault();
       event.stopPropagation();
       fire('command', detail: {'command': command});
+    }
+  }
+
+  /**
+   * Adds the attribute [value] to the element if it is not on it, removes it if
+   * it is. If [shouldAdd] is true, then we always add that [value] to th
+   * element. If [shouldAdd] is false then we always remove [value] from the
+   * element.
+   */
+  void _toggleAttribute(String attribute, [bool shouldAdd]) {
+    if (shouldAdd == null) {
+      shouldAdd = !attributes.containsKey(attribute);
+    }
+
+    if (shouldAdd) {
+      attributes['disabled'] = '';
+    } else {
+      attributes.remove('disabled');
     }
   }
 }

@@ -38,6 +38,9 @@ import 'utils.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
+dynamic get _spark => html.querySelector('spark-polymer-ui');
+dynamic get _toggleOutlineButton => _spark.$['toggle-outline'];
+
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
   static const int LARGE_FILE_SIZE = 500000;
@@ -106,6 +109,10 @@ class TextEditor extends Editor {
 
   void activate() {
     _outline.visible = supportsOutline;
+    // TODO(devoncarew): Instead of ace.dart knowing about the toggle outline
+    // button, the button should instead listen to the enablement of the
+    // 'toggle-outline' command.
+    _toggleOutlineButton.disabled = !supportsOutline;
     aceManager._aceEditor.readOnly = readOnly;
   }
 
@@ -131,6 +138,10 @@ class TextEditor extends Editor {
   void deactivate() {
     if (supportsOutline && _outline.visible) {
       _outline.visible = false;
+    }
+
+    if (!_toggleOutlineButton.disabled) {
+      _toggleOutlineButton.disabled = true;
     }
 
     saveState();
