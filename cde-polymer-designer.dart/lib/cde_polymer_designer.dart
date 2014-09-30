@@ -46,7 +46,7 @@ class CdePolymerDesigner extends PolymerElement {
       shadowRoot.append(_webviewElt);
     });
 
-    // TODO(ussuri): BUG #3467.
+    // TODO(ussuri): Try enabling once BUG #3467 is resolved.
     // _webviewReady.future.then((_) {
     //   _webview.callMethod('setZoom', [0.8]);
     // });
@@ -99,10 +99,20 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   void _tweakUI() {
+    // TODO(ussuri): Some of this will become unnecessary once BUG #3467 is
+    // resolved.
     _insertCssIntoWebview(r'''
         /* Reduce default font sizes */
         html /deep/ *, html /deep/ #tabs > * {
-          font-size: 0.8rem;
+          font-size: 13px;
+        }
+        html /deep/ #tabs {
+          padding-top: 0;
+          padding-bottom: 0;
+        }
+        html /deep/ core-toolbar,
+        html /deep/ core-toolbar::shadow > #topBar {
+          height: 40px;
         }
         /* Hide some UI elements we don't need */
         #designer::shadow > #appbar > * { 
