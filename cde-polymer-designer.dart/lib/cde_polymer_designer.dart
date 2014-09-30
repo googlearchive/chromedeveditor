@@ -7,6 +7,7 @@ library cde_polymer_designer;
 import 'dart:async';
 import 'dart:html';
 import 'dart:js' as js;
+import 'dart:convert' show JSON;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart';
@@ -128,7 +129,8 @@ class CdePolymerDesigner extends PolymerElement {
    * parse the code. If it can't, it resets the design to an empty one.
    */
   Future setCode(String code) {
-    code = code.replaceAll('"', r'\"').replaceAll('\n', r'\n');
+    // Escape all special charachters and enclose in double-quotes.
+    code = JSON.encode(code);
     // Just in case we are called too early, wait until the webview is ready.
     return _webviewReady.future.then((_) {
       // TODO(ussuri): This doesn't work without a delay:
@@ -136,8 +138,9 @@ class CdePolymerDesigner extends PolymerElement {
       return new Timer(new Duration(milliseconds: 500), () {
         // The request is received and handled by the JS proxy script injected
         // into [_webview>] by [_injectDesignerProxy].
-        return _executeScriptInWebview('''
-            window.postMessage({action: 'import_code', code: '$code'}, '*');
+        return _executeScriptInWebview(r'''
+            window.postMessage(
+                {action: 'import_code', code: ''' + code + r'''}, '*');
         ''');
       });
     });
@@ -155,7 +158,7 @@ class CdePolymerDesigner extends PolymerElement {
       // asynchronously returns the result via a chrome.runtime.sendMessage,
       // received and handled by [_designProxyListener], which completes the
       // [_codeExported] completer with the code string.
-      _executeScriptInWebview('''
+      _executeScriptInWebview(r'''
           window.postMessage({action: 'export_code'}, '*');
       ''');
     });
@@ -263,13 +266,12 @@ class CdePolymerDesigner extends PolymerElement {
    * properties.
    */
   Future _injectScriptIntoWebviewMainWorld(String script) {
-    script = script.replaceAll('"', r'\"')
-                   .replaceAll("'", r"\'")
-                   .replaceAll('\n', r'\n');
+    // Escape all special charachters and enclose in double-quotes.
+    script = JSON.encode('(function() { $script; })()');
     return _executeScriptInWebview(r'''
         (function() {
           var scriptTag = document.createElement('script');
-          scriptTag.innerHTML = '(function() { ''' + script + r'''; })()';
+          scriptTag.innerHTML = ''' + script + r''';
           document.body.appendChild(scriptTag);
         })();
     ''');
