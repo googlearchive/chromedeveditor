@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+  The `entryPoint` attribute can have the following values:
+    - "local": use the locally stored sources for Polymer Designer; this is the
+      faster option of the two, and it also works offline.
+    - "online": use the official online Polymer Designer; this is slower, but
+      provides the most up-to-date Polymer Designer UI. However, if the Designer
+      code changes significantly, this option can result in a broken UI.
+-->
+
+<link rel="import" href="../../../packages/polymer/polymer.html">
+
+<polymer-element name="cde-polymer-designer" attributes="entryPoint">
+  <template>
+    <!--TODO(ussuri): BUG #3466-->
+    <!--<webview id="webview"-->
+    <!--    src="src/polymer_designer/index.html"-->
+    <!--    partition="cde-polymer-designer">-->
+    <!--</webview>-->
+  </template>
+
+  <script type="application/dart" src="cde_polymer_designer.dart"></script>
+</polymer-element>
