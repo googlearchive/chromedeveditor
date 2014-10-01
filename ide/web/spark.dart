@@ -2351,6 +2351,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   CheckboxInputElement _ipElement;
   CheckboxInputElement _adbElement;
   InputElement _pushUrlElement;
+  InputElement _liveDeployCheckBox;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
   ws.Resource _resource;
@@ -2359,10 +2360,13 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
     _ipElement = getElement("#ip");
     _adbElement = getElement("#adb");
+    _liveDeployCheckBox = getElement("#liveDeploy");
     _pushUrlElement = _triggerOnReturn("#pushUrl");
 
     _ipElement.onChange.listen(_enableInputs);
     _adbElement.onChange.listen(_enableInputs);
+    _liveDeployCheckBox.onChange.listen((_) =>
+        spark.localPrefs.setValue("live-deployment", _liveDeployCheckBox.checked));
     _enableInputs();
   }
 
@@ -2428,8 +2432,6 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       ws_utils.setDeploymentTime(deployContainer,
           (new DateTime.now()).millisecondsSinceEpoch);
       if (SparkFlags.liveDeployMode) {
-        InputElement liveDeployCheckBox = getElement("#liveDeploy");
-        spark.localPrefs.setValue("live-deployment", liveDeployCheckBox.checked);
         LiveDeployManager.startLiveDeploy(_resource.project);
       }
       spark.showSuccessMessage('Successfully pushed');
