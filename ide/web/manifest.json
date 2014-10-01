@@ -4,7 +4,7 @@
   "short_name": "__MSG_app_name__",
   "description": "__MSG_app_description__",
   "offline_enabled": true,
-  "version": "0.15.0",
+  "version": "0.17.0",
   "minimum_chrome_version": "36",
   "manifest_version": 2,
   "default_locale": "en",
