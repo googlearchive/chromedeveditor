@@ -13,9 +13,9 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart';
 
 /**
- * This Polymer element is a wrapper around the top-level entry point of 
+ * This Polymer element is a wrapper around the top-level entry point of
  * Polymer Designer.
- * 
+ *
  * It runs either a local copy or the online origin of the Designer inside
  * a webview, tweaking its UI to match the requirements of CDE. To be able to
  * communicate with the Designer inside a webview, it injects a proxy script
@@ -24,10 +24,10 @@ import 'package:polymer/polymer.dart';
  * in the webview's "isolated world"; the proxy receives requests in its
  * on-message listener and responds back via chrome.runtime.sendMessage(),
  * received by the Dart side in a chrome.runtime.onMessage listener.
- * 
+ *
  * The webview with Polymer Designer can be started and terminated multiple
  * times.
- * 
+ *
  * The primary useful functionality to a client is [setCode] to intialize
  * the Designer with some existing design and [getCode] to extract a new design
  * back after the user has modified it.
@@ -52,7 +52,7 @@ class CdePolymerDesigner extends PolymerElement {
   /// script injected into it.
   Completer _webviewReady;
   /// Fires when the asynchronous code export requested from the proxy has
-  /// completed. 
+  /// completed.
   Completer<String> _codeExported;
 
   CdePolymerDesigner.created() : super.created();
@@ -60,7 +60,7 @@ class CdePolymerDesigner extends PolymerElement {
   @override
   void attached() {
     super.attached();
-    
+
     assert(['local', 'inline'].contains(entryPoint));
 
     _registerDesignerProxyListener();
@@ -100,7 +100,7 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   /**
-   * Reinitilizes the object from a running state.
+   * Reinitializes the object from a running state.
    */
   Future reload() {
     unload();
@@ -146,7 +146,7 @@ class CdePolymerDesigner extends PolymerElement {
     });
   }
 
-  /** 
+  /**
    * Extracts and returns to the caller the current design code from the
    * Polymer Designer.
    */
@@ -171,7 +171,7 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   /**
-   * Tweaks the Polymer Designer UI and inject a proxy script. 
+   * Tweaks the Polymer Designer UI and inject a proxy script.
    */
   void _onWebviewContentLoad(_) {
     _tweakDesignerUI();
@@ -220,13 +220,13 @@ class CdePolymerDesigner extends PolymerElement {
     // TODO(ussuri): Check the sender?
     if (event.message['type'] == 'export_code_response') {
       _codeExported.complete("${event.message['code']}");
-      // Null the completer so new [getCode] requests can work properly. 
+      // Null the completer so new [getCode] requests can work properly.
       _codeExported = null;
     }
   }
 
   /**
-   * Registers a listener for responses sent by [_designerProxy]. 
+   * Registers a listener for responses sent by [_designerProxy].
    */
   void _registerDesignerProxyListener() {
     chrome.runtime.onMessage.listen(_designerProxyListener);
@@ -265,7 +265,7 @@ class CdePolymerDesigner extends PolymerElement {
   }
 
   /**
-   * Effectively injects and runs a given script in the [_webview]'s scripting 
+   * Effectively injects and runs a given script in the [_webview]'s scripting
    * context ("main world"). This is achieved by creating a new <script> tag in
    * the [_webview]'s DOM and setting its inner HTML to the script's code.
    * Doing that will cause the script to run and be able to register event
