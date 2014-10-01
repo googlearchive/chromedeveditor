@@ -19,7 +19,7 @@ class SparkButton extends SparkWidget {
   @published bool primary;
   @published_reflected String padding;
   @published_reflected String hoverStyle;
-  @published bool disabled = false;
+  @published_reflected bool disabled = false;
   @published bool active;
   @published String tooltip;
   @published String command;

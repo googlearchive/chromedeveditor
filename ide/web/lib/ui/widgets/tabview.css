@@ -44,7 +44,7 @@
   display: inline-flex;
   border-right: 1px solid #dadada;
   line-height: 48px;
-  padding: 0 20px 0 10px;
+  padding: 0 20px 0 2px;
 }
 
 .tabview-tablabel.hide-close-button:not(.tabview-tablabel-active) {
@@ -109,8 +109,20 @@
   background: url(../../../images/close.svg);
 }
 
+.tabview-tablabel-saveState {
+  opacity: 0;
+  position: relative;
+  top: 1px;
+  font-size: 22px;
+  margin-left: 3px;
+  margin-right: 3px;
+  /* TODO(devoncarew): We disable this animation as it causes the label's text
+     to flicker. */
+  /*-webkit-transition: opacity 100ms;*/
+}
+
 .tabview-tablabel-dirty {
-  font-style: italic;
+  opacity: 0.5;
 }
 
 /* NOTE: These 4 rules also create stacking contexts, which affects the entire
