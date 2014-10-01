@@ -882,15 +882,27 @@ abstract class Spark
         return resources.first;
       }
     } else {
-      if (focusManager.currentResource != null) {
-        ws.Resource resource = focusManager.currentResource;
-        if (resource.isFile) {
-          if (resource.project != null) {
-            return resource.parent;
-          }
-        } else {
+      ws.Resource resource = focusManager.currentResource;
+      if (resource != null) {
+        if (resource.isFolder) {
           return resource;
+        } else if (resource.parent != null) {
+          return resource.parent;
         }
+      }
+    }
+    return null;
+  }
+
+  ws.File _getFile([List<ws.Resource> resources]) {
+    if (resources != null && resources.isNotEmpty) {
+      if (resources.first.isFile) {
+        return resources.first;
+      }
+    } else {
+      ws.Resource resource = focusManager.currentResource;
+      if (resource != null && resource.isFile) {
+        return resource;
       }
     }
     return null;
@@ -1184,12 +1196,17 @@ abstract class SparkAction extends Action {
    * Returns true if `object` is a list with a single item and this item is a
    * [Folder].
    */
-  bool _isSingleFolder(Object object) {
-    if (!_isSingleResource(object)) {
-      return false;
-    }
-    List<ws.Resource> resources = object as List;
-    return (object as List).first is ws.Folder;
+  bool _isSingleFolder(Object object) =>
+      _isSingleResource(object) && (object as List).first is ws.Folder;
+
+  /**
+   * Returns true if `object` is a list with a single [File] whose name matches
+   * [regex].
+   */
+  bool _isSingleFileMatchingRegex(Object object, RegExp regex) {
+    return _isSingleResource(object) && 
+           (object as List).first is ws.File &&
+           regex.hasMatch((object as List).first.name);
   }
 
   /**
