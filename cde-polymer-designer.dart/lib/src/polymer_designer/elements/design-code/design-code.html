@@ -1,0 +1,61 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../components/code-mirror/code-mirror.html">
+
+<polymer-element name="design-code" extends="code-mirror">
+<script>
+Polymer({
+
+  beginEditing: function(html) {
+    this.setValue(html);
+    this.refresh();
+    this.async('prepareCode');
+  },
+
+  finishEditing: function() {
+    this._styleUnfolded = !this._isStyleFolded();
+    return this.getValue();
+  },
+
+  getValue: function() {
+    return this.mirror.getValue();
+  },
+
+  setValue: function(value) {
+    this.mirror.setValue(value);
+  },
+
+  prepareCode: function() {
+    this.focus();
+    // fold style tag
+    var cm = this.mirror;
+    var c = cm.getSearchCursor('<style>');
+    if (c.find()) {
+      var l = c.pos.from.line;
+      cm.setSelection({line: l});
+      if (!this._styleUnfolded) {
+        cm.foldCode(l);
+      }
+      cm.execCommand('goLineDown');
+      cm.execCommand('goLineStartSmart');
+    }
+  },
+
+  _isStyleFolded: function() {
+    var cm = this.mirror;
+    var c = cm.getSearchCursor('<style>');
+    c.find();
+    return c.pos && cm.isFolded(c.pos.to);
+  },
+
+});
+</script>
+
+</polymer-element>

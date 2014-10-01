@@ -1,0 +1,59 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+  <title>design-state</title>
+
+  <script src="components/platform/platform.js"></script>
+  <link rel="import" href="components/polymer/polymer.html">
+  <link rel="import" href="design-state.html">
+</head>
+<body>
+  
+  <template is="auto-binding">
+    <button on-tap="{{push}}">Push</button>
+    <button on-tap="{{back}}" disabled?="{{!$.state.canBack}}">Back</button>
+    <button on-tap="{{forward}}" disabled?="{{!$.state.canForward}}">Forward</button>
+    <design-state id="state" on-last-state="{{last}}" on-first-state="{{first}}" on-state-change="{{change}}"></design-state>
+    <div>{{state}}</div>
+  </template>
+  <script>
+    var scope = document.querySelector('template');
+    scope.count = 0;
+    scope.push = function() {
+      this.count++;
+      this.updateState();
+      this.$.state.push(scope.state);
+    }
+
+    scope.back = function() {
+      this.$.state.back();
+    }
+
+    scope.forward = function() {
+      this.$.state.forward();
+    }
+
+    scope.change = function(e, detail) {
+      this.state = detail.state;
+    }
+
+    scope.updateState = function() {
+      return this.state = (this.count + Math.random()).toFixed(3);
+    }
+
+    addEventListener('template-bound', function(e) {
+      scope.$.state.push(scope.updateState());
+    })
+  </script>
+
+</body>
+</html>

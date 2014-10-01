@@ -1,0 +1,264 @@
+<!--
+Copyright 2014 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+
+limitations under the License.
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="github-import.html">
+
+<polymer-element name="github-element" attributes="message token">
+  <template>
+    <style>
+      .grey-paper {
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        margin: 5px;
+        padding: 5px;
+        background-color: rgba(242,242,242,1);
+      }
+
+      #form {
+        vertical-align: middle; 
+        margin-top: 12px;
+      }
+
+      #signIn-screen {
+        color: rgba(96,96,96,1);
+        display: none;
+        position: fixed; 
+        left: calc(50% - 125px); 
+        top: calc(40% - 60px); 
+        width: 250px; 
+        height: 150px; 
+        z-index: 10;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      #github-token{
+        display: inline-block;
+        width: 235px;
+        margin: 8px 5px 5px 5px;
+        padding: 0px 1px;
+        vertical-align: middle;
+        border: 1px solid silver;
+        border-radius: 2px;
+        height: 20px;
+      }
+
+      #github-token:focus {
+        border: 1px solid rgba(66,133,244,1);
+        outline: none;
+      }
+    </style>
+
+    <div id="signIn-screen" class="grey-paper">
+      <div id="form">
+        <label for="github-token">GitHub Token</label>
+        <input id="github-token" type="text" on-keyup="{{checkKeyCode}}">
+        <p>Get a <a href="https://github.com/settings/applications" target="_blank">github token</a>.</p>
+        <div>
+          <button on-click="{{confirm}}" title="OK">OK</button>
+          <button on-click="{{cancel}}" title="Cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+    Polymer('github-element', {
+      token: null,
+      message: '',
+      signedIn: false,
+      signingIn: false,
+
+      ready: function() {
+        if (!this.token) {
+          this.token = window.localStorage['github-element-token'] || '';
+        }
+      },
+
+      signingInChanged: function() {
+        this.$['signIn-screen'].style.display = this.signingIn ? 'block' : 'none';
+        if (this.signingIn) {
+          this.$['github-token'].focus()
+        }
+      },
+
+      tokenChanged: function() {
+        if (this.token) {
+          this.signedIn = true;
+          window.localStorage['github-element-token'] = this.token;
+        } else {
+          this.signedIn = false;
+          window.localStorage.clear();
+        }
+        this.github = new Github({token: this.token});
+        /*
+        if (!this.signedIn) {
+          this.signIn();
+        }
+        */
+        this.fire('token-changed');
+      },
+
+      toast: function(message) {
+        this.message = message;
+        this.fire('github-toast', message);
+        /*
+        if (this.message) {
+          this.clearMessage(3000);
+        }
+        */
+      },
+
+      clearMessage: function(delay) {
+        if (this.messageTimeout) {
+          clearTimeout(this.messageTimeout);
+        }
+        if (delay === undefined) {
+          delay = 3000;
+        }
+        this.messageTimeout = setTimeout(function() {
+          this.message = '';
+        }.bind(this), delay);
+      },
+
+      save: function(description, publicGist, files, callback) {
+        if (!this.github) {
+          this.toast('No GitHub connection was established.');
+          return;
+        }
+
+        var gist = this.github.getGist();
+        gist.create({
+          'description': description,
+          'public': publicGist,
+          'files': files,
+          }, function(error, response) {
+            if (!error) {
+              window.location.hash = response.id;
+              this.fire('files-saved', response);
+              this.toast('Saved files to <a href="' + response.html_url + '">'  + response.html_url + '</a>');
+            } else {
+              if (error.error == 401) { // unauthorized
+                this.token = '';
+                this.toast('Please sign in using a valid GitHub token.');
+              } else if (error.error == 403) { // forbidden
+                this.toast('Sorry, too much anonymous GitHub activity! ' +
+                    'Please either sign in or try again later.');
+              } else {
+                console.error(error);
+              }
+            }
+            if (callback) {
+              callback(error, response);
+            }
+          }.bind(this));
+      },
+
+      update: function(id, description, publicGist, files, callback) {
+        if (!this.github) {
+          this.toast('No GitHub connection was established.');
+          return;
+        }
+
+        var gist = this.github.getGist(id);
+        gist.update({
+          'description': description,
+          'files': files,
+          }, function(error, response) {
+            if (!error) {
+              window.location.hash = response.id;
+              this.fire('files-updated', response);
+              this.toast('Saved files to <a href="' + response.html_url + '">'  + response.html_url + '</a>');
+            } else {
+              if (error.error == 401) { // unauthorized
+                this.token = '';
+                this.toast('Please sign in using a valid GitHub token.');
+              } else if (error.error == 403) { // forbidden
+                this.toast('Sorry, too much anonymous GitHub activity! ' +
+                    'Please either sign in or try again later.');
+              } else if (error.error == 404) { // not found
+                this.toast('The animation was not updated because it could ' +
+                    'not be found on GitHub.');
+              } else {
+                console.error(error);
+              }
+            }
+            if (callback) {
+              callback(error, response);
+            }
+          }.bind(this));
+      },
+
+      load: function(id, callback) {
+        if (!this.github) {
+          return;
+        }
+        
+        var gist = this.github.getGist(id);
+        gist.read(function(error, response) {
+          if (!error) {
+            this.fire('files-loaded', response.files);
+            this.toast('Loaded files from ' + response.html_url);
+          } else {
+            if (error.error == 401) { // unauthorized
+              this.token = '';
+              this.toast('Please sign in using a valid GitHub token.');
+            } else if (error.error == 403) { // forbidden
+              this.toast('Sorry, too much anonymous GitHub activity! ' +
+                  'Please either sign in or try again later.');
+            } else if (error.error == 404) { // not found
+              this.toast('The animation was not loaded because it could not ' +
+                  'be found on GitHub.');
+            } else {
+              console.error(error);
+            }
+          }
+          if (callback) {
+            callback(error, response);
+          }
+        }.bind(this));
+      },
+
+      signIn: function() {
+        this.signingIn = true;
+      },
+
+      signOut: function() {
+        this.token = '';
+      },
+
+      confirm: function() {
+        this.token = this.$['github-token'].value;
+        this.signingIn = false;
+      },
+
+      cancel: function() {
+        this.signingIn = false;
+      },
+
+      checkKeyCode: function(e) {
+        if (e.keyCode == 13) { // 'Enter'
+          this.confirm();
+        } else if (e.keyCode == 27) { // 'Escape'
+          this.cancel();
+        }
+      }
+    });
+  </script>
+</polymer-element>

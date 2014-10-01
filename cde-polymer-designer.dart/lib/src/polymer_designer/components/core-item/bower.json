@@ -1,0 +1,8 @@
+{
+  "name": "core-item",
+  "private": true,
+  "dependencies": {
+    "core-icon": "Polymer/core-icon#master",
+    "core-icons": "Polymer/core-icons#master"
+  }
+}

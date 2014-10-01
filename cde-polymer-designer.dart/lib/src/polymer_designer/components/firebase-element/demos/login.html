@@ -1,0 +1,150 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+
+  <title>firebase-login</title>
+
+  <script src="../../platform/platform.js"></script>
+  
+  <link rel="import" href="../firebase-login.html">
+
+  <style>
+    input:not([type]) {
+      width: 250px;
+    }
+  </style>
+
+</head>
+<body unresolved>
+
+  <template is="auto-binding">
+
+    <h2>Firebase Simple Login</h2>
+
+    <firebase-login id="login" user="{{user}}" statusKnown="{{statusKnown}}" location="https://polymer-tests.firebaseio.com" provider="{{provider}}" on-error="{{error}}" on-user-created="{{userSuccess}}" on-password-changed="{{userSuccess}}" on-password-reset="{{userSuccess}}" on-user-removed="{{userSuccess}}"></firebase-login>
+
+    Firebase location:
+    <input value="https://polymer-tests.firebaseio.com" disabled>
+    <br>
+    
+    Provider type: 
+    <select value="{{provider}}">
+      <option>anonymous</option>>
+      <option>facebook</option>>
+      <option>github</option>>
+      <option>google</option>>
+      <option>twitter</option>>
+      <option>password</option>
+    </select>
+    <em>Only 'anonymous', 'google', and 'password' are activated for demo Firebase account</em>
+    <br>
+
+    Login params (JSON):
+    <input value="{{params}}" id="params">
+    <em>Required by some provider types</em>
+    <br>
+
+    <div hidden?="{{provider!='password'}}">
+      <br><em>Password-specific options:</em><br>
+      <input placeholder="email" value="{{email}}">
+      <input placeholder="password" value="{{password}}">
+      <button on-tap="{{createUser}}" disabled?="{{!email || !password}}">Create user</button>
+      <br>
+      <input placeholder="new password" value="{{newPassword}}">
+      <button on-tap="{{changePassword}}" disabled?="{{!email || !password || !newPassword}}">Change password</button>
+      <br>
+      <button on-tap="{{resetPassword}}" disabled?="{{!email || !password}}">Reset password</button>
+      <button on-tap="{{removeUser}}" disabled?="{{!email || !password}}">Remove user</button>
+    </div>
+    <br>
+    <div id="message"></div>
+    <br>
+    
+    <button on-tap="{{login}}" hidden?="{{!statusKnown || user}}">Login</button>
+    <button on-tap="{{logout}}" hidden?="{{!statusKnown || !user}}">Logout</button>
+
+    <h3>Login status:</h3>
+    <p>{{statusKnown && user && 'Logged in' || statusKnown && 'Logged out' || 'Unknown (checking status...)'}}</p>
+
+    <h3>User ID:</h3>
+    <pre>{{user.uid}}</pre>
+ 
+  </template>
+  
+  <script>
+    
+    addEventListener('template-bound', function(e) {
+
+      var scope = e.target;
+      var fbLogin = document.querySelector("#login");
+      var message = document.querySelector("#message");
+
+      scope.login = function() {
+        var params;
+        try {
+          params = JSON.parse(document.querySelector("#params").value);
+        } catch (e) {
+          params = null;
+        }
+        if (this.provider == 'password') {
+          params = this.params || {};
+          params.email = this.email;
+          params.password = this.password;
+        }
+        fbLogin.login(params);
+      };
+      
+      scope.logout = function() {
+        fbLogin.logout();
+      };
+
+      scope.createUser = function() {
+        fbLogin.createUser(this.email, this.password);
+      };
+
+      scope.removeUser = function() {
+        fbLogin.removeUser(this.email, this.password);
+      };
+
+      scope.changePassword = function() {
+        fbLogin.changePassword(this.email, this.password, this.newPassword);
+      };
+
+      scope.resetPassword = function() {
+        fbLogin.sendPasswordResetEmail(this.email);
+      };
+
+      scope.error = function(e) {
+        setMessage('Error: ' + e.detail.message, true);
+      };
+      
+      scope.userSuccess = function(e) {
+        setMessage(e.type + ' success!', false);
+      };
+
+      var msgTimeout;
+      function setMessage(msg, error) {
+        if (msgTimeout) {
+          clearTimeout(msgTimeout);
+        }
+        message.innerText = msg;
+        message.style.color = error ? 'red' : null;
+        msgTimeout = setTimeout(function() {
+          message.innerText = '';
+        }, 3000);
+      }
+      
+    });
+  </script>
+
+</body>
+</html>

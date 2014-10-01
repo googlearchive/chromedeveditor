@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+  <head>
+    <title>Youtube Search Video</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="../platform/platform.js"></script>
+    <link rel="import" href="yt-search-video.html">
+    <style>
+      yt-search-video {
+        width: 400px;
+        height: 300px;
+      }
+
+      input {
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body unresolved>
+    <input>
+    <yt-search-video></yt-search-video>
+    <script>
+      document.querySelector('input').addEventListener('change', function(e) {
+        document.querySelector('yt-search-video').ImFeelingLucky = e.target.value;
+      })
+    </script>
+  </body>
+</html>

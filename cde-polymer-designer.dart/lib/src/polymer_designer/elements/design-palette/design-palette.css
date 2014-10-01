@@ -1,0 +1,83 @@
+/*
+ * @license
+ * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+ */
+
+#list {
+  background-color: white;
+  padding: 0 10px;
+  overflow-y: auto;
+  font-size: 15px;
+  opacity: 0.9;
+  -webkit-overflow-scrolling: touch;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+#grid {
+  background-color: #F2F2F2;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-size: 15px;
+  -webkit-overflow-scrolling: touch;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+core-submenu::shadow #submenu {
+  margin-left: 24px;
+}
+
+.group-item {
+  font-weight: 500;
+}
+
+.group-item.palette-selected {
+  color: #4285f4;
+}
+
+.simple-item {
+  height: 40px;
+  line-height: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #000;
+  white-space: nowrap;
+}
+
+.grid-item {
+  display: inline-block;
+  border: 1px dotted silver;
+  border-left: none;
+  border-top: none;
+  width: 106px;
+  height: 116px;
+  font-size: 11px;
+  cursor: pointer;
+  color: #000;
+  overflow: hidden;
+  text-align: center;
+  padding: 12px;
+  background-color: white;
+}
+
+.grid-item > * {
+  pointer-events: none;
+}
+
+img {
+  vertical-align: middle;
+}
+
+[ishidden] {
+  display: none;
+}

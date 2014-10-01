@@ -1,0 +1,72 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../paper-fab/paper-fab.html">
+
+<polymer-element name="topeka-category-front-page" attributes="category wide" vertical layout>
+<template>
+
+  <style>
+  
+    .bottom-bar {
+      position: relative;
+      height: 64px;
+      line-height: 64px;
+      padding: 0 16px;
+      box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      font-size: 18px;
+      box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.16);
+    }
+    
+    .bottom-bar.wide, .dummy.wide {
+      box-sizing: border-box;
+      width: 512px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    paper-fab {
+      position: absolute;
+      top: -28px;
+      right: 16px;
+      background-color: #fff;
+      color: #616161;
+    }
+    
+    .wide > paper-fab {
+      right: 24px;
+    }
+
+  </style>
+
+  <div flex></div>
+  
+  <div class="bottom-bar theme-bg {{ {wide: wide} | tokenList }}" horizontal center layout hero-id="punch-bottom" hero>
+    <div cross-fade-delayed?="{{parentElement.selected === 'front'}}">{{category.name}}</div>
+    <paper-fab icon="av:play-arrow" on-tap="{{nextAction}}" scale-up></paper-fab>
+  </div>
+
+  <div class="dummy {{ {wide: wide} | tokenList }}" hero-id="quizzes-content" hero></div>
+
+</template>
+<script>
+
+  Polymer('topeka-category-front-page', {
+    
+    wide: false,
+    
+    nextAction: function() {
+      this.fire('next');
+    }
+    
+  });
+
+</script>
+</polymer-element>

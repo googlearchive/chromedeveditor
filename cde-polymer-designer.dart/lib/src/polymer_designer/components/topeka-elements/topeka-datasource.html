@@ -1,0 +1,106 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../core-ajax/core-ajax.html">
+<link rel="import" href="../firebase-element/firebase-element.html">
+<link rel="import" href="../firebase-element/firebase-login.html">
+
+<polymer-element name="topeka-datasource" hidden>
+<template>
+  
+  <firebase-login id="fbLogin" provider="anonymous" params='{"rememberMe": true}' location="https://polymer-topeka.firebaseio.com" user="{{fbUser}}" statusKnown="{{statusKnown}}"></firebase-login>
+  <firebase-element id="fbUser" location="{{!offline && fbUser ? 'https://polymer-topeka.firebaseio.com/users/' + fbUser.uid : null}}" priority="{{user.score}}" dataReady="{{userReady}}"></firebase-element>
+  <core-ajax auto handleAs="json" url="{{url}}" response="{{categories}}"></core-ajax>
+
+</template>
+<script>
+
+  Polymer('topeka-datasource', {
+
+    publish: {
+      user: null,
+      categories: null,
+      url: ''
+    },
+
+    observe: {
+      'fbUser userReady': 'syncUser'
+    },
+
+    ready: function() {
+      this.test = window.location.search.indexOf('test') >= 0;
+      this.offline = this.test || window.location.search.indexOf('offline') >= 0;
+      if (this.test) {
+        this.user = {
+          name: "Test U",
+          avatar: 1,
+          score: 0
+        };
+      } else {
+        try {
+          this.user = JSON.parse(localStorage.getItem('topeka-user'))
+        } catch (e) {
+          this.user = null;
+        }
+      }
+
+      window.addEventListener('offline', function() {
+        Firebase.goOffline();
+      });
+      window.addEventListener('online', function() {
+        Firebase.goOnline();
+      });
+    },
+
+    statusKnownChanged: function() {
+      if (this.statusKnown && !this.offline && !this.fbUser) {
+        this.$.fbLogin.login();
+      }
+    },
+
+    syncUser: function() {
+      if (this.fbUser && this.userReady) {
+        this.$.fbUser.data = this.user;
+      } else {
+        this.$.fbUser.data = null;
+      }
+    },
+
+    userChanged: function() {
+      if (!this.user) {
+        this.logout();
+      }
+      this.syncUser();
+      this.observeUser();
+      this.userFieldsChanged();
+    },
+
+    observeUser: function() {
+      if (this.userObserver) {
+        this.userObserver.close();
+        this.userObserver = null;
+      }
+      if (this.user) {
+        this.userObserver = new ObjectObserver(this.user);
+        this.userObserver.open(this.userFieldsChanged.bind(this));
+      }
+    },
+
+    userFieldsChanged: function(added, removed, changed, getOldValueFn) {
+      localStorage.setItem('topeka-user', JSON.stringify(this.user));
+    },
+
+    logout: function() {
+      this.$.fbLogin.logout();
+      this.$.fbLogin.login();
+    }
+  });
+
+</script>
+</polymer-element>

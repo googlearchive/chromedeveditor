@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "gulp": "^3.8.7",
+    "web-component-tester": "Polymer/web-component-tester#master"
+  }
+}

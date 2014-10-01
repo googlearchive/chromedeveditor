@@ -1,0 +1,56 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+
+  <title>paper-calculator-output</title>
+  
+  <script src="../../platform/platform.js"></script>
+  
+  <link rel="import" href="../paper-calculator-output.html">
+  <link rel="import" href="../../font-roboto/roboto.html">
+
+  <style>
+  
+    body, html {
+      height: 100%;
+    }
+  
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      margin: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      -webkit-touch-callout: none;
+    }
+    
+    paper-calculator-output {
+      width: 400px;
+      height: 300px;
+      border: 1px solid #aaa;
+      margin: 10px;
+    }
+    
+  </style>
+
+</head>
+<body unresolved>
+
+  <paper-calculator-output expression="1+1" style="background-color: #eee;"></paper-calculator-output>
+  <paper-calculator-output expression="1+1" result="2" style="background-color: lightblue;"></paper-calculator-output>
+  <paper-calculator-output error="error..." style="background-color: #f50057;"></paper-calculator-output>
+  
+</body>
+</html>

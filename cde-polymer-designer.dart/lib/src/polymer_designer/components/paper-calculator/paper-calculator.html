@@ -1,0 +1,246 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+/**
+ * @group Paper Elements
+ *
+ * A fancy looking calculator that can only perform simple math calculation. 
+ * 
+ * @element paper-calculator
+ * @homepage github.io
+ */
+-->
+
+<link rel="import" href="../core-media-query/core-media-query.html">
+<link rel="import" href="paper-calculator-output.html">
+<link rel="import" href="paper-calculator-keypad.html">
+<link rel="import" href="paper-calculator-math.html">
+
+<polymer-element name="paper-calculator" attributes="expression result wideMode responsiveWidth" tabindex="0">
+
+  <template>
+
+    <style>
+
+      :host {
+        display: block;
+        position: relative;
+        background-color: #eee;
+        overflow: hidden;
+
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-touch-callout: none;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      #output {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 38%;
+        z-index: 1;
+      }
+
+      #output.wide {      
+        box-shadow: 0 5px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      #keypad {
+        position: absolute;
+        top: 38%;
+        bottom: 0;
+        width: 100%;
+      }
+
+      #resultInk {
+        position: absolute;
+        border-radius: 50%;
+        background-color: #73daeb;
+        -webkit-transform: translateZ(0) scale(0);
+        transform: translateZ(0) scale(0);
+      }
+
+      #resultInk.error {
+        background-color: #f50057;
+      }
+
+      #resultInk.spill {
+        -webkit-transform: translateZ(0) scale(1);
+        transform: translateZ(0) scale(1);
+        -webkit-transition: -webkit-transform 0.38s ease-out;
+        transition: transform 0.38s ease-out;
+      }
+
+    </style>
+
+    <div id="resultInk" class="{{ {spill : result, error : error} | tokenList }}"></div>
+
+    <paper-calculator-output id="output" class="{{ {wide : wideMatches || wideMode} | tokenList}}" expression="{{expression}}" result="{{result}}" error="{{error}}"></paper-calculator-output>
+
+    <paper-calculator-keypad id="keypad" wideMode="{{wideMatches || wideMode}}" standardKeys="{{standardKeys}}" advancedKeys="{{advancedKeys}}" modeKeys="{{modeKeys}}" on-cal-keytap="{{keyTap}}"></paper-calculator-keypad>
+
+    <paper-calculator-math id="math" expression="{{expression}}" result="{{result}}" error="{{error}}"></paper-calculator-math>
+
+    <core-media-query query="min-width: {{responsiveWidth}}" queryMatches="{{wideMatches}}"></core-media-query>
+
+  </template>
+
+  <script>
+
+    Polymer('paper-calculator', {
+
+      domReady: function() {
+        this.updateResultInk();
+        window.addEventListener('resize', this.updateResultInk.bind(this));
+      },
+      standardKeys: [
+        ['7', '4', '1', '.'],
+        ['8', '5', '2', '0'],
+        ['9', '6', '3', '='],
+        ['DEL', '+', '-', '\u00F7', '\u00D7'],
+      ],
+
+      advancedKeys: [
+        ['2nd', '1/x', 'x!', 'sin', 'sinh', 'EXP'],
+        ['(', 'x\u00B2', '\u221A', 'cos', 'cosh', '\u03A0'],
+        [')', 'x\u00B3', '\u207F \u221Ay', 'tan', 'tanh', 'EE'],
+        ['%', 'y\u207F', 'log', 'ln', 'e\u207F', 'Rand']
+      ],
+
+      modeKeys: [
+        ['Deg', 'Rad', 'func', 'Table', 'Graph', '']
+      ],
+
+      errorMsgs: ['error...', 'umm...', ':-('],
+
+      /**
+       * If true, calculator changes to wide layout.
+       *
+       * @attribute wideMode
+       * @type boolean
+       * @default false
+       */
+      wideMode: false,
+
+      /**
+       * Min-width when calculator changes to wide layout.
+       *
+       * @attribute responsiveWidth
+       * @type string
+       * @default ''
+       */
+      responsiveWidth: '',
+
+      /**
+       * The expression entered to the calculator.
+       *
+       * @attribute expression
+       * @type string
+       * @default ''
+       */
+      expression: '',
+
+      /**
+       * The result from evaluating the expression.
+       *
+       * @attribute result
+       * @type string
+       * @default ''
+       */
+      result: '',
+
+      eventDelegates: {
+        keydown: 'keyDown',
+        keypress: 'keyPress'
+      },
+
+      clear: function() {
+        this.expression = '';
+        this.result = '';
+        this.error = '';
+      },
+
+      del: function() {
+        this.expression = this.expression.slice(0, -1);
+      },
+
+      eval: function() {
+        this.$.math.eval();
+      },
+
+      keyTap: function(e) {
+        var k = e.detail.key;
+        if (this.modeKeys[0].indexOf(k) < 0) {
+          this.processKey(k);
+        }
+      },
+
+      keyDown: function(e) {
+        // backspace key
+        if (e.keyCode === 8) {
+          this.del();
+          e.preventDefault();
+        }
+      },
+
+      keyPress: function(e) {
+        var c = e.keyCode, k;
+        // enter key
+        if (c === 13) {
+          k = '=';
+        } else {
+          k = String.fromCharCode(c);
+        }
+        var key = this.$.keypad.findKey(k);
+        this.processKey(k);
+        e.preventDefault();
+      },
+
+      processKey: function(k) {
+        if (this.result && k !== '=') {
+          this.clear();
+        }
+        if (k === '=') {
+          this.async(this.eval);
+        } else if (k === 'DEL') {
+          this.del();
+        } else {
+          this.expression += k;
+        }
+      },
+
+      updateResultInk: function() {
+        var rect = this.getBoundingClientRect();
+        var keyRect = this.$.keypad.equalKey.getBoundingClientRect();
+        var s  = this.$.resultInk.style;
+        var t = keyRect.top - rect.top + keyRect.height / 2;
+        s.top = -t + 'px';
+        s.left = -t * 2 + (keyRect.left - rect.left + keyRect.width / 2) + 'px';
+        s.width = s.height = 4 * t + 'px';
+      },
+
+      resultChanged: function() {
+        if (this.result === '?') {
+          this.error = this.errorMsgs[Math.floor(Math.random() * 
+              this.errorMsgs.length)];
+        }
+      }
+
+    });
+
+  </script>
+
+</polymer-element>
