@@ -19,7 +19,10 @@ class SparkButton extends SparkWidget {
   @published bool primary;
   @published_reflected String padding;
   @published_reflected String hoverStyle;
-  @published_reflected bool disabled = false;
+
+  @published bool get disabled => attributes.containsKey('disabled');
+  @published set disabled(bool value) => setAttr('disabled', value);
+
   @published bool active;
   @published String tooltip;
   @published String command;
