@@ -5,18 +5,39 @@
 @import url("../common/spark_widget.css");
 
 :host {
-  background-color: #dadada;
   display: block;
+  box-sizing: border-box;
   /* Form an independent stacking context. */
   position: relative;
-  /* The no-op transform forms an independent stacking context. */
-  -webkit-transform: translateX(0);
+  background-color: #fafafa;
 }
 
-:host([handle]:host) {
+:host(.vertical:host) {
   border-left: 1px solid #ddd;
   border-right: 1px solid #ddd;
-  background-color: #f7f7f7;
+}
+
+:host([size="1"].vertical:host) {
+  border-right: none;
+}
+
+:host([size="0"].vertical:host) {
+  border-left: none;
+  border-right: none;
+}
+
+:host([size="1"].horizontal:host) {
+  border-bottom: none;
+}
+
+:host([size="0"].horizontal:host) {
+  border-top: none;
+  border-bottom: none;
+}
+
+:host(.horizontal:host) {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
 
 :host([handle].vertical:host) {
