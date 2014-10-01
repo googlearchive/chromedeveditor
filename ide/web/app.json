@@ -12,5 +12,6 @@
   "bower-override-dependencies": {
   },
   "bower-use-git-clone": false,
-  "package-files-are-editable": false
+  "package-files-are-editable": false,
+  "enable-polymer-designer": false
 }
