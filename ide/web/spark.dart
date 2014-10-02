@@ -2211,7 +2211,6 @@ class BuildApkAction extends SparkActionWithProgressDialog {
 
 
   void _invoke([context]) {
-    print("test");
     if (context == null) {
       _resource = spark.focusManager.currentResource;
     } else {
@@ -2268,14 +2267,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
     _buildButton.disabled = true;
     _buildButton.deliverChanges();
 
-    //build the app.json
-
-    _appInfo.mobileAppManifest["appName"] = _appNameElement.value;
-    _appInfo.mobileAppManifest["packageName"] = _packageNameElement.value;
-    _appInfo.mobileAppManifest["versionName"] = _versionNameElement.value;
-    _appInfo.mobileAppManifest["keyPassword"] = _privatePasswordElement.value;
-    _appInfo.mobileAppManifest["publicKeyName"] =  _appInfo.publicKey.name;
-    _appInfo.mobileAppManifest["privateKeyName"] = _appInfo.privateKey.name;
+    _appInfo.keyPassword = _privatePasswordElement.value;
 
     _monitor = new ProgressMonitorImpl(this);
 

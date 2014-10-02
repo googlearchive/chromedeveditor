@@ -13,6 +13,7 @@ import 'dart:convert';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_net/tcp.dart';
 import 'package:logging/logging.dart';
+import 'package:crypto/crypto.dart' as crypto;
 
 import 'adb.dart';
 import 'adb_client_tcp.dart';
@@ -349,12 +350,13 @@ abstract class AbstractDeployer {
   void _doWhenComplete();
 
   Future sleep1() {
-    return new Future.delayed(const Duration(seconds: 10), () => "1");
+    return new Future.delayed(const Duration(seconds: 3), () => "1");
   }
 
   Future build(ProgressMonitor monitor, MobileBuildInfo appInfo) {
     List<int> httpRequest;
     List<int> ad;
+    Map<String, String> signInfo = new Map<String, String>();
 
     httpRequest = _buildAssetManifestRequest(_getTarget());
     return _setTimeout(_pushRequestToDevice(httpRequest, REGULAR_REQUEST_TIMEOUT))
@@ -376,54 +378,17 @@ abstract class AbstractDeployer {
          return _expectHttpOkResponse(msg);
     }).then((String response) {
       _updateContainerEtag(response);
-      return archiveDataForBuild(appContainer, appInfo);
-    }).then((List<int> archivedData) {
       return sleep1();
     }).then((_) {
+      return appInfo.publicKey.readBytes();
+    }).then((chrome.ArrayBuffer data) {
+        signInfo['publicKeyData'] = crypto.CryptoUtils.bytesToBase64(data.getBytes());
+        return appInfo.privateKey.readBytes();
+    }).then((chrome.ArrayBuffer data) {
+      signInfo['privateKeyData'] = crypto.CryptoUtils.bytesToBase64(data.getBytes());
+      signInfo['keyPassword'] = appInfo.keyPassword;
+      print(appInfo.keyPassword);
 
-      Map<String, String> signInfo = new Map<String, String>();
-
-      signInfo['storePassword']= 'android';
-      signInfo['keyAlias']= 'AndroidDebugKey';
-      signInfo['keyPassword'] = 'android';
-      signInfo['storeData']="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";
       httpRequest = _makeBuildRequest(_getTarget(), JSON.encode(signInfo).codeUnits);
       //TODO(albualexandru): make the request and save the file
       return _setTimeout(_pushRequestToDevice(httpRequest, BUILD_REQUEST_TIMEOUT));
@@ -613,7 +578,7 @@ class LiveDeployManager {
 }
 
 class MobileBuildInfo {
-  Map<String, String> mobileAppManifest = {};
   chrome.ChromeFileEntry publicKey;
   chrome.ChromeFileEntry privateKey;
+  String keyPassword;
 }
