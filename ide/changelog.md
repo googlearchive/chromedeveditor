@@ -4,7 +4,7 @@
 ### New features
 - added the 'Live Deploy' mode when pushing to mobile: see your changes reflected on the device in real time!
 - added real-time validation for Chrome apps' manifests
-- enabled running Bower commands on project's subdirectories that contain bower.json
+- enabled running Bower commands on a project's subdirectories that contain their own bower.json -- not only the top level one
 - enabled 'Refactor for CSP' context menu for any HTML files or folder(s) with HTMLs -- not only package directories
 
 ### Other changes
@@ -16,8 +16,8 @@
 
     - upgraded to Roboto 2 font
     - moved the 'Toggle Outline' button to the toolbar
-    - changed status/progress indicator
-    - display a warning dialog when the user attempts to drag-and-drop a file into a folder where a file with the same name already exists
+    - moved the status/progress indicator to the bottom toolbar instead of the blue bubble
+    - display a warning dialog when a file is dragged onto a folder where a file with the same name already exists
     - hide "Properties..." context menu item when multiple resources are selected
     - added some missing tooltips to UI elements
 
