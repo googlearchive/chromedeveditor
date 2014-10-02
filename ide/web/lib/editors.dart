@@ -518,3 +518,22 @@ class FileContentProvider implements ContentProvider {
   Future write(String content) => file.setContents(content);
 }
 
+/**
+ * Defines a provider of content from an element named [_filename] in a
+ * [PreferenceStore] [_store].
+ */
+class PreferenceContentProvider implements ContentProvider {
+  final PreferenceStore _store;
+  final String _filename;
+  
+  StreamController _changeController = new StreamController.broadcast();
+
+  Stream get onChange => _changeController.stream;
+
+  PreferenceContentProvider(this._store, this._filename);
+
+  Future<String> read() => _store.getValue(_filename);
+
+  Future write(String content) => _store.setValue(_filename, content);
+}
+
