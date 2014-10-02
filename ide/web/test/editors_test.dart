@@ -84,21 +84,15 @@ defineTests() {
     test('read / write preference values', () {
       PreferenceStore store = new MapPreferencesStore();
       PreferenceContentProvider provider = new PreferenceContentProvider(store, "foo");
-      
-      Future initialFuture = provider.onChange.first;
-      Future alteredFuture = provider.onChange.elementAt(1);
 
       provider.write("bar baz");
-      return initialFuture.then((_) {
-        return provider.read();
-      }).then((String content) {
+      return provider.read().then((String content) {
         expect(content, "bar baz");
         return provider.write("altered");
       }).then((String content) {
         return provider.read();
       }).then((String content) {
         expect(content, "altered");
-        return alteredFuture;
       });
     });
   });

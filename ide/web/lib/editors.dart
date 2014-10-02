@@ -534,9 +534,6 @@ class PreferenceContentProvider implements ContentProvider {
 
   Future<String> read() => _store.getValue(_filename);
 
-  Future write(String content) => _store.setValue(_filename, content).then((_) {
-    _changeController.add(null);
-  });
-
+  Future write(String content) => _store.setValue(_filename, content);
 }
 
