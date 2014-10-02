@@ -1,0 +1,306 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="firebase-import.html">
+<link rel="import" href="firebase-simple-login-import.html">
+<link rel="import" href="../polymer/polymer.html">
+
+<polymer-element name="firebase-login" attributes="location provider user autoLogin statusKnown params">
+<!--
+Element wrapper for the Firebase Simple Login API (https://www.firebase.com/docs/security/simple-login-overview.html).
+
+@class firebase-login
+@blurb Element wrapper for the Firebase Simple Login API (https://www.firebase.com/docs/security/simple-login-overview.html).
+@status alpha
+@snap snap.png
+-->
+
+<script>
+  
+  Polymer('firebase-login', {
+
+    /**
+     * Fired when user is logged in
+     * 
+     * @event login
+     */
+
+    /**
+     * Fired when user is logged out
+     * 
+     * @event logout
+     */
+
+    /**
+     * Fired when an error occurred logging in
+     * 
+     * @event error
+     */
+
+    /**
+     * Fired when user is created (password provider type)
+     * 
+     * @event user-created
+     */
+
+    /**
+     * Fired when user changes their password (password provider type)
+     * 
+     * @event password-changed
+     */
+
+    /**
+     * Fired when password reset email is sent (password provider type)
+     * 
+     * @event password-reset
+     */
+
+    /**
+     * Fired when user is removed (password provider type)
+     * 
+     * @event user-removed
+     */
+       
+    /**
+     * Firebase location URL (must have simple login enabled via Forge interface).
+     * @attribute location
+     * @type String
+     */
+    location: null,
+
+    /**
+     * Default simple login provider type.  May be overridden at `login()`-time.
+     * @attribute provider
+     * @type String
+     */
+    provider: 'anonymous',
+
+    /**
+     * When logged in, this property reflects the firebase user object.
+     * @attribute user
+     * @type Object
+     */
+    user: null,
+
+    /**
+     * When true, login will be attempted if login status check determines no user is
+     * logged in.  Should generally only be used with provider types that do not present
+     * a login UI, such as 'anonymous'.
+     * @attribute autoLogin
+     * @type Boolean
+     */
+    autoLogin: false,
+
+    /**
+     * When true, login status can be determined by checking `user` property.
+     * @attribute statusKnown
+     * @type Boolean
+     */
+    statusKnown: false,
+
+    /**
+     * Provider-specific parameters to pass to login.  May be overridden at `login()`-time.
+     * @attribute params
+     * @type Object
+     */
+    params: null,
+
+    ready: function() {
+      if (!this.location) {
+        // FIXME(kschaaf): doesn't seem to be a way to un-register auth callbacks, so
+        // for now require a static location (switching locations should be rare)
+        console.error("firebase-login requires a static location");
+      }
+      this.ref = new Firebase(this.location);
+      this.auth = new FirebaseSimpleLogin(this.ref, function(error, user) {
+        if (error) {
+          // an error occurred while attempting login
+          this.fire('error', error);
+        } else if (user) {
+          // user authenticated with Firebase
+          this.user = user;
+          this.statusKnown = true;
+          this.fire('login', {user: user});
+        } else {
+          this.user = null;
+          if (this.statusKnown) {
+            this.fire('logout');
+          }
+          if (this.queuedLogin) {
+            this.login(this.queuedLogin.provider, this.queuedLogin.params);
+            this.queuedLogin = null;
+          } else if (!this.statusKnown && this.autoLogin) {
+            this.login();                
+          }
+          this.statusKnown = true;
+        }
+      }.bind(this));
+      
+      window.addEventListener('online', function() {
+        this.onlineHandler();
+      }.bind(this));
+    },
+
+    /**
+     * Performs a login attempt, using the `provider` specified via attribute/property,
+     * or optionally via `provider` argument to the `login` function.  Optionally, 
+     * provider-specific login parameters can be specified via attribute (JSON)/property,
+     * or via the `params` argument to the `login` function.
+     * 
+     * If the login is successful, the `login` event is fired, with `e.detail.user`
+     * containing the authenticated user object from Firebase.
+     *
+     * If login fails, the `error` event is fired, with `e.detail` containing error
+     * information supplied from Firebase.
+     *
+     * If the browswer supports `navigator.onLine` network status reporting and the
+     * network is currently offline, the login attempt will be queued until the network
+     * is restored.
+     *
+     * @method login
+     * @param {string} provider (optional)
+     * @param {string} params (optional)
+     */
+    login: function(provider, params) {
+      if (navigator.onLine === false) {
+        this.queuedLogin = {provider: provider, params: params};
+      } else {
+        var pr = (typeof(provider) === 'string' || provider instanceof String) ? provider : this.provider;
+        var pa = ((typeof(provider) === 'string' || provider instanceof String) ? params : provider) || this.params;
+        if (typeof pa == 'string') {
+          pa = JSON.parse(pa);
+        }
+        this.auth.login(pr, pa);
+      }
+    },
+
+    /**
+     * Performs a logout attempt.
+     * 
+     * If the login is successful, the `logout` event is fired.
+     *
+     * If login fails, the `error` event is fired, with `e.detail` containing error
+     * information supplied from Firebase.
+     *
+     * If the browswer supports `navigator.onLine` network status reporting and the
+     * network is currently offline, the logout attempt will be queued until the network
+     * is restored.
+     *
+     * @method logout
+     */
+    logout: function() {
+      if (navigator.onLine === false) {
+        this.queuedLogout = true;
+      } else {
+        this.auth.logout();
+      }
+    },
+
+    onlineHandler: function() {
+      if (this.queuedLogout) {
+        this.queuedLogout = false;
+        this.logout();
+      } else if (this.queuedLogin) {
+        this.login(this.queuedLogin.provider, this.queuedLogin.params);
+        this.queuedLogin = null;
+      }
+    },
+    
+    /**
+     * Creates a "password provider"-based user account.
+     *
+     * If the operation is successful, the `user-created` event is fired.
+     *
+     * If the operation fails, the `error` event is fired, with `e.detail` 
+     * containing error information supplied from Firebase.
+     *
+     * @method createUser
+     * @param {string} email
+     * @param {string} password
+     */
+    createUser: function(email, password) {
+        this.auth.createUser(email, password, function(error, user) {
+          if (!error) {
+            this.fire('user-created', {user: user});
+          } else {
+            this.fire('error', error);
+          }
+        }.bind(this));
+      },
+
+    /**
+     * Changes the password of a "password provider"-based user account.
+     *
+     * If the operation is successful, the `user-created` event is fired.
+     *
+     * If the operation fails, the `error` event is fired, with `e.detail` 
+     * containing error information supplied from Firebase.
+     *
+     * @method changePassword
+     * @param {string} email
+     * @param {string} oldPassword
+     * @param {string} newPassword
+     */
+    changePassword: function(email, oldPassword, newPassword) {
+      this.auth.changePassword(email, oldPassword, newPassword, function(error, success) {
+        if (!error) {
+          this.fire('password-changed');
+        } else {
+          this.fire('error', error);
+        }
+      }.bind(this));
+    },
+
+    /**
+     * Sends a password reset email for a "password provider"-based user account.
+     *
+     * If the operation is successful, the `user-created` event is fired.
+     *
+     * If the operation fails, the `error` event is fired, with `e.detail` 
+     * containing error information supplied from Firebase.
+     *
+     * @method sendPasswordResetEmail
+     * @param {string} email
+     */
+    sendPasswordResetEmail: function(email) {
+      this.auth.sendPasswordResetEmail(email, function(error, success) {
+        if (!error) {
+          this.fire('password-reset');
+        } else {
+          this.fire('error', error);
+        }
+      }.bind(this));
+    },
+
+    /**
+     * Removes a "password provider"-based user account.
+     *
+     * If the operation is successful, the `user-created` event is fired.
+     *
+     * If the operation fails, the `error` event is fired, with `e.detail` 
+     * containing error information supplied from Firebase.
+     *
+     * @method removeUser
+     * @param {string} email
+     * @param {string} password
+     */
+    removeUser: function(email, password) {
+      this.auth.removeUser(email, password, function(error, success) {
+        if (!error) {
+          this.fire('user-removed');
+        } else {
+          this.fire('error', error);
+        }
+      }.bind(this));
+    }
+
+  });
+
+</script>
+</polymer-element>

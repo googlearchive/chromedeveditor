@@ -1,0 +1,133 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="topeka-category-front-page.html">
+<link rel="import" href="topeka-quizzes.html">
+<link rel="import" href="topeka-quiz-score.html">
+<link rel="import" href="topeka-results.html">
+<link rel="import" href="topeka-user-score.html">
+<link rel="import" href="../core-animated-pages/core-animated-pages.html">
+<link rel="import" href="../core-animated-pages/transitions/slide-up.html">
+<link rel="import" href="../core-animated-pages/transitions/slide-down.html">
+
+<polymer-element name="topeka-category" attributes="user category selected wide allScores" vertical layout>
+<template>
+
+  <link rel="stylesheet" href="topeka-category.css">
+  <link rel="stylesheet" href="topeka-category-themes.css">
+  
+  <div class="{{category.theme}}-theme theme-bg-a {{ {wide: wide} | tokenList }}" dummy fit layout vertical center center-justified hero-id="punch" hero>
+    <div class="category-bg" relative?="{{wide}}" flex?="{{!wide}}">
+      <core-icon icon="category-images:{{category.id}}" cross-fade-delayed?="{{parentElement.selected === 'category'}}" cross-fade="{{parentElement.selected !== 'category'}}" fit></core-icon>
+    </div>
+  </div>
+  
+  <div class="{{category.theme}}-theme {{ {wide: wide} | tokenList }}" flex vertical layout>
+  
+    <core-animated-pages class="category-pages" selected="{{selected}}" selectedItem="{{selectedItem}}" flex transitions="cross-fade cross-fade-delayed slide-up slide-down hero-transition" no-transition?="{{selected === 'front'}}" on-core-animated-pages-transition-end="{{transitionEnd}}">
+
+      <section name="empty"></section>
+
+      <topeka-category-front-page name="front" category="{{category}}" wide="{{wide}}" on-previous="{{mainAction}}" on-next="{{showQuizzes}}"></topeka-category-front-page>
+    
+      <topeka-quizzes id="quizzes" name="quizzes" selectedPage="{{selected}}" scores="{{scores}}" category="{{category}}" avatar="{{user.avatar}}" wide="{{wide}}" on-quiz-done="{{quizDone}}"></topeka-quizzes>
+      
+      <topeka-quiz-score name="quizScore" selectedPage="{{selected}}" scores="{{scores}}" category="{{category}}" avatar="{{user.avatar}}" wide="{{wide}}" quizScore="{{quizScore}}"></topeka-quiz-score>
+      
+      <topeka-results id="results" name="results" scores="{{scores}}" category="{{category}}" avatar="{{user.avatar}}" wide="{{wide}}" on-next="{{showScore}}" cross-fade?="{{parentElement.selected === 'categories'}}"></topeka-results>
+      
+      <topeka-user-score name="score" user="{{user}}" scores="{{scores}}" category="{{category}}" wide="{{wide}}" on-next="{{mainAction}}" cross-fade?="{{parentElement.selected === 'categories'}}"></topeka-user-score>
+      
+    </core-animated-pages>
+    
+    <paper-icon-button class="main-button {{ {'theme-color': !wide && selected == 'quizzes'} | tokenList }}" icon="arrow-back" hidden?="{{selected === 'results' || selected === 'score'}}" on-tap="{{mainAction}}" hero?="{{parentElement.selected === 'categories'}}" cross-fade-delayed?="{{parentElement.selected === 'category'}}"></paper-icon-button>
+    
+  </div>
+  
+</template>
+<script>
+
+  Polymer('topeka-category', {
+    
+    selected: 'front',
+    selectedItem: null,
+    wide: false,
+    
+    computed: {
+      'scores': 'computeScores(allScores, category, dirty)'
+    },
+
+    created: function() {
+      this.scores = [];
+      this.category = {quizzes: []};
+    },
+    
+    computeScores: function(user, category) {
+      if (this.allScores && category && category.quizzes) {
+        var n = category.name;
+        return this.allScores[n] = this.allScores[n] || [];
+      } else {
+        return null;
+      }
+    },
+    
+    selectedChanged: function() {
+      if (this.selected === 'score') {
+        this.fire('score-update');
+      }
+    },
+
+    transitionEnd: function() {
+      if (this.selected === 'quizScore') {
+
+        // Delay switching questions so we don't see the new question
+        // before the transition to the score card, and so we're not
+        // switching questions when a transition is running.
+        this.$.quizzes.next();
+
+        this.async(function() {
+          if (this.scores.length === this.category.quizzes.length) {
+            this.selected = 'results';
+          } else {
+            this.showQuizzes();
+          }
+        }, null, parseInt(CoreStyle.g.transitions.duration));
+
+      } else if (this.selected === 'empty') {
+        this.selected = 'front';
+        this.fire('main');
+      }
+    },
+    
+    showQuizzes: function() {
+      this.selected = 'quizzes';
+    },
+    
+    showScore: function() {
+      this.selected = 'score';
+    },
+    
+    mainAction: function() {
+      if (this.selected !== 'front') {
+        this.selected = 'empty';
+      } else {
+        this.fire('main');
+      }
+    },
+    
+    quizDone: function(e, detail) {
+      this.$.quizzes.resetScrollTop();
+      this.selected = 'quizScore';
+      this.quizScore = detail.score;
+    }
+    
+  });
+
+</script>
+</polymer-element>

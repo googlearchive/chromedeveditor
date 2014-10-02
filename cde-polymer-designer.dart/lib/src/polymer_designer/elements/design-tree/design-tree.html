@@ -1,0 +1,123 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../components/polymer/polymer.html">
+
+<polymer-element name="design-tree" attributes="canvas selected" vertical layout>
+<template>
+
+  <style>
+    #interior {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      cursor: pointer;
+    }
+    #caption {
+      color: blue;
+    }
+    id {
+      font-style: italic;
+      color: #804C00;
+    }
+    #tree {
+      display: inline-block;
+      padding: 8px;
+    }
+    #tree div {
+      padding: 4px;
+      white-space: nowrap;
+    }
+    .selected {
+      background: rgba(72, 154, 254, 0.20);
+    }
+  </style>
+
+  <div id="interior" touch-action="auto" flex>
+    <div id="tree">
+      <template repeat="{{components}}">
+        <div class="{{selected}}" on-tap="{{selectAction}}" _style="padding-left: {{indent}}px"><span>{{name}}<id>{{id}}</id><span id="caption">{{text}}</span></span></div>
+      </template>
+    </div>
+  </div>
+
+</template>
+<script>
+(function() {
+
+Polymer({
+  components: null,
+  canvas: null,
+  dirty: 0,
+
+  observe: {
+    'canvas selected dirty': 'update'
+  },
+
+  forceUpdate: function() {
+    this.dirty++;
+  },
+
+  update: function() {
+    var selected = this.selected;
+    var tabsize = 12;
+    var components = this.components = [];
+
+    function subtree(root, indent) {
+      var e = root.firstElementChild;
+      while (e) {
+        if (elementBlackList.indexOf(e.localName) < 0) {
+          var text = e.children.length == 0 ? e.textContent.trim() : '';
+          if (text) {
+            if (text.length > 12) {
+              text = text.slice(0, 12) + "...";
+            }
+            text = ' "' + text + '"';
+          }
+          var info = e.treeInfo || {name: e.localName, id: e.id}
+          components.push({
+            indent: indent,
+            name: info.name,
+            element: e,
+            id: info.id ? ' #' + info.id + '': '',
+            text: text,
+            selected: (e == selected) ? 'selected' : ''
+          });
+          if (!(e._designMeta && e._designMeta.hideSubtree)) {
+            subtree(e, indent + tabsize);
+          }
+        }
+        e = e.nextElementSibling;
+      }
+    }
+
+    subtree(this.canvas, 4);
+
+    // scroll selected into view.
+    this.onMutation(this.$.tree, function() {
+      var e = this.$.tree.querySelector('.selected');
+      if (e && e.scrollIntoViewIfNeeded) {
+        e.scrollIntoViewIfNeeded();
+      }
+    });
+  },
+
+  selectAction: function(event, detail, sender) {
+    if (sender) {
+      this.selected = sender.templateInstance.model.element;
+      this.fire('node-select', {selected: this.selected});
+    }
+  }
+
+});
+
+var elementBlackList = ['style'];
+
+})();
+</script>
+</polymer-element>

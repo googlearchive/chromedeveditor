@@ -1,0 +1,92 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="editors.html">
+
+<polymer-element name="id-select-editor" extends="select-editor">
+<template>
+  <shadow></shadow>
+</template>
+<script>
+
+Polymer({
+  root: null,
+  idPrefix: '',
+
+  metaChanged: function() {
+    this.super();
+    this.root = this.findRoot(this.meta.obj);
+  },
+
+  rootChanged: function() {
+    this.buildOptions();
+  },
+
+  findRoot: function(node) {
+    while (node && !node.__designHost) {
+      node = node.parentNode;
+    }
+    return node;
+  },
+
+  buildOptions: function() {
+    var o = [''];
+    if (this.root) {
+      var pre = this.idPrefix;
+      Array.prototype.forEach.call(this.root.querySelectorAll('[id]'), 
+        function(n) {
+          o.push(pre + n.id);
+        });
+    }
+    this.options = o;
+  },
+
+  get selectedNode() {
+    return this.root && this.value 
+        && this.root.querySelector('#' + this.value);
+  }
+
+});
+
+</script>
+</polymer-element>
+
+<polymer-element name="target-select-editor" extends="id-select-editor">
+<script>
+
+Polymer({
+
+  idPrefix: '#'
+
+});
+
+</script>
+</polymer-element>
+
+<polymer-element name="action-editor" extends="abstract-editor">
+<template>
+
+  <button touch-action="none" on-pointerup="{{buttonClick}}">{{meta.label}}</button>
+
+</template>
+<script>
+
+Polymer({
+
+  buttonClick: function() {
+    var action = this.meta.action;
+    if (this.meta.obj[action]) {
+      this.meta.obj[action]();
+    }
+  }
+
+});
+
+</script>
+</polymer-element>

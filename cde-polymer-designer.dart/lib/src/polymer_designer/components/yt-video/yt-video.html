@@ -1,0 +1,106 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../google-apis/google-apis.html">
+
+<polymer-element name="yt-video" attributes="videoId videoEntry muted">
+<template>
+  <style>
+    :host {
+      background-image: url(assets/logo.png);
+      background-position: center;
+      background-repeat: no-repeat;
+      display: block;
+      position: relative;
+    } 
+  </style>
+  <google-youtube-api on-api-load="{{apiLoad}}"></google-youtube-api>
+  <div id="container"></div>
+</template>
+<script>
+
+Polymer('yt-video', {
+
+  videoId: '',
+  videoEntry: '',
+  muted: false,
+
+  videoIdChanged: function() {
+    if (this.videoId && this.videoId !== true) {
+      if (this.isPlayerReady) {
+        this.playerNode.hidden = false;
+        this.player.loadVideoById(this.videoId);
+      }
+    } else {
+      this.clearVideo();
+    }
+  },
+
+  videoEntryChanged: function() {
+    if (this.videoEntry && this.videoEntry.media$group) {
+      this.videoId = this.videoEntry.media$group.yt$videoid.$t;
+    } else {
+      this.videoId = '';
+    }
+  },
+
+  apiLoad: function() {
+    this.createPlayer();
+  },
+
+  createPlayer: function() {
+    this.player = new YT.Player(this.$.container, {
+      height: '100%',
+      width: '100%',
+      events: {
+        onReady: this.playerReady.bind(this),
+        onStateChange: this.playerStateChange.bind(this)
+      }
+    });
+    if (this.playerNode) {
+      this.playerNode.hidden = true;
+    }
+  },
+
+  playerReady: function(e) {
+    this.isPlayerReady = true;
+    this.player = e.target;
+    this.playerNode.hidden = true;
+    this.player.loadVideoById(this.videoId);
+    this.player.playVideo();
+    if (this.muted) {
+      this.player.mute();
+    }
+    // make player iframe fittable to this component.
+    this.playerNode.style.position = "absolute";
+  },
+
+  playerStateChange: function(inEvent) {
+    if (inEvent.data == 1) {
+      this.playerNode.hidden = false;
+    }
+  },
+
+  get playerNode() {
+    return this.player && this.player.a;
+  },
+
+  clearVideo: function() {
+    if (this.player) {
+      this.player.stopVideo();
+      this.playerNode.hidden = true;
+    }
+  },
+
+  mutedChanged: function() {
+    var p = this.player;
+    if (p) {
+      p[this.muted ? 'mute' : 'unMute']();
+    }
+  }
+  
+});
+</script>
+</polymer-element>

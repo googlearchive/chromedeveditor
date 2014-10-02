@@ -1,0 +1,116 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+
+<polymer-element name="paper-calculator-output" attributes="expression result error">
+
+  <template>
+
+    <style>
+
+      :host {
+        display: block;
+      }
+
+      .output {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding-right: 30px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        background-color: transparent;
+        color: #b3b3b3;
+        overflow: hidden;
+      }
+
+      .output.show-result {
+        color: #eee;
+      }
+
+      .expression-outer {
+        width: 100%;
+        height: 100%;
+        font-size: 5.625em;
+        font-weight: 100;
+        text-align: right;
+        overflow: hidden;
+      }
+
+      .show-result > .expression-outer {
+        height: 38%;
+        font-size: 2.5em;
+        font-weight: 400;
+      }
+
+      #expression {
+        white-space: nowrap;
+      }
+
+      .output.error #expression {
+        display: none;
+      }
+
+      #error {
+        display: none;
+        color: #eee;
+      }
+
+      .output.error #error {
+        display: block;
+      }
+
+      .result {
+        visibility: hidden;
+      }
+
+      .show-result > .result {
+        visibility: visible;
+        height: 62%;
+        font-weight: 400;
+      }
+
+      .result-equal {
+        padding: 0 30px;
+        font-size: 2.5em;
+      }
+
+      .result-value {
+        font-size: 5em;
+        overflow: hidden;
+      }
+
+    </style>
+
+    <div class="output {{ {error: error, 'show-result': result && !error } | tokenList }}">
+
+      <div class="expression-outer" horizontal end-justified center layout>
+        <div id="expression">{{expression}}</div>
+        <div id="error">{{error}}</div>
+      </div>
+
+      <div class="result" horizontal center layout>
+
+        <div class="result-equal">=</div>
+        <div class="result-value" flex horizontal end-justified layout>{{result}}</div>
+
+      </div>
+
+    </div>
+
+  </template>
+
+  <script>
+
+    Polymer('paper-calculator-output');
+
+  </script>
+
+</polymer-element>

@@ -1,0 +1,1229 @@
+{
+    "project": {
+        "name": "Docs",
+        "description": "Docs"
+    },
+    "files": {
+        "..\\..\\code-mirror\\codemirror-3.14\\addon\\edit\\closetag.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\addon\\edit\\closetag.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\clojure\\clojure.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clojure\\clojure.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\cobol\\cobol.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\cobol\\cobol.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\coffeescript\\coffeescript.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\coffeescript\\coffeescript.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\livescript\\livescript.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\livescript\\livescript.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\ntriples\\ntriples.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\ntriples\\ntriples.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\scheme\\scheme.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\scheme\\scheme.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\smarty\\smarty.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\smarty\\smarty.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\mode\\tiddlywiki\\tiddlywiki.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\mode\\tiddlywiki\\tiddlywiki.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\test\\lint\\parse-js.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\test\\lint\\parse-js.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "..\\..\\code-mirror\\codemirror-3.14\\test\\vim_test.js": {
+            "name": "..\\..\\code-mirror\\codemirror-3.14\\test\\vim_test.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {},
+    "classes": {},
+    "classitems": [
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\addon\\edit\\closetag.js",
+            "line": 1,
+            "description": "Tag-closer extension for CodeMirror.\n\nThis extension adds an \"autoCloseTags\" option that can be set to\neither true to get the default behavior, or an object to further\nconfigure its behavior.\n\nThese are supported options:\n\n`whenClosing` (default true)\n  Whether to autoclose when the '/' of a closing tag is typed.\n`whenOpening` (default true)\n  Whether to autoclose the tag when the final '>' of an opening\n  tag is typed.\n`dontCloseTags` (default is empty tags for HTML, none for XML)\n  An array of tag names that should not be autoclosed.\n`indentTags` (default is block tags for HTML, none for XML)\n  An array of tag names that should, when opened, cause a\n  blank line to be added inside the tag, and the blank line and\n  closing line to be indented.\n\nSee demos/closetag.html for a usage example.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 1,
+            "description": "Supported keybindings:\n\n  Motion:\n  h, j, k, l\n  gj, gk\n  e, E, w, W, b, B, ge, gE\n  f<character>, F<character>, t<character>, T<character>\n  $, ^, 0, -, +, _\n  gg, G\n  %\n  '<character>, `<character>\n\n  Operator:\n  d, y, c\n  dd, yy, cc\n  g~, g~g~\n  >, <, >>, <<\n\n  Operator-Motion:\n  x, X, D, Y, C, ~\n\n  Action:\n  a, i, s, A, I, S, o, O\n  zz, z., z<CR>, zt, zb, z-\n  J\n  u, Ctrl-r\n  m<character>\n  r<character>\n\n  Modes:\n  ESC - leave insert mode, visual mode, and clear input state.\n  Ctrl-[, Ctrl-c - same as ESC.\n\nRegisters: unamed, -, a-z, A-Z, 0-9\n  (Does not respect the special case for number registers when delete\n   operator is made with these commands: %, (, ),  , /, ?, n, N, {, } )\n  TODO: Implement the remaining registers.\nMarks: a-z, A-Z, and 0-9\n  TODO: Implement the remaining special marks. They have more complex\n      behavior.\n\nCode structure:\n 1. Default keymap\n 2. Variable declarations and short basic helpers\n 3. Instance (External API) implementation\n 4. Internal state tracking objects (input state, counter) implementation\n    and instanstiation\n 5. Key handler (the main command dispatcher) implementation\n 6. Motion, operator, and action implementations\n 7. Helper functions for the key handler, motions, operators, and actions\n 8. Set up Vim to work as a keymap for CodeMirror.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 1166,
+            "description": "typedef {Object{line:number,ch:number}} Cursor An object containing the\n    position of the cursor.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 1916,
+            "description": "Clips cursor to ensure that line is within the buffer's range\nIf includeLineBreak is true, then allow cur.ch == lineLength.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 2327,
+            "params": [
+                {
+                    "name": "cm",
+                    "description": "CodeMirror object.",
+                    "type": "CodeMirror"
+                },
+                {
+                    "name": "repeat",
+                    "description": "Number of words to move past.",
+                    "type": "Int"
+                },
+                {
+                    "name": "forward",
+                    "description": "True to search forward. False to search\n    backward.",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "wordEnd",
+                    "description": "True to move to end of word. False to move to\n    beginning of word.",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "bigWord",
+                    "description": "True if punctuation count as part of the word.\n    False if only alphabet characters count as part of the word.",
+                    "type": "Boolean"
+                }
+            ],
+            "return": {
+                "description": "The position the cursor should move to.",
+                "type": "Cursor"
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 2619,
+            "description": "Extract the regular expression from the query and return a Regexp object.\nReturns null if the query is blank.\nIf ignoreCase is passed in, the Regexp object will have the 'i' flag set.\nIf smartCase is passed in, and the query contains upper case letters,\n  then ignoreCase is overridden, and the 'i' flag will not be set.\nIf the query contains the /i in the flag part of the regular expression,\n  then both ignoreCase and smartCase are ignored, and 'i' will be passed\n  through to the Regex object.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 2788,
+            "description": "Check if pos is in the specified range, INCLUSIVE.\nRange can be specified with 1 or 2 arguments.\nIf the first range argument is an array, treat it as an array of line\nnumbers. Match pos against any of the lines.\nIf the first range argument is a number,\n  if there is only 1 range argument, check if pos has the same line\n      number\n  if there are 2 range arguments, then check if pos is in between the two\n      range arguments.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 3248,
+            "params": [
+                {
+                    "name": "cm",
+                    "description": "CodeMirror instance we are in.",
+                    "type": "CodeMirror"
+                },
+                {
+                    "name": "confirm",
+                    "description": "Whether to confirm each replace.",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "lineStart",
+                    "description": "Line to start replacing from.",
+                    "type": "Cursor"
+                },
+                {
+                    "name": "lineEnd",
+                    "description": "Line to stop replacing at.",
+                    "type": "Cursor"
+                },
+                {
+                    "name": "query",
+                    "description": "Query for performing matches with.",
+                    "type": "RegExp"
+                },
+                {
+                    "name": "replaceWith",
+                    "description": "Text to replace matches with. May contain $1,\n    $2, etc for replacing captured groups using Javascript replace.",
+                    "type": "String"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 3339,
+            "description": "Handle the raw key event from CodeMirror. Translate the\nShift + key modifier to the resulting letter, while preserving other\nmodifers.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 3488,
+            "description": "Listens for changes made in insert mode.\nShould only be active in insert mode.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 3507,
+            "description": "Listens for any kind of cursor activity on CodeMirror.\n- For tracking cursor activity in insert mode.\n- Should only be active in insert mode.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 3523,
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 3528,
+            "description": "Handles raw key down events from the text area.\n- Should only be active in insert mode.\n- For recording deletes in insert mode.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js",
+            "line": 3546,
+            "description": "Repeats the last edit, which includes exactly 1 command and at most 1\ninsert. Operator and motion commands are read from lastEditInputState,\nwhile action commands are read from lastEditActionCommand.\n\nIf repeatForInsert is true, then the function was called by\nexitInsertMode to repeat the insert mode changes the user just made. The\ncorresponding enterInsertMode call was made with a count.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 46,
+            "description": "$traversableInfo",
+            "define": "coll traversable collection",
+            "author": "Martin Odersky",
+            "version": "2.8",
+            "since": "2.8",
+            "tparam": "Repr the type of the actual collection containing the elements.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 107,
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 110,
+            "description": "By default this is implemented as the `TraversableLike` object itself,\nbut this can be overridden.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 116,
+            "description": "By default this is implemented as the current collection object itself,\nbut this can be overridden.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 122,
+            "description": "By default this is implemented as just a cast, but this can be overridden.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 127,
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 133,
+            "description": "Note: this method underlies the implementation of most other bulk operations.\n    It's important to implement this method in an efficient way.",
+            "params": [
+                {
+                    "name": "f",
+                    "description": "the function that is applied for its side-effect to every element.\n              The result of function `f` is discarded."
+                }
+            ],
+            "tparam": "U  the type parameter describing the result of function `f`. \n              This result will always be ignored. Typically `U` is `Unit`,\n              but this is not necessary.",
+            "usecase": "def foreach(f: A => Unit): Unit",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 150,
+            "return": {
+                "description": "`true` if the $coll contain no elements, `false` otherwise."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 165,
+            "description": "All strict collections are known to have finite size. For a non-strict collection\nsuch as `Stream`, the predicate returns `true` if all elements have been computed.\nIt returns `false` if the stream is not yet evaluated to the end.\n\nNote: many collection methods will not work on collections of infinite sizes.",
+            "return": {
+                "description": "`true` if this collection is known to have finite size, `false` otherwise."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 188,
+            "description": "It differs from ++ in that the right operand determines the type of the\nresulting collection rather than the left one.",
+            "params": [
+                {
+                    "name": "that",
+                    "description": "the traversable to append."
+                },
+                {
+                    "name": "bf",
+                    "description": "$bfinfo"
+                }
+            ],
+            "tparam": "That  $thatinfo",
+            "return": {
+                "description": "a new $coll which contains all elements of this $coll\n              followed by all elements of `that`."
+            },
+            "usecase": "def ++:[B](that: TraversableOnce[B]): $Coll[B]",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 212,
+            "description": "that of ++ because many collections override it with more efficient versions.\nSince TraversableOnce has no '++' method, we have to implement that directly,\nbut Traversable and down can use the overload.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 233,
+            "params": [
+                {
+                    "name": "p",
+                    "description": "the predicate used to test elements."
+                }
+            ],
+            "return": {
+                "description": "a new $coll consisting of all elements of this $coll that satisfy the given\n               predicate `p`. The order of the elements is preserved."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 246,
+            "params": [
+                {
+                    "name": "p",
+                    "description": "the predicate used to test elements."
+                }
+            ],
+            "return": {
+                "description": "a new $coll consisting of all elements of this $coll that do not satisfy the given\n               predicate `p`. The order of the elements is preserved."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 260,
+            "description": "elements of this $coll on which the function is defined.",
+            "params": [
+                {
+                    "name": "f",
+                    "description": "the option-valued function which filters and maps the $coll."
+                },
+                {
+                    "name": "bf",
+                    "description": "$bfinfo"
+                },
+                {
+                    "name": "pf",
+                    "description": "the partial function which filters and maps the $coll."
+                }
+            ],
+            "tparam": "That  $thatinfo",
+            "return": {
+                "description": "a new $coll resulting from applying the given option-valued function\n              `f` to each element and collecting all defined results.\n              The order of the elements is preserved.\n  def filterMap[B, That](f: A => Option[B])(implicit bf: CanBuildFrom[Repr, B, That]): That = \n    b.result\n  }",
+                "type": "!~YUIDOC_LINE~!    val b = bf(repr)!~YUIDOC_LINE~!    for (x <- this) !~YUIDOC_LINE~!      f(x) match !~YUIDOC_LINE~!        case Some(y) => b += y!~YUIDOC_LINE~!        case _ =>!~YUIDOC_LINE~!"
+            },
+            "usecase": "def filterMap[B](f: A => Option[B]): $Coll[B]",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 288,
+            "params": [
+                {
+                    "name": "p",
+                    "description": "the predicate on which to partition."
+                }
+            ],
+            "return": {
+                "description": "a pair of $s: the first $coll consists of all elements that \n           satisfy the predicate `p` and the second $coll consists of all elements\n           that don't. The relative order of the elements in the resulting ${coll}s\n           is the same as in the original $coll.",
+                "type": "Coll"
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 316,
+            "description": "$mayNotTerminateInf",
+            "params": [
+                {
+                    "name": "p",
+                    "description": "the predicate used to test elements."
+                }
+            ],
+            "return": {
+                "description": "`true` if the given predicate `p` holds for all elements\n                 of this $coll, otherwise `false`."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 333,
+            "description": "$mayNotTerminateInf",
+            "params": [
+                {
+                    "name": "p",
+                    "description": "the predicate used to test elements."
+                }
+            ],
+            "return": {
+                "description": "`true` if the given predicate `p` holds for some of the\n                 elements of this $coll, otherwise `false`."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 350,
+            "description": "$mayNotTerminateInf\n  $orderDependent",
+            "params": [
+                {
+                    "name": "p",
+                    "description": "the predicate used to test elements."
+                }
+            ],
+            "return": {
+                "description": "an option value containing the first element in the $coll\n              that satisfies `p`, or `None` if none exists."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 395,
+            "description": "$orderDependent",
+            "return": {
+                "description": "the first element of this $coll."
+            },
+            "throws": [
+                "`NoSuchElementException` if the $coll is empty."
+            ],
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 411,
+            "description": "$orderDependent",
+            "return": {
+                "description": "the first element of this $coll if it is nonempty, `None` if it is empty."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 417,
+            "description": "$orderDependent",
+            "return": {
+                "description": "a $coll consisting of all elements of this $coll\n         except the first one."
+            },
+            "throws": [
+                "`UnsupportedOperationException` if the $coll is empty."
+            ],
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 428,
+            "description": "$orderDependent",
+            "return": {
+                "description": "The last element of this $coll."
+            },
+            "throws": [
+                "NoSuchElementException If the $coll is empty."
+            ],
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 440,
+            "description": "$orderDependent",
+            "return": {
+                "description": "the last element of this $coll$ if it is nonempty, `None` if it is empty."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 446,
+            "description": "$orderDependent",
+            "return": {
+                "description": "a $coll consisting of all elements of this $coll\n         except the last one."
+            },
+            "throws": [
+                "`UnsupportedOperationException` if the $coll is empty."
+            ],
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 552,
+            "description": "$coll and the final one will be an empty $coll, with the intervening\nvalues the results of successive applications of `tail`.",
+            "return": {
+                "description": "an iterator over all the tails of this $coll"
+            },
+            "example": [
+                "  `List(1,2,3).tails = Iterator(List(1,2,3), List(2,3), List(3), Nil)`"
+            ],
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 561,
+            "description": "$coll and the final one will be an empty $coll, with the intervening\nvalues the results of successive applications of `init`.",
+            "return": {
+                "description": "an iterator over all the inits of this $coll"
+            },
+            "example": [
+                "  `List(1,2,3).inits = Iterator(List(1,2,3), List(1,2), List(1), Nil)`"
+            ],
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 570,
+            "description": "Fills the given array `xs` with at most `len` elements of\nthis $coll, starting at position `start`.\nCopying will stop once either the end of the current $coll is reached,\nor the end of the array is reached, or `len` elements have been copied.\n\n$willNotTerminateInf",
+            "params": [
+                {
+                    "name": "xs",
+                    "description": "the array to fill."
+                },
+                {
+                    "name": "start",
+                    "description": "the starting index."
+                },
+                {
+                    "name": "len",
+                    "description": "the maximal number of elements to copy."
+                }
+            ],
+            "tparam": "B      the type of the elements of the array.",
+            "usecase": "def copyToArray(xs: Array[A], start: Int, len: Int): Unit",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 602,
+            "return": {
+                "description": "a string representation of this collection. By default this\n            string consists of the `stringPrefix` of this $coll,\n            followed by all elements separated by commas and enclosed in parentheses."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 610,
+            "return": {
+                "description": "a string representation which starts the result of `toString`\n           applied to this $coll. By default the string prefix is the\n           simple name of the collection class $coll."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 625,
+            "return": {
+                "description": "a non-strict view of this $coll."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 634,
+            "description": "Note: the difference between `view` and `slice` is that `view` produces\n        a view of the current $coll, whereas `slice` produces a new $coll.\n \n  Note: `view(from, to)` is equivalent to `view.slice(from, to)`\n  $orderDependent",
+            "params": [
+                {
+                    "name": "from",
+                    "description": "the index of the first element of the view"
+                },
+                {
+                    "name": "until",
+                    "description": "the index of the element following the view"
+                }
+            ],
+            "return": {
+                "description": "a non-strict view of a slice of this $coll, starting at index `from`\n  and extending up to (but not including) index `until`."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 649,
+            "description": "Note: the difference between `c filter p` and `c withFilter p` is that\n        the former creates a new collection, whereas the latter only\n        restricts the domain of subsequent `map`, `flatMap`, `foreach`,\n        and `withFilter` operations.\n  $orderDependent",
+            "params": [
+                {
+                    "name": "p",
+                    "description": "the predicate used to test elements."
+                }
+            ],
+            "return": {
+                "description": "an object of class `WithFilter`, which supports\n             `map`, `flatMap`, `foreach`, and `withFilter` operations.\n             All these operations apply to those elements of this $coll which\n             satisfy the predicate `p`."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 665,
+            "description": "returned by method `withFilter`.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 670,
+            "description": "outer $coll containing this `WithFilter` instance that satisfy predicate `p`.",
+            "params": [
+                {
+                    "name": "f",
+                    "description": "the function to apply to each element."
+                },
+                {
+                    "name": "bf",
+                    "description": "$bfinfo"
+                }
+            ],
+            "tparam": "That  $thatinfo",
+            "return": {
+                "description": "a new $coll resulting from applying the given function\n              `f` to each element of the outer $coll that satisfies\n              predicate `p` and collecting the results."
+            },
+            "usecase": "def map[B](f: A => B): $Coll[B]",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 694,
+            "description": "outer $coll containing this `WithFilter` instance that satisfy\npredicate `p` and concatenating the results.",
+            "params": [
+                {
+                    "name": "f",
+                    "description": "the function to apply to each element."
+                },
+                {
+                    "name": "bf",
+                    "description": "$bfinfo"
+                }
+            ],
+            "tparam": "That  $thatinfo",
+            "return": {
+                "description": "a new $coll resulting from applying the given collection-valued function\n              `f` to each element of the outer $coll that satisfies predicate `p` and concatenating the results."
+            },
+            "usecase": "def flatMap[B](f: A => TraversableOnce[B]): $Coll[B]",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 719,
+            "description": "this `WithFilter` instance that satisfy predicate `p`.",
+            "params": [
+                {
+                    "name": "f",
+                    "description": "the function that is applied for its side-effect to every element.\n            The result of function `f` is discarded."
+                }
+            ],
+            "tparam": "U  the type parameter describing the result of function `f`. \n            This result will always be ignored. Typically `U` is `Unit`,\n            but this is not necessary.",
+            "usecase": "def foreach(f: A => Unit): Unit",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html",
+            "line": 735,
+            "params": [
+                {
+                    "name": "q",
+                    "description": "the predicate used to test elements."
+                }
+            ],
+            "return": {
+                "description": "an object of class `WithFilter`, which supports\n             `map`, `flatMap`, `foreach`, and `withFilter` operations.\n             All these operations apply to those elements of this $coll which\n             satisfy the predicate `q` in addition to the predicate `p`."
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clojure\\clojure.js",
+            "line": 1,
+            "description": "Author: Hans Engel\nBranched from CodeMirror's Scheme mode (by Koh Zi Han, based on implementation by Koh Zi Chun)",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\clojure\\clojure.js",
+            "line": 163,
+            "description": "Either\n(indent-word ..\n(non-indent-word ..\n(;something else, bracket, etc.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\cobol\\cobol.js",
+            "line": 1,
+            "description": "Author: Gautam Mehta\nBranched from CodeMirror's Scheme mode",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\coffeescript\\coffeescript.js",
+            "line": 1,
+            "description": "Link to the project's GitHub page:\nhttps://github.com/pickhardt/coffeescript-codemirror-mode",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\livescript\\livescript.js",
+            "line": 1,
+            "description": "Link to the project's GitHub page:\nhttps://github.com/duralog/CodeMirror",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\ntriples\\ntriples.js",
+            "line": 1,
+            "description": "This script provides syntax highlighting support for\nthe Ntriples format.\nNtriples format specification:\n    http://www.w3.org/TR/rdf-testcases/#ntriples",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\scheme\\scheme.js",
+            "line": 1,
+            "description": "Author: Koh Zi Han, based on implementation by Koh Zi Chun",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\scheme\\scheme.js",
+            "line": 170,
+            "description": "Either\n(indent-word ..\n(non-indent-word ..\n(;something else, bracket, etc.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\smarty\\smarty.js",
+            "line": 1,
+            "description": "Smarty 2 and 3 mode.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\mode\\tiddlywiki\\tiddlywiki.js",
+            "line": 1,
+            "description": "|''Name''|tiddlywiki.js|\n|''Description''|Enables TiddlyWikiy syntax highlighting using CodeMirror|\n|''Author''|PMario|\n|''Version''|0.1.7|\n|''Status''|''stable''|\n|''Source''|[[GitHub|https://github.com/pmario/CodeMirror2/blob/tw-syntax/mode/tiddlywiki]]|\n|''Documentation''|http://codemirror.tiddlyspace.com/|\n|''License''|[[MIT License|http://www.opensource.org/licenses/mit-license.php]]|\n|''CoreVersion''|2.5.0|\n|''Requires''|codemirror.js|\n|''Keywords''|syntax highlighting color code mirror codemirror|\n! Info\nCoreVersion parameter is needed for TiddlyWiki only!",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\test\\lint\\parse-js.js",
+            "line": 1,
+            "description": "A JavaScript tokenizer / parser / beautifier / compressor.\nThis version is suitable for Node.js.  With minimal changes (the\n  exports stuff) it should work on any JS platform.\nThis file contains the tokenizer/parser.  It is a port to JavaScript\n  of parse-js [1], a JavaScript parser library written in Common Lisp\n  by Marijn Haverbeke.  Thank you Marijn!\n[1] http://marijn.haverbeke.nl/parse-js/\nExported functions:\n  - tokenizer(code) -- returns a function.  Call the returned\n      function to fetch the next token.\n  - parse(code) -- returns an AST of the given JavaScript code.\n-------------------------------- (C) ---------------------------------\n                         Author: Mihai Bazon\n                         <mihai.bazon@gmail.com>\n                       http://mihai.bazon.net/blog\nDistributed under the BSD license:\n  Copyright 2010 (c) Mihai Bazon <mihai.bazon@gmail.com>\n    Based on parse-js (http://marijn.haverbeke.nl/parse-js/).\n  Redistribution and use in source and binary forms, with or without\n    modification, are permitted provided that the following conditions\n    are met:\n      * Redistributions of source code must retain the above\n          copyright notice, this list of conditions and the following\n          disclaimer.\n      * Redistributions in binary form must reproduce the above\n          copyright notice, this list of conditions and the following\n          disclaimer in the documentation and/or other materials\n          provided with the distribution.\n  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY\n    EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n    PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE\n    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,\n    OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\n    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR\n    TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF\n    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n    SUCH DAMAGE.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js",
+            "line": 1,
+            "description": "Helper to test CodeMirror highlighting modes. It pretty prints output of the\nhighlighter and can check against expected styles.\n\nMode tests are registered by calling test.mode(testName, mode,\ntokens), where mode is a mode object as returned by\nCodeMirror.getMode, and tokens is an array of lines that make up\nthe test.\n\nThese lines are strings, in which styled stretches of code are\nenclosed in brackets `[]`, and prefixed by their style. For\nexample, `[keyword if]`. Brackets in the code itself must be\nduplicated to prevent them from being interpreted as token\nboundaries. For example `a[[i]]` for `a[i]`. If a token has\nmultiple styles, the styles must be separated by ampersands, for\nexample `[tag&error </hmtl>]`.\n\nSee the test.js files in the css, markdown, gfm, and stex mode\ndirectories for examples.",
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js",
+            "line": 107,
+            "description": "Emulation of CodeMirror's internal highlight routine for testing. Multi-line\ninput is supported.",
+            "params": [
+                {
+                    "name": "string",
+                    "description": "to highlight"
+                },
+                {
+                    "name": "mode",
+                    "description": "the mode that will do the actual highlighting"
+                }
+            ],
+            "return": {
+                "description": "array of [style, token] pairs"
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js",
+            "line": 149,
+            "description": "Compare two arrays of output from highlight.",
+            "params": [
+                {
+                    "name": "o1",
+                    "description": "array of [style, token] pairs"
+                },
+                {
+                    "name": "o2",
+                    "description": "array of [style, token] pairs"
+                }
+            ],
+            "return": {
+                "description": "boolean; true iff outputs equal"
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js",
+            "line": 165,
+            "description": "Print tokens and corresponding styles in a table. Spaces in the token are\nreplaced with 'interpunct' dots (&middot;).",
+            "params": [
+                {
+                    "name": "output",
+                    "description": "array of [style, token] pairs"
+                }
+            ],
+            "return": {
+                "description": "html string"
+            },
+            "class": ""
+        },
+        {
+            "file": "..\\..\\code-mirror\\codemirror-3.14\\test\\vim_test.js",
+            "line": 265,
+            "params": [
+                {
+                    "name": "name",
+                    "description": "Name of the test"
+                },
+                {
+                    "name": "keys",
+                    "description": "An array of keys or a string with a single key to simulate."
+                },
+                {
+                    "name": "endPos",
+                    "description": "The expected end position of the cursor."
+                },
+                {
+                    "name": "startPos",
+                    "description": "The position the cursor should start at, defaults to 0, 0."
+                }
+            ],
+            "class": ""
+        }
+    ],
+    "warnings": [
+        {
+            "message": "unknown tag: define",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "unknown tag: define",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "unknown tag: version",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "unknown tag: define",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "unknown tag: define",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:133"
+        },
+        {
+            "message": "unknown tag: usecase",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:133"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:188"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:188"
+        },
+        {
+            "message": "unknown tag: usecase",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:188"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:260"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:260"
+        },
+        {
+            "message": "unknown tag: usecase",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:260"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:570"
+        },
+        {
+            "message": "unknown tag: usecase",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:570"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:670"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:670"
+        },
+        {
+            "message": "unknown tag: usecase",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:670"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:694"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:694"
+        },
+        {
+            "message": "unknown tag: usecase",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:694"
+        },
+        {
+            "message": "unknown tag: tparam",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:719"
+        },
+        {
+            "message": "unknown tag: usecase",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:719"
+        },
+        {
+            "message": "Missing item type\nTag-closer extension for CodeMirror.\n\nThis extension adds an \"autoCloseTags\" option that can be set to\neither true to get the default behavior, or an object to further\nconfigure its behavior.\n\nThese are supported options:\n\n`whenClosing` (default true)\n  Whether to autoclose when the '/' of a closing tag is typed.\n`whenOpening` (default true)\n  Whether to autoclose the tag when the final '>' of an opening\n  tag is typed.\n`dontCloseTags` (default is empty tags for HTML, none for XML)\n  An array of tag names that should not be autoclosed.\n`indentTags` (default is block tags for HTML, none for XML)\n  An array of tag names that should, when opened, cause a\n  blank line to be added inside the tag, and the blank line and\n  closing line to be indented.\n\nSee demos/closetag.html for a usage example.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\addon\\edit\\closetag.js:1"
+        },
+        {
+            "message": "Missing item type\nSupported keybindings:\n\n  Motion:\n  h, j, k, l\n  gj, gk\n  e, E, w, W, b, B, ge, gE\n  f<character>, F<character>, t<character>, T<character>\n  $, ^, 0, -, +, _\n  gg, G\n  %\n  '<character>, `<character>\n\n  Operator:\n  d, y, c\n  dd, yy, cc\n  g~, g~g~\n  >, <, >>, <<\n\n  Operator-Motion:\n  x, X, D, Y, C, ~\n\n  Action:\n  a, i, s, A, I, S, o, O\n  zz, z., z<CR>, zt, zb, z-\n  J\n  u, Ctrl-r\n  m<character>\n  r<character>\n\n  Modes:\n  ESC - leave insert mode, visual mode, and clear input state.\n  Ctrl-[, Ctrl-c - same as ESC.\n\nRegisters: unamed, -, a-z, A-Z, 0-9\n  (Does not respect the special case for number registers when delete\n   operator is made with these commands: %, (, ),  , /, ?, n, N, {, } )\n  TODO: Implement the remaining registers.\nMarks: a-z, A-Z, and 0-9\n  TODO: Implement the remaining special marks. They have more complex\n      behavior.\n\nCode structure:\n 1. Default keymap\n 2. Variable declarations and short basic helpers\n 3. Instance (External API) implementation\n 4. Internal state tracking objects (input state, counter) implementation\n    and instanstiation\n 5. Key handler (the main command dispatcher) implementation\n 6. Motion, operator, and action implementations\n 7. Helper functions for the key handler, motions, operators, and actions\n 8. Set up Vim to work as a keymap for CodeMirror.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:1"
+        },
+        {
+            "message": "Missing item type\ntypedef {Object{line:number,ch:number}} Cursor An object containing the\n    position of the cursor.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:1166"
+        },
+        {
+            "message": "Missing item type\nClips cursor to ensure that line is within the buffer's range\nIf includeLineBreak is true, then allow cur.ch == lineLength.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:1916"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:2327"
+        },
+        {
+            "message": "Missing item type\nExtract the regular expression from the query and return a Regexp object.\nReturns null if the query is blank.\nIf ignoreCase is passed in, the Regexp object will have the 'i' flag set.\nIf smartCase is passed in, and the query contains upper case letters,\n  then ignoreCase is overridden, and the 'i' flag will not be set.\nIf the query contains the /i in the flag part of the regular expression,\n  then both ignoreCase and smartCase are ignored, and 'i' will be passed\n  through to the Regex object.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:2619"
+        },
+        {
+            "message": "Missing item type\nCheck if pos is in the specified range, INCLUSIVE.\nRange can be specified with 1 or 2 arguments.\nIf the first range argument is an array, treat it as an array of line\nnumbers. Match pos against any of the lines.\nIf the first range argument is a number,\n  if there is only 1 range argument, check if pos has the same line\n      number\n  if there are 2 range arguments, then check if pos is in between the two\n      range arguments.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:2788"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:3248"
+        },
+        {
+            "message": "Missing item type\nHandle the raw key event from CodeMirror. Translate the\nShift + key modifier to the resulting letter, while preserving other\nmodifers.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:3339"
+        },
+        {
+            "message": "Missing item type\nListens for changes made in insert mode.\nShould only be active in insert mode.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:3488"
+        },
+        {
+            "message": "Missing item type\nListens for any kind of cursor activity on CodeMirror.\n- For tracking cursor activity in insert mode.\n- Should only be active in insert mode.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:3507"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:3523"
+        },
+        {
+            "message": "Missing item type\nHandles raw key down events from the text area.\n- Should only be active in insert mode.\n- For recording deletes in insert mode.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:3528"
+        },
+        {
+            "message": "Missing item type\nRepeats the last edit, which includes exactly 1 command and at most 1\ninsert. Operator and motion commands are read from lastEditInputState,\nwhile action commands are read from lastEditActionCommand.\n\nIf repeatForInsert is true, then the function was called by\nexitInsertMode to repeat the insert mode changes the user just made. The\ncorresponding enterInsertMode call was made with a count.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\keymap\\vim.js:3546"
+        },
+        {
+            "message": "Missing item type\n$traversableInfo",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:46"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:107"
+        },
+        {
+            "message": "Missing item type\nBy default this is implemented as the `TraversableLike` object itself,\nbut this can be overridden.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:110"
+        },
+        {
+            "message": "Missing item type\nBy default this is implemented as the current collection object itself,\nbut this can be overridden.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:116"
+        },
+        {
+            "message": "Missing item type\nBy default this is implemented as just a cast, but this can be overridden.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:122"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:127"
+        },
+        {
+            "message": "Missing item type\nNote: this method underlies the implementation of most other bulk operations.\n    It's important to implement this method in an efficient way.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:133"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:150"
+        },
+        {
+            "message": "Missing item type\nAll strict collections are known to have finite size. For a non-strict collection\nsuch as `Stream`, the predicate returns `true` if all elements have been computed.\nIt returns `false` if the stream is not yet evaluated to the end.\n\nNote: many collection methods will not work on collections of infinite sizes.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:165"
+        },
+        {
+            "message": "Missing item type\nIt differs from ++ in that the right operand determines the type of the\nresulting collection rather than the left one.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:188"
+        },
+        {
+            "message": "Missing item type\nthat of ++ because many collections override it with more efficient versions.\nSince TraversableOnce has no '++' method, we have to implement that directly,\nbut Traversable and down can use the overload.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:212"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:233"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:246"
+        },
+        {
+            "message": "Missing item type\nelements of this $coll on which the function is defined.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:260"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:288"
+        },
+        {
+            "message": "Missing item type\n$mayNotTerminateInf",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:316"
+        },
+        {
+            "message": "Missing item type\n$mayNotTerminateInf",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:333"
+        },
+        {
+            "message": "Missing item type\n$mayNotTerminateInf\n  $orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:350"
+        },
+        {
+            "message": "Missing item type\n$orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:395"
+        },
+        {
+            "message": "Missing item type\n$orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:411"
+        },
+        {
+            "message": "Missing item type\n$orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:417"
+        },
+        {
+            "message": "Missing item type\n$orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:428"
+        },
+        {
+            "message": "Missing item type\n$orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:440"
+        },
+        {
+            "message": "Missing item type\n$orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:446"
+        },
+        {
+            "message": "Missing item type\n$coll and the final one will be an empty $coll, with the intervening\nvalues the results of successive applications of `tail`.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:552"
+        },
+        {
+            "message": "Missing item type\n$coll and the final one will be an empty $coll, with the intervening\nvalues the results of successive applications of `init`.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:561"
+        },
+        {
+            "message": "Missing item type\nFills the given array `xs` with at most `len` elements of\nthis $coll, starting at position `start`.\nCopying will stop once either the end of the current $coll is reached,\nor the end of the array is reached, or `len` elements have been copied.\n\n$willNotTerminateInf",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:570"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:602"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:610"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:625"
+        },
+        {
+            "message": "Missing item type\nNote: the difference between `view` and `slice` is that `view` produces\n        a view of the current $coll, whereas `slice` produces a new $coll.\n \n  Note: `view(from, to)` is equivalent to `view.slice(from, to)`\n  $orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:634"
+        },
+        {
+            "message": "Missing item type\nNote: the difference between `c filter p` and `c withFilter p` is that\n        the former creates a new collection, whereas the latter only\n        restricts the domain of subsequent `map`, `flatMap`, `foreach`,\n        and `withFilter` operations.\n  $orderDependent",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:649"
+        },
+        {
+            "message": "Missing item type\nreturned by method `withFilter`.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:665"
+        },
+        {
+            "message": "Missing item type\nouter $coll containing this `WithFilter` instance that satisfy predicate `p`.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:670"
+        },
+        {
+            "message": "Missing item type\nouter $coll containing this `WithFilter` instance that satisfy\npredicate `p` and concatenating the results.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:694"
+        },
+        {
+            "message": "Missing item type\nthis `WithFilter` instance that satisfy predicate `p`.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:719"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clike\\scala.html:735"
+        },
+        {
+            "message": "Missing item type\nAuthor: Hans Engel\nBranched from CodeMirror's Scheme mode (by Koh Zi Han, based on implementation by Koh Zi Chun)",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clojure\\clojure.js:1"
+        },
+        {
+            "message": "Missing item type\nEither\n(indent-word ..\n(non-indent-word ..\n(;something else, bracket, etc.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\clojure\\clojure.js:163"
+        },
+        {
+            "message": "Missing item type\nAuthor: Gautam Mehta\nBranched from CodeMirror's Scheme mode",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\cobol\\cobol.js:1"
+        },
+        {
+            "message": "Missing item type\nLink to the project's GitHub page:\nhttps://github.com/pickhardt/coffeescript-codemirror-mode",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\coffeescript\\coffeescript.js:1"
+        },
+        {
+            "message": "Missing item type\nLink to the project's GitHub page:\nhttps://github.com/duralog/CodeMirror",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\livescript\\livescript.js:1"
+        },
+        {
+            "message": "Missing item type\nThis script provides syntax highlighting support for\nthe Ntriples format.\nNtriples format specification:\n    http://www.w3.org/TR/rdf-testcases/#ntriples",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\ntriples\\ntriples.js:1"
+        },
+        {
+            "message": "Missing item type\nAuthor: Koh Zi Han, based on implementation by Koh Zi Chun",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\scheme\\scheme.js:1"
+        },
+        {
+            "message": "Missing item type\nEither\n(indent-word ..\n(non-indent-word ..\n(;something else, bracket, etc.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\scheme\\scheme.js:170"
+        },
+        {
+            "message": "Missing item type\nSmarty 2 and 3 mode.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\smarty\\smarty.js:1"
+        },
+        {
+            "message": "Missing item type\n|''Name''|tiddlywiki.js|\n|''Description''|Enables TiddlyWikiy syntax highlighting using CodeMirror|\n|''Author''|PMario|\n|''Version''|0.1.7|\n|''Status''|''stable''|\n|''Source''|[[GitHub|https://github.com/pmario/CodeMirror2/blob/tw-syntax/mode/tiddlywiki]]|\n|''Documentation''|http://codemirror.tiddlyspace.com/|\n|''License''|[[MIT License|http://www.opensource.org/licenses/mit-license.php]]|\n|''CoreVersion''|2.5.0|\n|''Requires''|codemirror.js|\n|''Keywords''|syntax highlighting color code mirror codemirror|\n! Info\nCoreVersion parameter is needed for TiddlyWiki only!",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\mode\\tiddlywiki\\tiddlywiki.js:1"
+        },
+        {
+            "message": "Missing item type\nA JavaScript tokenizer / parser / beautifier / compressor.\nThis version is suitable for Node.js.  With minimal changes (the\n  exports stuff) it should work on any JS platform.\nThis file contains the tokenizer/parser.  It is a port to JavaScript\n  of parse-js [1], a JavaScript parser library written in Common Lisp\n  by Marijn Haverbeke.  Thank you Marijn!\n[1] http://marijn.haverbeke.nl/parse-js/\nExported functions:\n  - tokenizer(code) -- returns a function.  Call the returned\n      function to fetch the next token.\n  - parse(code) -- returns an AST of the given JavaScript code.\n-------------------------------- (C) ---------------------------------\n                         Author: Mihai Bazon\n                         <mihai.bazon@gmail.com>\n                       http://mihai.bazon.net/blog\nDistributed under the BSD license:\n  Copyright 2010 (c) Mihai Bazon <mihai.bazon@gmail.com>\n    Based on parse-js (http://marijn.haverbeke.nl/parse-js/).\n  Redistribution and use in source and binary forms, with or without\n    modification, are permitted provided that the following conditions\n    are met:\n      * Redistributions of source code must retain the above\n          copyright notice, this list of conditions and the following\n          disclaimer.\n      * Redistributions in binary form must reproduce the above\n          copyright notice, this list of conditions and the following\n          disclaimer in the documentation and/or other materials\n          provided with the distribution.\n  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY\n    EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n    PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE\n    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,\n    OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\n    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR\n    TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF\n    THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n    SUCH DAMAGE.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\test\\lint\\parse-js.js:1"
+        },
+        {
+            "message": "Missing item type\nHelper to test CodeMirror highlighting modes. It pretty prints output of the\nhighlighter and can check against expected styles.\n\nMode tests are registered by calling test.mode(testName, mode,\ntokens), where mode is a mode object as returned by\nCodeMirror.getMode, and tokens is an array of lines that make up\nthe test.\n\nThese lines are strings, in which styled stretches of code are\nenclosed in brackets `[]`, and prefixed by their style. For\nexample, `[keyword if]`. Brackets in the code itself must be\nduplicated to prevent them from being interpreted as token\nboundaries. For example `a[[i]]` for `a[i]`. If a token has\nmultiple styles, the styles must be separated by ampersands, for\nexample `[tag&error </hmtl>]`.\n\nSee the test.js files in the css, markdown, gfm, and stex mode\ndirectories for examples.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js:1"
+        },
+        {
+            "message": "Missing item type\nEmulation of CodeMirror's internal highlight routine for testing. Multi-line\ninput is supported.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js:107"
+        },
+        {
+            "message": "Missing item type\nCompare two arrays of output from highlight.",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js:149"
+        },
+        {
+            "message": "Missing item type\nPrint tokens and corresponding styles in a table. Spaces in the token are\nreplaced with 'interpunct' dots (&middot;).",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\test\\mode_test.js:165"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ..\\..\\code-mirror\\codemirror-3.14\\test\\vim_test.js:265"
+        }
+    ]
+}

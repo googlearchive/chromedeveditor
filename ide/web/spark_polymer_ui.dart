@@ -31,6 +31,7 @@ class SparkPolymerUI extends SparkWidget {
   @observable bool liveDeployMode = true;
   @observable bool developerMode = true;
   @observable bool apkBuildMode = true;
+  @observable bool polymerDesigner = true;
   @observable bool chromeOS = false;
   @observable String appVersion = '';
   // This flag is different from the rest: the comment immediately above doesn't
@@ -67,6 +68,7 @@ class SparkPolymerUI extends SparkWidget {
     liveDeployMode = SparkFlags.liveDeployMode;
     apkBuildMode = SparkFlags.apkBuildMode;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
+    polymerDesigner = SparkFlags.polymerDesigner;
     chromeOS = PlatformInfo.isCros;
     appVersion = _model.appVersion;
 

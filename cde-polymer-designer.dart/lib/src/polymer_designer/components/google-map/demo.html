@@ -1,0 +1,42 @@
+<!doctype html>
+<!-- Copyright (c) 2014 Google Inc. All rights reserved. -->
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>Google Map demo</title>
+  <script src="../platform/platform.js"></script>
+  <link rel="import" href="google-map.html">
+  <link rel="import" href="google-map-directions.html">
+  <style>
+    #controlsToggle {
+      position: absolute;
+      left: 10%;
+      bottom: 10%;
+    }
+  </style>
+</head>
+<body fullbleed unresolved>
+
+<google-map latitude="37.779" longitude="-122.3892" minZoom="9" maxZoom="11" fit>
+  <google-map-marker latitude="37.779" longitude="-122.3892"
+                     title="Go Giants!" draggable="true">
+    <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/4/49/San_Francisco_Giants_Cap_Insignia.svg/200px-San_Francisco_Giants_Cap_Insignia.svg.png" />
+  </google-map-marker>
+</google-map>
+
+<google-map-directions startAddress="San Francisco" endAddress="Mountain View"></google-map-directions>
+
+<button id="controlsToggle" onclick="toggleControls()">Toggle controls</button>
+
+<script>
+  var gmap = document.querySelector('google-map');
+  gmap.addEventListener('api-load', function(e) {
+    document.querySelector('google-map-directions').map = this.map;
+  });
+
+  function toggleControls() {
+    gmap.disableDefaultUI = !gmap.disableDefaultUI;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<polymer-element name="design-state" attributes="canBack canForward">
+<script>
+
+Polymer({
+  _cursor: -1,
+  cursor: -1,
+  canBack: false,
+  canForward: false,
+  created: function() {
+    this.reset();
+  },
+
+  push: function(state) {
+    if (!state && state !== 0) {
+      return;
+    }
+    if (!this.isAtLast()) {
+      var f = this.cursor + 1;
+      this.stack.splice(f, this.stack.length - f);
+    }
+    this.stack.push(state);
+    this.cursor = this.stack.length - 1;
+    this._statePushed = true;
+    Platform.flush();
+  },
+
+  back: function() {
+    this._cursor--;
+  },
+
+  forward: function() {
+    this._cursor++;
+  },
+
+  _cursorChanged: function() {
+    this.cursor = Math.max(0, Math.min(this._cursor,
+        this.stack.length-1));
+  },
+
+  cursorChanged: function(old) {
+    //console.log('cursorChanged', this.cursor, this._statePushed);
+    this._cursor = this.cursor;
+    if (!this._statePushed) {
+      var state = this.stack[this.cursor];
+      this.fire('state-change', {state: state});
+    } else {
+      this._statePushed = false;
+    }
+    var first = this.isAtFirst(), last = this.isAtLast();
+    this.canBack = !first;
+    this.canForward = !last;
+    if (first) {
+      this.fire('first-state');
+    } else if (last) {
+      this.fire('last-state');
+    }
+  },
+
+  isAtLast: function() {
+    return (this.cursor === this.stack.length -1) 
+  },
+
+  isAtFirst: function() {
+    return (this.cursor === 0) 
+  },
+
+  reset: function() {
+    this.stack = [];
+    this.cursor = 0;
+  }
+
+});
+
+</script>
+</polymer-element>

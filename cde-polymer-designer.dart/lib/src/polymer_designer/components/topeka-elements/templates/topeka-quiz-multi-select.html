@@ -1,0 +1,67 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../topeka-quiz-base.html">
+<link rel="import" href="../../core-selector/core-selector.html">
+<link rel="import" href="../../paper-checkbox/paper-checkbox.html">
+
+<polymer-element name="topeka-quiz-multi-select" extends="topeka-quiz-base">
+<template>
+
+  <style>
+
+    paper-checkbox {
+      padding: 14px 0;
+    }
+
+    paper-checkbox::shadow #checkboxLabel {
+      padding-left: 24px;
+    }
+    
+    paper-checkbox::shadow #ink[checked] {
+      color: #00bad2;
+    }
+    
+    paper-checkbox::shadow #checkbox.checked {
+      border-color: #00bad2;
+    }
+
+  </style>
+
+  <div id="choices">
+
+    <template repeat="{{quiz.options}}">
+
+      <paper-checkbox label="{{}}"></paper-checkbox><br>
+
+    </template>
+
+  </div>
+
+  <core-selector target="{{$.choices}}" multi itemsSelector="paper-checkbox" selected="{{selected}}" selectedProperty="checked"></core-selector>
+
+</template>
+<script>
+
+  Polymer('topeka-quiz-multi-select', {
+    
+    reset: function() {
+      this.super();
+      this.selected = null;
+    },
+    
+    isCorrect: function() {
+      var v = this.selected && this.selected.sort();
+      return v && v.toString() == this.quiz.answer.toString();
+    }
+
+  });
+
+</script>
+</polymer-element>

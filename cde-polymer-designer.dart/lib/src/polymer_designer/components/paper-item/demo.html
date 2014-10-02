@@ -1,0 +1,39 @@
+<!doctype html>
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+<head>
+  <title>paper-item</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <script src="../platform/platform.js"></script>
+  <link href="../font-roboto/roboto.html" rel="import">
+  <link href="../core-icons/core-icons.html" rel="import">
+  <link href="../core-menu/core-menu.html" rel="import">
+  <link href="paper-item.html" rel="import">
+  <style shim-shadowdom>
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+    }
+
+    paper-item {
+      max-width: 320px;
+    }
+  </style>
+</head>
+<body unresolved>
+  <core-menu>
+    <paper-item icon="refresh" label="Item 1"></paper-item>
+    <paper-item label="Item 2"></paper-item>
+    <paper-item label="Item with a link">
+      <a href="http://www.polymer-project.org" target="_self"></a>
+    </paper-item>
+  </core-menu>
+</body>
+</html>

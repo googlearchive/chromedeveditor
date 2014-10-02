@@ -1,0 +1,7 @@
+{
+  "name": "paper-focusable",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master"
+  }
+}

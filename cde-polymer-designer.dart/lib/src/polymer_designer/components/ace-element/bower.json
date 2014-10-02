@@ -1,0 +1,7 @@
+{
+  "name": "ace-element",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master"
+  }
+}

@@ -18,6 +18,8 @@
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
+<link rel="import" href="packages/cde_polymer_designer/cde_polymer_designer.html">
+
 <link rel="import" href="lib/ui/commit_message_view/commit_message_view.html">
 <link rel="import" href="lib/ui/goto_line_view/goto_line_view.html">
 
@@ -874,6 +876,18 @@
         Remove Reference
       </spark-dialog-button>
     </spark-dialog>
+
+    <template if="{{polymerDesigner}}">
+      <spark-dialog id="polymerDesignerDialog" headerTitle="Polymer Designer">
+        <cde-polymer-designer id="polymerDesigner" entryPoint="local">
+        </cde-polymer-designer>
+
+        <spark-dialog-button cancel>Cancel</spark-dialog-button>
+        <spark-dialog-button id="polymerDesignerReset">Reset</spark-dialog-button>
+        <spark-dialog-button submit focused>Generate code</spark-dialog-button>
+      </spark-dialog>
+    </template>
+
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>

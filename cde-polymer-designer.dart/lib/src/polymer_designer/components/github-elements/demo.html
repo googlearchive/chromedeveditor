@@ -1,0 +1,58 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+<head>
+
+  <title>github-element Demo</title>
+
+  <script src="../platform/platform.js"></script>
+  <link rel="import" href="github-elements.html">
+
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+  </style>
+
+</head>
+<body unresolved>
+
+  <github-element></github-element>
+
+  <textarea cols="100" rows="10"># Test
+
+Sweet.</textarea><br>
+
+  <button onclick="saveGist()">Create Gist</button>
+
+  <hr>
+  <div></div>
+
+  <script>
+
+    var github = document.querySelector('github-element');
+    github.addEventListener('github-toast', function() {
+      document.querySelector('div').innerHTML += this.message + '<br>';
+    });
+
+    var text = document.querySelector('textarea');
+    function saveGist() {
+      github.save('test', true, {
+        'test.md': {
+          content: text.value
+        }
+      });
+    }
+
+  </script>
+
+</body>
+</html>

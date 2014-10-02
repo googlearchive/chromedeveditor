@@ -1,0 +1,8 @@
+{
+  "name": "core-range",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master",
+    "core-input": "Polymer/core-input#master"
+  }
+}

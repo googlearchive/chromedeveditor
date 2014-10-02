@@ -32,6 +32,20 @@ spark-dialog {
   margin-left: -256px;
 }
 
+spark-dialog#polymerDesignerDialog {
+  top: 5%;
+  width: 90%;
+  margin-left: -45%;
+}
+
+spark-dialog#polymerDesignerDialog #polymerDesigner {
+  display: block;
+  box-sizing: border-box;
+  /* TODO(ussuri): Find a way to use percentage height (hasn't worked so far). */
+  height: 600px;
+  border: 1px solid #ccc;
+}
+
 .toolbar {
   height: 48px;
   border-bottom: 1px solid #ddd;

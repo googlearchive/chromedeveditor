@@ -1,0 +1,91 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../components/core-icons/core-icons.html">
+<link rel="import" href="../design-canvas/design-canvas.html">
+<link rel="import" href="../../components/x-meta/x-meta.html">
+
+<polymer-element name="design-frame" horizontal layout attributes="selected">
+<template>
+
+  <link rel="stylesheet" href="design-frame.css">
+  <x-meta id="meta" categories="{{categories}}"></x-meta>
+  <design-canvas flex id="designCanvas" tabIndex="-1" selected="{{selected}}" on-design-change="{{designChange}}"></design-canvas>
+
+</template>
+<script>
+
+Polymer({
+
+  ready: function() {
+    this.fire('designer-ready');
+  },
+
+  //
+  // choreograph composed objects
+  //
+
+  paletteDrag: function(event, dragInfo) {
+    // locate meta data
+    var meta = this.$.meta.byId(dragInfo.tag);
+    dragInfo.element = meta.createElement();
+    // let canvas hook the drag
+    this.$.designCanvas.dragStart(dragInfo);
+  },
+
+  designChange: function() {
+    this.$.designCanvas.update();
+  },
+
+  deleteElement: function() {
+    this.$.designCanvas.deleteElement();
+  },
+
+  promoteElement: function() {
+    this.$.designCanvas.promoteElement();
+  },
+
+  demoteElement: function() {
+    this.$.designCanvas.demoteElement();
+  },
+
+  moveoutElement: function() {
+    this.$.designCanvas.moveoutElement();
+  },
+
+  maximizeElement: function() {
+    this.$.designCanvas.maximizeElement();
+  },
+
+  selectParentElement: function() {
+    this.$.designCanvas.selectParentElement();
+  },
+
+  loadHtml: function(html) {
+    this.$.designCanvas.loadHtml(html);
+  },
+
+  applyPropertyBinding: function(obj, name, path) {
+    this.$.designCanvas.applyPropertyBinding(obj, name, path);
+  },
+
+  'import': function(urls, callback) {
+    /* normalize metadata imports to our expectation that the design space
+    is inside a component folder */
+    var imports = urls.map(function(u) {
+      return u.replace('components/', '../');
+    });
+    Polymer.import(imports, callback);
+  }
+
+});
+
+</script>
+
+</polymer-element>

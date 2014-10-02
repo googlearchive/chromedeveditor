@@ -1,0 +1,52 @@
+<!--
+Copyright 2013 The Polymer Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<link rel="import" href="../core-ajax/core-ajax.html">
+
+<polymer-element name="yt-search" attributes="query list maxResults">
+<template>
+  <core-ajax id="ajax" url="http://gdata.youtube.com/feeds/api/videos/" 
+      params='{"alt":"json", "v":"2", "max-results":"{{maxResults}}", "q":"{{serviceQuery}}"}'
+      handleAs="json" response="{{response}}">
+  </core-ajax><content></content>
+</template>
+<script>
+
+Polymer('yt-search', {
+
+  query: '',
+  response: null,
+  list: null,
+  maxResults: 50,
+
+  ready: function() {
+    this._request = this.$.ajax.go();
+  },
+
+  queryChanged: function() {
+    if (this.query) {
+      this.serviceQuery = this.query;
+      this._request.abort();
+      this._request = this.$.ajax.go();
+    } else {
+      this.list = null;
+      this.fireResults();
+    }
+  },
+
+  responseChanged: function() {
+    this.list = this.response && this.response.feed.entry;
+    this.fireResults();
+  },
+
+  fireResults: function() {
+    this.fire('yt-search-result', {list: this.list});
+
+  }
+
+});
+  
+</script>
+</polymer-element>

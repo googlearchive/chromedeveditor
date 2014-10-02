@@ -1,0 +1,130 @@
+/*
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+*/
+
+:host {
+  overflow: hidden;
+}
+
+.quizzes-panel {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+:host([animate]) .quizzes-panel {
+  overflow: visible;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  position: relative;
+}
+
+.quizzes-panel.wide > .card {
+  width: 512px;
+  margin: 64px auto 0;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+}
+
+.card > core-toolbar {
+  height: 176px;
+  font-size: 16px;
+  line-height: 26px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.card > core-toolbar::shadow #topBar {
+  height: 176px;
+}
+
+.quizzes-panel.wide > .card > core-toolbar {
+  font-size: 18px;
+}
+
+.quizzes-panel.wide core-toolbar > .question {
+  padding: 0 8px;
+}
+
+.quizzes-content {
+  background-color: #fff;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.quizzes-panel.wide .quizzes-content {
+  overflow: inherit;
+}
+
+#quizViews {
+  display: block;
+}
+
+#quizViews > * {
+  display: none;
+}
+
+#quizViews > .core-selected {
+  display: block;
+}
+
+paper-fab.check-button {
+  position: absolute;
+  top: 148px;
+  right: 16px;
+  background-color: #f5f5f5;
+  color: #cdcdcd;
+  transition: transform 500ms cubic-bezier(0.4, 0, 0.2, 1) 500ms, background-color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-transition: -webkit-transform 500ms cubic-bezier(0.4, 0, 0.2, 1) 500ms, background-color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+  -webkit-transform-origin: 50% 50%;
+  transform-origin: 50% 50%;
+}
+
+:host([animate]) paper-fab {
+  visibility: hidden;
+}
+
+.quizzes-panel.wide paper-fab.check-button {
+  right: 24px;
+}
+
+.answered paper-fab.check-button {
+  -webkit-transform: none;
+  transform: none;
+}
+
+.answered paper-fab.check-button.correct {
+  background-color: #00e676;
+  color: #fff;
+}
+
+.answered paper-fab.check-button.incorrect {
+  background-color: #ff5252;
+  color: #fff;
+}
+
+.answered paper-fab.check-button {
+  color: #626262;
+}
+
+topeka-status-bar {
+  position: relative;
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.16);
+}
+
+topeka-status-bar.wide {
+  width: 512px;
+  margin: 0 auto;
+}

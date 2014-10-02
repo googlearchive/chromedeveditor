@@ -1,0 +1,67 @@
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../x-meta/x-meta.html">
+<link rel="import" href="property-inspector.html">
+
+<script src="reflection.js"></script>
+
+<polymer-element name="style-inspector" attributes="selected dirty">
+<template>
+
+  <style>
+    property-inspector {
+      width: 33%;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+
+    property-inspector.wide {
+      width: 67%;
+    }    
+  </style>
+  <div horizontal wrap layout>
+    <template repeat="{{property in properties}}">
+      <property-inspector property="{{property}}" nobind class="{{ {wide: property.meta.wide} | tokenList }}"></property-inspector>
+    </template>
+  </div>
+  <x-meta id="meta">
+    <property name="backgroundColor" label="bg color" kind="color"></property>
+    <property name="border" wide></property>
+    <property name="opacity" kind="range" min="0" max="1" step="0.1" defaultvalue="1"></property>
+    <property name="padding"></property>
+    <property name="margin"></property>
+    <property name="position" kind="select" options=" ,static,absolute,relative"></property>
+    <property name="left"></property>
+    <property name="top"></property>
+    <property name="display"></property>
+    <property name="width"></property>
+    <property name="height"></property>
+  </x-meta>
+
+</template>
+<script>
+
+Polymer({
+
+  properties: null,
+
+  observe: {
+    'selected dirty': 'update'
+  },
+
+  update: function() {
+    this.properties = Reflection.styles(this.selected,
+      this.$.meta.properties);
+  }
+
+});
+
+</script>
+</polymer-element>
