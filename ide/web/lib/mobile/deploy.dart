@@ -355,7 +355,6 @@ abstract class AbstractDeployer {
 
   Future build(ProgressMonitor monitor, MobileBuildInfo appInfo) {
     List<int> httpRequest;
-    List<int> ad;
     Map<String, String> signInfo = new Map<String, String>();
 
     httpRequest = _buildAssetManifestRequest(_getTarget());
@@ -371,7 +370,6 @@ abstract class AbstractDeployer {
     }).then((_) {
       return archiveModifiedFilesInContainer(appContainer, true, [])
       .then((List<int> archivedData) {
-          ad = archivedData;
           httpRequest = _buildPushRequest(_getTarget(), archivedData);
           return _setTimeout(_pushRequestToDevice(httpRequest, PUSH_REQUEST_TIMEOUT));
      }).then((msg) {
@@ -387,25 +385,13 @@ abstract class AbstractDeployer {
     }).then((chrome.ArrayBuffer data) {
       signInfo['privateKeyData'] = crypto.CryptoUtils.bytesToBase64(data.getBytes());
       signInfo['keyPassword'] = appInfo.keyPassword;
-      print(appInfo.keyPassword);
 
       httpRequest = _makeBuildRequest(_getTarget(), JSON.encode(signInfo).codeUnits);
-      //TODO(albualexandru): make the request and save the file
       return _setTimeout(_pushRequestToDevice(httpRequest, BUILD_REQUEST_TIMEOUT));
-      //return new Future.value("bla");
     }).then((msg) {
           return _expectHttpOkResponse(msg);
     }).then((String response) {
-        print(response);
-      //need to prompt for save as to save the APK
-      chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-              type: chrome.ChooseEntryType.SAVE_FILE);
-      return chrome.fileSystem.chooseEntry(options).then(
-          (chrome.ChooseEntryResult res) {
-        chrome.ChromeFileEntry r = res.entry;
-        r.writeBytes(new chrome.ArrayBuffer.fromBytes(ad));
         return new Future.error("Not implemented");
-      });
     });
     }).whenComplete(() {
       _doWhenComplete();
