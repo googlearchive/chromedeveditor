@@ -201,9 +201,9 @@ class CdePolymerDesigner extends PolymerElement {
           height: 40px;
         }
         /* Hide some UI elements we don't need */
-        #designer::shadow > #appbar > * { 
+        #designer::shadow > #appbar > * {
           display: none;
-        } 
+        }
         #designer::shadow > #appbar > .design-controls {
           display: block;
         }
