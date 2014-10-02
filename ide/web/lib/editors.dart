@@ -423,10 +423,10 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
  */
 class _EditorState {
   EditorManager manager;
-  File file;
+  ContentProvider contentProvider;
   ace.EditSession session;
 
-  _EditorState.fromFile(this.manager, this.file);
+  _EditorState.fromFile(this.manager, this.contentProvider);
 
   factory _EditorState.fromMap(EditorManager manager, Map m) {
     File f = manager._workspace.restoreResource(m['file']);
@@ -463,7 +463,8 @@ class _EditorState {
         return new Future.value(this);
       } else {
         return file.getContents().then((text) {
-          session = manager._aceContainer.createEditSession(text, file.name);
+          /*%TRACE3*/ print("(4> 10/2/14): file.getContents!"); // TRACE%
+          session = manager._aceContainer.createEditSession("text", file.name);
           return this;
         });
       }
@@ -473,6 +474,7 @@ class _EditorState {
   void handleFileChanged() {
     if (session != null) {
       file.getContents().then((String text) {
+        /*%TRACE3*/ print("(4> 10/2/14): handleFileChanged!"); // TRACE%
         session.value = text;
       });
     }

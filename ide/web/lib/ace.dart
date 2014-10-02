@@ -209,6 +209,7 @@ class TextEditor extends Editor {
   }
 
   void fileContentsChanged() {
+    /*%TRACE3*/ print("(4> 10/2/14): fileContentsChanged!"); // TRACE%
     if (_session != null) {
       // Check that we didn't cause this change event.
       file.getContents().then((String text) {
