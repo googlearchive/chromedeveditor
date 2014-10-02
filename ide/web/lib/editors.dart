@@ -149,14 +149,14 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
    * This will open the given [File]. If this file is already open, it will
    * instead be made the active editor.
    */
-  void openFile(File file, {bool activateEditor: true}) {
-    if (file == null) return;
-    _EditorState state = _getStateFor(file);
+  void openFile(ContentProvider contentProvider, {bool activateEditor: true}) {
+    if (contentProvider == null) return;
+    _EditorState state = _getStateFor(contentProvider);
 
     if (state == null) {
-      state = _savedEditorStates[file.uuid];
+      state = _savedEditorStates[contentProvider.uuid];
       if (state == null) {
-        state = new _EditorState.fromFile(this, file);
+        state = new _EditorState.fromFile(this, contentProvider);
       }
       _insertState(state);
     }
@@ -399,7 +399,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     }
 
     _editorMap[file] = editor;
-    openFile(file);
+    openFile(contentProvider);
     editor.onModification.listen((_) => _startSaveTimer());
     return editor;
   }
@@ -423,10 +423,10 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
  */
 class _EditorState {
   EditorManager manager;
-  File file;
+  ContentProvider contentProvider;
   ace.EditSession session;
 
-  _EditorState.fromFile(this.manager, this.file);
+  _EditorState.fromFile(this.manager, this.contentProvider);
 
   factory _EditorState.fromMap(EditorManager manager, Map m) {
     File f = manager._workspace.restoreResource(m['file']);
@@ -451,7 +451,7 @@ class _EditorState {
    */
   Map toMap() {
     Map m = {};
-    m['file'] = file.uuid;
+    m['file'] = contentProvider.uuid;
     return m;
   }
 
@@ -459,11 +459,11 @@ class _EditorState {
     if (hasSession) {
       return new Future.value(this);
     } else {
-      if (manager.editorType(file.name) == EditorManager.EDITOR_TYPE_IMAGE) {
+      if (manager.editorType(contentProvider.name) == EditorManager.EDITOR_TYPE_IMAGE) {
         return new Future.value(this);
       } else {
-        return file.getContents().then((text) {
-          session = manager._aceContainer.createEditSession(text, file.name);
+        return contentProvider.read().then((text) {
+          session = manager._aceContainer.createEditSession(text, contentProvider.name);
           return this;
         });
       }
@@ -472,7 +472,7 @@ class _EditorState {
 
   void handleFileChanged() {
     if (session != null) {
-      file.getContents().then((String text) {
+      contentProvider.read().then((String text) {
         session.value = text;
       });
     }
