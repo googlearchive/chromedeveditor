@@ -349,10 +349,6 @@ abstract class AbstractDeployer {
   /// that the used resources are disposed
   void _doWhenComplete();
 
-  Future sleep1() {
-    return new Future.delayed(const Duration(seconds: 3), () => "1");
-  }
-
   Future build(ProgressMonitor monitor, MobileBuildInfo appInfo) {
     List<int> httpRequest;
     Map<String, String> signInfo = new Map<String, String>();
@@ -376,8 +372,6 @@ abstract class AbstractDeployer {
          return _expectHttpOkResponse(msg);
     }).then((String response) {
       _updateContainerEtag(response);
-      return sleep1();
-    }).then((_) {
       return appInfo.publicKey.readBytes();
     }).then((chrome.ArrayBuffer data) {
         signInfo['publicKeyData'] = crypto.CryptoUtils.bytesToBase64(data.getBytes());
