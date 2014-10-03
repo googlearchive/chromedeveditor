@@ -2283,7 +2283,7 @@ class BuildApkAction extends SparkActionWithProgressDialog {
       return useAdb ?
           deployer.buildWithAdb(_monitor) : deployer.pushToHost(url, _monitor);
     });
-     _monitor.runCancellableFuture(f).then((_) {
+      _monitor.runCancellableFuture(f).then((_) {
       _hide();
       spark.showSuccessMessage('Successfully built');
     }).catchError((e) {
