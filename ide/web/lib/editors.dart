@@ -28,9 +28,9 @@ const int _DELAY_MS = 1000;
  * Classes implement this interface provides/refreshes editors for [Resource]s.
  */
 abstract class EditorProvider {
-  Editor createEditorForFile(File file);
+  Editor createEditorForContentProvider(ContentProvider contentProvider);
   void activate(Editor editor);
-  void close(File file);
+  void close(ContentProvider contentProvider);
 }
 
 /**
@@ -43,7 +43,7 @@ abstract class EditorProvider {
  */
 abstract class Editor {
   html.Element get element;
-  File get file;
+  ContentProvider get contentProvider;
   bool get dirty;
 
   Stream get onDirtyChange;
@@ -95,13 +95,13 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   // Keys are persist tokens of the files.
   final Map<String, _EditorState> _savedEditorStates = {};
   List<String> persistedFilesUuids = [];
-  final Map<File, Editor> _editorMap = {};
+  final Map<String, Editor> _editorUuidMap = {};
   final Services _services;
 
   final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
 
-  final StreamController<File> _selectedController =
+  final StreamController<ContentProvider> _selectedController =
       new StreamController.broadcast();
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
@@ -130,17 +130,18 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   PreferenceStore get _prefStore => _prefs.prefsStore;
 
-  File get currentFile => _currentState != null ? _currentState.file : null;
+  ContentProvider get currentProvider =>
+      _currentState != null ? _currentState.contentProvider : null;
 
   Iterable<File> get files => _openedEditorStates.map((s) => s.file);
   Future<bool> get loaded => _loadedCompleter.future;
-  Iterable<Editor> get editors => _editorMap.values;
+  Iterable<Editor> get editors => _editorUuidMap.values;
 
-  Stream<File> get onSelectedChange => _selectedController.stream;
+  Stream<ContentProvider> get onSelectedChange => _selectedController.stream;
 
   void _insertState(_EditorState state) {
     _openedEditorStates.add(state);
-    _savedEditorStates[state.file.uuid] = state;
+    _savedEditorStates[state.contentProvider.uuid] = state;
   }
 
   bool _removeState(_EditorState state) => _openedEditorStates.remove(state);
@@ -149,14 +150,14 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
    * This will open the given [File]. If this file is already open, it will
    * instead be made the active editor.
    */
-  void openFile(File file, {bool activateEditor: true}) {
-    if (file == null) return;
-    _EditorState state = _getStateFor(file);
+  void openFile(ContentProvider contentProvider, {bool activateEditor: true}) {
+    if (contentProvider == null) return;
+    _EditorState state = _getStateFor(contentProvider);
 
     if (state == null) {
-      state = _savedEditorStates[file.uuid];
+      state = _savedEditorStates[contentProvider.uuid];
       if (state == null) {
-        state = new _EditorState.fromFile(this, file);
+        state = new _EditorState.fromContentProvider(this, contentProvider);
       }
       _insertState(state);
     }
@@ -166,13 +167,14 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     }
   }
 
-  bool isFileOpened(File file) => _getStateFor(file) != null;
+  bool isFileOpened(ContentProvider contentProvider) =>
+      _getStateFor(contentProvider) != null;
 
   void saveAll() => _saveAll(userAction: true);
 
-  void close(File file) {
-    _EditorState state = _getStateFor(file);
-    Editor editor = _editorMap[file];
+  void close(ContentProvider contentProvider) {
+    _EditorState state = _getStateFor(contentProvider);
+    Editor editor = _editorUuidMap[contentProvider.uuid];
 
     if (state != null) {
       int index = _openedEditorStates.indexOf(state);
@@ -194,7 +196,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
         }
       }
 
-      _editorMap.remove(file);
+      _editorUuidMap.remove(contentProvider.uuid);
 
       persistState();
       state.close();
@@ -215,8 +217,8 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     List<String> openedTabs = [];
     // Save only persisted tabs.
     for(_EditorState state in _openedEditorStates) {
-      if (persistedTabs.contains(state.file.uuid)) {
-        openedTabs.add(state.file.uuid);
+      if (persistedTabs.contains(state.contentProvider.uuid)) {
+        openedTabs.add(state.contentProvider.uuid);
       }
     }
     savedMap['openedTabs'] = openedTabs;
@@ -257,9 +259,9 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     });
   }
 
-  _EditorState _getStateFor(File file) {
+  _EditorState _getStateFor(ContentProvider contentProvider) {
     for (_EditorState state in _openedEditorStates) {
-      if (state.file == file) {
+      if (state.contentProvider.uuid == contentProvider.uuid) {
         return state;
       }
     }
@@ -274,7 +276,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
       }
 
       _currentState = state;
-      _selectedController.add(currentFile);
+      _selectedController.add(currentProvider);
       if (state == null) {
         _aceContainer.switchTo(null);
         persistState();
@@ -293,14 +295,14 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
             return;
           }
           if (editorType(state.file.name) == EDITOR_TYPE_IMAGE) {
-            _selectedController.add(currentFile);
+            _selectedController.add(currentProvider);
             persistState();
-          } else if (_editorMap[currentFile] != null) {
+          } else if (_editorUuidMap[currentProvider.uuid] != null) {
             // TODO: this explicit casting to AceEditor will go away in a
             // future refactoring
-            ace.TextEditor textEditor = _editorMap[currentFile];
+            ace.TextEditor textEditor = _editorUuidMap[currentProvider.uuid];
             textEditor.setSession(state.session);
-            _selectedController.add(currentFile);
+            _selectedController.add(currentProvider);
             _aceContainer.switchTo(state.session, state.file);
             persistState();
           }
@@ -362,7 +364,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   void _handleFileDeleted(File file) {
     // If the file is open in an editor, the editor will take care of closing.
-    if (_editorMap.containsKey(file)) {
+    if (_editorUuidMap.containsKey(file)) {
       return;
     }
 
@@ -375,7 +377,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   void _handleFileChanged(File file) {
     // If the file is open in an editor, the editor will take care of updating.
-    if (_editorMap.containsKey(file)) {
+    if (_editorUuidMap.containsKey(file)) {
       return;
     }
 
@@ -388,24 +390,25 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   }
 
   // EditorProvider
-  Editor createEditorForFile(File file) {
-    Editor editor = _editorMap[file];
+  Editor createEditorForContentProvider(ContentProvider contentProvider) {
+    Editor editor = _editorUuidMap[contentProvider.uuid];
     assert(editor == null);
-    if (editorType(file.name) == EDITOR_TYPE_IMAGE) {
-      editor = new ImageViewer(file);
+    if (editorType(contentProvider.name) == EDITOR_TYPE_IMAGE) {
+      // TODO(ericarnold): For now, assuming that all images are files.
+      editor = new ImageViewer(contentProvider as FileContentProvider);
     } else {
-      editor = new ace.TextEditor(_aceContainer, file, _prefs);
+      editor = new ace.TextEditor(_aceContainer, contentProvider, _prefs);
       editor.resize();
     }
 
-    _editorMap[file] = editor;
-    openFile(file);
+    _editorUuidMap[contentProvider.uuid] = editor;
+    openFile(contentProvider);
     editor.onModification.listen((_) => _startSaveTimer());
     return editor;
   }
 
   void activate(Editor editor) {
-    _EditorState state = _getStateFor(editor.file);
+    _EditorState state = _getStateFor(editor.contentProvider);
     _switchState(state);
   }
 
@@ -426,7 +429,13 @@ class _EditorState {
   ContentProvider contentProvider;
   ace.EditSession session;
 
-  _EditorState.fromFile(this.manager, this.contentProvider);
+  _EditorState.fromFile(this.manager, File file) {
+    contentProvider = new FileContentProvider(file);
+  }
+
+  _EditorState.fromContentProvider(this.manager, ContentProvider contentProvider) {
+    this.contentProvider = contentProvider;
+  }
 
   factory _EditorState.fromMap(EditorManager manager, Map m) {
     File f = manager._workspace.restoreResource(m['file']);
@@ -451,7 +460,7 @@ class _EditorState {
    */
   Map toMap() {
     Map m = {};
-    m['file'] = file.uuid;
+    m['file'] = contentProvider.uuid;
     return m;
   }
 
@@ -459,12 +468,12 @@ class _EditorState {
     if (hasSession) {
       return new Future.value(this);
     } else {
-      if (manager.editorType(file.name) == EditorManager.EDITOR_TYPE_IMAGE) {
+      if (manager.editorType(contentProvider.name) == EditorManager.EDITOR_TYPE_IMAGE) {
         return new Future.value(this);
       } else {
-        return file.getContents().then((text) {
+        return contentProvider.read().then((text) {
           /*%TRACE3*/ print("(4> 10/2/14): file.getContents!"); // TRACE%
-          session = manager._aceContainer.createEditSession("text", file.name);
+          session = manager._aceContainer.createEditSession("text", contentProvider.name);
           return this;
         });
       }
@@ -473,7 +482,7 @@ class _EditorState {
 
   void handleFileChanged() {
     if (session != null) {
-      file.getContents().then((String text) {
+      contentProvider.read().then((String text) {
         /*%TRACE3*/ print("(4> 10/2/14): handleFileChanged!"); // TRACE%
         session.value = text;
       });
@@ -491,6 +500,8 @@ class _EditorState {
  * written to / read from source.
  */
 abstract class ContentProvider {
+  String get name;
+  String get uuid;
   Stream get onChange;
   Future write(String content);
   Future<String> read();
@@ -501,6 +512,10 @@ abstract class ContentProvider {
  */
 class FileContentProvider implements ContentProvider {
   final File file;
+  
+  String get name => file.name;
+  String get uuid => file.uuid;
+  
   StreamController _changeController;
   StreamSubscription _changeSubscription;
 
@@ -521,21 +536,23 @@ class FileContentProvider implements ContentProvider {
 }
 
 /**
- * Defines a provider of content from an element named [_filename] in a
+ * Defines a provider of content from an element named [name] in a
  * [PreferenceStore] [_store].
  */
 class PreferenceContentProvider implements ContentProvider {
   final PreferenceStore _store;
-  final String _filename;
+  final String name;
   
   StreamController _changeController = new StreamController.broadcast();
-
   Stream get onChange => _changeController.stream;
+  
+  // TODO(ericarnold): Deal with multiple [PreferenceStore]s?
+  String get uuid => name;
 
-  PreferenceContentProvider(this._store, this._filename);
+  PreferenceContentProvider(this._store, this.name);
 
-  Future<String> read() => _store.getValue(_filename);
+  Future<String> read() => _store.getValue(name);
 
-  Future write(String content) => _store.setValue(_filename, content);
+  Future write(String content) => _store.setValue(name, content);
 }
 

@@ -9,7 +9,6 @@ library spark.navigation;
 
 import 'dart:async';
 
-import 'editors.dart';
 import 'workspace.dart';
 
 abstract class NavigationLocationProvider{
@@ -83,16 +82,12 @@ class NavigationManager {
    */
   void removeFile(File file) {
     for (var i = 0; i < _locations.length; i++) {
-      ContentProvider locationProvider = _locations[i].contentProvider;
-      if (locationProvider is FileContentProvider) {
-        File locationFile = locationProvider.file;
-        if ((locationFile.path == file.path) && (locationProvider.name == file.name)) {
-          _locations.removeAt(i) ;
-          if (_position >= i) {
-             _position--;
-          }
-          i--;
+      if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
+        _locations.removeAt(i) ;
+        if (_position >= i) {
+           _position--;
         }
+        i--;
       }
     }
 
@@ -156,10 +151,10 @@ class NavigationManager {
  * A navigation location - a [File] and [Span] tuple.
  */
 class NavigationLocation {
-  final ContentProvider contentProvider;
+  final File file;
   final Span selection;
 
-  NavigationLocation(this.contentProvider, [this.selection = null]);
+  NavigationLocation(this.file, [this.selection = null]);
 
   bool operator==(NavigationLocation other) {
     if (other is! NavigationLocation) return false;

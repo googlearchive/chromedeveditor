@@ -10,6 +10,7 @@ import 'dart:html';
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/editors.dart';
 import '../lib/navigation.dart';
 import '../lib/outline.dart';
 import '../lib/state.dart';
@@ -29,7 +30,7 @@ defineTests() {
 class MockAceManager implements AceManager {
   /// The element to put the editor in.
   final Element parentElement = null;
-  workspace.File currentFile = null;
+  ContentProvider currentProvider = null;
   AceManagerDelegate delegate = null;
   GotoLineView gotoLineView = null;
   Outline outline = null;
@@ -49,7 +50,7 @@ class MockAceManager implements AceManager {
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }
-  void switchTo(EditSession session, [workspace.File file]) { }
+  void switchTo(EditSession session, [ContentProvider contentProvider]) { }
   set theme(String value) { }
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);
@@ -71,7 +72,7 @@ class MockAceManager implements AceManager {
 
 class MockAceEditor implements TextEditor {
   AceManager aceManager;
-  workspace.File file;
+  ContentProvider contentProvider;
 
   MockAceEditor([this.aceManager]);
 

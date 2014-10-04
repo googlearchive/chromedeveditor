@@ -9,6 +9,7 @@ import 'dart:html' as html;
 
 import 'package:markdown/markdown.dart' show markdownToHtml;
 
+import 'editors.dart';
 import 'workspace.dart' as workspace;
 
 class Markdown {
@@ -16,7 +17,7 @@ class Markdown {
   final html.Element _container;
 
   // Workspace file.
-  final workspace.File _file;
+  final ContentProvider _contentProvider;
 
   // Preview button.
   html.Element _previewButton;
@@ -28,7 +29,7 @@ class Markdown {
   // Is the markdown in preview window open.
   bool _visible = false;
 
-  Markdown(this._container, this._file) {
+  Markdown(this._container, this._contentProvider) {
     // Get and clone template for markdown preview content.
     html.DocumentFragment template =
         (html.querySelector('#markdown-template') as
@@ -51,7 +52,7 @@ class Markdown {
 
   void renderHtml() {
     if (visible) {
-      _file.getContents().then((String contents) {
+      _contentProvider.read().then((String contents) {
         String markdownHtml = markdownToHtml(contents);
         _previewDiv.children.clear();
         _previewDiv.appendHtml(markdownHtml);

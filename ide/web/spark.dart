@@ -369,7 +369,7 @@ abstract class Spark
 
   void _selectLocation(NavigationLocation location) {
     for (Editor editor in editorManager.editors) {
-      if (editor.file == location.file) {
+      if (editor.contentProvider.uuid == location.file.uuid) {
         if (editor is TextEditor) {
           editor.select(location.selection);
         }
@@ -448,7 +448,7 @@ abstract class Spark
       if (!_filesController.isFileSelected(tab.file)) {
         _filesController.selectFile(tab.file);
       }
-      localPrefs.setValue('lastFileSelection', tab.file.uuid);
+      localPrefs.setValue('lastFileSelection', tab.contentProvider.uuid);
       focusManager.setEditedFile(tab.file);
     });
   }
@@ -723,9 +723,9 @@ abstract class Spark
   }
 
   Editor getCurrentEditor() {
-    ws.File file = editorManager.currentFile;
+    ContentProvider contentProvider = editorManager.currentProvider;
     for (Editor editor in editorManager.editors) {
-      if (editor.file == file) return editor;
+      if (editor.contentProvider.uuid == contentProvider.uuid) return editor;
     }
     return null;
   }
@@ -912,7 +912,7 @@ abstract class Spark
   }
 
   void _closeOpenEditor(ws.Resource resource) {
-    if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
+    if (resource is ws.File && editorManager.isFileOpened(resource)) {
       editorArea.closeFile(resource);
     }
   }
