@@ -119,7 +119,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
             new ResourceChangeEvent.fromList(event.changes, filterRename: true);
         for (ChangeDelta delta in event.changes) {
           if (delta.isDelete) {
-              _handleFileDeleted(delta.resource);
+            _handleFileDeleted(delta.resource);
             if (delta.deletions.isNotEmpty) {
               for (ChangeDelta change in delta.deletions) {
                 _handleFileDeleted(change.resource);

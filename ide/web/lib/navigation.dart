@@ -29,11 +29,11 @@ class NavigationManager {
   int _position = -1;
   bool _pauseNavigation = false;
 
-  void pauseNavigation() {
+  void pause() {
     _pauseNavigation = true;
   }
 
-  void resumeNavigation() {
+  void resume() {
     _pauseNavigation = false;
   }
 

@@ -356,13 +356,13 @@ abstract class Spark
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete) {
           if (delta.deletions.isNotEmpty) {
-            _navigationManager.pauseNavigation();
+            _navigationManager.pause();
             for (ChangeDelta change in delta.deletions) {
               if (change.resource.isFile) {
                 _navigationManager.removeFile(change.resource);
               }
             }
-            _navigationManager.resumeNavigation();
+            _navigationManager.resume();
             _navigationManager.gotoLocation(_navigationManager.currentLocation);
           } else if (delta.resource.isFile){
             _navigationManager.removeFile(delta.resource);

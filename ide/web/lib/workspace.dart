@@ -533,8 +533,7 @@ class Workspace extends Container {
     _save();
     if (fireEvent) {
       _fireResourceChange(new ChangeDelta.projectDelete(
-                                resource,
-                                ChangeDelta.containerDelete(resource)));
+          resource, ChangeDelta.containerDelete(resource)));
     }
   }
 }
@@ -564,8 +563,7 @@ abstract class Container extends Resource {
     getChildren().remove(resource);
     if (fireEvent) {
       _fireResourceChange(new ChangeDelta.projectDelete(
-                              resource,
-                              ChangeDelta.containerDelete(resource)));
+          resource, ChangeDelta.containerDelete(resource)));
     }
   }
 
