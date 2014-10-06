@@ -737,6 +737,9 @@ class FilesController implements TreeViewDelegate {
           _files.remove(resource);
           needsSortTopLevel = true;
         }
+        for (ChangeDelta delta in change.deletions) {
+          _filesMap.remove(delta.resource.uuid);
+        }
         _filesMap.remove(resource.uuid);
         // The current selection was deleted. No selected resource.
         updatedSelection = [];

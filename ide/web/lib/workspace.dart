@@ -532,7 +532,8 @@ class Workspace extends Container {
     _roots.removeWhere((root) => root.resource == resource);
     _save();
     if (fireEvent) {
-      _fireResourceChanges(ChangeDelta.containerDelete(resource));
+      _fireResourceChange(new ChangeDelta.projectDelete(
+          resource, ChangeDelta.containerDelete(resource)));
     }
   }
 }
@@ -561,7 +562,8 @@ abstract class Container extends Resource {
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     getChildren().remove(resource);
     if (fireEvent) {
-      _fireResourceChanges(ChangeDelta.containerDelete(resource));
+      _fireResourceChange(new ChangeDelta.projectDelete(
+          resource, ChangeDelta.containerDelete(resource)));
     }
   }
 
@@ -1473,6 +1475,9 @@ class ChangeDelta {
   }
 
   ChangeDelta(this.resource, this.type);
+
+  ChangeDelta.projectDelete(this.resource,
+                            this.deletions) : type = EventType.DELETE;
 
   ChangeDelta.rename(this.originalResource,
                      this.resource,
