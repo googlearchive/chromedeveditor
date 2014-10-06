@@ -118,8 +118,13 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
         event =
             new ResourceChangeEvent.fromList(event.changes, filterRename: true);
         for (ChangeDelta delta in event.changes) {
-          if (delta.isDelete && delta.resource.isFile) {
-            _handleFileDeleted(delta.resource);
+          if (delta.isDelete) {
+              _handleFileDeleted(delta.resource);
+            if (delta.deletions.isNotEmpty) {
+              for (ChangeDelta change in delta.deletions) {
+                _handleFileDeleted(change.resource);
+              }
+            }
           } else if (delta.isChange && delta.resource.isFile) {
             _handleFileChanged(delta.resource);
           }
@@ -360,7 +365,10 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     }
   }
 
-  void _handleFileDeleted(File file) {
+  void _handleFileDeleted(Resource file) {
+    if (!file.isFile) {
+      return;
+    }
     // If the file is open in an editor, the editor will take care of closing.
     if (_editorMap.containsKey(file)) {
       return;
