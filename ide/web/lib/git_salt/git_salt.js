@@ -56,13 +56,13 @@ function makeMessage(command, path) {
 
 function saveFile() {
   if (common.naclModule) {
-    common.naclModule.postMessage(makeMessage('sv', "/filename.txt", "some text"));
+    common.naclModule.postMessage(makeMessage('sv', "/grvfs/spark3", "some text"));
   }
 }
 
 // Called by the common.js module.
 function handleMessage(message_event) {
-console.log(message_event);  
+console.log(message_event);
 var msg = message_event.data;
   var parts = msg.split('|');
   var command = parts[0];

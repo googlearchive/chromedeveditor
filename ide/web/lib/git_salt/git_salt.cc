@@ -8,6 +8,7 @@
 #define __STDC_LIMIT_MACROS
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <git2.h>
 #include <sys/mount.h>
 #include <stdio.h>
@@ -16,10 +17,6 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <errno.h>
-
-using namespace std;
-
-
 
 #include "ppapi/c/pp_stdint.h"
 #include "ppapi/c/ppb_file_io.h"
@@ -50,36 +47,9 @@ using namespace std;
 
 namespace {
 /// Used for our simple protocol to communicate with Javascript
-const char* const kLoadPrefix = "ld";
 const char* const kSavePrefix = "sv";
-const char* const kDeletePrefix = "de";
-const char* const kListPrefix = "ls";
-const char* const kMakeDirPrefix = "md";
 const char* const kChromefsPrefix = "cr";
 }
-
-/*static void fetch_progress(
-        const git_transfer_progress *stats,
-        void *payload)
-{
-    int fetch_percent =
-        (100 * stats->received_objects) /
-        stats->total_objects;
-    int index_percent =
-        (100 * stats->indexed_objects) /
-        stats->total_objects;
-    int kbytes = stats->received_bytes / 1024;
-
-    printf("network %3d%% (%4d kb, %5d/%5d)  /"
-            "  index %3d%% (%5d/%5d)\n",
-            fetch_percent, kbytes,
-            stats->received_objects, stats->total_objects,
-            index_percent,
-            stats->indexed_objects, stats->total_objects);
-}*/
-
-
-
 
 /// The Instance class.  One of these exists for each instance of your NaCl
 /// module on the web page.  The browser will ask the Module object to create
@@ -155,64 +125,39 @@ class FileIoInstance : public pp::Instance {
     reader.ignore(1);  // Eat the delimiter
     reader.read(&file_name[0], file_name_length);
 
-    if (file_name.length() == 0 || file_name[0] != '/') {
-      ShowStatusMessage("File name must begin with /");
-      return;
-    }
-
     // Dispatch the instruction
-    if (instruction == kLoadPrefix) {
-      file_thread_.message_loop().PostWork(
-          callback_factory_.NewCallback(&FileIoInstance::Load, file_name));
-    } else if (instruction == kSavePrefix) {
+    if (instruction == kSavePrefix) {
       // Read the rest of the message as the file text
       reader.ignore(1);  // Eat the delimiter
       std::string file_text = message.substr(reader.tellg());
       file_thread_.message_loop().PostWork(callback_factory_.NewCallback(
           &FileIoInstance::Save, file_name, file_text));
-    } else if (instruction == kDeletePrefix) {
-      file_thread_.message_loop().PostWork(
-          callback_factory_.NewCallback(&FileIoInstance::Delete, file_name));
-    } else if (instruction == kListPrefix) {
-      const std::string& dir_name = file_name;
-      file_thread_.message_loop().PostWork(
-          callback_factory_.NewCallback(&FileIoInstance::List, dir_name));
-    } else if (instruction == kMakeDirPrefix) {
-      const std::string& dir_name = file_name;
-      file_thread_.message_loop().PostWork(
-          callback_factory_.NewCallback(&FileIoInstance::MakeDir, dir_name));
     }
   }
 
-  int cloning(int r, const char *url) {
+  int cloning(int r, char* path, char* url) {
     git_repository *repo = NULL;
-    //const char path[100] = "/chromefs/nacl_checkout";
-    const char path[100] = "/grvfs/nacl_checkout-8";
-    printf("before gdit clone %s %s\n", url, path);
-    const char url2[] = "https://github.com/dart-lang/spark.git";
     git_threads_init();
-    int r2 = git_clone(&repo, url2, path, NULL);
+    int r2 = git_clone(&repo, url, path, NULL);
     printf("clonidng repo %d %d\n", r2, r);
     return 2;
   }
 
-
- int do_clone(const char *url, const char *path) {
-
+  int do_clone(char *url, char *path) {
     file_thread_.message_loop().PostWork(
-          callback_factory_.NewCallback(&FileIoInstance::cloning,url));
+          callback_factory_.NewCallback(&FileIoInstance::cloning, path, url));
     return 1;
-}
+  }
 
-  void GitClone() {
-    DIR* dir = opendir("/chromefs/nacl_checkout");
-    if (dir) {
-      printf("dir exists chromefs \n");
-    } else {
-      printf("dir is null chromefs\n");
-    }
-    const char url[100] = "https://github.com/gaurave/trep";
-    const char local_path[100] = "/chromefs/naclgit";
+  void GitClone(const std::string& path) {
+    char url_string[] = "https://github.com/gaurave/trep";
+    const char* local_path_string = path.c_str();
+
+    char* url = (char*) malloc(sizeof(strlen(url_string)));
+    char* local_path = (char*) malloc(sizeof(strlen(local_path_string)));
+    printf("Lengths: %d %d", strlen(local_path_string), strlen(url_string));
+    strcpy(local_path, local_path_string);
+    strcpy(url, url_string);
     do_clone(url, local_path);
     printf("calling git clone %s %s\n", local_path, url);
     const git_error *a = giterr_last();
@@ -261,184 +206,10 @@ class FileIoInstance : public pp::Instance {
   void Save(int32_t /* result */,
             const std::string& file_name,
             const std::string& file_contents) {
-            //  GitClone();
-            char dir[100] = "filename.txt";
-            pp::FileRef ref(file_system_, dir);
-            pp::Var path = ref.GetPath();
-            std::string debugString = path.AsString();
-            printf("%s\n", debugString.c_str());
-            GitClone();
-             ShowStatusMessage("Save succddess");
-            printf("asfklasdjfkjasdfjkasdfjkl\n");
+    GitClone(file_name);
+    ShowStatusMessage("Save succddess");
     PostMessage("pyaflasdkfjkasl");
     return;
-
-   /* if (!file_system_ready_) {
-      ShowErrorMessage("File system is not open", PP_ERROR_FAILED);
-      return;
-    }
-    pp::FileRef ref(file_system_, file_name.c_str());
-    pp::FileIO file(this);
-
-    int32_t open_result =
-        file.Open(ref,
-                  PP_FILEOPENFLAG_WRITE | PP_FILEOPENFLAG_CREATE |
-                      PP_FILEOPENFLAG_TRUNCATE,
-                  pp::BlockUntilComplete());
-    if (open_result != PP_OK) {
-      ShowErrorMessage("File open for write failed", open_result);
-      return;
-    }
-
-    // We have truncated the file to 0 bytes. So we need only write if
-    // file_contents is non-empty.
-    if (!file_contents.empty()) {
-      if (file_contents.length() > INT32_MAX) {
-        ShowErrorMessage("File too big", PP_ERROR_FILETOOBIG);
-        return;
-      }
-      int64_t offset = 0;
-      int32_t bytes_written = 0;
-      do {
-        bytes_written = file.Write(offset,
-                                   file_contents.data() + offset,
-                                   file_contents.length(),
-                                   pp::BlockUntilComplete());
-        if (bytes_written > 0) {
-          offset += bytes_written;
-        } else {
-          ShowErrorMessage("File write failed", bytes_written);
-          return;
-        }
-      } while (bytes_written < static_cast<int64_t>(file_contents.length()));
-    }
-    // All bytes have been written, flush the write buffer to complete
-    int32_t flush_result = file.Flush(pp::BlockUntilComplete());
-    if (flush_result != PP_OK) {
-      ShowErrorMessage("File fail to flush", flush_result);
-      return;
-    }
-    ShowStatusMessage("Save success");*/
-  }
-
-  void Load(int32_t /* result */, const std::string& file_name) {
-    if (!file_system_ready_) {
-      ShowErrorMessage("File system is not open", PP_ERROR_FAILED);
-      return;
-    }
-    pp::FileRef ref(file_system_, file_name.c_str());
-    pp::FileIO file(this);
-
-    int32_t open_result =
-        file.Open(ref, PP_FILEOPENFLAG_READ, pp::BlockUntilComplete());
-    if (open_result == PP_ERROR_FILENOTFOUND) {
-      ShowErrorMessage("File not found", open_result);
-      return;
-    } else if (open_result != PP_OK) {
-      ShowErrorMessage("File open for read failed", open_result);
-      return;
-    }
-    PP_FileInfo info;
-    int32_t query_result = file.Query(&info, pp::BlockUntilComplete());
-    if (query_result != PP_OK) {
-      ShowErrorMessage("File query failed", query_result);
-      return;
-    }
-    // FileIO.Read() can only handle int32 sizes
-    if (info.size > INT32_MAX) {
-      ShowErrorMessage("File too big", PP_ERROR_FILETOOBIG);
-      return;
-    }
-
-    std::vector<char> data(info.size);
-    int64_t offset = 0;
-    int32_t bytes_read = 0;
-    int32_t bytes_to_read = info.size;
-    while (bytes_to_read > 0) {
-      bytes_read = file.Read(offset,
-                             &data[offset],
-                             data.size() - offset,
-                             pp::BlockUntilComplete());
-      if (bytes_read > 0) {
-        offset += bytes_read;
-        bytes_to_read -= bytes_read;
-      } else if (bytes_read < 0) {
-        // If bytes_read < PP_OK then it indicates the error code.
-        ShowErrorMessage("File read failed", bytes_read);
-        return;
-      }
-    }
-    // Done reading, send content to the user interface
-    std::string string_data(data.begin(), data.end());
-    PostMessage("DISP|" + string_data);
-    ShowStatusMessage("Load success");
-  }
-
-  void Delete(int32_t /* result */, const std::string& file_name) {
-    if (!file_system_ready_) {
-      ShowErrorMessage("File system is not open", PP_ERROR_FAILED);
-      return;
-    }
-    pp::FileRef ref(file_system_, file_name.c_str());
-
-    int32_t result = ref.Delete(pp::BlockUntilComplete());
-    if (result == PP_ERROR_FILENOTFOUND) {
-      ShowStatusMessage("File/Directory not found");
-      return;
-    } else if (result != PP_OK) {
-      ShowErrorMessage("Deletion failed", result);
-      return;
-    }
-    ShowStatusMessage("Delete success");
-  }
-
-  void List(int32_t /* result */, const std::string& dir_name) {
-    if (!file_system_ready_) {
-      ShowErrorMessage("File system is not open", PP_ERROR_FAILED);
-      return;
-    }
-
-    pp::FileRef ref(file_system_, dir_name.c_str());
-
-    // Pass ref along to keep it alive.
-    ref.ReadDirectoryEntries(callback_factory_.NewCallbackWithOutput(
-        &FileIoInstance::ListCallback, ref));
-  }
-
-  void ListCallback(int32_t result,
-                    const std::vector<pp::DirectoryEntry>& entries,
-                    pp::FileRef /* unused_ref */) {
-    if (result != PP_OK) {
-      ShowErrorMessage("List failed", result);
-      return;
-    }
-
-    std::stringstream ss;
-    ss << "LIST";
-    for (size_t i = 0; i < entries.size(); ++i) {
-      pp::Var path = entries[i].file_ref().GetPath();
-      if (path.is_string()) {
-        ss << "|" << path.AsString();
-      }
-    }
-    PostMessage(ss.str());
-    ShowStatusMessage("List success");
-  }
-
-  void MakeDir(int32_t /* result */, const std::string& dir_name) {
-    if (!file_system_ready_) {
-      ShowErrorMessage("File system is not open", PP_ERROR_FAILED);
-      return;
-    }
-    pp::FileRef ref(file_system_, dir_name.c_str());
-
-    int32_t result = ref.MakeDirectory(
-        PP_MAKEDIRECTORYFLAG_NONE, pp::BlockUntilComplete());
-    if (result != PP_OK) {
-      ShowErrorMessage("Make directory failed", result);
-      return;
-    }
-    ShowStatusMessage("Make directory success");
   }
 
     void ChromefsInit(int32_t /* result */, pp::FileSystem fs) {
@@ -456,26 +227,8 @@ class FileIoInstance : public pp::Instance {
         if (!f) {
           printf("can't open file\n");
         } else {
-          //fputs("i am here\n", f);
           printf("file open successful\n");
-          //fclose(f);
         }
-      /*  FILE* r4 = fopen("/chromefs/grv2.txt", "r");
-        if (!r4) {
-          printf("can't open file r\n");
-        } else {
-          printf("file open r successful\n");
-        }
-                 f = fopen("/grvfs/filename.txt", "r");
-        if (!f) {
-          printf("can't open file grv\n");
-        } else {
-          printf("file open successful grv\n");
-        }*/
-       /* pp::FileRef ref = pp::FileRef(fs, "/chromefs/nacl_checkout/grv.txt");
-        if (ref.is_null()) {
-          printf("ref is null\n");
-        } else */
     ShowStatusMessage(fs_resource);
   }
 
