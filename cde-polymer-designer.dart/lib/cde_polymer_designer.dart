@@ -80,15 +80,13 @@ class CdePolymerDesigner extends PolymerElement {
     // TODO(ussuri): BUG #3466.
     new Timer(new Duration(milliseconds: 500), () {
       _webviewElt = new Element.tag('webview');
+      _webviewElt.on['contentload'].listen(_onWebviewContentLoad);
+      _webviewElt.attributes['partition'] = _STORAGE_PARTITION;
+      _webviewElt.attributes['src'] =
+          entryPoint == 'local'  ? _LOCAL_ENTRY_POINT : _ONLINE_ENTRY_POINT;
+      shadowRoot.append(_webviewElt);
 
       _webview = new js.JsObject.fromBrowserObject(_webviewElt);
-      _webview.callMethod(
-          'addEventListener', ['contentload', _onWebviewContentLoad]);
-      _webview['partition'] = _STORAGE_PARTITION;
-      _webview['src'] =
-          entryPoint == 'local'  ? _LOCAL_ENTRY_POINT : _ONLINE_ENTRY_POINT;
-
-      shadowRoot.append(_webviewElt);
     });
 
     // TODO(ussuri): Try enabling once BUG #3467 is resolved.
