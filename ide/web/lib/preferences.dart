@@ -162,7 +162,7 @@ abstract class PreferenceStore {
   /**
    * Get the value for the given key. The value is returned as a [Future].
    */
-  Future<String> getValue(String key, [dynamic defaultVal]);
+  Future<dynamic> getValue(String key, [dynamic defaultVal]);
 
   /**
    * Set the value for the given key. The returned [Future] has the same value
@@ -198,12 +198,12 @@ class MapPreferencesStore implements PreferenceStore {
 
   bool get isDirty => _dirty;
 
-  Future getValue(String key, [String defaultVal]) {
-    final String val = _map[key];
+  Future getValue(String key, [dynamic defaultVal]) {
+    final val = _map[key];
     return new Future.value(val != null ? val : defaultVal);
   }
 
-  Future setValue(String key, String value) {
+  Future setValue(String key, dynamic value) {
     _dirty = true;
     _map[key] = value;
     _controller.add(new PreferenceEvent(this, key, value));
@@ -259,12 +259,12 @@ class _ChromePreferenceStore implements PreferenceStore {
   /**
    * Get the value for the given key. The value is returned as a [Future].
    */
-  Future<String> getValue(String key, [String defaultVal]) {
+  Future<dynamic> getValue(String key, [var defaultVal]) {
     if (_map.containsKey(key)) {
       return new Future.value(_map[key]);
     } else {
-      return _storageArea.get(key).then((Map<String, String> map) {
-        final String val = map == null ? null : map[key];
+      return _storageArea.get(key).then((Map map) {
+        final val = map == null ? null : map[key];
         return val != null ? val : defaultVal;
       });
     }
@@ -277,7 +277,7 @@ class _ChromePreferenceStore implements PreferenceStore {
     // Using a completer ensures the correct updating order: source of truth
     // (_storageArea) first, cache (_map) second.
     var completer = new Completer();
-    _storageArea.remove(keys).then((Map<String, String> map) {
+    _storageArea.remove(keys).then((Map map) {
       keys.forEach((key) => _map.remove(key));
       completer.complete();
     });
@@ -301,7 +301,7 @@ class _ChromePreferenceStore implements PreferenceStore {
    * Set the value for the given key. The returned [Future] has the same value
    * as [value] on success.
    */
-  Future<String> setValue(String key, String value) {
+  Future<String> setValue(String key, var value) {
     if (value == null) {
       return removeValue([key]);
     } else {
@@ -345,7 +345,7 @@ class _ChromePreferenceStore implements PreferenceStore {
 class PreferenceEvent {
   final PreferenceStore store;
   final String key;
-  final String value;
+  final dynamic value;
 
   PreferenceEvent(this.store, this.key, this.value);
 }
