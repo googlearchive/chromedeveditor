@@ -9,6 +9,7 @@ library spark.navigation;
 
 import 'dart:async';
 
+import 'editors.dart';
 import 'workspace.dart';
 
 abstract class NavigationLocationProvider{
@@ -80,9 +81,10 @@ class NavigationManager {
    * This method checks if it has the currently closing file in the navigation history
    * If it does it deletes it from the list.
    */
-  void removeFile(File file) {
+  void removeFile(ContentProvider contentProvider) {
     for (var i = 0; i < _locations.length; i++) {
-      if ((_locations[i].file.path == file.path) && (_locations[i].file.name == file.name)) {
+      if ((_locations[i].contentProvider.uuid == contentProvider.uuid)
+          && (_locations[i].contentProvider.name == contentProvider.name)) {
         _locations.removeAt(i) ;
         if (_position >= i) {
            _position--;
@@ -99,7 +101,7 @@ class NavigationManager {
      * represent the same file and are on consecutive positions.
      */
     for (var i = 1; i < _locations.length; i++) {
-      if (_locations[i].file == _locations[i-1].file) {
+      if (_locations[i].contentProvider.uuid == _locations[i-1].contentProvider.uuid) {
         _locations.removeAt(i);
         if (_position >= i) {
            _position--;
@@ -151,10 +153,10 @@ class NavigationManager {
  * A navigation location - a [File] and [Span] tuple.
  */
 class NavigationLocation {
-  final File file;
+  final ContentProvider contentProvider;
   final Span selection;
 
-  NavigationLocation(this.file, [this.selection = null]);
+  NavigationLocation(this.contentProvider, [this.selection = null]);
 
   bool operator==(NavigationLocation other) {
     if (other is! NavigationLocation) return false;
