@@ -28,6 +28,15 @@ class NavigationManager {
 
   List<NavigationLocation> _locations = [];
   int _position = -1;
+  bool _pauseNavigation = false;
+
+  void pause() {
+    _pauseNavigation = true;
+  }
+
+  void resume() {
+    _pauseNavigation = false;
+  }
 
   NavigationLocation get backLocation {
     int backPosition = _position - 1;
@@ -118,7 +127,7 @@ class NavigationManager {
       }
     }
 
-    if (_position >= 0) {
+    if (_position >= 0 && !_pauseNavigation) {
       _controller.add(_locations[_position]);
     }
   }

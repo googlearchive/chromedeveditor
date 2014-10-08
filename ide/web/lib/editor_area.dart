@@ -112,8 +112,15 @@ class EditorArea extends TabView {
       // TODO(dvh): reflect name change instead of closing the file.
       event = new ResourceChangeEvent.fromList(event.changes, filterRename: true);
       for (ChangeDelta delta in event.changes) {
-        if (delta.isDelete && delta.resource.isFile) {
-          closeFile(delta.resource);
+        if (delta.isDelete) {
+          if (delta.resource.isFile) {
+            closeFile(delta.resource);
+          }
+          for (ChangeDelta change in delta.deletions) {
+            if(change.resource.isFile) {
+              closeFile(change.resource);
+            }
+          }
         } else if (delta.isChange && delta.resource.isFile) {
           _updateFile(delta.resource);
         }
