@@ -256,7 +256,8 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
             // Restore opened files.
             for (String filePersistID in openedTabs) {
               File f = _workspace.restoreResource(filePersistID);
-              openFile(f, activateEditor: false);
+              ContentProvider contentProvider = new FileContentProvider(f);
+              openFile(contentProvider, activateEditor: false);
             }
           }
         }

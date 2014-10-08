@@ -23,6 +23,7 @@ import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
 import '../dependency.dart';
 import '../decorators.dart';
+import '../editors.dart';
 import '../event_bus.dart';
 import '../preferences.dart' as preferences;
 import '../scm.dart';
@@ -111,8 +112,8 @@ class FilesController implements TreeViewDelegate {
     _workspace.onMarkerChange.listen((_) => _processMarkerChange());
   }
 
-  bool isFileSelected(Resource file) {
-    return _treeView.selection.contains(file.uuid);
+  bool isFileSelected(ContentProvider contentProvider) {
+    return _treeView.selection.contains(contentProvider.uuid);
   }
 
   List<Resource> _currentFiles() {

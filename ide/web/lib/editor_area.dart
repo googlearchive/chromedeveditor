@@ -105,7 +105,10 @@ class EditorArea extends TabView {
   EditorArea(Element parentElement, this.editorProvider, Workspace workspace,
              {this.allowsLabelBar: true})
       : super(parentElement) {
-    onClose.listen((EditorTab tab) => closeFile(tab.contentProvider));
+    onClose.listen((EditorTab tab) {
+      FileContentProvider fileContentProvider = tab.contentProvider;
+      closeFile(fileContentProvider.file);
+    });
     showLabelBar = true;
 
     workspace.onResourceChange.listen((ResourceChangeEvent event) {
@@ -239,8 +242,9 @@ class EditorArea extends TabView {
   }
 
   /// Closes the tab.
-  void closeFile(ContentProvider contentProvider) {
-    EditorTab tab = _tabOfUuid[contentProvider.uuid];
+  void closeFile(File file) {
+    EditorTab tab = _tabOfUuid[file.uuid];
+    ContentProvider contentProvider = tab.contentProvider;
 
     if (tab != null) {
       remove(tab);

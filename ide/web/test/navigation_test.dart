@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:unittest/unittest.dart';
 
+import '../lib/editors.dart';
 import '../lib/files_mock.dart';
 import '../lib/preferences.dart';
 import '../lib/navigation.dart';
@@ -98,13 +99,13 @@ defineTests() {
       locationProvider.navigationLocation = nav4;
       expect(manager.forwardLocation, isNull);
       expect(manager.backLocation, isNotNull);
-      manager.removeFile(nav4.file);
+      manager.removeFile((nav4.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, nav3);
-      manager.removeFile(nav2.file);
+      manager.removeFile((nav2.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, nav3);
-      manager.removeFile(nav1.file);
+      manager.removeFile((nav1.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, nav3);
-      manager.removeFile(nav3.file);
+      manager.removeFile((nav3.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, isNull);
     });
 
@@ -132,18 +133,18 @@ defineTests() {
       locationProvider.navigationLocation = nav3;
       manager.gotoLocation(nav4);
       locationProvider.navigationLocation = nav4;
-      manager.removeFile(nav4.file);
+      manager.removeFile((nav4.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, nav3);
       locationProvider.navigationLocation = nav3;
       manager.goBack();
-      manager.removeFile(nav2.file);
+      manager.removeFile((nav2.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, nav1);
       locationProvider.navigationLocation = nav1;
       manager.goForward();
-      manager.removeFile(nav3.file);
+      manager.removeFile((nav3.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, nav1);
       locationProvider.navigationLocation = nav1;
-      manager.removeFile(nav1.file);
+      manager.removeFile((nav1.contentProvider as FileContentProvider).file);
       expect(manager.currentLocation, isNull);
     });
 
@@ -184,11 +185,11 @@ defineTests() {
       manager.gotoLocation(nav4);
       locationProvider.navigationLocation = nav4;
       manager.goBack();
-      expect(manager.backLocation.file, nav4.file);
-      expect(manager.forwardLocation.file, nav4.file);
-      manager.removeFile(nav3.file);
-      expect(manager.currentLocation.file, nav4.file);
-      expect(manager.backLocation.file, nav2.file);
+      expect((manager.backLocation as FileContentProvider).file, (nav4.contentProvider as FileContentProvider).file);
+      expect((manager.forwardLocation as FileContentProvider).file, (nav4.contentProvider as FileContentProvider).file);
+      manager.removeFile((nav3 as FileContentProvider).file);
+      expect((manager.currentLocation as FileContentProvider).file, (nav4.contentProvider as FileContentProvider).file);
+      expect((manager.backLocation as FileContentProvider).file, (nav2.contentProvider as FileContentProvider).file);
     });
 
     test('remove file and check for duplication in history', () {
@@ -228,12 +229,12 @@ defineTests() {
       locationProvider.navigationLocation = nav3;
       manager.gotoLocation(nav4);
       locationProvider.navigationLocation = nav4;
-      manager.removeFile(nav1.file);
-      expect(manager.currentLocation.file, nav4.file);
-      manager.removeFile(nav2.file);
-      expect(manager.currentLocation.file, nav4.file);
-      manager.removeFile(nav4.file);
-      expect(manager.currentLocation.file, nav3.file);
+      manager.removeFile((nav1 as FileContentProvider).file);
+      expect((manager.currentLocation as FileContentProvider).file, (nav4 as FileContentProvider).file);
+      manager.removeFile((nav2 as FileContentProvider).file);
+      expect((manager.currentLocation as FileContentProvider).file, (nav4 as FileContentProvider).file);
+      manager.removeFile((nav4 as FileContentProvider).file);
+      expect((manager.currentLocation as FileContentProvider).file, (nav3 as FileContentProvider).file);
       expect(manager.canGoBack(), false);
       expect(manager.canGoForward(), false);
     });

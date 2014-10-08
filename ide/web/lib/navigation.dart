@@ -90,10 +90,10 @@ class NavigationManager {
    * This method checks if it has the currently closing file in the navigation history
    * If it does it deletes it from the list.
    */
-  void removeFile(ContentProvider contentProvider) {
+  void removeFile(File file) {
     for (var i = 0; i < _locations.length; i++) {
-      if ((_locations[i].contentProvider.uuid == contentProvider.uuid)
-          && (_locations[i].contentProvider.name == contentProvider.name)) {
+      if ((_locations[i].contentProvider.uuid == file.uuid)
+          && (_locations[i].contentProvider.name == file.name)) {
         _locations.removeAt(i) ;
         if (_position >= i) {
            _position--;
