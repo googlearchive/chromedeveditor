@@ -18,51 +18,6 @@ var isRelease = true;
 // code.
 var common = (function() {
 
-  function isHostToolchain(tool) {
-    return tool == 'win' || tool == 'linux' || tool == 'mac';
-  }
-
-  /**
-   * Return the mime type for NaCl plugin.
-   *
-   * @param {string} tool The name of the toolchain, e.g. "glibc", "newlib" etc.
-   * @return {string} The mime-type for the kind of NaCl plugin matching
-   * the given toolchain.
-   */
-  function mimeTypeForTool(tool) {
-    // For NaCl modules use application/x-nacl.
-    var mimetype = 'application/x-nacl';
-    if (isHostToolchain(tool)) {
-      // For non-NaCl PPAPI plugins use the x-ppapi-debug/release
-      // mime type.
-      if (isRelease)
-        mimetype = 'application/x-ppapi-release';
-      else
-        mimetype = 'application/x-ppapi-debug';
-    } else if (tool == 'pnacl') {
-      mimetype = 'application/x-pnacl';
-    }
-    return mimetype;
-  }
-
-  /**
-   * Check if the browser supports NaCl plugins.
-   *
-   * @param {string} tool The name of the toolchain, e.g. "glibc", "newlib" etc.
-   * @return {bool} True if the browser supports the type of NaCl plugin
-   * produced by the given toolchain.
-   */
-  function browserSupportsNaCl(tool) {
-    // Assume host toolchains always work with the given browser.
-    // The below mime-type checking might not work with
-    // --register-pepper-plugins.
-    if (isHostToolchain(tool)) {
-      return true;
-    }
-    var mimetype = mimeTypeForTool(tool);
-    return navigator.mimeTypes[mimetype] !== undefined;
-  }
-
   /**
    * Inject a script into the DOM, and call a callback when it is loaded.
    *
@@ -114,30 +69,18 @@ var common = (function() {
    * named "listener".
    *
    * @param {string} name The name of the example.
-   * @param {string} tool The name of the toolchain, e.g. "glibc", "newlib" etc.
    * @param {string} path Directory name where .nmf file can be found.
-   * @param {number} width The width to create the plugin.
-   * @param {number} height The height to create the plugin.
-   * @param {Object} attrs Dictionary of attributes to set on the module.
    */
-  function createNaClModule(name, tool, path, width, height, attrs) {
+  function createNaClModule(name, path) {
     var moduleEl = document.createElement('embed');
     moduleEl.setAttribute('name', 'nacl_module');
     moduleEl.setAttribute('id', 'nacl_module');
-    moduleEl.setAttribute('width', width);
-    moduleEl.setAttribute('height', height);
+    moduleEl.setAttribute('width', 0);
+    moduleEl.setAttribute('height', 0);
     moduleEl.setAttribute('path', path);
     moduleEl.setAttribute('src', path + '/' + name + '.nmf');
 
-    // Add any optional arguments
-    if (attrs) {
-      for (var key in attrs) {
-        moduleEl.setAttribute(key, attrs[key]);
-      }
-    }
-
-    var mimetype = mimeTypeForTool(tool);
-    moduleEl.setAttribute('type', mimetype);
+    moduleEl.setAttribute('type', "application/x-nacl");
 
     // The <EMBED> element is wrapped inside a <DIV>, which has both a 'load'
     // and a 'message' event listener attached.  This wrapping method is used
@@ -146,23 +89,6 @@ var common = (function() {
     // event fires.
     var listenerDiv = document.getElementById('git-salt-container');
     listenerDiv.appendChild(moduleEl);
-
-    // Request the offsetTop property to force a relayout. As of Apr 10, 2014
-    // this is needed if the module is being loaded on a Chrome App's
-    // background page (see crbug.com/350445).
-    moduleEl.offsetTop;
-
-    // Host plugins don't send a moduleDidLoad message. We'll fake it here.
-    var isHost = isHostToolchain(tool);
-    if (isHost) {
-      window.setTimeout(function() {
-        moduleEl.readyState = 1;
-        moduleEl.dispatchEvent(new CustomEvent('loadstart'));
-        moduleEl.readyState = 4;
-        moduleEl.dispatchEvent(new CustomEvent('load'));
-        moduleEl.dispatchEvent(new CustomEvent('loadend'));
-      }, 100);  // 100 ms
-    }
 
     // This is code that is only used to test the SDK.
     if (isTest) {
@@ -234,8 +160,6 @@ var common = (function() {
   function moduleDidLoad() {
     common.naclModule = document.getElementById('nacl_module');
     updateStatus('RUNNING');
-
-   console.log('module did load');
     saveFile();
     if (typeof window.moduleDidLoad !== 'undefined') {
       window.moduleDidLoad();
@@ -339,57 +263,21 @@ var common = (function() {
    * document.querySelector, document.getElementById, etc.
    *
    * @param {string} name The name of the example.
-   * @param {string} tool The name of the toolchain, e.g. "glibc", "newlib" etc.
    * @param {string} path Directory name where .nmf file can be found.
-   * @param {number} width The width to create the plugin.
-   * @param {number} height The height to create the plugin.
-   * @param {Object} attrs Optional dictionary of additional attributes.
    */
-  function domContentLoaded(name, tool, path, width, height, attrs) {
-    // If the page loads before the Native Client module loads, then set the
-    // status message indicating that the module is still loading.  Otherwise,
-    // do not change the status message.
-    updateStatus('Page loaded.');
-    if (!browserSupportsNaCl(tool)) {
-      updateStatus(
-          'Browser does not support NaCl (' + tool + '), or NaCl is disabled');
-    } else if (common.naclModule == null) {
-      updateStatus('Creating embed: ' + tool);
-
-      // We use a non-zero sized embed to give Chrome space to place the bad
-      // plug-in graphic, if there is a problem.
-      width = typeof width !== 'undefined' ? width : 200;
-      height = typeof height !== 'undefined' ? height : 200;
-      attachDefaultListeners();
-      createNaClModule(name, tool, path, width, height, attrs);
-    } else {
-      // It's possible that the Native Client module onload event fired
-      // before the page's onload event.  In this case, the status message
-      // will reflect 'SUCCESS', but won't be displayed.  This call will
-      // display the current message.
-      updateStatus('Waiting.');
-    }
+  function domContentLoaded(name, path) {
+    attachDefaultListeners();
+    createNaClModule(name, path);
   }
 
   /** Saved text to display in the element with id 'statusField'. */
   var statusText = 'NO-STATUSES';
 
-  /**
-   * Set the global status message. If the element with id 'statusField'
-   * exists, then set its HTML to the status message as well.
-   *
-   * @param {string} opt_message The message to set. If null or undefined, then
-   *     set element 'statusField' to the message from the last call to
-   *     updateStatus.
-   */
   function updateStatus(opt_message) {
     if (opt_message) {
       statusText = opt_message;
     }
-    var statusField = document.getElementById('statusField');
-    if (statusField) {
-      statusField.innerHTML = statusText;
-    }
+    console.log(statusText);
   }
 
   // The symbols to export.
@@ -411,5 +299,5 @@ var common = (function() {
 // Listen for the DOM content to be loaded. This event is fired when parsing of
 // the page's document has finished.
 document.addEventListener('DOMContentLoaded', function() {
-  common.domContentLoaded('git_salt', null, 'lib/git_salt', 0, 0, []); 
+  common.domContentLoaded('git_salt', 'lib/git_salt');
 });
