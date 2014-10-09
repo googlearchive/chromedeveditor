@@ -4184,7 +4184,7 @@ class PolymerDesignerAction
 
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
       : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
-    _designer = js.JsObject.fromBrowserObject(
+    _designer = new js.JsObject.fromBrowserObject(
         _dialog.getElement('#polymerDesigner'));
     _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
       _designer.callMethod('load', []);

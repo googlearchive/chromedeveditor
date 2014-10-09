@@ -47,8 +47,6 @@ Polymer('cde-polymer-designer', {
   },
 
   attached: function() {
-    assert(entryPoint in ['local', 'inline']);
-
     this._registerDesignerProxyListener();
   },
 
@@ -67,15 +65,15 @@ Polymer('cde-polymer-designer', {
       this._webviewReadyResolve = resolve;
       // TODO(ussuri): BUG #3466.
       setTimeout(function() {
-        this._webview = document.createElement('webview');
-        this._webview.addEventListener('contentload', this._onWebviewContentLoad);
-        this._webview.partition = this._STORAGE_PARTITION;
-        this._webview.src =
-            this.entryPoint == 'local' ?
-            this._LOCAL_ENTRY_POINT :
-            this._ONLINE_ENTRY_POINT;
-        this.shadowRoot.append(this._webview);
-      }, 500);
+        // this._webview = document.createElement('webview');
+        // this._webview.addEventListener('contentload', this._onWebviewContentLoad);
+        // this._webview.partition = this._STORAGE_PARTITION;
+        // this._webview.src =
+        //     this.entryPoint == 'local' ?
+        //     this._LOCAL_ENTRY_POINT :
+        //     this._ONLINE_ENTRY_POINT;
+        // this.shadowRoot.append(this._webview);
+      }.bind(this), 500);
     });
     return this._webviewReady;
   },
@@ -126,8 +124,8 @@ Polymer('cde-polymer-designer', {
         // into [_webview>] by [_injectDesignerProxy].
         return this._executeScriptInWebview(function() {
           window.postMessage({action: 'import_code', code: code}, '*');
-        });
-      }, 500);
+        }.bind(this));
+      }.bind(this), 500);
     });
   },
 
@@ -168,7 +166,7 @@ Polymer('cde-polymer-designer', {
     this._tweakDesignerUI();
     this._injectDesignerProxy().then(function() {
       this._webviewReadyResolve();
-    });
+    }.bind(this));
   },
 
   /**
@@ -228,7 +226,7 @@ Polymer('cde-polymer-designer', {
    * @type: void
    */
   _registerDesignerProxyListener: function() {
-    chrome.runtime.onMessage.listen(this._designerProxyListener);
+    chrome.runtime.onMessage.addListener(this._designerProxyListener);
   },
 
   /**
@@ -279,11 +277,11 @@ Polymer('cde-polymer-designer', {
    */
   _injectScriptIntoWebviewMainWorld: function(script) {
     // Escape all special charachters and enclose in double-quotes.
-    return _executeScriptInWebview(function() {
+    return this._executeScriptInWebview(function() {
       var scriptTag = document.createElement('script');
       scriptTag.innerHTML = '(function() { $script; })()';
       document.body.appendChild(scriptTag);
-    });
+    }.bind(this));
   },
 
   /**
@@ -308,6 +306,6 @@ Polymer('cde-polymer-designer', {
    * @type: void
    */
   _insertCssIntoWebview: function(css) {
-    _webview.insertCSS({code: css});
+    this._webview.insertCSS({code: css});
   }
 });
