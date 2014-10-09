@@ -7,8 +7,8 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
+import 'dart:js' as js;
 
-import 'package:cde_polymer_designer/cde_polymer_designer.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_testing/testing_app.dart';
 import 'package:intl/intl.dart';
@@ -4179,40 +4179,43 @@ class PolymerDesignerAction
     extends SparkActionWithStatusDialog implements ContextAction {
   static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
 
-  CdePolymerDesigner _designer;
+  js.JsObject _designer;
   File _file;
 
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
       : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
-    _designer = _dialog.getElement('#polymerDesigner');
+    _designer = js.JsObject.fromBrowserObject(
+        _dialog.getElement('#polymerDesigner'));
     _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
-      _designer.reload();
+      _designer.callMethod('load', []);
     });
   }
 
   void _invoke([List<ws.Resource> resources]) {
     _show();
     _file = spark._getFile(resources);
-    _designer.load().then((_) {
-      _file.getContents().then((String contents) {
-        _designer.setCode(contents);
-      });
-    });
+    _designer.callMethod('load', [(promise) { print(promise); }]);
+    //   .then((_) {
+    //   _file.getContents().then((String contents) {
+    //     _designer.setCode(contents);
+    //   });
+    // });
   }
 
   void _commit() {
-    _designer.getCode().then((String code) {
-      _file.setContents(code);
-      _file = null;
-      _designer.unload();
-    });
+    _designer.callMethod('getCode', [(promise) { print(promise); }]);
+    // .then((String code) {
+    //   _file.setContents(code);
+    //   _file = null;
+    //   _designer.unload();
+    // });
 
     super._commit();
   }
 
   void _cancel() {
     _file = null;
-    _designer.unload();
+    _designer.callMethod('unload', []);
 
     super._cancel();
   }
