@@ -65,16 +65,17 @@ Polymer('cde-polymer-designer', {
       this._webviewReadyResolve = resolve;
       // TODO(ussuri): BUG #3466.
       setTimeout(function() {
-        // this._webview = document.createElement('webview');
-        // this._webview.addEventListener('contentload', this._onWebviewContentLoad);
-        // this._webview.partition = this._STORAGE_PARTITION;
-        // this._webview.src =
-        //     this.entryPoint == 'local' ?
-        //     this._LOCAL_ENTRY_POINT :
-        //     this._ONLINE_ENTRY_POINT;
-        // this.shadowRoot.append(this._webview);
+        this._webview = document.createElement('webview');
+        this._webview.addEventListener(
+            'contentload', this._onWebviewContentLoad.bind(this));
+        this._webview.partition = this._STORAGE_PARTITION;
+        this._webview.src =
+            this.entryPoint == 'local' ?
+            this._LOCAL_ENTRY_POINT :
+            this._ONLINE_ENTRY_POINT;
+        this.shadowRoot.insertBefore(this._webview);
       }.bind(this), 500);
-    });
+    }.bind(this));
     return this._webviewReady;
   },
 
