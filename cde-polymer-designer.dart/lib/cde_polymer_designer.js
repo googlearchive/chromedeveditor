@@ -21,6 +21,11 @@ Polymer('cde-polymer-designer', {
   entryPoint: 'local',
 
   /**
+   * The dynamically created <webview> element.
+   */
+  _webview: null,
+
+  /**
    * Fires after the <webview> has been created, its UI tweaked and the proxy
    * script injected into it.
    *
@@ -37,11 +42,6 @@ Polymer('cde-polymer-designer', {
    */
   _codeExported: null,
   _codeExportedResolve: null,
-
-  /**
-   * The dynamically created <webview> element.
-   */
-  _webview: null,
 
   ready: function() {
   },
@@ -310,4 +310,4 @@ Polymer('cde-polymer-designer', {
   _insertCssIntoWebview: function(css) {
     _webview.insertCSS({code: css});
   }
-}
+});
