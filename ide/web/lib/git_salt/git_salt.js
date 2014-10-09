@@ -19,22 +19,22 @@ function fsLoaded(fileSystem) {
 window.webkitRequestFileSystem(window.PERSISTENT, 5 * 1024 * 1024 * 1024, fsLoaded);
 
 function moduleDidLoad() {
-  common.hideModule();
+  GitSalt.hideModule();
 }
 
-// Called by the common.js module.
+// Called by the GitSalt.js module.
 function domContentLoaded(name, tc, config, width, height) {
   navigator.webkitPersistentStorage.requestQuota(1024 * 1024,
     function(bytes) {
-      common.updateStatus(
+      GitSalt.updateStatus(
           'Allocated ' + bytes + ' bytes of persistant storage.');
-      common.attachDefaultListeners();
-      common.createNaClModule(name, tc, config, width, height);
+      GitSalt.attachDefaultListeners();
+      GitSalt.createNaClModule(name, tc, config, width, height);
     },
     function(e) { alert('Failed to allocate space') });
 }
 
-// Called by the common.js module.
+// Called by the GitSalt.js module.
 function attachListeners() {
   return;
 }
@@ -55,12 +55,12 @@ function makeMessage(command, path) {
 }
 
 function saveFile() {
-  if (common.naclModule) {
-    common.naclModule.postMessage(makeMessage('sv', "/grvfs/spark3", "some text"));
+  if (GitSalt.naclModule) {
+    GitSalt.naclModule.postMessage(makeMessage('sv', "/grvfs/spark3", "some text"));
   }
 }
 
-// Called by the common.js module.
+// Called by the GitSalt.js module.
 function handleMessage(message_event) {
 console.log(message_event);
 var msg = message_event.data;
@@ -69,11 +69,11 @@ var msg = message_event.data;
   var args = parts.slice(1);
 
   if (command == 'ERR') {
-    common.logMessage('Error: ' + args[0]);
+    GitSalt.logMessage('Error: ' + args[0]);
   } else if (command == 'STAT') {
-    common.logMessage(args[0]);
+    GitSalt.logMessage(args[0]);
   } else if (command == 'READY') {
-    common.logMessage('Filesystem ready!');
+    GitSalt.logMessage('Filesystem ready!');
   } else if (command == 'DISP') {
     // Find the file editor that is currently visible.
     var fileEditorEl =

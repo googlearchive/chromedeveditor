@@ -16,7 +16,7 @@ var isRelease = true;
 // returns a new object. The new object contains only the exported definitions;
 // all other definitions in the anonymous function are inaccessible to external
 // code.
-var common = (function() {
+var GitSalt = (function() {
 
   /**
    * Inject a script into the DOM, and call a callback when it is loaded.
@@ -43,16 +43,16 @@ var common = (function() {
    */
   function runTests(moduleEl) {
     console.log('runTests()');
-    common.tester = new Tester();
+    GitSalt.tester = new Tester();
 
     // All NaCl SDK examples are OK if the example exits cleanly; (i.e. the
     // NaCl module returns 0 or calls exit(0)).
     //
     // Without this exception, the browser_tester thinks that the module
     // has crashed.
-    common.tester.exitCleanlyIsOK();
+    GitSalt.tester.exitCleanlyIsOK();
 
-    common.tester.addAsyncTest('loaded', function(test) {
+    GitSalt.tester.addAsyncTest('loaded', function(test) {
       test.pass();
     });
 
@@ -60,8 +60,8 @@ var common = (function() {
       window.addTests();
     }
 
-    common.tester.waitFor(moduleEl);
-    common.tester.run();
+    GitSalt.tester.waitFor(moduleEl);
+    GitSalt.tester.run();
   }
 
   /**
@@ -130,7 +130,7 @@ var common = (function() {
    * This event listener is registered in createNaClModule above.
    */
   function handleError(event) {
-    // We can't use common.naclModule yet because the module has not been
+    // We can't use GitSalt.naclModule yet because the module has not been
     // loaded.
     var moduleEl = document.getElementById('nacl_module');
     updateStatus('ERROR [' + moduleEl.lastError + ']');
@@ -142,13 +142,13 @@ var common = (function() {
    * This event listener is registered in attachDefaultListeners above.
    */
   function handleCrash(event) {
-    if (common.naclModule.exitStatus == -1) {
+    if (GitSalt.naclModule.exitStatus == -1) {
       updateStatus('CRASHED');
     } else {
-      updateStatus('EXITED [' + common.naclModule.exitStatus + ']');
+      updateStatus('EXITED [' + GitSalt.naclModule.exitStatus + ']');
     }
     if (typeof window.handleCrash !== 'undefined') {
-      window.handleCrash(common.naclModule.lastError);
+      window.handleCrash(GitSalt.naclModule.lastError);
     }
   }
 
@@ -158,7 +158,7 @@ var common = (function() {
    * This event listener is registered in attachDefaultListeners above.
    */
   function moduleDidLoad() {
-    common.naclModule = document.getElementById('nacl_module');
+    GitSalt.naclModule = document.getElementById('nacl_module');
     updateStatus('RUNNING');
     saveFile();
     if (typeof window.moduleDidLoad !== 'undefined') {
@@ -175,17 +175,17 @@ var common = (function() {
    *
    */
   function hideModule() {
-    // Setting common.naclModule.style.display = "None" doesn't work; the
+    // Setting GitSalt.naclModule.style.display = "None" doesn't work; the
     // module will no longer be able to receive postMessages.
-    common.naclModule.style.height = '0';
+    GitSalt.naclModule.style.height = '0';
   }
 
   /**
    * Remove the NaCl module from the page.
    */
   function removeModule() {
-    common.naclModule.parentNode.removeChild(common.naclModule);
-    common.naclModule = null;
+    GitSalt.naclModule.parentNode.removeChild(GitSalt.naclModule);
+    GitSalt.naclModule = null;
   }
 
   /**
@@ -258,14 +258,10 @@ var common = (function() {
   }
 
   /**
-   * Called when the DOM content has loaded; i.e. the page's document is fully
-   * parsed. At this point, we can safely query any elements in the document via
-   * document.querySelector, document.getElementById, etc.
-   *
    * @param {string} name The name of the example.
    * @param {string} path Directory name where .nmf file can be found.
    */
-  function domContentLoaded(name, path) {
+  function loadPlugin(name, path) {
     attachDefaultListeners();
     createNaClModule(name, path);
   }
@@ -286,18 +282,11 @@ var common = (function() {
     naclModule: null,
 
     attachDefaultListeners: attachDefaultListeners,
-    domContentLoaded: domContentLoaded,
+    loadPlugin: loadPlugin,
     createNaClModule: createNaClModule,
     hideModule: hideModule,
     removeModule: removeModule,
     logMessage: logMessage,
     updateStatus: updateStatus
   };
-
 }());
-
-// Listen for the DOM content to be loaded. This event is fired when parsing of
-// the page's document has finished.
-document.addEventListener('DOMContentLoaded', function() {
-  common.domContentLoaded('git_salt', 'lib/git_salt');
-});
