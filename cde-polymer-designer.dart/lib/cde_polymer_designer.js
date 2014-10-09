@@ -27,6 +27,7 @@ Polymer('cde-polymer-designer', {
    * @type: Promise
    */
   _webviewReady: null,
+  _webviewReadyResolve: null,
 
   /**
    * Fires when the asynchronous code export requested from the proxy has
@@ -35,6 +36,7 @@ Polymer('cde-polymer-designer', {
    * @type: Promise<String>
    */
   _codeExported: null,
+  _codeExportedResolve: null,
 
   /**
    * The dynamically created <webview> element.
@@ -47,7 +49,7 @@ Polymer('cde-polymer-designer', {
   attached: function() {
     assert(entryPoint in ['local', 'inline']);
 
-    _registerDesignerProxyListener();
+    this._registerDesignerProxyListener();
   },
 
   /**
@@ -61,26 +63,20 @@ Polymer('cde-polymer-designer', {
    * @type: Promise
    */
   load: function() {
-    this._webviewReady = new Promise();
-
-    // TODO(ussuri): BUG #3466.
-    setTimeout(function() {
-      this._webview = document.createElement('webview');
-      this._webview.addEventListener(
-          'contentload', this._onWebviewContentLoad);
-      this._webview.partition = this._STORAGE_PARTITION;
-      this._webview.src =
-          this.entryPoint == 'local' ?
-          this._LOCAL_ENTRY_POINT :
-          this._ONLINE_ENTRY_POINT;
-      this.shadowRoot.append(this._webview);
-    }, 500);
-
-    // TODO(ussuri): Try enabling once BUG #3467 is resolved.
-    // this._webviewReady.then(function() {
-    //   _webview.setZoom(0.8);
-    // });
-
+    this._webviewReady = new Promise(function(resolve, reject) {
+      this._webviewReadyResolve = resolve;
+      // TODO(ussuri): BUG #3466.
+      setTimeout(function() {
+        this._webview = document.createElement('webview');
+        this._webview.addEventListener('contentload', this._onWebviewContentLoad);
+        this._webview.partition = this._STORAGE_PARTITION;
+        this._webview.src =
+            this.entryPoint == 'local' ?
+            this._LOCAL_ENTRY_POINT :
+            this._ONLINE_ENTRY_POINT;
+        this.shadowRoot.append(this._webview);
+      }, 500);
+    });
     return this._webviewReady;
   },
 
@@ -107,7 +103,8 @@ Polymer('cde-polymer-designer', {
       this._webview.terminate();
       this._webview.remove();
     }
-    this._webview = this._webviewReady = this._codeExported = null;
+    this._webview = this._webviewReady = this._webviewReadyResolve = null;
+    this._codeExported = null;
   },
 
   /**
@@ -121,15 +118,14 @@ Polymer('cde-polymer-designer', {
     // Escape all special charachters and enclose in double-quotes.
     code = JSON.encode(code);
     // Just in case we are called too early, wait until the webview is ready.
-    return this._webviewReady.then((_) {
+    return this._webviewReady.then(function () {
       // TODO(ussuri): This doesn't work without a delay:
       // find some way to detect when PD is fully ready.
       return setTimeout(function() {
         // The request is received and handled by the JS proxy script injected
         // into [_webview>] by [_injectDesignerProxy].
         return this._executeScriptInWebview(function() {
-          window.postMessage(
-              {action: 'import_code', code: ''' + code + r'''}, '*');
+          window.postMessage({action: 'import_code', code: code}, '*');
         });
       }, 500);
     });
@@ -142,23 +138,25 @@ Polymer('cde-polymer-designer', {
    * @type: Promise<String>
    */
   getCode: function() {
-    if (_codeExported == null) {
-      _codeExported = new Completer<String>();
-      // Just in case we are called too early, wait until the webview is ready.
-      _webviewReady.future.then((_) {
+    if (this._codeExported == null) {
+      this._codeExported = new Promise(function(resolve, reject) {
+        this._codeExportedResolve = resolve;
         // The request is received and handled by [_designerProxy], which
         // asynchronously returns the result via a chrome.runtime.sendMessage,
         // received and handled by [_designProxyListener], which completes the
         // [_codeExported] completer with the code string.
-        _executeScriptInWebview(r'''
-            window.postMessage({action: 'export_code'}, '*');
-        ''');
+        this._executeScriptInWebview(function() {
+          window.postMessage({action: 'export_code'}, '*');
+        });
+        // .then(function(result) {
+        //   resolve(result);
+        // });
       });
     } else {
       // There already is a pending [getCode] request: just fall through
-      // to returning the same future to the new caller.
+      // to returning the same promise to the new caller.
     }
-    return _codeExported.future;
+    return this._codeExported;
   },
 
   /**
@@ -167,8 +165,10 @@ Polymer('cde-polymer-designer', {
    * @type: void
    */
   _onWebviewContentLoad: function(event) {
-    _tweakDesignerUI();
-    _injectDesignerProxy().then((_) => _webviewReady.complete());
+    this._tweakDesignerUI();
+    this._injectDesignerProxy().then(function() {
+      this._webviewReadyResolve();
+    });
   },
 
   /**
@@ -182,43 +182,43 @@ Polymer('cde-polymer-designer', {
   _tweakDesignerUI: function() {
     // TODO(ussuri): Some of this will become unnecessary once BUG #3467 is
     // resolved.
-    _insertCssIntoWebview(r'''
-        /* Reduce the initial font sizes */
-        html /deep/ *, html /deep/ #tabs > * {
-          font-size: 13px;
-        }
-        html /deep/ #tabs {
-          padding-top: 0;
-          padding-bottom: 0;
-        }
-        html /deep/ core-toolbar,
-        html /deep/ core-toolbar::shadow > #topBar {
-          height: 40px;
-        }
-        /* Hide some UI elements we don't need */
-        #designer::shadow > #appbar > * {
-          display: none;
-        }
-        #designer::shadow > #appbar > .design-controls {
-          display: block;
-        }
-        #designer::shadow > #appbar > .design-controls > .separator:first-child {
-          display: none;
-        }
-    ''');
+    this._insertCssIntoWebview('\
+        /* Reduce the initial font sizes */\
+        html /deep/ *, html /deep/ #tabs > * {\
+          font-size: 13px;\
+        }\
+        html /deep/ #tabs {\
+          padding-top: 0;\
+          padding-bottom: 0;\
+        }\
+        html /deep/ core-toolbar,\
+        html /deep/ core-toolbar::shadow > #topBar {\
+          height: 40px;\
+        }\
+        /* Hide some UI elements we do not need */\
+        #designer::shadow > #appbar > * {\
+          display: none;\
+        }\
+        #designer::shadow > #appbar > .design-controls {\
+          display: block;\
+        }\
+        #designer::shadow > #appbar > .design-controls > .separator:first-child {\
+          display: none;\
+        }'
+    );
   },
 
   /**
-   * Handles responses sent from inside [_webview] by [_designerProxy].
+   * Handles messages/responses sent from inside [_webview] by [_designerProxy].
    *
    * @type: void
    */
   _designerProxyListener: function(event) {
     // TODO(ussuri): Check the sender?
     if (event.message['type'] == 'export_code_response') {
-      _codeExported.complete("${event.message['code']}");
+      this._codeExportedResolve("${event.message['code']}");
       // Null the completer so new [getCode] requests can work properly.
-      _codeExported = null;
+      this._codeExported = null;
     }
   },
 
@@ -228,7 +228,7 @@ Polymer('cde-polymer-designer', {
    * @type: void
    */
   _registerDesignerProxyListener: function() {
-    chrome.runtime.onMessage.listen(_designerProxyListener);
+    chrome.runtime.onMessage.listen(this._designerProxyListener);
   },
 
   /**
@@ -264,7 +264,7 @@ Polymer('cde-polymer-designer', {
    */
   _injectDesignerProxy: function() {
     // TODO(ussuri): Check the sender?
-    return _injectScriptIntoWebviewMainWorld(_designerProxy);
+    return this._injectScriptIntoWebviewMainWorld(this._designerProxy);
   },
 
   /**
@@ -279,28 +279,27 @@ Polymer('cde-polymer-designer', {
    */
   _injectScriptIntoWebviewMainWorld: function(script) {
     // Escape all special charachters and enclose in double-quotes.
-    script = JSON.encode('(function() { $script; })()');
-    return _executeScriptInWebview(r'''
-        (function() {
-          var scriptTag = document.createElement('script');
-          scriptTag.innerHTML = ''' + script + r''';
-          document.body.appendChild(scriptTag);
-        })();
-    ''');
+    return _executeScriptInWebview(function() {
+      var scriptTag = document.createElement('script');
+      scriptTag.innerHTML = '(function() { $script; })()';
+      document.body.appendChild(scriptTag);
+    });
   },
 
   /**
    * Executes a script in [_webview]'s "isolated world", which give the script
    * access only to the webview's DOM, but not the JS context.
    *
-   * @type: Promise<dynamic>
+   * @type: Promise<array of any>
    */
   _executeScriptInWebview: function(script) {
-    final js.JsObject jsScript = new js.JsObject.jsify({'code': script});
-    final completer = new Completer();
-    _webview.callMethod('executeScript',
-        [jsScript, ([result]) => completer.complete(result)]);
-    return completer.future;
+    script = '(function() {' + JSON.stringify(script) + '; })()';
+    return new Promise(function(resolve, reject) {
+      this._webview.executeScript(
+          {code: script},
+          function(result) { resolve(result); }
+      );
+    });
   },
 
   /**
@@ -309,6 +308,6 @@ Polymer('cde-polymer-designer', {
    * @type: void
    */
   _insertCssIntoWebview: function(css) {
-    _webview.insertCSS(css);
+    _webview.insertCSS({code: css});
   }
 }
