@@ -3470,8 +3470,6 @@ class _GitCloneTask {
           } else {
             root = new ws.FolderChildRoot(location.parent, location.entry);
           }
-          window.console.log(location.entry.fullPath);
-          window.console.log(location.entry.filesystem);
           return spark.workspace.link(root).then((ws.Project project) {
             spark.showSuccessMessage('Cloned into ${project.name}');
 
