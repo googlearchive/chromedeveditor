@@ -4194,21 +4194,21 @@ class PolymerDesignerAction
   void _invoke([List<ws.Resource> resources]) {
     _show();
     _file = spark._getFile(resources);
-    _designer.callMethod('load', [(promise) { print(promise); }]);
-    //   .then((_) {
-    //   _file.getContents().then((String contents) {
-    //     _designer.setCode(contents);
-    //   });
-    // });
+    js.JsObject promise = _designer.callMethod('load');
+    promise.callMethod('then', new js.JsObject.jsify([(_) {
+      _file.getContents().then((String contents) {
+        _designer.setCode(contents);
+      });
+    }]));
   }
 
   void _commit() {
-    _designer.callMethod('getCode', [(promise) { print(promise); }]);
-    // .then((String code) {
-    //   _file.setContents(code);
-    //   _file = null;
-    //   _designer.unload();
-    // });
+    js.JsObject promise = _designer.callMethod('getCode');
+    promise.callMethod('then', new js.JsObject.jsify([(String code) {
+      _file.setContents(code);
+      _file = null;
+      _designer.unload();
+    }]));
 
     super._commit();
   }
