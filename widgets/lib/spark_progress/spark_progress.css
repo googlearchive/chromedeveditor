@@ -3,8 +3,9 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("../common/spark_widget.css");
-@import url("../../../packages/bootjack/css/bootstrap.min.css");
-@import url("../../../packages/bootjack/css/bootstrap-theme.css");
+
+/* TODO(devoncarew): Removed the bootstrap css. This component will either need
+   to be rehabilitated or deleted. */
 
 #progressLayout {
   display: flex;
