@@ -320,7 +320,10 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   Timer _timer;
 
   void _startSaveTimer() {
-    _eventBus.addEvent(new FileModifiedBusEvent(currentFile));
+    if (currentProvider is FileContentProvider) {
+      FileContentProvider contentProvider = (currentProvider as FileContentProvider);
+      _eventBus.addEvent(new FileModifiedBusEvent(contentProvider.file));
+    }
 
     if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () =>
@@ -514,6 +517,11 @@ abstract class ContentProvider {
   Stream get onChange;
   Future write(String content);
   Future<String> read();
+  
+  bool operator==(ContentProvider other) {
+    if (other is! ContentProvider) return false;
+    return uuid == other.uuid;
+  }
 }
 
 /**

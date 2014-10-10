@@ -37,7 +37,7 @@ defineTests() {
         completer.complete();
       });
 
-      manager.openFile(fileResource);
+      manager.openFile(new FileContentProvider(fileResource));
       return completer.future;
     });
   });

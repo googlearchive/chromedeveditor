@@ -345,11 +345,14 @@ abstract class Spark
   void initNavigationManager() {
     _navigationManager = new NavigationManager(_editorManager);
     _navigationManager.onNavigate.listen((NavigationLocation location) {
-      _selectFile(location.file).then((_) {
-        if (location.selection != null) {
-          nextTick().then((_) => _selectLocation(location));
-        }
-      });
+      ContentProvider contentProvider = location.contentProvider;
+      if (contentProvider is FileContentProvider) {
+        _selectFile(contentProvider.file).then((_) {
+          if (location.selection != null) {
+            nextTick().then((_) => _selectLocation(location));
+          }
+        });
+      }
     });
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
       event =
@@ -380,7 +383,7 @@ abstract class Spark
 
   void _selectLocation(NavigationLocation location) {
     for (Editor editor in editorManager.editors) {
-      if (editor.contentProvider.uuid == location.file.uuid) {
+      if (editor.contentProvider == location.contentProvider) {
         if (editor is TextEditor) {
           editor.select(location.selection);
         }
@@ -456,11 +459,15 @@ abstract class Spark
     _editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
-      if (!_filesController.isFileSelected(tab.file)) {
-        _filesController.selectFile(tab.file);
+      if (tab.contentProvider is FileContentProvider) {
+        FileContentProvider fileContentProvider = tab.contentProvider;
+        if (!_filesController.isFileSelected(tab.contentProvider)) {
+          _filesController.selectFile(fileContentProvider.file);
+        }
+        focusManager.setEditedFile(fileContentProvider.file);
       }
+      
       localPrefs.setValue('lastFileSelection', tab.contentProvider.uuid);
-      focusManager.setEditedFile(tab.file);
     });
   }
 
@@ -479,7 +486,7 @@ abstract class Spark
     });
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
         .listen((FilesControllerPersistTabEvent event) {
-      editorArea.persistTab(event.file);
+      editorArea.persistTab(editorArea.tabByFile(event.file));
     });
     querySelector('#showFileViewButton').onClick.listen((_) {
       Action action = actionManager.getAction('show-files-view');
@@ -654,7 +661,9 @@ abstract class Spark
         return nextTick().then((_) {
           return folder.importFileEntry(entry);
         }).then((File file) {
-          navigationManager.gotoLocation(new NavigationLocation(file));
+          ContentProvider contentProvider = new FileContentProvider(file);
+          NavigationLocation navLocation = new NavigationLocation(contentProvider);
+          navigationManager.gotoLocation(navLocation);
         });
       }
     }).catchError((e) {
@@ -1469,7 +1478,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // this to occur.
           Timer.run(() {
             spark._openFile(file).then((_) {
-              spark.editorArea.persistTab(file);
+              spark.editorArea.persistTab(spark.editorArea.tabByFile(file));
             });
             spark._aceManager.focus();
           });

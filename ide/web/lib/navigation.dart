@@ -169,10 +169,10 @@ class NavigationLocation {
 
   bool operator==(NavigationLocation other) {
     if (other is! NavigationLocation) return false;
-    return file == other.file && selection == other.selection;
+    return contentProvider == other.contentProvider && selection == other.selection;
   }
 
-  String toString() => selection == null ? '[${file}]' : '[${file}, ${selection}]';
+  String toString() => selection == null ? '[${contentProvider}]' : '[${contentProvider}, ${selection}]';
 }
 
 /**
