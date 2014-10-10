@@ -4186,38 +4186,54 @@ class PolymerDesignerAction
       : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
     _designer = new js.JsObject.fromBrowserObject(
         _dialog.getElement('#polymerDesigner'));
-    _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
-      _designer.callMethod('reload');
-    });
+    _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearCode);
+    _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertCode);
   }
 
   void _invoke([List<ws.Resource> resources]) {
     _show();
     _file = spark._getFile(resources);
-    _file.getContents().then((String code) {
-      _designer.callMethod('load', [code]);
-    });
+    final js.JsObject promise = _designer.callMethod('load');
+    promise.callMethod('then', [_setCode]);
   }
 
   void _commit() {
-    js.JsObject promise = _designer.callMethod('getCode');
+    final js.JsObject promise = _designer.callMethod('getCode');
     promise.callMethod('then', [(String code) {
-      _file.setContents(code);
-      _file = null;
-      _designer.callMethod('unload');
+      _getCode(code);
+      _cleanup();
     }]);
 
     super._commit();
   }
 
   void _cancel() {
-    _file = null;
-    _designer.callMethod('unload');
-
+    _cleanup();
     super._cancel();
   }
 
-  String get category => 'refactor';
+  void _setCode([_]) {
+    _file.getContents().then((String code) {
+      _designer.callMethod('setCode', [code]);
+    });
+  }
+
+  void _revertCode([_]) => _setCode();
+
+  void _clearCode([_]) {
+    _designer.callMethod('setCode', ['']);
+  }
+
+  void _getCode(String code) {
+    _file.setContents(code);
+  }
+
+  void _cleanup() {
+    _designer.callMethod('unload');
+    _file = null;
+  }
+
+  String get category => 'design';
 
   bool appliesTo(Object object) {
     // NOTE: Flags can get updated from .spark.json after createActions()

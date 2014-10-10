@@ -43,15 +43,15 @@ Polymer('cde-polymer-designer', {
   _codeExported: null,
   _codeExportedResolve: null,
 
-  ready: function() {
-    this._registerDesignerProxyListener();
-  },
-
   /**
-   * - Registers an event listener to complete initialization once the
+   * Registers an event listener to complete initialization once the
    * <webview> is up and running.
    */
+  ready: function() {
+  },
+
   attached: function() {
+    this._registerDesignerProxyListener();
   },
 
   /**
@@ -62,7 +62,7 @@ Polymer('cde-polymer-designer', {
    *
    * @type: Promise
    */
-  load: function(code) {
+  load: function() {
     this._webviewReady = new Promise(function(resolve, reject) {
       this._webviewReadyResolve = resolve;
       // TODO(ussuri): BUG #3466.
@@ -76,10 +76,9 @@ Polymer('cde-polymer-designer', {
             this._LOCAL_ENTRY_POINT :
             this._ONLINE_ENTRY_POINT;
         this.shadowRoot.appendChild(this._webview);
-
-        this.setCode(code);
       }.bind(this), 500);
     }.bind(this));
+
     return this._webviewReady;
   },
 
@@ -169,7 +168,7 @@ Polymer('cde-polymer-designer', {
   _onWebviewContentLoad: function(event) {
     this._tweakDesignerUI();
     this._injectDesignerProxy().then(function() {
-      this._webviewReadyResolve();
+      this._webviewReadyResolve(null);
     }.bind(this));
   },
 
