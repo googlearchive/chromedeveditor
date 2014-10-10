@@ -4187,35 +4187,32 @@ class PolymerDesignerAction
     _designer = new js.JsObject.fromBrowserObject(
         _dialog.getElement('#polymerDesigner'));
     _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
-      _designer.callMethod('load', []);
+      _designer.callMethod('reload');
     });
   }
 
   void _invoke([List<ws.Resource> resources]) {
     _show();
     _file = spark._getFile(resources);
-    js.JsObject promise = _designer.callMethod('load');
-    promise.callMethod('then', new js.JsObject.jsify([(_) {
-      _file.getContents().then((String contents) {
-        _designer.setCode(contents);
-      });
-    }]));
+    _file.getContents().then((String code) {
+      _designer.callMethod('load', [code]);
+    });
   }
 
   void _commit() {
     js.JsObject promise = _designer.callMethod('getCode');
-    promise.callMethod('then', new js.JsObject.jsify([(String code) {
+    promise.callMethod('then', [(String code) {
       _file.setContents(code);
       _file = null;
-      _designer.unload();
-    }]));
+      _designer.callMethod('unload');
+    }]);
 
     super._commit();
   }
 
   void _cancel() {
     _file = null;
-    _designer.callMethod('unload', []);
+    _designer.callMethod('unload');
 
     super._cancel();
   }
