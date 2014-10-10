@@ -2,8 +2,6 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-@import url("../../../packages/bootjack/css/bootstrap.min.css");
-@import url("../../../packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/roboto/roboto.css");
 
 body {
@@ -15,6 +13,8 @@ body {
 
 /* TODO(ussuri): Replace scrollbar and *-align-box rules with new Spark widgets. */
 
+/* TODO(devoncarew): We should narrow these down to specific elements or classes
+  of elements. */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -52,6 +52,11 @@ body {
 .scrollbar-dark::-webkit-scrollbar-thumb:hover,
 .ace_scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #ccc;
+}
+
+.hidden {
+  display: none !important;
+  visibility: hidden !important;
 }
 
 .top-align-box,

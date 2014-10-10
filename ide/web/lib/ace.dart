@@ -269,7 +269,7 @@ class TextEditor extends Editor {
 
     try {
       // Restore the cursor position and scroll location.
-      int scrollTop = _session.scrollTop;
+      num scrollTop = _session.scrollTop;
       html.Point cursorPos = null;
       if (aceManager.currentFile == file) {
         cursorPos = aceManager.cursorPosition;
@@ -295,7 +295,7 @@ class TextEditor extends Editor {
   /**
    * Handle navigating to file references in strings. So, things like:
    *
-   *     @import url("packages/bootjack/css/bootstrap.min.css");
+   *     @import url("packages/bootstrap/bootstrap.min.css");
    */
   Future<svc.Declaration> _simpleNavigateToDeclaration([Duration timeLimit]) {
     if (file.parent == null) {
