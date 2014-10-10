@@ -47,9 +47,6 @@ Polymer('cde-polymer-designer', {
    * Registers an event listener to complete initialization once the
    * <webview> is up and running.
    */
-  ready: function() {
-  },
-
   attached: function() {
     this._registerDesignerProxyListener();
   },
