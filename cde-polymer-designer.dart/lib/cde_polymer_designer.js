@@ -148,8 +148,8 @@ Polymer('cde-polymer-designer', {
         this._codeExportedResolve = resolve;
         // The request is received and handled by [_designerProxy], which
         // asynchronously returns the result via a chrome.runtime.sendMessage,
-        // received and handled by [_designProxyListener], which completes the
-        // [_codeExported] completer with the code string.
+        // received and handled by [_designProxyListener], which resolves the
+        // [_codeExported] promise with the code string.
         this._executeScriptInWebview(
           "function() { window.postMessage({action: 'get_code'}, '*'); }"
         );
@@ -226,7 +226,7 @@ Polymer('cde-polymer-designer', {
    * @type: void
    */
   _registerDesignerProxyListener: function() {
-    chrome.runtime.onMessage.addListener(this._designerProxyListener);
+    chrome.runtime.onMessage.addListener(this._designerProxyListener.bind(this));
   },
 
   /**
