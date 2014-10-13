@@ -17,7 +17,6 @@ import 'package:mime/mime.dart' as mime;
 
 import '../html_utils.dart';
 import '../../editors.dart';
-import '../../workspace.dart';
 
 /**
  * A simple image viewer.

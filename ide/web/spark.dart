@@ -347,7 +347,7 @@ abstract class Spark
     _navigationManager.onNavigate.listen((NavigationLocation location) {
       ContentProvider contentProvider = location.contentProvider;
       if (contentProvider is FileContentProvider) {
-        _selectFile(contentProvider.file).then((_) {
+        _selectContentProvider(contentProvider).then((_) {
           if (location.selection != null) {
             nextTick().then((_) => _selectLocation(location));
           }
@@ -965,18 +965,17 @@ abstract class Spark
       navigationManager.gotoLocation(new NavigationLocation(contentProvider));
       return new Future.value();
     } else {
-      return _selectFile(resource);
+      return _selectNonFileResource(resource);
     }
   }
 
-  Future _selectFile(ws.Resource resource) {
-    if (resource.isFile) {
-      return editorArea.selectFile(resource);
-    } else {
-      _filesController.selectFile(resource);
-      _filesController.setFolderExpanded(resource);
-      return new Future.value();
-    }
+  Future _selectContentProvider(ContentProvider contentProvider) =>
+      editorArea.selectFile(contentProvider);
+
+  Future _selectNonFileResource(ws.Resource resource) {
+    _filesController.selectFile(resource);
+    _filesController.setFolderExpanded(resource);
+    return new Future.value();
   }
 
   //

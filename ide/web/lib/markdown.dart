@@ -10,7 +10,6 @@ import 'dart:html' as html;
 import 'package:markdown/markdown.dart' show markdownToHtml;
 
 import 'editors.dart';
-import 'workspace.dart' as workspace;
 
 class Markdown {
   // Parent container.
