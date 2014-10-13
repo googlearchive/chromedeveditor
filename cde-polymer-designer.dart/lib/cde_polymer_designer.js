@@ -31,8 +31,7 @@ Polymer('cde-polymer-designer', {
    *
    * @type: Promise
    */
-  _webviewReady: null,
-  _webviewReadyResolve: null,
+  _webviewReady: { promise: null, resolve: null },
 
   /**
    * Fires when the asynchronous code export requested from the proxy has
@@ -40,8 +39,7 @@ Polymer('cde-polymer-designer', {
    *
    * @type: Promise<String>
    */
-  _codeExported: null,
-  _codeExportedResolve: null,
+  _codeExported: { promise: null, resolve: null },
 
   /**
    * Registers an event listener to complete initialization once the
@@ -62,8 +60,8 @@ Polymer('cde-polymer-designer', {
   load: function() {
     var that = this;
 
-    that._webviewReady = new Promise(function(resolve, reject) {
-      that._webviewReadyResolve = resolve;
+    that._webviewReady.promise = new Promise(function(resolve, reject) {
+      that._webviewReady.resolve = resolve;
       // TODO(ussuri): BUG #3466.
       setTimeout(function() {
         that._webview = document.createElement('webview');
@@ -78,7 +76,7 @@ Polymer('cde-polymer-designer', {
       }, 500);
     });
 
-    return that._webviewReady;
+    return that._webviewReady.promise;
   },
 
   /**
@@ -94,8 +92,8 @@ Polymer('cde-polymer-designer', {
       this._webview.terminate();
       this.shadowRoot.removeChild(this._webview);
     }
-    this._webview = this._webviewReady = this._webviewReadyResolve = null;
-    this._codeExported = this._codeExportedResolve = null;
+    this._webview = null;
+    this._webviewReady = this._codeExported = { promise: null, resolve: null };
   },
 
   /**
@@ -121,7 +119,7 @@ Polymer('cde-polymer-designer', {
     // Escape all special charachters and enclose in double-quotes.
     code = JSON.stringify(code);
     // Just in case we are called too early, wait until the webview is ready.
-    return that._webviewReady.then(function () {
+    return that._webviewReady.promise.then(function () {
       // TODO(ussuri): This doesn't work without a delay:
       // find some way to detect when PD is fully ready.
       return setTimeout(function() {
@@ -145,13 +143,13 @@ Polymer('cde-polymer-designer', {
   getCode: function() {
     var that = this;
 
-    if (that._codeExported == null) {
-      that._codeExported = new Promise(function(resolve, reject) {
-        that._codeExportedResolve = resolve;
+    if (that._codeExported.promise == null) {
+      that._codeExported.promise = new Promise(function(resolve, reject) {
+        that._codeExported.resolve = resolve;
         // The request is received and handled by [_designerProxy], which
         // asynchronously returns the result via a chrome.runtime.sendMessage,
-        // received and handled by [_designProxyListener], which resolves the
-        // [_codeExported] promise with the code string.
+        // received and handled by [_designProxyListener], which resolves
+        // [_codeExported.promise] with the code string.
         that._executeScriptInWebview(
           "function() { window.postMessage({action: 'get_code'}, '*'); }"
         );
@@ -161,7 +159,7 @@ Polymer('cde-polymer-designer', {
       // to returning the same promise to the new caller.
     }
 
-    return that._codeExported;
+    return that._codeExported.promise;
   },
 
   /**
@@ -174,7 +172,7 @@ Polymer('cde-polymer-designer', {
 
     that._tweakDesignerUI();
     that._injectDesignerProxy().then(function() {
-      that._webviewReadyResolve(null);
+      that._webviewReady.resolve(null);
     });
   },
 
@@ -243,9 +241,9 @@ Polymer('cde-polymer-designer', {
     // TODO(ussuri): Check the sender?
     switch (event.type) {
       case 'get_code_response':
-        this._codeExportedResolve(event.code);
+        this._codeExported.resolve(event.code);
         // Null the promise so new [getCode] requests can work properly.
-        this._codeExported = this._codeExportedResolve = null;
+        this._codeExported = { promise: null, resolve: null };
         break;
     }
   },
