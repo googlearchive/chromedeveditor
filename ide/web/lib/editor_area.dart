@@ -181,7 +181,7 @@ class EditorArea extends TabView {
 
     if (forceOpen || replaceCurrent) {
       ContentProvider contentProvider = new FileContentProvider(file);
-      
+
       Editor editor = editorProvider.createEditorForContentProvider(contentProvider);
       editorReadyFuture = editor.whenReady;
 
@@ -223,11 +223,11 @@ class EditorArea extends TabView {
     _savePersistedTabs();
     return editorReadyFuture;
   }
-  
+
   EditorTab _tabByUuid(String uuid) {
     return _tabOfUuid.containsKey(uuid) ? _tabOfUuid[uuid] : null;
   }
-  
+
   EditorTab tabByFile(File file) => _tabByUuid(file.uuid);
   EditorTab tabByContentProvider(ContentProvider contentProvider) =>
       _tabByUuid(contentProvider.uuid);
@@ -264,11 +264,11 @@ class EditorArea extends TabView {
 
   // Replaces the file loaded in a tab with a renamed version of the file. The
   // new tab is not selected.
-  void renameFile(ContentProvider contentProvider) {
-    EditorTab tab = tabByContentProvider(contentProvider);
+  void renameFile(File file) {
+    EditorTab tab = tabByFile(file);
     if (tab != null) {
-      tab.label = contentProvider.name;
-      _calculateTooltip(contentProvider).then((value) {
+      tab.label = file.name;
+      _calculateTooltip(tab.contentProvider).then((value) {
         tab.tooltip = value;
       }).catchError((e) => null);
       _nameController.add(selectedTab.label);

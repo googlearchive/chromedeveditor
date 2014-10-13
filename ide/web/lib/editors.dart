@@ -157,7 +157,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
    */
   void openFile(ContentProvider contentProvider, {bool activateEditor: true}) {
     if (contentProvider == null) return;
-    _EditorState state = _getStateFor(contentProvider);
+    _EditorState state = _getStateForUuid(contentProvider.uuid);
 
     if (state == null) {
       state = _savedEditorStates[contentProvider.uuid];
@@ -172,13 +172,16 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     }
   }
 
-  bool isFileOpened(ContentProvider contentProvider) =>
-      _getStateFor(contentProvider) != null;
+  bool isContentProviderOpened(ContentProvider contentProvider) =>
+      _getStateForUuid(contentProvider.uuid) != null;
+
+  bool isFileOpened(File file) =>
+      _getStateForUuid(file.uuid) != null;
 
   void saveAll() => _saveAll(userAction: true);
 
   void close(ContentProvider contentProvider) {
-    _EditorState state = _getStateFor(contentProvider);
+    _EditorState state = _getStateForUuid(contentProvider.uuid);
     Editor editor = _editorUuidMap[contentProvider.uuid];
 
     if (state != null) {
@@ -265,9 +268,9 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     });
   }
 
-  _EditorState _getStateFor(ContentProvider contentProvider) {
+  _EditorState _getStateForUuid(String uuid) {
     for (_EditorState state in _openedEditorStates) {
-      if (state.contentProvider.uuid == contentProvider.uuid) {
+      if (state.contentProvider.uuid == uuid) {
         return state;
       }
     }
@@ -420,7 +423,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   }
 
   void activate(Editor editor) {
-    _EditorState state = _getStateFor(editor.contentProvider);
+    _EditorState state = _getStateForUuid(editor.contentProvider.uuid);
     _switchState(state);
   }
 
@@ -517,7 +520,7 @@ abstract class ContentProvider {
   Stream get onChange;
   Future write(String content);
   Future<String> read();
-  
+
   bool operator==(ContentProvider other) {
     if (other is! ContentProvider) return false;
     return uuid == other.uuid;
@@ -529,10 +532,10 @@ abstract class ContentProvider {
  */
 class FileContentProvider implements ContentProvider {
   final File file;
-  
+
   String get name => file.name;
   String get uuid => file.uuid;
-  
+
   StreamController _changeController;
   StreamSubscription _changeSubscription;
 
@@ -559,10 +562,10 @@ class FileContentProvider implements ContentProvider {
 class PreferenceContentProvider implements ContentProvider {
   final PreferenceStore _store;
   final String name;
-  
+
   StreamController _changeController = new StreamController.broadcast();
   Stream get onChange => _changeController.stream;
-  
+
   // TODO(ericarnold): Deal with multiple [PreferenceStore]s?
   String get uuid => name;
 

@@ -466,7 +466,7 @@ abstract class Spark
         }
         focusManager.setEditedFile(fileContentProvider.file);
       }
-      
+
       localPrefs.setValue('lastFileSelection', tab.contentProvider.uuid);
     });
   }
@@ -931,11 +931,12 @@ abstract class Spark
     return null;
   }
 
-  void _closeOpenEditor(ws.Resource resource) {
-    if (resource is ws.File && editorManager.isFileOpened(resource)) {
-      editorArea.closeFile(resource);
-    }
-  }
+  // _closeOpenEditor is removed for now: #1037
+//  void _closeOpenEditor(ws.Resource resource) {
+//    if (resource is ws.File && editorManager.isFileOpened(resource)) {
+//      editorArea.closeFile(resource);
+//    }
+//  }
 
   /**
    * Refreshes the file name on an opened editor tab.
@@ -953,7 +954,15 @@ abstract class Spark
     }
 
     if (resource is ws.File) {
-      navigationManager.gotoLocation(new NavigationLocation(resource));
+      EditorTab tab = editorArea.tabByFile(resource);
+      ContentProvider contentProvider = tab.contentProvider;
+      if (tab != null) {
+        contentProvider = new FileContentProvider(resource);
+      } else {
+        contentProvider = tab.contentProvider;
+      }
+
+      navigationManager.gotoLocation(new NavigationLocation(contentProvider));
       return new Future.value();
     } else {
       return _selectFile(resource);
@@ -1000,7 +1009,15 @@ abstract class Spark
   }
 
   void openEditor(ws.File file, {Span selection}) {
-    navigationManager.gotoLocation(new NavigationLocation(file, selection));
+    EditorTab tab = editorArea.tabByFile(file);
+    ContentProvider contentProvider = tab.contentProvider;
+    if (tab != null) {
+      contentProvider = new FileContentProvider(file);
+    } else {
+      contentProvider = tab.contentProvider;
+    }
+
+    navigationManager.gotoLocation(new NavigationLocation(contentProvider, selection));
   }
 
   //
@@ -1678,28 +1695,29 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
       _isSingleResource(object) && !_isTopLevel(object);
 }
 
-class ResourceCloseAction extends SparkAction implements ContextAction {
-  ResourceCloseAction(Spark spark) : super(spark, "file-close", "Close");
-
-  void _invoke([List<ws.Resource> resources]) {
-    if (resources == null) {
-      resources = spark._getSelection();
-    }
-
-    for (ws.Resource resource in resources) {
-      spark.workspace.unlink(resource);
-      if (resource is ws.File) {
-        spark._closeOpenEditor(resource);
-      } else if (resource is ws.Project) {
-        resource.traverse().forEach(spark._closeOpenEditor);
-      }
-    }
-  }
-
-  String get category => 'resource';
-
-  bool appliesTo(Object object) => _isTopLevel(object);
-}
+//ResourceCloseAction is removed for now: #1037
+//class ResourceCloseAction extends SparkAction implements ContextAction {
+//  ResourceCloseAction(Spark spark) : super(spark, "file-close", "Close");
+//
+//  void _invoke([List<ws.Resource> resources]) {
+//    if (resources == null) {
+//      resources = spark._getSelection();
+//    }
+//
+//    for (ws.Resource resource in resources) {
+//      spark.workspace.unlink(resource);
+//      if (resource is ws.File) {
+//        spark._closeOpenEditor(resource);
+//      } else if (resource is ws.Project) {
+//        resource.traverse().forEach(spark._closeOpenEditor);
+//      }
+//    }
+//  }
+//
+//  String get category => 'resource';
+//
+//  bool appliesTo(Object object) => _isTopLevel(object);
+//}
 
 class TabPreviousAction extends SparkAction {
   TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {

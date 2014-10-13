@@ -13,6 +13,7 @@ import 'dart:html' as html;
 import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 
+import '../editors.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
@@ -101,7 +102,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
       _searching = true;
       _search = new WorkspaceSearch();
       _search.delegate = this;
-      _search.performSearch(_workspace, filterString).catchError((_) {});
+      _search.searchContainer(_workspace, filterString).catchError((_) {});
       _statusComponent.spinning = true;
       _statusComponent.progressMessage = 'Searching...';
       _setShowSearchResultPlaceholder(false);
@@ -112,14 +113,16 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     _updateResultsNow();
   }
 
-  void workspaceSearchFile(WorkspaceSearch search, File file) {
+  void workspaceSearchFile(WorkspaceSearch search, ContentProvider contentProvider) {
     if (_lastUpdateTime != null) {
       if (new DateTime.now().difference(_lastUpdateTime).inMilliseconds < 500) {
         return;
       }
     }
 
-    _statusComponent.progressMessage = 'Searching ${file.path}';
+    String description = (contentProvider is FileContentProvider) ?
+        contentProvider.file.path : contentProvider.name;
+    _statusComponent.progressMessage = 'Searching ${description}';
     _lastUpdateTime = new DateTime.now();
   }
 
@@ -160,10 +163,10 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     _linesMap = {};
     List<String> uuids = [];
     _items.forEach((WorkspaceSearchResultItem item) {
-      uuids.add(item.file.uuid);
-      _filesMap[item.file.uuid] = item;
+      uuids.add(item.contentProvider.uuid);
+      _filesMap[item.contentProvider.uuid] = item;
       item.lines.forEach((WorkspaceSearchResultLine lineInfo) {
-        _linesMap['${item.file.uuid}:${lineInfo.lineNumber}'] = lineInfo;
+        _linesMap['${item.contentProvider.uuid}:${lineInfo.lineNumber}'] = lineInfo;
       });
     });
     _treeView.restoreExpandedState(uuids);
@@ -187,14 +190,14 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     if (nodeUid == null) {
       if (childIndex < _items.length) {
         WorkspaceSearchResultItem item = _items[childIndex];
-        return item.file.uuid;
+        return item.contentProvider.uuid;
       } else {
         return reachedMaxResultsCellUid;
       }
     } else if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
       WorkspaceSearchResultLine lineInfo = item.lines[childIndex];
-      return '${item.file.uuid}:${lineInfo.lineNumber}';
+      return '${item.contentProvider.uuid}:${lineInfo.lineNumber}';
     } else {
       return null;
     }
@@ -224,7 +227,7 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
     if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
-      return new SearchResultFileCell(item.file.name);
+      return new SearchResultFileCell(item.contentProvider.name);
     } else if (_linesMap[nodeUid] != null) {
       WorkspaceSearchResultLine lineInfo = _linesMap[nodeUid];
       return new SearchResultLineCell(lineInfo);
@@ -251,12 +254,13 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     String nodeUid = nodeUids.first;
     if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
-      NavigationLocation location = new NavigationLocation(item.file);
+      NavigationLocation location = new NavigationLocation(item.contentProvider);
       delegate.searchViewControllerNavigate(this, location);
     } else if (_linesMap[nodeUid] != null) {
       WorkspaceSearchResultLine lineInfo = _linesMap[nodeUid];
       Span selection = new Span(lineInfo.position, lineInfo.length);
-      NavigationLocation location = new NavigationLocation(lineInfo.file, selection);
+      NavigationLocation location = new NavigationLocation(
+          lineInfo.contentProvider, selection);
       delegate.searchViewControllerNavigate(this, location);
     }
   }
