@@ -138,7 +138,8 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   ContentProvider get currentProvider =>
       _currentState != null ? _currentState.contentProvider : null;
 
-  Iterable<File> get files => _openedEditorStates.map((s) => s.file);
+  Iterable<ContentProvider> get contentProviders =>
+      _openedEditorStates.map((_EditorState s) => s.contentProvider);
   Future<bool> get loaded => _loadedCompleter.future;
   Iterable<Editor> get editors => _editorUuidMap.values;
 
@@ -303,7 +304,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
           if (state != _currentState) {
             return;
           }
-          if (editorType(state.file.name) == EDITOR_TYPE_IMAGE) {
+          if (editorType(state.contentProvider.name) == EDITOR_TYPE_IMAGE) {
             _selectedController.add(currentProvider);
             persistState();
           } else if (_editorUuidMap[currentProvider.uuid] != null) {
@@ -312,7 +313,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
             ace.TextEditor textEditor = _editorUuidMap[currentProvider.uuid];
             textEditor.setSession(state.session);
             _selectedController.add(currentProvider);
-            _aceContainer.switchTo(state.session, state.file);
+            _aceContainer.switchTo(state.session, state.contentProvider);
             persistState();
           }
         });

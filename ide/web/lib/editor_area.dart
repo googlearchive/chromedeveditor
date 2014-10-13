@@ -166,22 +166,20 @@ class EditorArea extends TabView {
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
   /// [selectFile] will be called instead. Otherwise the editor provider is
   /// requested to switch the file to the editor in case the editor is shared.
-  Future selectFile(Resource file,
+  Future selectFile(ContentProvider contentProvider,
                     {bool forceOpen: false, bool switchesTab: true,
                     bool replaceCurrent: true, bool forceFocus: false}) {
-    EditorTab tab = tabByFile(file);
+    EditorTab tab = tabByContentProvider(contentProvider);
 
     if (tab != null) {
       if (switchesTab) tab.select(forceFocus: forceFocus);
-      _nameController.add(file.name);
+      _nameController.add(contentProvider.name);
       return new Future.value();
     }
 
     Future editorReadyFuture;
 
     if (forceOpen || replaceCurrent) {
-      ContentProvider contentProvider = new FileContentProvider(file);
-
       Editor editor = editorProvider.createEditorForContentProvider(contentProvider);
       editorReadyFuture = editor.whenReady;
 
@@ -215,7 +213,7 @@ class EditorArea extends TabView {
 
       if (forceFocus) tab.select(forceFocus: forceFocus);
 
-      _nameController.add(file.name);
+      _nameController.add(contentProvider.name);
     } else {
       editorReadyFuture = new Future.value();
     }

@@ -427,9 +427,9 @@ abstract class Spark
         workspace, aceManager, prefs, eventBus, services);
 
     editorManager.loaded.then((_) {
-      List<ws.Resource> files = editorManager.files.toList();
-      editorManager.files.forEach((file) {
-        editorArea.selectFile(file, forceOpen: true, switchesTab: false,
+      List<ContentProvider> contentProviders = editorManager.contentProviders.toList();
+      editorManager.contentProviders.forEach((ContentProvider contentProvider) {
+        editorArea.selectFile(contentProvider, forceOpen: true, switchesTab: false,
             replaceCurrent: false);
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
@@ -1060,7 +1060,12 @@ abstract class Spark
     // deleted files. For any other changes it is the user's responsibility to
     // explicitly refresh the affected project.
     Set<ws.Resource> resources = new Set.from(
-        editorManager.files.map((r) => r.project != null ? r.project : r));
+        editorManager.contentProviders.map((ContentProvider contentProvider) {
+          if (contentProvider is FileContentProvider) {
+            File file = contentProvider.file;
+            return (file.project != null) ? file.project : file;
+          }
+    }));
     resources.forEach((ws.Resource r) => r.refresh());
   }
 
