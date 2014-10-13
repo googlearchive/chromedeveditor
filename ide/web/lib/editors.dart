@@ -489,7 +489,7 @@ class _EditorState {
       } else {
         return contentProvider.read().then((text) {
           /*%TRACE3*/ print("(4> 10/2/14): file.getContents!"); // TRACE%
-          session = manager._aceContainer.createEditSession("text", contentProvider.name);
+          session = manager._aceContainer.createEditSession(text, contentProvider.name);
           return this;
         });
       }

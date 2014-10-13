@@ -185,11 +185,15 @@ defineTests() {
       manager.gotoLocation(nav4);
       locationProvider.navigationLocation = nav4;
       manager.goBack();
-      expect((manager.backLocation as FileContentProvider).file, (nav4.contentProvider as FileContentProvider).file);
-      expect((manager.forwardLocation as FileContentProvider).file, (nav4.contentProvider as FileContentProvider).file);
-      manager.removeFile((nav3 as FileContentProvider).file);
-      expect((manager.currentLocation as FileContentProvider).file, (nav4.contentProvider as FileContentProvider).file);
-      expect((manager.backLocation as FileContentProvider).file, (nav2.contentProvider as FileContentProvider).file);
+      expect((manager.backLocation.contentProvider as FileContentProvider).file,
+          (nav4.contentProvider as FileContentProvider).file);
+      expect((manager.forwardLocation.contentProvider as FileContentProvider).file,
+          (nav4.contentProvider as FileContentProvider).file);
+      manager.removeFile((nav3.contentProvider as FileContentProvider).file);
+      expect((manager.currentLocation.contentProvider as FileContentProvider).file,
+          (nav4.contentProvider as FileContentProvider).file);
+      expect((manager.backLocation.contentProvider as FileContentProvider).file,
+          (nav2.contentProvider as FileContentProvider).file);
     });
 
     test('remove file and check for duplication in history', () {
@@ -229,12 +233,15 @@ defineTests() {
       locationProvider.navigationLocation = nav3;
       manager.gotoLocation(nav4);
       locationProvider.navigationLocation = nav4;
-      manager.removeFile((nav1 as FileContentProvider).file);
-      expect((manager.currentLocation as FileContentProvider).file, (nav4 as FileContentProvider).file);
-      manager.removeFile((nav2 as FileContentProvider).file);
-      expect((manager.currentLocation as FileContentProvider).file, (nav4 as FileContentProvider).file);
-      manager.removeFile((nav4 as FileContentProvider).file);
-      expect((manager.currentLocation as FileContentProvider).file, (nav3 as FileContentProvider).file);
+      manager.removeFile((nav1.contentProvider as FileContentProvider).file);
+      expect((manager.currentLocation.contentProvider as FileContentProvider).file,
+          (nav4.contentProvider as FileContentProvider).file);
+      manager.removeFile((nav2.contentProvider as FileContentProvider).file);
+      expect((manager.currentLocation.contentProvider as FileContentProvider).file,
+          (nav4.contentProvider as FileContentProvider).file);
+      manager.removeFile((nav4.contentProvider as FileContentProvider).file);
+      expect((manager.currentLocation.contentProvider as FileContentProvider).file,
+          (nav3.contentProvider as FileContentProvider).file);
       expect(manager.canGoBack(), false);
       expect(manager.canGoForward(), false);
     });

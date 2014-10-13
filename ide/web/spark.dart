@@ -955,12 +955,9 @@ abstract class Spark
 
     if (resource is ws.File) {
       EditorTab tab = editorArea.tabByFile(resource);
-      ContentProvider contentProvider = tab.contentProvider;
-      if (tab != null) {
-        contentProvider = new FileContentProvider(resource);
-      } else {
-        contentProvider = tab.contentProvider;
-      }
+
+      ContentProvider contentProvider =
+          (tab == null) ? new FileContentProvider(resource) : tab.contentProvider;
 
       navigationManager.gotoLocation(new NavigationLocation(contentProvider));
       return new Future.value();
