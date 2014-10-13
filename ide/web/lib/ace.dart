@@ -173,9 +173,9 @@ class TextEditor extends Editor {
     if (!(contentProvider is FileContentProvider)) {
       return false;
     }
-    
+
     workspace.File file = (contentProvider as FileContentProvider).file;
-    
+
     return !SparkFlags.packageFilesAreEditable && (
         pubProperties.isInPackagesFolder(file) ||
         bowerProperties.isInPackagesFolder(file));
@@ -214,7 +214,6 @@ class TextEditor extends Editor {
   }
 
   void fileContentsChanged() {
-    /*%TRACE3*/ print("(4> 10/2/14): fileContentsChanged!"); // TRACE%
     if (_session != null) {
       // Check that we didn't cause this change event.
       contentProvider.read().then((String text) {
@@ -307,9 +306,9 @@ class TextEditor extends Editor {
     if (!(contentProvider is FileContentProvider)) {
       throw "Can only navigate from [File]s for now";
     }
-    
+
     workspace.File file = (contentProvider as FileContentProvider).file;
-    
+
     if (file.parent == null) {
       return new Future.value(svc.Declaration.EMPTY_DECLARATION);
     }
@@ -381,7 +380,7 @@ class DartEditor extends TextEditor {
 
     // We can only find declarations from a File currently.
     workspace.File file = (contentProvider as FileContentProvider).file;
-    
+
     Future declarationFuture = aceManager._analysisService.getDeclarationFor(
         file, offset);
 
@@ -981,7 +980,7 @@ class AceManager {
         }
         setMarkers(contentProvider.file.getMarkers());
       }
-      
+
       session.onChangeScrollTop.listen((_) => Timer.run(() {
         if (outline.showing) {
           int firstCursorOffset = currentSession.document.positionToIndex(

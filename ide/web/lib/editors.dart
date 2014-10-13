@@ -488,7 +488,6 @@ class _EditorState {
         return new Future.value(this);
       } else {
         return contentProvider.read().then((text) {
-          /*%TRACE3*/ print("(4> 10/2/14): file.getContents!"); // TRACE%
           session = manager._aceContainer.createEditSession(text, contentProvider.name);
           return this;
         });
@@ -499,7 +498,6 @@ class _EditorState {
   void handleFileChanged() {
     if (session != null) {
       contentProvider.read().then((String text) {
-        /*%TRACE3*/ print("(4> 10/2/14): handleFileChanged!"); // TRACE%
         session.value = text;
       });
     }
