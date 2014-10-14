@@ -2,26 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var fs;
-var dir;
-
-function onRead(entries) {
-  console.log(entries);
-}
-
-function fsLoaded(fileSystem) {
-  fs = fileSystem;
-  console.log("file system loaded");
-  var reader = fs.root.createReader();
-  reader.readEntries(onRead);
-}
-
-window.webkitRequestFileSystem(window.PERSISTENT, 5 * 1024 * 1024 * 1024, fsLoaded);
-
-function moduleDidLoad() {
-  GitSalt.hideModule();
-}
-
 // Called by the GitSalt.js module.
 function domContentLoaded(name, tc, config, width, height) {
   navigator.webkitPersistentStorage.requestQuota(1024 * 1024,
@@ -37,27 +17,6 @@ function domContentLoaded(name, tc, config, width, height) {
 // Called by the GitSalt.js module.
 function attachListeners() {
   return;
-}
-
-function makeMessage(command, path) {
-  // Package a message using a simple protocol containing:
-  // command <path length> <path> <space-separated extra args>
-  var msg = command;
-  msg += ' ';
-  msg += path.length;
-  msg += ' ';
-  msg += path;
-  // Maybe add extra args
-  for (var i = 2; i < arguments.length; ++i) {
-    msg += ' ' + arguments[i];
-  }
-  return msg;
-}
-
-function saveFile() {
-  if (GitSalt.naclModule) {
-    GitSalt.naclModule.postMessage(makeMessage('sv', "/grvfs/spark3", "some text"));
-  }
 }
 
 // Called by the GitSalt.js module.
