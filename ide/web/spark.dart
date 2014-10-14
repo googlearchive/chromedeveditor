@@ -850,8 +850,8 @@ abstract class Spark
           _okCancelCompleter = null;
         }
       });
-      _okCancelDialog.dialog.on['opened'].listen((event) {
-        if (event.detail == false) {
+      _okCancelDialog.dialog.on['transition-start'].listen((event) {
+        if (!event.detail['opening']) {
           if (_okCancelCompleter != null) {
             _okCancelCompleter.complete(false);
             _okCancelCompleter = null;

@@ -83,8 +83,8 @@ class SparkPolymerDialog implements Dialog {
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement {
     // TODO(ussuri): Encapsulate backdrop in SparkModal.
-    _dialogElement.on['opened'].listen((event) {
-      SparkPolymer.backdropShowing = event.detail;
+    _dialogElement.on['transition-start'].listen((event) {
+      SparkPolymer.backdropShowing = event.detail['opening'];
     });
   }
 
