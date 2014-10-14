@@ -3442,6 +3442,16 @@ class _GitCloneTask {
     _cancel.performCancel();
   }
 
+  Future _clone(ScmProvider scm, String url, entry, String username, String password) {
+    if (SparkFlags.gitSalt) {
+      GitSalt.clone(entry, url);
+      //TODO(grv): implement callbacks for nacl calls.
+      return new Future.value();
+    } else {
+      return scm.clone(url, entry, username: username, password: password);
+    }
+  }
+
   Future run() {
     return filesystem.fileSystemAccess.createNewFolder(_projectName).then(
         (filesystem.LocationResult location) {
@@ -3461,8 +3471,7 @@ class _GitCloneTask {
           password = info['password'];
         }
 
-        return scmProvider.clone(url, location.entry,
-            username: username, password: password).then((_) {
+        return _clone(scmProvider, url, location.entry, username, password).then((_) {
           ws.WorkspaceRoot root;
 
           if (location.isSync) {
