@@ -9,20 +9,20 @@ function PromiseCompleter() {
   }.bind(this));
 }
 
-Completer.prototype.resolve = function(value) {
+PromiseCompleter.prototype.resolve = function(value) {
   // `resolve` and `reject` don't like `undefined`.
   this.resolve(value !== undefined ? value : null);
 };
 
-Completer.prototype.reject = function(value) {
+PromiseCompleter.prototype.reject = function(value) {
   this.reject(value !== undefined ? value : null);
 };
 
-Completer.prototype.then = function(callback) {
+PromiseCompleter.prototype.then = function(callback) {
   this.promise.then(callback);
 }
 
-Completer.prototype.catch = function(callback) {
+PromiseCompleter.prototype.catch = function(callback) {
   this.promise.catch(callback);
 }
 
@@ -55,7 +55,7 @@ Polymer('cde-polymer-designer', {
    *
    * @type: Promise
    */
-  _webviewReady: null,
+  _webviewReadyCompleter: null,
 
   /**
    * Resolves when the asynchronous code export requested from the proxy has
@@ -63,7 +63,7 @@ Polymer('cde-polymer-designer', {
    *
    * @type: Promise<String>
    */
-  _codeExported: null,
+  _getCodeCompleter: null,
 
   /**
    * Registers an event listener to complete initialization once the
@@ -83,7 +83,7 @@ Polymer('cde-polymer-designer', {
    */
   load: function() {
     // This will be completed in [_onWebviewContentLoad].
-    this._webviewReady = new PromiseCompleter();
+    this._webviewReadyCompleter = new PromiseCompleter();
 
     // TODO(ussuri): BUG #3466.
     setTimeout(function() {
@@ -98,7 +98,7 @@ Polymer('cde-polymer-designer', {
       this.shadowRoot.appendChild(this._webview);
     }.bind(this), 500);
 
-    return this._webviewReady.promise;
+    return this._webviewReadyCompleter.promise;
   },
 
   /**
@@ -115,8 +115,8 @@ Polymer('cde-polymer-designer', {
       this.shadowRoot.removeChild(this._webview);
     }
     this._webview = null;
-    this._webviewReady = null;
-    this._codeExported = null;
+    this._webviewReadyCompleter = null;
+    this._getCodeCompleter = null;
   },
 
   /**
@@ -140,7 +140,7 @@ Polymer('cde-polymer-designer', {
     // Escape all special charachters and enclose in double-quotes.
     code = JSON.stringify(code);
     // Just in case we are called too early, wait until the webview is ready.
-    return this._webviewReady.then(function() {
+    return this._webviewReadyCompleter.then(function() {
       // TODO(ussuri): This doesn't work without a delay:
       // find some way to detect when PD is fully ready.
       return setTimeout(function() {
@@ -162,13 +162,13 @@ Polymer('cde-polymer-designer', {
    * @type: Promise<String>
    */
   getCode: function() {
-    if (!this._codeExported) {
-      this._codeExported = new PromiseCompleter();
+    if (!this._getCodeCompleter) {
+      this._getCodeCompleter = new PromiseCompleter();
 
       // The request is received and handled by [_designerProxy], which
       // asynchronously returns the result via a chrome.runtime.sendMessage,
       // received and handled by [_designProxyListener], which resolves
-      // [_codeExported.promise] with the code string.
+      // [_getCodeCompleter.promise] with the code string.
       this._executeScriptInWebview(
         "function() { window.postMessage({action: 'get_code'}, '*'); }"
       );
@@ -177,7 +177,7 @@ Polymer('cde-polymer-designer', {
       // to returning the same promise to the new caller.
     }
 
-    return this._codeExported.promise;
+    return this._getCodeCompleter.promise;
   },
 
   /**
@@ -188,7 +188,7 @@ Polymer('cde-polymer-designer', {
   _onWebviewContentLoad: function(event) {
     this._tweakDesignerUI();
     this._injectDesignerProxy().then(function() {
-      this._webviewReady.resolve();
+      this._webviewReadyCompleter.resolve();
     }.bind(this));
   },
 
@@ -258,9 +258,9 @@ Polymer('cde-polymer-designer', {
     // console.log('event: ' + event.type + '\n' + event.code);
     switch (event.type) {
       case 'get_code_response':
-        this._codeExported.resolve(event.code + '\n');
+        this._getCodeCompleter.resolve(event.code + '\n');
         // Null the promise so new [getCode] requests can work properly.
-        this._codeExported = null;
+        this._getCodeCompleter = null;
         break;
     }
   },
