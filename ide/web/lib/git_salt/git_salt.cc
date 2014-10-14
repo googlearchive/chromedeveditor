@@ -195,27 +195,28 @@ class FileIoInstance : public pp::Instance {
   }
 
   void NaclIoInit() {
-      nacl_io_init_ppapi(pp::Instance::pp_instance(), pp::Module::Get()->get_browser_interface());
+    nacl_io_init_ppapi(pp::Instance::pp_instance(),
+                      pp::Module::Get()->get_browser_interface());
 
-  // By default, nacl_io mounts / to pass through to the original NaCl
-  // filesystem (which doesn't do much). Let's remount it to a memfs
-  // filesystem.
-  umount("/");
-  mount("", "/", "memfs", 0, "");
+    // By default, nacl_io mounts / to pass through to the original NaCl
+    // filesystem (which doesn't do much). Let's remount it to a memfs
+    // filesystem.
+    umount("/");
+    mount("", "/", "memfs", 0, "");
 
-  mount("",                                       /* source */
-        "/grvfs",                                 /* target */
-        "html5fs",                                /* filesystemtype */
-        0,                                        /* mountflags */
-        "type=PERSISTENT,expected_size=1048576"); /* data */
+    mount("",                                       /* source */
+          "/grvfs",                                 /* target */
+          "html5fs",                                /* filesystemtype */
+          0,                                        /* mountflags */
+          "type=PERSISTENT,expected_size=1048576"); /* data */
 
-  mount("",       /* source. Use relative URL */
-        "/http",  /* target */
-        "httpfs", /* filesystemtype */
-        0,        /* mountflags */
-        "");      /* data */
-        printf("mounted all filesystem!!\n");
-  }
+    mount("",       /* source. Use relative URL */
+          "/http",  /* target *
+          "httpfs", /* filesystemtype */
+          0,        /* mountflags */
+          "");      /* data */
+          printf("mounted all filesystem!!\n");
+ }
 
   void ChromefsInit(int32_t /* result */, pp::FileSystem fs, std::string fullPath) {
     int32_t r = (int32_t) fs.pp_resource();
