@@ -157,8 +157,7 @@ class FileIoInstance : public pp::Instance {
   int cloning(int r, char* path, char* url) {
     git_repository *repo = NULL;
     git_threads_init();
-    int r2 = git_clone(&repo, url, path, NULL);
-    return 1
+    return git_clone(&repo, url, path, NULL);
   }
 
   int do_clone(char *url, char *path) {
