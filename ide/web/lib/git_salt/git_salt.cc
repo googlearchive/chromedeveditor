@@ -28,6 +28,7 @@
 #include "ppapi/cpp/message_loop.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
+#include "ppapi/cpp/var_dictionary.h"
 #include "ppapi/utility/completion_callback_factory.h"
 #include "ppapi/utility/threading/simple_thread.h"
 #include "nacl_io/nacl_io.h"
@@ -95,43 +96,61 @@ class FileIoInstance : public pp::Instance {
   pp::SimpleThread file_thread_;
 
   /// Handler for messages coming in from the browser via postMessage().  The
-  /// @a var_message can contain anything: a JSON string; a string that encodes
-  /// method names and arguments; etc.
+  /// @a var_message is a json dictionary.
   ///
   /// Here we use messages to communicate with the user interface
   ///
   /// @param[in] var_message The message posted by the browser.
   virtual void HandleMessage(const pp::Var& var_message) {
-    if (!var_message.is_string()) {
-      pp::Resource resource_filesystem = var_message.AsResource();
-      printf("resource_filesystme = %d", (int32_t)resource_filesystem.pp_resource());
-      //pp::Resource resource_filesystem = var_resource_filesystem.AsResource();
-      pp::FileSystem filesystem(resource_filesystem);
-      printf("inside chrome fs init\n");
-      file_thread_.message_loop().PostWork(
-          callback_factory_.NewCallback(&FileIoInstance::ChromefsInit, filesystem));
+
+    if (!var_message.is_dictionary()) {
+      PostMessage("Error: Message was not a dictionary.");
       return;
     }
 
-    // Parse message into: instruction file_name_length file_name [file_text]
-    std::string message = var_message.AsString();
-    std::string instruction;
-    std::string file_name;
-    std::stringstream reader(message);
-    int file_name_length;
+    pp::VarDictionary var_dictionary_message(var_message);
 
-    reader >> instruction >> file_name_length;
-    file_name.resize(file_name_length);
-    reader.ignore(1);  // Eat the delimiter
-    reader.read(&file_name[0], file_name_length);
+    pp::Var var_filesystem = var_dictionary_message.Get("filesystem");
+    pp::Var var_fullpath = var_dictionary_message.Get("fullPath");
+    pp::Var var_url = var_dictionary_message.Get("url");
+    pp::Var var_cmd = var_dictionary_message.Get("cmd");
 
-    // Dispatch the instruction
-    if (instruction == kSavePrefix) {
-      // Read the rest of the message as the file text
-      reader.ignore(1);  // Eat the delimiter
-      std::string file_text = message.substr(reader.tellg());
-      file_thread_.message_loop().PostWork(callback_factory_.NewCallback(
-          &FileIoInstance::Save, file_name, file_text));
+    if (!var_filesystem.is_resource()) {
+      PostMessage("Error: filesystem was missing or not a resource.");
+      return;
+    }
+
+    pp::Resource resource_filesystem = var_filesystem.AsResource();
+    pp::FileSystem filesystem(resource_filesystem);
+
+    if (!var_fullpath.is_string()) {
+      PostMessage("Error: fullPath was missing or not a string.");
+      return;
+    }
+
+    std::string fullpath = var_fullpath.AsString();
+
+    if (!var_url.is_string()) {
+      PostMessage("Error: url was missing or not a string.");
+      return;
+    }
+
+    std::string url = var_url.AsString();
+
+    if (!var_cmd.is_string()) {
+      PostMessage("Error: cmd was missing or not a string.");
+      return;
+    }
+
+    std::string cmd = var_cmd.AsString();
+
+    //TODO(grv): Implement a general message passing protocol.
+    if (!cmd.compare("clone")) {
+      file_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&FileIoInstance::GitClone, fullpath, url));
+    } else {
+      file_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&FileIoInstance::ChromefsInit, filesystem, fullpath));
     }
   }
 
@@ -139,8 +158,7 @@ class FileIoInstance : public pp::Instance {
     git_repository *repo = NULL;
     git_threads_init();
     int r2 = git_clone(&repo, url, path, NULL);
-    printf("clonidng repo %d %d\n", r2, r);
-    return 2;
+    return 1
   }
 
   int do_clone(char *url, char *path) {
@@ -149,24 +167,21 @@ class FileIoInstance : public pp::Instance {
     return 1;
   }
 
-  void GitClone(const std::string& path) {
-    char url_string[] = "https://github.com/gaurave/trep";
-    const char* local_path_string = path.c_str();
+  void GitClone(int32_t r, const std::string path, const std::string url) {
 
-    char* url = (char*) malloc(sizeof(strlen(url_string)));
+    const char* local_path_string = path.c_str();
+    const char* url_string = url.c_str();
+
+    char* repourl = (char*) malloc(sizeof(strlen(url_string)));
     char* local_path = (char*) malloc(sizeof(strlen(local_path_string)));
-    printf("Lengths: %d %d", strlen(local_path_string), strlen(url_string));
+    printf("Lengths: %d %d\n", strlen(local_path_string), strlen(url_string));
     strcpy(local_path, local_path_string);
-    strcpy(url, url_string);
-    do_clone(url, local_path);
-    printf("calling git clone %s %s\n", local_path, url);
+    strcpy(repourl, url_string);
+    do_clone(repourl, local_path);
+    printf("calling git clone %s %s\n", local_path, repourl);
     const git_error *a = giterr_last();
-    if (a == NULL) {
-      printf("something is wrong\n");
-      return;
-    }
       printf("%s\n", a->message);
-  }
+    }
 
   void OpenFileSystem(int32_t /* result */) {
     int32_t rv = file_system_.Open(1024 * 1024, pp::BlockUntilComplete());
@@ -203,32 +218,15 @@ class FileIoInstance : public pp::Instance {
         printf("mounted all filesystem!!\n");
   }
 
-  void Save(int32_t /* result */,
-            const std::string& file_name,
-            const std::string& file_contents) {
-    GitClone(file_name);
-    ShowStatusMessage("Save succddess");
-    PostMessage("pyaflasdkfjkasl");
-    return;
-  }
-
-    void ChromefsInit(int32_t /* result */, pp::FileSystem fs) {
-      int32_t r = (int32_t) fs.pp_resource();
-      char fs_resource[100] = "filesystem_resource=";
-      sprintf(&fs_resource[20], "%d", r);
-      printf("%s\n", fs_resource);
-
-        mount("",                                 /* source */
-        "/chromefs",                              /* target */
-        "html5fs",                                /* filesystemtype */
-        0,                                        /* mountflags */
-        fs_resource); /* data */
-        FILE* f = fopen("/chromefs/nacl_checkout/33/grv.txt", "w");
-        if (!f) {
-          printf("can't open file\n");
-        } else {
-          printf("file open successful\n");
-        }
+  void ChromefsInit(int32_t /* result */, pp::FileSystem fs, std::string fullPath) {
+    int32_t r = (int32_t) fs.pp_resource();
+    char fs_resource[100] = "filesystem_resource=";
+    sprintf(&fs_resource[20], "%d", r);
+    mount(fullPath.c_str(),                     /* source */
+      "/chromefs",                              /* target */
+      "html5fs",                                /* filesystemtype */
+      0,                                        /* mountflags */
+      fs_resource);                             /* data */
     ShowStatusMessage(fs_resource);
   }
 
