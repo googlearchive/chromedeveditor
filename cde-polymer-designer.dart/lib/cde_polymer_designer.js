@@ -26,7 +26,7 @@ Polymer('cde-polymer-designer', {
   _webview: null,
 
   /**
-   * Fires after the <webview> has been created, its UI tweaked and the proxy
+   * Resolves after the <webview> has been created, its UI tweaked and the proxy
    * script injected into it.
    *
    * @type: Promise
@@ -34,7 +34,7 @@ Polymer('cde-polymer-designer', {
   _webviewReady: { promise: null, resolve: null },
 
   /**
-   * Fires when the asynchronous code export requested from the proxy has
+   * Resolves when the asynchronous code export requested from the proxy has
    * completed.
    *
    * @type: Promise<String>
@@ -91,7 +91,8 @@ Polymer('cde-polymer-designer', {
       this.shadowRoot.removeChild(this._webview);
     }
     this._webview = null;
-    this._webviewReady = this._codeExported = { promise: null, resolve: null };
+    this._webviewReady = { promise: null, resolve: null };
+    this._codeExported = { promise: null, resolve: null };
   },
 
   /**
@@ -231,10 +232,13 @@ Polymer('cde-polymer-designer', {
    */
   _designerProxyListener: function(event) {
     // TODO(ussuri): Check the sender?
-    if (event.type === 'get_code_response') {
-      this._codeExported.resolve(event.code + '\n');
-      // Null the promise so new [getCode] requests can work properly.
-      this._codeExported = { promise: null, resolve: null };
+    // console.log('event: ' + event.type + '\n' + event.code);
+    switch (event.type) {
+      case 'get_code_response':
+        this._codeExported.resolve(event.code + '\n');
+        // Null the promise so new [getCode] requests can work properly.
+        this._codeExported = { promise: null, resolve: null };
+        break;
     }
   },
 
