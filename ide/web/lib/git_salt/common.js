@@ -276,6 +276,15 @@ var GitSalt = (function() {
     console.log(statusText);
   }
 
+  function postMessage(args) {
+    GitSalt.naclModule.postMessage(args);
+    setTimeout(function () {
+      args.cmd ="clone"
+      args.fullPath = "/chromefs";
+      GitSalt.naclModule.postMessage(args);
+    }, 5000);
+  }
+
   // The symbols to export.
   return {
     /** A reference to the NaCl module, once it is loaded. */
@@ -287,6 +296,7 @@ var GitSalt = (function() {
     hideModule: hideModule,
     removeModule: removeModule,
     logMessage: logMessage,
-    updateStatus: updateStatus
+    updateStatus: updateStatus,
+    postMessage: postMessage
   };
 }());
