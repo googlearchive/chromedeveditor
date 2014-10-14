@@ -58,25 +58,23 @@ Polymer('cde-polymer-designer', {
    * @type: Promise
    */
   load: function() {
-    var that = this;
-
-    that._webviewReady.promise = new Promise(function(resolve, reject) {
-      that._webviewReady.resolve = resolve;
+    this._webviewReady.promise = new Promise(function(resolve, reject) {
+      this._webviewReady.resolve = resolve;
       // TODO(ussuri): BUG #3466.
       setTimeout(function() {
-        that._webview = document.createElement('webview');
-        that._webview.addEventListener(
-            'contentload', that._onWebviewContentLoad.bind(that));
-        that._webview.partition = that._STORAGE_PARTITION;
-        that._webview.src =
-            that.entryPoint == 'local' ?
-            that._LOCAL_ENTRY_POINT :
-            that._ONLINE_ENTRY_POINT;
-        that.shadowRoot.appendChild(that._webview);
-      }, 500);
-    });
+        this._webview = document.createElement('webview');
+        this._webview.addEventListener(
+            'contentload', this._onWebviewContentLoad.bind(this));
+        this._webview.partition = this._STORAGE_PARTITION;
+        this._webview.src =
+            this.entryPoint == 'local' ?
+            this._LOCAL_ENTRY_POINT :
+            this._ONLINE_ENTRY_POINT;
+        this.shadowRoot.appendChild(this._webview);
+      }.bind(this), 500);
+    }.bind(this));
 
-    return that._webviewReady.promise;
+    return this._webviewReady.promise;
   },
 
   /**
@@ -114,24 +112,22 @@ Polymer('cde-polymer-designer', {
    * @type: Promise
    */
   setCode: function(code) {
-    var that = this;
-
     // Escape all special charachters and enclose in double-quotes.
     code = JSON.stringify(code);
     // Just in case we are called too early, wait until the webview is ready.
-    return that._webviewReady.promise.then(function () {
+    return this._webviewReady.promise.then(function () {
       // TODO(ussuri): This doesn't work without a delay:
       // find some way to detect when PD is fully ready.
       return setTimeout(function() {
         // The request is received and handled by the JS proxy script injected
         // into [_webview>] by [_injectDesignerProxy].
-        return that._executeScriptInWebview(
+        return this._executeScriptInWebview(
           "function() { window.postMessage({action: 'set_code', code: " +
           code +
           "}, '*'); }"
         );
-      }, 500);
-    });
+      }.bind(this), 500);
+    }.bind(this));
   },
 
   /**
@@ -141,25 +137,23 @@ Polymer('cde-polymer-designer', {
    * @type: Promise<String>
    */
   getCode: function() {
-    var that = this;
-
-    if (that._codeExported.promise == null) {
-      that._codeExported.promise = new Promise(function(resolve, reject) {
-        that._codeExported.resolve = resolve;
+    if (this._codeExported.promise == null) {
+      this._codeExported.promise = new Promise(function(resolve, reject) {
+        this._codeExported.resolve = resolve;
         // The request is received and handled by [_designerProxy], which
         // asynchronously returns the result via a chrome.runtime.sendMessage,
         // received and handled by [_designProxyListener], which resolves
         // [_codeExported.promise] with the code string.
-        that._executeScriptInWebview(
+        this._executeScriptInWebview(
           "function() { window.postMessage({action: 'get_code'}, '*'); }"
         );
-      });
+      }.bind(this));
     } else {
       // There already is a pending [getCode] request: just fall through
       // to returning the same promise to the new caller.
     }
 
-    return that._codeExported.promise;
+    return this._codeExported.promise;
   },
 
   /**
@@ -168,12 +162,10 @@ Polymer('cde-polymer-designer', {
    * @type: void
    */
   _onWebviewContentLoad: function(event) {
-    var that = this;
-
-    that._tweakDesignerUI();
-    that._injectDesignerProxy().then(function() {
-      that._webviewReady.resolve(null);
-    });
+    this._tweakDesignerUI();
+    this._injectDesignerProxy().then(function() {
+      this._webviewReady.resolve(null);
+    }.bind(this));
   },
 
   /**
@@ -314,16 +306,14 @@ Polymer('cde-polymer-designer', {
    * @type: Promise<array of any>
    */
   _executeScriptInWebview: function(func) {
-    var that = this;
-
     var script = '(' + func.toString() + ')();';
 
     return new Promise(function(resolve, reject) {
-      that._webview.executeScript(
+      this._webview.executeScript(
           {code: script},
           function(result) { resolve(result); }
       );
-    });
+    }.bind(this));
   },
 
   /**
