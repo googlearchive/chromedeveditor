@@ -157,13 +157,14 @@ class FileIoInstance : public pp::Instance {
   int cloning(int r, char* path, char* url) {
     git_repository *repo = NULL;
     git_threads_init();
-    return git_clone(&repo, url, path, NULL);
+    git_clone(&repo, url, path, NULL);
+    return 2;
   }
 
   int do_clone(char *url, char *path) {
     file_thread_.message_loop().PostWork(
           callback_factory_.NewCallback(&FileIoInstance::cloning, path, url));
-    return 1;
+    return 2;
   }
 
   void GitClone(int32_t r, const std::string path, const std::string url) {
@@ -173,13 +174,14 @@ class FileIoInstance : public pp::Instance {
 
     char* repourl = (char*) malloc(sizeof(strlen(url_string)));
     char* local_path = (char*) malloc(sizeof(strlen(local_path_string)));
-    printf("Lengths: %d %d\n", strlen(local_path_string), strlen(url_string));
     strcpy(local_path, local_path_string);
     strcpy(repourl, url_string);
     do_clone(repourl, local_path);
     printf("calling git clone %s %s\n", local_path, repourl);
     const git_error *a = giterr_last();
-      printf("%s\n", a->message);
+      if (a != NULL) {
+        printf("%s\n", a->message);
+      }
     }
 
   void OpenFileSystem(int32_t /* result */) {
@@ -211,7 +213,7 @@ class FileIoInstance : public pp::Instance {
           "type=PERSISTENT,expected_size=1048576"); /* data */
 
     mount("",       /* source. Use relative URL */
-          "/http",  /* target *
+          "/http",  /* target */
           "httpfs", /* filesystemtype */
           0,        /* mountflags */
           "");      /* data */
