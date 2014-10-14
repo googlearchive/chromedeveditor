@@ -4202,8 +4202,9 @@ class PolymerDesignerAction
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    _show();
     _file = spark._getFile(resources);
+    _dialog.dialog.headerTitle = "Polymer Designer: ${_file.name}";
+    _show();
     final js.JsObject promise = _designer.callMethod('load');
     promise.callMethod('then', [_setCode]);
   }
