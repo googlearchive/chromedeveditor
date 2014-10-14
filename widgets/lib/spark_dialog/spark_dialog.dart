@@ -79,8 +79,22 @@ class SparkDialog extends SparkWidget {
 
   void hide() {
     if (_modal.opened) {
-      _validatedFields..forEach((f) => f.cleanup())..clear();
+      _validatedFields
+          ..forEach((f) => f.cleanup())
+          ..clear();
       _modal.hide();
+    }
+  }
+
+  void handleModalTransitionStart(CustomEvent event, dynamic detail) {
+    if (detail['opening']) {
+      style.display = 'block';
+    }
+  }
+
+  void handleModalTransitionEnd(CustomEvent event, dynamic detail) {
+    if (!(detail['opened'])) {
+      style.display = 'none';
     }
   }
 

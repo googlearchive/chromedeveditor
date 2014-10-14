@@ -118,8 +118,13 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
         event =
             new ResourceChangeEvent.fromList(event.changes, filterRename: true);
         for (ChangeDelta delta in event.changes) {
-          if (delta.isDelete && delta.resource.isFile) {
+          if (delta.isDelete) {
             _handleFileDeleted(delta.resource);
+            if (delta.deletions.isNotEmpty) {
+              for (ChangeDelta change in delta.deletions) {
+                _handleFileDeleted(change.resource);
+              }
+            }
           } else if (delta.isChange && delta.resource.isFile) {
             _handleFileChanged(delta.resource);
           }
@@ -360,7 +365,10 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     }
   }
 
-  void _handleFileDeleted(File file) {
+  void _handleFileDeleted(Resource file) {
+    if (!file.isFile) {
+      return;
+    }
     // If the file is open in an editor, the editor will take care of closing.
     if (_editorMap.containsKey(file)) {
       return;
@@ -516,5 +524,24 @@ class FileContentProvider implements ContentProvider {
   Future<String> read() => file.getContents();
 
   Future write(String content) => file.setContents(content);
+}
+
+/**
+ * Defines a provider of content from an element named [_filename] in a
+ * [PreferenceStore] [_store].
+ */
+class PreferenceContentProvider implements ContentProvider {
+  final PreferenceStore _store;
+  final String _filename;
+  
+  StreamController _changeController = new StreamController.broadcast();
+
+  Stream get onChange => _changeController.stream;
+
+  PreferenceContentProvider(this._store, this._filename);
+
+  Future<String> read() => _store.getValue(_filename);
+
+  Future write(String content) => _store.setValue(_filename, content);
 }
 

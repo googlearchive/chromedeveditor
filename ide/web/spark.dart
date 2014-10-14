@@ -355,8 +355,19 @@ abstract class Spark
       event =
           new ResourceChangeEvent.fromList(event.changes, filterRename: true);
       for (ChangeDelta delta in event.changes) {
-        if (delta.isDelete && delta.resource.isFile) {
-          _navigationManager.removeFile(delta.resource);
+        if (delta.isDelete) {
+          if (delta.deletions.isNotEmpty) {
+            _navigationManager.pause();
+            for (ChangeDelta change in delta.deletions) {
+              if (change.resource.isFile) {
+                _navigationManager.removeFile(change.resource);
+              }
+            }
+            _navigationManager.resume();
+            _navigationManager.gotoLocation(_navigationManager.currentLocation);
+          } else if (delta.resource.isFile){
+            _navigationManager.removeFile(delta.resource);
+          }
         }
       }
     });
@@ -839,8 +850,8 @@ abstract class Spark
           _okCancelCompleter = null;
         }
       });
-      _okCancelDialog.dialog.on['opened'].listen((event) {
-        if (event.detail == false) {
+      _okCancelDialog.dialog.on['transition-start'].listen((event) {
+        if (!event.detail['opening']) {
           if (_okCancelCompleter != null) {
             _okCancelCompleter.complete(false);
             _okCancelCompleter = null;

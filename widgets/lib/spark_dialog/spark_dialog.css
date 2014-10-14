@@ -5,29 +5,37 @@
 @import url("../common/spark_widget.css");
 
 :host {
+  display: none;
   position: absolute;
 }
 
 #modal {
+  display: flex;
+  flex-direction: column;
   position: relative;
+  height: 100%;
+  width: 100%;
   border-radius: 3px;
   box-shadow: 0 12px 15px 0 rgba(0, 0, 0, 0.24);
   background: white;
 }
 
 #body {
-  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px;
 }
 
 #header {
   background: none;
-  padding: 24px 18px 8px 20px;
+  padding: 24px 18px 0 20px;
   fill-opacity: 1;
 }
 
 #footer {
   background: none;
-  padding: 0 24px 24px;
+  padding: 0 24px 20px;
 }
 
 #headerTitle {
