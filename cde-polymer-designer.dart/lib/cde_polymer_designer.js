@@ -2,6 +2,30 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+function PromiseCompleter() {
+  this.promise = new Promise(function(resolve, reject) {
+    this.resolve = resolve;
+    this.reject = reject;
+  }.bind(this));
+}
+
+Completer.prototype.resolve = function(value) {
+  // `resolve` and `reject` don't like `undefined`.
+  this.resolve(value !== undefined ? value : null);
+};
+
+Completer.prototype.reject = function(value) {
+  this.reject(value !== undefined ? value : null);
+};
+
+Completer.prototype.then = function(callback) {
+  this.promise.then(callback);
+}
+
+Completer.prototype.catch = function(callback) {
+  this.promise.catch(callback);
+}
+
 Polymer('cde-polymer-designer', {
   // NOTE: Make sure this is in-sync with ide/web/manifest.json.
   _STORAGE_PARTITION: 'persist:cde-polymer-designer',
@@ -31,7 +55,7 @@ Polymer('cde-polymer-designer', {
    *
    * @type: Promise
    */
-  _webviewReady: { promise: null, resolve: null },
+  _webviewReady: null,
 
   /**
    * Resolves when the asynchronous code export requested from the proxy has
@@ -39,7 +63,7 @@ Polymer('cde-polymer-designer', {
    *
    * @type: Promise<String>
    */
-  _codeExported: { promise: null, resolve: null },
+  _codeExported: null,
 
   /**
    * Registers an event listener to complete initialization once the
@@ -58,21 +82,21 @@ Polymer('cde-polymer-designer', {
    * @type: Promise
    */
   load: function() {
-    this._webviewReady.promise = new Promise(function(resolve, reject) {
-      this._webviewReady.resolve = resolve;
-      // TODO(ussuri): BUG #3466.
-      setTimeout(function() {
-        this._webview = document.createElement('webview');
-        this._webview.addEventListener(
-            'contentload', this._onWebviewContentLoad.bind(this));
-        this._webview.partition = this._STORAGE_PARTITION;
-        this._webview.src =
-            this.entryPoint == 'local' ?
-            this._LOCAL_ENTRY_POINT :
-            this._ONLINE_ENTRY_POINT;
-        this.shadowRoot.appendChild(this._webview);
-      }.bind(this), 500);
-    }.bind(this));
+    // This will be completed in [_onWebviewContentLoad].
+    this._webviewReady = new PromiseCompleter();
+
+    // TODO(ussuri): BUG #3466.
+    setTimeout(function() {
+      this._webview = document.createElement('webview');
+      this._webview.addEventListener(
+          'contentload', this._onWebviewContentLoad.bind(this));
+      this._webview.partition = this._STORAGE_PARTITION;
+      this._webview.src =
+          this.entryPoint == 'local' ?
+          this._LOCAL_ENTRY_POINT :
+          this._ONLINE_ENTRY_POINT;
+      this.shadowRoot.appendChild(this._webview);
+    }.bind(this), 500);
 
     return this._webviewReady.promise;
   },
@@ -91,8 +115,8 @@ Polymer('cde-polymer-designer', {
       this.shadowRoot.removeChild(this._webview);
     }
     this._webview = null;
-    this._webviewReady = { promise: null, resolve: null };
-    this._codeExported = { promise: null, resolve: null };
+    this._webviewReady = null;
+    this._codeExported = null;
   },
 
   /**
@@ -116,7 +140,7 @@ Polymer('cde-polymer-designer', {
     // Escape all special charachters and enclose in double-quotes.
     code = JSON.stringify(code);
     // Just in case we are called too early, wait until the webview is ready.
-    return this._webviewReady.promise.then(function() {
+    return this._webviewReady.then(function() {
       // TODO(ussuri): This doesn't work without a delay:
       // find some way to detect when PD is fully ready.
       return setTimeout(function() {
@@ -138,17 +162,16 @@ Polymer('cde-polymer-designer', {
    * @type: Promise<String>
    */
   getCode: function() {
-    if (this._codeExported.promise == null) {
-      this._codeExported.promise = new Promise(function(resolve, reject) {
-        this._codeExported.resolve = resolve;
-        // The request is received and handled by [_designerProxy], which
-        // asynchronously returns the result via a chrome.runtime.sendMessage,
-        // received and handled by [_designProxyListener], which resolves
-        // [_codeExported.promise] with the code string.
-        this._executeScriptInWebview(
-          "function() { window.postMessage({action: 'get_code'}, '*'); }"
-        );
-      }.bind(this));
+    if (!this._codeExported) {
+      this._codeExported = new PromiseCompleter();
+
+      // The request is received and handled by [_designerProxy], which
+      // asynchronously returns the result via a chrome.runtime.sendMessage,
+      // received and handled by [_designProxyListener], which resolves
+      // [_codeExported.promise] with the code string.
+      this._executeScriptInWebview(
+        "function() { window.postMessage({action: 'get_code'}, '*'); }"
+      );
     } else {
       // There already is a pending [getCode] request: just fall through
       // to returning the same promise to the new caller.
@@ -165,7 +188,7 @@ Polymer('cde-polymer-designer', {
   _onWebviewContentLoad: function(event) {
     this._tweakDesignerUI();
     this._injectDesignerProxy().then(function() {
-      this._webviewReady.resolve(null);
+      this._webviewReady.resolve();
     }.bind(this));
   },
 
@@ -237,7 +260,7 @@ Polymer('cde-polymer-designer', {
       case 'get_code_response':
         this._codeExported.resolve(event.code + '\n');
         // Null the promise so new [getCode] requests can work properly.
-        this._codeExported = { promise: null, resolve: null };
+        this._codeExported = null;
         break;
     }
   },
