@@ -79,7 +79,7 @@ Polymer('cde-polymer-designer', {
    * - Inserts it into the shadow DOM.
    * - Navigates it to the Polymer Designer local or online entry point.
    *
-   * @type: Promise
+   * @return: Promise
    */
   load: function() {
     // This will be completed in [_onWebviewContentLoad].
@@ -107,7 +107,7 @@ Polymer('cde-polymer-designer', {
    * - removes the <webview> element from the shadow DOM.
    * - Resets the [Completer]s.
    *
-   * @type: void
+   * @return: void
    */
   unload: function() {
     if (this._webview != null) {
@@ -122,7 +122,7 @@ Polymer('cde-polymer-designer', {
   /**
    * Reinitializes the object from a running state.
    *
-   * @type: Promise
+   * @return: Promise
    */
   reload: function() {
     this.unload();
@@ -134,7 +134,7 @@ Polymer('cde-polymer-designer', {
    * the <webview>. This results in PD re-rendering the design, if it can
    * parse the code. If it can't, it resets the design to an empty one.
    *
-   * @type: Promise
+   * @return: Promise
    */
   setCode: function(code) {
     // Escape all special charachters and enclose in double-quotes.
@@ -159,7 +159,7 @@ Polymer('cde-polymer-designer', {
    * Extracts and returns to the caller the current design code from the
    * Polymer Designer.
    *
-   * @type: Promise<String>
+   * @return: Promise<String>
    */
   getCode: function() {
     if (!this._getCodeCompleter) {
@@ -183,7 +183,7 @@ Polymer('cde-polymer-designer', {
   /**
    * Tweaks the Polymer Designer UI and inject a proxy script.
    *
-   * @type: void
+   * @return: void
    */
   _onWebviewContentLoad: function(event) {
     this._tweakDesignerUI();
@@ -198,7 +198,7 @@ Polymer('cde-polymer-designer', {
    * - Reduces toolbar sizes.
    * - Removes some buttons we don't need.
    *
-   * @type: void
+   * @return: void
    */
   _tweakDesignerUI: function() {
     // TODO(ussuri): Some of this will become unnecessary once BUG #3467 is
@@ -242,7 +242,7 @@ Polymer('cde-polymer-designer', {
   /**
    * Registers a listener for responses sent by [_designerProxy].
    *
-   * @type: void
+   * @return: void
    */
   _registerDesignerProxyListener: function() {
     chrome.runtime.onMessage.addListener(this._designerProxyListener.bind(this));
@@ -251,7 +251,7 @@ Polymer('cde-polymer-designer', {
   /**
    * Handles messages/responses sent from inside [_webview] by [_designerProxy].
    *
-   * @type: void
+   * @return: void
    */
   _designerProxyListener: function(event) {
     // TODO(ussuri): Check the sender?
@@ -269,7 +269,7 @@ Polymer('cde-polymer-designer', {
    * The proxy script injected into the scripting context ("main world") of
    * [_webview] in order to receive and handle requests on behalf of this object.
    *
-   * @type: string
+   * @return: string
    */
   _designerProxy: function() {
     // This will receive events sent by the main code via window.postMessage
@@ -298,7 +298,7 @@ Polymer('cde-polymer-designer', {
    * order for the proxy to have access to the JS context of the Designer
    * (within "isolated world", the proxy would only see the Designer's DOM).
    *
-   * @type: Promise
+   * @return: Promise
    */
   _injectDesignerProxy: function() {
     return this._injectScriptIntoWebviewMainWorld(this._designerProxy);
@@ -312,7 +312,7 @@ Polymer('cde-polymer-designer', {
    * listeners which will have access to various Polymer Designer's JS
    * properties.
    *
-   * @type: Promise
+   * @return: Promise
    */
   _injectScriptIntoWebviewMainWorld: function(func) {
     var script = JSON.stringify('(' + func.toString() + ')();');
@@ -330,7 +330,7 @@ Polymer('cde-polymer-designer', {
    * Executes a script in [_webview]'s "isolated world", which give the script
    * access only to the webview's DOM, but not the JS context.
    *
-   * @type: Promise<array of any>
+   * @return: Promise<array of any>
    */
   _executeScriptInWebview: function(func) {
     var script = '(' + func.toString() + ')();';
@@ -346,7 +346,7 @@ Polymer('cde-polymer-designer', {
   /**
    * Inserts a fragment of CSS into [_webview]'s DOM.
    *
-   * @type: void
+   * @return: void
    */
   _insertCssIntoWebview: function(css) {
     this._webview.insertCSS({code: css});
