@@ -53,7 +53,7 @@ Polymer('cde-polymer-designer', {
    * Resolves after the <webview> has been created, its UI tweaked and the proxy
    * script injected into it.
    *
-   * @type: Promise
+   * @type: PromiseCompleter
    */
   webviewReadyCompleter_: null,
 
@@ -61,7 +61,7 @@ Polymer('cde-polymer-designer', {
    * Resolves when the asynchronous code export requested from the proxy has
    * completed.
    *
-   * @type: Promise<String>
+   * @type: PromiseCompleter<String>
    */
   getCodeCompleter_: null,
 
