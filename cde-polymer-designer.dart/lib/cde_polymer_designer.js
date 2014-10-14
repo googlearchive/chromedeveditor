@@ -115,7 +115,7 @@ Polymer('cde-polymer-designer', {
     // Escape all special charachters and enclose in double-quotes.
     code = JSON.stringify(code);
     // Just in case we are called too early, wait until the webview is ready.
-    return this._webviewReady.promise.then(function () {
+    return this._webviewReady.promise.then(function() {
       // TODO(ussuri): This doesn't work without a delay:
       // find some way to detect when PD is fully ready.
       return setTimeout(function() {
