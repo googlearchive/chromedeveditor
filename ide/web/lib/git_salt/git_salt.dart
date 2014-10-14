@@ -22,4 +22,17 @@ class GitSalt {
   static void loadPlugin() {
     jsGitSalt.callMethod('loadPlugin', ['git_salt', 'lib/git_salt']);
   }
+
+  static void clone(entry, String url) {
+
+    var args = new js.JsObject.jsify({
+      "cmd": "init",
+      "entry": entry.toJs(),
+      "filesystem": entry.filesystem.toJs(),
+      "fullPath": entry.fullPath,
+      "url": url
+    });
+
+    jsGitSalt.callMethod('postMessage', [args]);
+  }
 }
