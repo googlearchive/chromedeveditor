@@ -231,12 +231,10 @@ Polymer('cde-polymer-designer', {
    */
   _designerProxyListener: function(event) {
     // TODO(ussuri): Check the sender?
-    switch (event.type) {
-      case 'get_code_response':
-        this._codeExported.resolve(event.code);
-        // Null the promise so new [getCode] requests can work properly.
-        this._codeExported = { promise: null, resolve: null };
-        break;
+    if (event.type === 'get_code_response') {
+      this._codeExported.resolve(event.code + '\n');
+      // Null the promise so new [getCode] requests can work properly.
+      this._codeExported = { promise: null, resolve: null };
     }
   },
 
