@@ -203,39 +203,39 @@ Polymer('cde-polymer-designer', {
   _tweakDesignerUI: function() {
     // TODO(ussuri): Some of this will become unnecessary once BUG #3467 is
     // resolved.
-    this._insertCssIntoWebview("\
-        /* Reduce the initial font sizes */\
-        html /deep/ *, html /deep/ #tabs > * {\
-          font-size: 12px;\
-        }\
-        html /deep/ #tabs {\
-          padding-top: 0;\
-          padding-bottom: 0;\
-        }\
-        html /deep/ core-toolbar,\
-        html /deep/ core-toolbar::shadow > #topBar {\
-          height: 40px;\
-        }\
-        /* Hide some UI elements we do not need */\
-        #designer::shadow > #appbar > * {\
-          display: none;\
-        }\
-        #designer::shadow > #appbar > .design-controls {\
-          display: block;\
-        }\
-        #designer::shadow > #appbar > .design-controls > .separator:first-child {\
-          display: none;\
-        }\
-        /* Revert font size for the current element */\
-        #designer /deep/ #selectedElement {\
-          font-size: 15px;\
-        }\
-        /* Adjust palette elements' style */\
-        #designer /deep/ .simple-item {\
-          height: 30px;\
-          line-height: 30px;\
-          font-size: 12px;\
-        }"
+    this._insertCssIntoWebview(
+        "/* Reduce the initial font sizes */" +
+        "html /deep/ *, html /deep/ #tabs > * {" +
+        "  font-size: 12px;" +
+        "}" +
+        "html /deep/ #tabs {" +
+        "  padding-top: 0;" +
+        "  padding-bottom: 0;" +
+        "}" +
+        "html /deep/ core-toolbar," +
+        "html /deep/ core-toolbar::shadow > #topBar {" +
+        "  height: 40px;" +
+        "}" +
+        "/* Hide some UI elements we do not need */" +
+        "#designer::shadow > #appbar > * {" +
+        "  display: none;" +
+        "}" +
+        "#designer::shadow > #appbar > .design-controls {" +
+        "  display: block;" +
+        "}" +
+        "#designer::shadow > #appbar > .design-controls > .separator:first-child {" +
+        "  display: none;" +
+        "}" +
+        "/* Revert font size for the current element */" +
+        "#designer /deep/ #selectedElement {" +
+        "  font-size: 15px;" +
+        "}" +
+        "/* Adjust palette elements' style */" +
+        "#designer /deep/ .simple-item {" +
+        "  height: 30px;" +
+        "  line-height: 30px;" +
+        "  font-size: 12px;" +
+        "}"
     );
   },
 
@@ -317,11 +317,13 @@ Polymer('cde-polymer-designer', {
   _injectScriptIntoWebviewMainWorld: function(func) {
     var script = JSON.stringify('(' + func.toString() + ')();');
 
-    return this._executeScriptInWebview("function() {\n\
-      var scriptTag = document.createElement('script');\n\
-      scriptTag.innerHTML = " + script + ";\n\
-      document.body.appendChild(scriptTag);\n\
-    }");
+    return this._executeScriptInWebview(
+        "function() {\n" +
+        "  var scriptTag = document.createElement('script');\n" +
+        "  scriptTag.innerHTML = " + script + ";\n" +
+        "  document.body.appendChild(scriptTag);\n" +
+        "}"
+    );
   },
 
   /**
