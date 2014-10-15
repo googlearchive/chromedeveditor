@@ -12,7 +12,7 @@ import 'dart:js' as js;
  */
 class GitSalt {
   // Javascript object to wrap.
-  static js.JsObject jsGitSalt = js.context['GitSalt'];
+  static js.JsObject jsGitSalt = js.context['gitSalt'];
 
   /**
    * Load the companion NaCl plugin.  This call isn't strictly required as

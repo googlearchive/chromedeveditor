@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Javascript module pattern:
-//   see http://en.wikipedia.org/wiki/Unobtrusive_JavaScript#Namespaces
-// In essence, we define an anonymous function which is immediately called and
-// returns a new object. The new object contains only the exported definitions;
-// all other definitions in the anonymous function are inaccessible to external
-// code.
-var GitSalt = (function() {
+/**
+ *@constructor
+ */
+var GitSalt = function() {
+  this.loadPlugin = this.loadPlugin;
+  this.postMessage = this.postMessage;
+};
 
+GitSalt.prototype = {
   /**
    * Create the Native Client <embed> element as a child of the DOM element
    * named "listener".
@@ -17,7 +18,7 @@ var GitSalt = (function() {
    * @param {string} name The name of the example.
    * @param {string} path Directory name where .nmf file can be found.
    */
-  function createNaClModule(name, path) {
+  createNaClModule: function(name, path) {
     var moduleEl = document.createElement('embed');
     moduleEl.setAttribute('name', 'nacl_module');
     moduleEl.setAttribute('id', 'nacl_module');
@@ -35,7 +36,16 @@ var GitSalt = (function() {
     // event fires.
     var listenerDiv = document.getElementById('git-salt-container');
     listenerDiv.appendChild(moduleEl);
-  }
+  },
+
+  statusText: 'NO-STATUSES',
+
+  updateStatus: function(opt_message) {
+    if (opt_message) {
+      statusText = opt_message;
+    }
+    console.log(statusText);
+  },
 
   /**
    * Add the default "load" and "message" event listeners to the element with
@@ -46,54 +56,55 @@ var GitSalt = (function() {
    * PPB_Messaging.PostMessage() (in C) or pp::Instance().PostMessage() (in
    * C++).
    */
-  function attachDefaultListeners() {
+  attachDefaultListeners: function() {
     var listenerDiv = document.getElementById('git-salt-container');
-    listenerDiv.addEventListener('load', moduleDidLoad, true);
-    listenerDiv.addEventListener('message', handleMessage, true);
-    listenerDiv.addEventListener('error', handleError, true);
-    listenerDiv.addEventListener('crash', handleCrash, true);
-  }
+    listenerDiv.addEventListener('load', this.moduleDidLoad.bind(this), true);
+    listenerDiv.addEventListener('message', this.handleMessage.bind(this), true);
+    listenerDiv.addEventListener('error', this.handleError.bind(this), true);
+    listenerDiv.addEventListener('crash', this.handleCrash.bind(this), true);
+  },
+
 
   /**
    * Called when the NaCl module fails to load.
    *
    * This event listener is registered in createNaClModule above.
    */
-  function handleError(event) {
+  handleError: function(event) {
     // We can't use GitSalt.naclModule yet because the module has not been
     // loaded.
     var moduleEl = document.getElementById('nacl_module');
-    updateStatus('ERROR [' + moduleEl.lastError + ']');
-  }
+    this.updateStatus('ERROR [' + moduleEl.lastError + ']');
+  },
 
   /**
    * Called when the Browser can not communicate with the Module
    *
    * This event listener is registered in attachDefaultListeners above.
    */
-  function handleCrash(event) {
+ handleCrash: function(event) {
     if (GitSalt.naclModule.exitStatus == -1) {
-      updateStatus('CRASHED');
+      this.updateStatus('CRASHED');
     } else {
-      updateStatus('EXITED [' + GitSalt.naclModule.exitStatus + ']');
+      this.updateStatus('EXITED [' + this.naclModule.exitStatus + ']');
     }
     if (typeof window.handleCrash !== 'undefined') {
-      window.handleCrash(GitSalt.naclModule.lastError);
+      window.handleCrash(this.naclModule.lastError);
     }
-  }
+  },
 
   /**
    * Called when the NaCl module is loaded.
    *
    * This event listener is registered in attachDefaultListeners above.
    */
-  function moduleDidLoad() {
-    GitSalt.naclModule = document.getElementById('nacl_module');
-    updateStatus('RUNNING');
+   moduleDidLoad: function() {
+    this.naclModule = document.getElementById('nacl_module');
+    this.updateStatus('RUNNING');
     if (typeof window.moduleDidLoad !== 'undefined') {
       window.moduleDidLoad();
     }
-  }
+  },
 
   /**
    * Hide the NaCl module's embed element.
@@ -103,19 +114,19 @@ var GitSalt = (function() {
    * "moduleDidLoad" function.
    *
    */
-  function hideModule() {
+  hideModule: function() {
     // Setting GitSalt.naclModule.style.display = "None" doesn't work; the
     // module will no longer be able to receive postMessages.
-    GitSalt.naclModule.style.height = '0';
-  }
+    this.naclModule.style.height = '0';
+  },
 
   /**
    * Remove the NaCl module from the page.
    */
-  function removeModule() {
-    GitSalt.naclModule.parentNode.removeChild(GitSalt.naclModule);
-    GitSalt.naclModule = null;
-  }
+  removeModule: function() {
+    this.naclModule.parentNode.removeChild(this.naclModule);
+    this.naclModule = null;
+  },
 
   /**
    * Return true when |s| starts with the string |prefix|.
@@ -123,20 +134,20 @@ var GitSalt = (function() {
    * @param {string} s The string to search.
    * @param {string} prefix The prefix to search for in |s|.
    */
-  function startsWith(s, prefix) {
+  startsWith: function(s, prefix) {
     // indexOf would search the entire string, lastIndexOf(p, 0) only checks at
     // the first index. See: http://stackoverflow.com/a/4579228
     return s.lastIndexOf(prefix, 0) === 0;
-  }
+  },
 
-  function logMessage(message) {
+  logMessage: function(message) {
      console.log(message);
-  }
+  },
 
-  var defaultMessageTypes = {
+  defaultMessageTypes: {
     'alert': alert,
-    'log': logMessage
-  };
+    'log': this.logMessage
+  },
 
   /**
    * Called when the NaCl module sends a message to JavaScript (via
@@ -147,12 +158,12 @@ var GitSalt = (function() {
    * @param {Event} message_event A message event. message_event.data contains
    *     the data sent from the NaCl module.
    */
-  function handleMessage(message_event) {
+  handleMessage: function(message_event) {
     if (typeof message_event.data === 'string') {
-      for (var type in defaultMessageTypes) {
-        if (defaultMessageTypes.hasOwnProperty(type)) {
-          if (startsWith(message_event.data, type + ':')) {
-            func = defaultMessageTypes[type];
+      for (var type in this.defaultMessageTypes) {
+        if (this.defaultMessageTypes.hasOwnProperty(type)) {
+          if (this.startsWith(message_event.data, type + ':')) {
+            func = this.defaultMessageTypes[type];
             func(message_event.data.slice(type.length + 1));
             return;
           }
@@ -165,54 +176,32 @@ var GitSalt = (function() {
       return;
     }
 
-    logMessage('Unhandled message: ' + message_event.data);
-  }
+    this.logMessage('Unhandled message: ' + message_event.data);
+  },
 
   /**
    * @param {string} name The name of the example.
    * @param {string} path Directory name where .nmf file can be found.
    */
-  function loadPlugin(name, path) {
-    attachDefaultListeners();
-    createNaClModule(name, path);
-  }
+  loadPlugin: function(name, path) {
+    this.attachDefaultListeners();
+    this.createNaClModule(name, path);
+  },
 
-  var statusText = 'NO-STATUSES';
-
-  function updateStatus(opt_message) {
-    if (opt_message) {
-      statusText = opt_message;
-    }
-    console.log(statusText);
-  }
-
-  function postMessage(args) {
-    GitSalt.naclModule.postMessage(args);
+  postMessage: function(args) {
+    this.naclModule.postMessage(args);
+    var gitSalt = this;
     setTimeout(function () {
       args.cmd ="clone"
       args.fullPath = "/chromefs";
-      GitSalt.naclModule.postMessage(args);
+      gitSalt.naclModule.postMessage(args);
     }, 5000);
   }
+};
 
-  // The symbols to export.
-  return {
-    /** A reference to the NaCl module, once it is loaded. */
-    naclModule: null,
-
-    attachDefaultListeners: attachDefaultListeners,
-    loadPlugin: loadPlugin,
-    createNaClModule: createNaClModule,
-    hideModule: hideModule,
-    removeModule: removeModule,
-    logMessage: logMessage,
-    updateStatus: updateStatus,
-    postMessage: postMessage
-  };
-}());
+var gitSalt = new GitSalt();
 
 // TODO(grv): implement callbacks to git-salt module.
 function handleMessage(message_event) {
   console.log(message_event);
-  console.log('main yahan hoon');
 }
