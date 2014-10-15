@@ -50,6 +50,14 @@ Polymer('cde-polymer-designer', {
   webview_: null,
 
   /**
+   * Resolves after the <webview> has been created, its UI tweaked and the proxy
+   * script injected into it.
+   *
+   * @type: PromiseCompleter
+   */
+  webviewReadyCompleter_: null,
+
+  /**
    * Resolves when the asynchronous code export requested from the proxy has
    * completed.
    *
@@ -74,28 +82,14 @@ Polymer('cde-polymer-designer', {
    * @return: Promise
    */
   load: function() {
-    // Resolves after the <webview> has been created, its UI tweaked and the proxy
-    // script injected into it.
-    var webviewReadyCompleter = new PromiseCompleter();
+    // This will be completed in [onWebviewContentLoad_].
+    this.webviewReadyCompleter_ = new PromiseCompleter();
 
     // TODO(ussuri): BUG #3466.
     setTimeout(function() {
       this.webview_ = document.createElement('webview');
-
-      this.webview_.addEventListener('contentload', function() {
-        /**
-         * Tweaks the Polymer Designer UI and inject a proxy script.
-         *
-         * @return: void
-         */
-        onWebviewContentLoad_: function(event) {
-          this.tweakDesignerUI_();
-          this.injectDesignerProxy_().then(function() {
-            this.webviewReadyCompleter_.resolve();
-          }.bind(this));
-        },
-      });
-
+      this.webview_.addEventListener(
+          'contentload', this.onWebviewContentLoad_.bind(this));
       this.webview_.partition = this.STORAGE_PARTITION_;
       this.webview_.src =
           this.entryPoint == 'local' ?
@@ -184,6 +178,18 @@ Polymer('cde-polymer-designer', {
     }
 
     return this.getCodeCompleter_.promise;
+  },
+
+  /**
+   * Tweaks the Polymer Designer UI and inject a proxy script.
+   *
+   * @return: void
+   */
+  onWebviewContentLoad_: function(event) {
+    this.tweakDesignerUI_();
+    this.injectDesignerProxy_().then(function() {
+      this.webviewReadyCompleter_.resolve();
+    }.bind(this));
   },
 
   /**
