@@ -108,21 +108,6 @@
   outline: 0;
 }
 
-.dropdown-menu > .disabled > a,
-.dropdown-menu > .disabled > a:hover,
-.dropdown-menu > .disabled > a:focus {
-  color: #999999;
-}
-
-.dropdown-menu > .disabled > a:hover,
-.dropdown-menu > .disabled > a:focus {
-  text-decoration: none;
-  cursor: not-allowed;
-  background-color: transparent;
-  background-image: none;
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
-}
-
 .open > .dropdown-menu {
   display: block;
 }
