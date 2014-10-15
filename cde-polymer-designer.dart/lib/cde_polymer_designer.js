@@ -209,7 +209,7 @@ Polymer('cde-polymer-designer', {
     this.insertCssIntoWebview_(
         "/* Reduce the initial font sizes */" +
         "html /deep/ *, html /deep/ #tabs > * {" +
-        "  font-size: 12px;" +
+        "  font-size: 13px;" +
         "}" +
         "html /deep/ #tabs {" +
         "  padding-top: 0;" +
@@ -237,7 +237,7 @@ Polymer('cde-polymer-designer', {
         "#designer /deep/ .simple-item {" +
         "  height: 30px;" +
         "  line-height: 30px;" +
-        "  font-size: 12px;" +
+        "  font-size: 13px;" +
         "}"
     );
   },
