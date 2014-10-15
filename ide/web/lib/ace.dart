@@ -1014,7 +1014,7 @@ class AceManager {
 }
 
 class ThemeManager {
-  static final LIGHT_THEMES = [
+  static final _THEMES = [
       // White bg color themes:
       'chrome',
       'clouds',
@@ -1032,8 +1032,7 @@ class ThemeManager {
       'katzenmilch',
       'kuroir',
       'solarized_light',
-  ];
-  static final DARK_THEMES = [
+      // Dark bg color themes:
       'ambiance',
       'chaos',
       'clouds_midnight',
@@ -1058,16 +1057,13 @@ class ThemeManager {
   ace.Editor _aceEditor;
   SparkPreferences _prefs;
   html.Element _label;
-  List<String> _themes = [];
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    _themes.addAll(DARK_THEMES);
-    if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
     String theme = _prefs.editorTheme.value;
-    if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
-      theme = _themes[0];
+    if (theme == null || theme.isEmpty || !_THEMES.contains(theme)) {
+      theme = _THEMES[0];
     }
     _updateTheme(theme);
   }
@@ -1083,9 +1079,9 @@ class ThemeManager {
   }
 
   void _changeTheme(int direction) {
-    int index = _themes.indexOf(_aceEditor.theme.name);
-    index = (index + direction) % _themes.length;
-    String newTheme = _themes[index];
+    int index = _THEMES.indexOf(_aceEditor.theme.name);
+    index = (index + direction) % _THEMES.length;
+    String newTheme = _THEMES[index];
     _updateTheme(newTheme);
   }
 

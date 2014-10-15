@@ -26,8 +26,6 @@ class SparkFlags {
       _flags['enable-apk-build'] == true;
 
   // Editor:
-  static bool get useLightAceThemes =>
-      _flags['light-ace-themes'] == true;
   static bool get enableMultiSelect =>
       _flags['enable-multiselect'] == true;
   static bool get packageFilesAreEditable =>
