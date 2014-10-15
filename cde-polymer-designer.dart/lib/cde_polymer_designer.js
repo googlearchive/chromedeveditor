@@ -10,12 +10,11 @@ function PromiseCompleter() {
 }
 
 PromiseCompleter.prototype.resolve = function(value) {
-  // `resolve` and `reject` don't like `undefined`.
-  this.resolve_(value !== undefined ? value : null);
+  this.resolve_(value);
 };
 
 PromiseCompleter.prototype.reject = function(value) {
-  this.reject_(value !== undefined ? value : null);
+  this.reject_(value);
 };
 
 PromiseCompleter.prototype.then = function(callback) {
@@ -96,7 +95,7 @@ Polymer('cde-polymer-designer', {
           'contentload', this.onWebviewContentLoad_.bind(this));
       this.webview_.partition = this.STORAGE_PARTITION_;
       this.webview_.src =
-          this.entryPoint == 'local' ?
+          this.entryPoint === 'local' ?
           this.LOCAL_ENTRY_POINT_ :
           this.ONLINE_ENTRY_POINT_;
       this.shadowRoot.appendChild(this.webview_);
@@ -320,7 +319,6 @@ Polymer('cde-polymer-designer', {
    */
   injectScriptIntoWebviewMainWorld_: function(func) {
     var script = JSON.stringify('(' + func.toString() + ')();');
-
     return this.executeScriptInWebview_(
         "function() {\n" +
         "  var scriptTag = document.createElement('script');\n" +
@@ -338,13 +336,12 @@ Polymer('cde-polymer-designer', {
    */
   executeScriptInWebview_: function(func) {
     var script = '(' + func.toString() + ')();';
-
-    return new Promise(function(resolve, reject) {
-      this.webview_.executeScript(
-          {code: script},
-          function(result) { resolve(result); }
-      );
-    }.bind(this));
+    var completer = new PromiseCompleter();
+    this.webview_.executeScript(
+        {code: script},
+        function(result) { completer.resolve(result); }
+    );
+    return completer.promise;
   },
 
   /**
