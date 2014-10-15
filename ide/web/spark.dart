@@ -7,8 +7,8 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
+import 'dart:js' as js;
 
-import 'package:cde_polymer_designer/cde_polymer_designer.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_testing/testing_app.dart';
 import 'package:intl/intl.dart';
@@ -4208,45 +4208,62 @@ class PolymerDesignerAction
     extends SparkActionWithStatusDialog implements ContextAction {
   static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
 
-  CdePolymerDesigner _designer;
+  js.JsObject _designer;
   File _file;
 
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
       : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
-    _designer = _dialog.getElement('#polymerDesigner');
-    _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
-      _designer.reload();
-    });
+    _designer = new js.JsObject.fromBrowserObject(
+        _dialog.getElement('#polymerDesigner'));
+    _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearCode);
+    _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertCode);
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    _show();
     _file = spark._getFile(resources);
-    _designer.load().then((_) {
-      _file.getContents().then((String contents) {
-        _designer.setCode(contents);
-      });
-    });
+    _dialog.dialog.headerTitle = "Polymer Designer: ${_file.name}";
+    _show();
+    final js.JsObject promise = _designer.callMethod('load');
+    promise.callMethod('then', [_setCode]);
   }
 
   void _commit() {
-    _designer.getCode().then((String code) {
-      _file.setContents(code);
-      _file = null;
-      _designer.unload();
-    });
+    final js.JsObject promise = _designer.callMethod('getCode');
+    promise.callMethod('then', [(String code) {
+      _getCode(code);
+      _cleanup();
+    }]);
 
     super._commit();
   }
 
   void _cancel() {
-    _file = null;
-    _designer.unload();
-
+    _cleanup();
     super._cancel();
   }
 
-  String get category => 'refactor';
+  void _setCode([_]) {
+    _file.getContents().then((String code) {
+      _designer.callMethod('setCode', [code]);
+    });
+  }
+
+  void _revertCode([_]) => _setCode();
+
+  void _clearCode([_]) {
+    _designer.callMethod('setCode', ['']);
+  }
+
+  void _getCode(String code) {
+    _file.setContents(code);
+  }
+
+  void _cleanup() {
+    _designer.callMethod('unload');
+    _file = null;
+  }
+
+  String get category => 'design';
 
   bool appliesTo(Object object) {
     // NOTE: Flags can get updated from .spark.json after createActions()
