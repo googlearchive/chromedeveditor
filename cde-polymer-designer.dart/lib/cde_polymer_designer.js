@@ -82,6 +82,10 @@ Polymer('cde-polymer-designer', {
    * @return: Promise
    */
   load: function() {
+    if (this.webviewReadyCompleter_ !== null) {
+      throw "Already loaded or still loading: call unload() first";
+    }
+
     // This will be completed in [onWebviewContentLoad_].
     this.webviewReadyCompleter_ = new PromiseCompleter();
 
