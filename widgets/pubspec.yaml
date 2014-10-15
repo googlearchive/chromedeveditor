@@ -6,7 +6,6 @@ homepage: https://github.com/dart-lang/chromedeveditor/tree/master/widgets
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  bootjack: '>=0.6.5 <0.7.0'
   polymer: '>=0.14.3 <0.15.0'
 
 dev_dependencies:
