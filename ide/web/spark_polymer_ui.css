@@ -110,6 +110,7 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
 
 #navigationButtons {
   border: none;
+  border-bottom: 1px solid #ddd;
   position: absolute;
   right: 0;
   width: 131px;
@@ -123,7 +124,7 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
 .settings-value {
   flex: 1;
   height: 100%;
-  border: 1px solid #DDD;
+  border: 1px solid #ddd;
   border-radius: 3px;
   padding: 5px;
   color: #666;
