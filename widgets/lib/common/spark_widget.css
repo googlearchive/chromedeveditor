@@ -4,9 +4,10 @@
 
 @import url("../resources/roboto/roboto.css");
 
+/* TODO(devoncarew): We should narrow these down to specific elements or classes
+  of elements. */
 :host,
-:host *,
-::content * {
+:host * {
   box-sizing: border-box;
   outline: none;
 }
