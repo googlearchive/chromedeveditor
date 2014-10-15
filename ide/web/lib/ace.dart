@@ -1014,26 +1014,8 @@ class AceManager {
 }
 
 class ThemeManager {
-  static final LIGHT_THEMES = [
-      // White bg color themes:
-      'chrome',
-      'clouds',
-      'crimson_editor',
-      'dreamweaver',
-      'eclipse',
-      // This one uses bold font for keywords: doesn't work well with Monaco.
-      // 'github',
-      'textmate',
-      'tomorrow',
-      'xcode',
-      // Non-white bg color themes:
-      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
-      // 'dawn',
-      'katzenmilch',
-      'kuroir',
-      'solarized_light',
-  ];
-  static final DARK_THEMES = [
+  static final _THEMES = [
+      // Dark bg color themes:
       'ambiance',
       'chaos',
       'clouds_midnight',
@@ -1053,21 +1035,35 @@ class ThemeManager {
       'tomorrow_night_eighties',
       'twilight',
       'vibrant_ink',
+      // White bg color themes:
+      'chrome',
+      'clouds',
+      'crimson_editor',
+      'dreamweaver',
+      'eclipse',
+      // This one uses bold font for keywords: doesn't work well with Monaco.
+      // 'github',
+      'textmate',
+      'tomorrow',
+      'xcode',
+      // Non-white bg color themes:
+      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
+      // 'dawn',
+      'katzenmilch',
+      'kuroir',
+      'solarized_light',
   ];
 
   ace.Editor _aceEditor;
   SparkPreferences _prefs;
   html.Element _label;
-  List<String> _themes = [];
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    _themes.addAll(DARK_THEMES);
-    if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
     String theme = _prefs.editorTheme.value;
-    if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
-      theme = _themes[0];
+    if (theme == null || theme.isEmpty || !_THEMES.contains(theme)) {
+      theme = _THEMES[0];
     }
     _updateTheme(theme);
   }
@@ -1083,9 +1079,9 @@ class ThemeManager {
   }
 
   void _changeTheme(int direction) {
-    int index = _themes.indexOf(_aceEditor.theme.name);
-    index = (index + direction) % _themes.length;
-    String newTheme = _themes[index];
+    int index = _THEMES.indexOf(_aceEditor.theme.name);
+    index = (index + direction) % _THEMES.length;
+    String newTheme = _THEMES[index];
     _updateTheme(newTheme);
   }
 

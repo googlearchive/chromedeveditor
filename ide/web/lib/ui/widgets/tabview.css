@@ -42,13 +42,14 @@ button.close {
 }
 
 .tabview-tabbar {
+  display: flex;
+  position: relative;
+  height: 48px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  overflow: visible;
   -webkit-transition: height 250ms, padding 250ms;
   -webkit-user-select: none;
-  background: white;
-  display: flex;
-  height: 48px;
-  overflow: visible;
-  position: relative;
 }
 
 .tabview-tabbar.tabview-tabbar-hidden {
