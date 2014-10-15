@@ -1015,23 +1015,6 @@ class AceManager {
 
 class ThemeManager {
   static final _THEMES = [
-      // White bg color themes:
-      'chrome',
-      'clouds',
-      'crimson_editor',
-      'dreamweaver',
-      'eclipse',
-      // This one uses bold font for keywords: doesn't work well with Monaco.
-      // 'github',
-      'textmate',
-      'tomorrow',
-      'xcode',
-      // Non-white bg color themes:
-      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
-      // 'dawn',
-      'katzenmilch',
-      'kuroir',
-      'solarized_light',
       // Dark bg color themes:
       'ambiance',
       'chaos',
@@ -1052,6 +1035,23 @@ class ThemeManager {
       'tomorrow_night_eighties',
       'twilight',
       'vibrant_ink',
+      // White bg color themes:
+      'chrome',
+      'clouds',
+      'crimson_editor',
+      'dreamweaver',
+      'eclipse',
+      // This one uses bold font for keywords: doesn't work well with Monaco.
+      // 'github',
+      'textmate',
+      'tomorrow',
+      'xcode',
+      // Non-white bg color themes:
+      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
+      // 'dawn',
+      'katzenmilch',
+      'kuroir',
+      'solarized_light',
   ];
 
   ace.Editor _aceEditor;
