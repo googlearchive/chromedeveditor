@@ -186,12 +186,6 @@ GitSalt.prototype.loadPlugin = function(name, path) {
 
 GitSalt.prototype.postMessage = function(args) {
   this.naclModule.postMessage(args);
-  var gitSalt = this;
-  setTimeout(function () {
-    args.cmd ="clone"
-    args.fullPath = "/chromefs";
-    gitSalt.naclModule.postMessage(args);
-  }, 5000);
 };
 
 var gitSalt = new GitSalt();
