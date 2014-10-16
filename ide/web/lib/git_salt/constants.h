@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifndef GIT_SALT_CONSTANTS_H__
+#define GIT_SALT_CONSTANTS_H__
+
 namespace {
 // Used for our simple protocol to communicate with Javascript
 const char* const kFileSystem = "filesystem";

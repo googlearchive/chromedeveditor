@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifndef GIT_SALT_GIT_SALT_H__
+#define GIT_SALT_GIT_SALT_H__
+
 #include <sstream>
 #include <string>
 
