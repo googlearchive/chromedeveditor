@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/// @file file_io.cc
-/// This example demonstrates the use of persistent file I/O
-
 #define __STDC_LIMIT_MACROS
 #include <sstream>
 #include <string>
@@ -50,14 +47,136 @@ namespace {
 /// Used for our simple protocol to communicate with Javascript
 const char* const kSavePrefix = "sv";
 const char* const kChromefsPrefix = "cr";
+
+const char* const kFileSystem = "filesystem";
+const char* const kUrl = "url";
+const char* const kFullPath = "fullPath";
+const char* const kName = "name";
+const char* const kSubject = "subject";
+const char* const kArg = "arg";
+const char* const kCmdClone = "clone";
+const char* const kCmdCommit = "commit";
+
+int parseString(pp::VarDictionary message, const char* name,
+    std::string& option) {
+  pp::Var var_option = message.Get(name);
+  if (!var_option.is_string()) {
+    //TODO(grv): return error code;
+    return 1;
+  }
+  option = var_option.AsString();
+  return 0;
 }
+}
+
+/**
+ * Abstract class to defining git command. Every git command
+ * should extend this.
+ */
+class GitCommand {
+ protected:
+  std::string subject;
+  pp::VarDictionary _args;
+
+  int parseFileSystem(pp::VarDictionary message, std::string name,
+      pp::FileSystem& fileSystem) {
+    pp::Var var_filesystem = message.Get(name);
+
+    if (!var_filesystem.is_resource()) {
+      //TODO(grv): return error code;
+      return 1;
+    }
+
+    pp::Resource resource_filesystem = var_filesystem.AsResource();
+    fileSystem = pp::FileSystem(resource_filesystem);
+    return 0;
+  }
+
+ public:
+  pp::FileSystem fileSystem;
+  std::string fullPath;
+  std::string url;
+  int error;
+  git_repository* repo;
+
+  GitCommand(const std::string& subject, const pp::VarDictionary& args)
+      : subject(subject), _args(args) {}
+
+  int parseArgs() {
+
+    int error = 0;
+
+    if ((error = parseFileSystem(_args, kFileSystem, fileSystem))) {
+
+    }
+
+    if ((error = parseString(_args, kFullPath,  fullPath))) {
+
+    }
+
+    if ((error = parseString(_args, kUrl,  url))) {
+
+    }
+    return 0;
+  }
+
+  virtual int runCommand() = 0;
+};
+
+class GitClone : public GitCommand {
+
+ public:
+
+  GitClone(std::string subject, pp::VarDictionary args)
+      : GitCommand(subject, args) {
+        repo = NULL;
+  }
+
+  int runCommand() {
+    // mount the folder as a filesystem.
+    ChromefsInit();
+
+    git_threads_init();
+
+    git_clone(&repo, url.c_str(), "/chromefs", NULL);
+
+    const git_error *a = giterr_last();
+
+    if (a != NULL) {
+      printf("giterror: %s\n", a->message);
+    }
+    printf("cloning done %s\n", subject.c_str());
+    return 0;
+  }
+
+  void ChromefsInit() {
+    int32_t r = (int32_t) fileSystem.pp_resource();
+    char fs_resource[100] = "filesystem_resource=";
+    sprintf(&fs_resource[20], "%d", r);
+    mount(fullPath.c_str(),                     /* source */
+      "/chromefs",                              /* target */
+      "html5fs",                                /* filesystemtype */
+      0,                                        /* mountflags */
+      fs_resource);                             /* data */
+  }
+};
+
+class GitCommit : public GitCommand {
+
+ public:
+  GitCommit(std::string subject, pp::VarDictionary args)
+      : GitCommand(subject, args) {}
+
+  int runCommand() {
+    //TODO(grv): implement.
+    printf("GitCommit: to be implemented");
+    return 0;
+  }
+};
 
 /// The Instance class.  One of these exists for each instance of your NaCl
 /// module on the web page.  The browser will ask the Module object to create
 /// a new Instance for each occurrence of the <embed> tag that has these
-/// attributes:
-///     type="application/x-nacl"
-///     src="file_io.nmf"
 class FileIoInstance : public pp::Instance {
  public:
   /// The constructor creates the plugin-side instance.
@@ -110,79 +229,43 @@ class FileIoInstance : public pp::Instance {
 
     pp::VarDictionary var_dictionary_message(var_message);
 
-    pp::Var var_filesystem = var_dictionary_message.Get("filesystem");
-    pp::Var var_fullpath = var_dictionary_message.Get("fullPath");
-    pp::Var var_url = var_dictionary_message.Get("url");
-    pp::Var var_cmd = var_dictionary_message.Get("cmd");
+    int error = 0;
+    std::string cmd;
+    std::string subject;
 
-    if (!var_filesystem.is_resource()) {
-      PostMessage("Error: filesystem was missing or not a resource.");
-      return;
+    if ((error = parseString(var_dictionary_message, kName,  cmd))) {
+
     }
 
-    pp::Resource resource_filesystem = var_filesystem.AsResource();
-    pp::FileSystem filesystem(resource_filesystem);
+    if ((error = parseString(var_dictionary_message, kSubject,  subject))) {
 
-    if (!var_fullpath.is_string()) {
-      PostMessage("Error: fullPath was missing or not a string.");
-      return;
     }
 
-    std::string fullpath = var_fullpath.AsString();
+    pp::VarDictionary var_dictionary_args(var_dictionary_message.Get(kArg));
 
-    if (!var_url.is_string()) {
-      PostMessage("Error: url was missing or not a string.");
-      return;
-    }
 
-    std::string url = var_url.AsString();
-
-    if (!var_cmd.is_string()) {
-      PostMessage("Error: cmd was missing or not a string.");
-      return;
-    }
-
-    std::string cmd = var_cmd.AsString();
-
-    //TODO(grv): Implement a general message passing protocol.
-    if (!cmd.compare("clone")) {
+    if (!cmd.compare(kCmdClone)) {
+      GitClone* clone = new GitClone(subject, var_dictionary_args);
+      clone->parseArgs();
       file_thread_.message_loop().PostWork(
-        callback_factory_.NewCallback(&FileIoInstance::GitClone, fullpath, url));
-    } else {
+          callback_factory_.NewCallback(&FileIoInstance::Clone, clone));
+    } else if (!cmd.compare(kCmdCommit)) {
+     GitCommit* commit = new GitCommit(subject, var_dictionary_args);
+      commit->parseArgs();
       file_thread_.message_loop().PostWork(
-        callback_factory_.NewCallback(&FileIoInstance::ChromefsInit, filesystem, fullpath));
+        callback_factory_.NewCallback(&FileIoInstance::Commit, commit));
     }
   }
 
-  int cloning(int r, char* path, char* url) {
-    git_repository *repo = NULL;
-    git_threads_init();
-    git_clone(&repo, url, path, NULL);
-    return 2;
+  int Clone(int32_t r, GitClone* clone) {
+    clone->runCommand();
+    return 0;
   }
 
-  int do_clone(char *url, char *path) {
-    file_thread_.message_loop().PostWork(
-          callback_factory_.NewCallback(&FileIoInstance::cloning, path, url));
-    return 2;
+  int Commit(int32_t r, GitCommit* commit) {
+    commit->runCommand();
+    return 0;
   }
-
-  void GitClone(int32_t r, const std::string path, const std::string url) {
-
-    const char* local_path_string = path.c_str();
-    const char* url_string = url.c_str();
-
-    char* repourl = (char*) malloc(sizeof(strlen(url_string)));
-    char* local_path = (char*) malloc(sizeof(strlen(local_path_string)));
-    strcpy(local_path, local_path_string);
-    strcpy(repourl, url_string);
-    do_clone(repourl, local_path);
-    printf("calling git clone %s %s\n", local_path, repourl);
-    const git_error *a = giterr_last();
-      if (a != NULL) {
-        printf("%s\n", a->message);
-      }
-    }
 
   void OpenFileSystem(int32_t /* result */) {
     int32_t rv = file_system_.Open(1024 * 1024, pp::BlockUntilComplete());
@@ -217,20 +300,8 @@ class FileIoInstance : public pp::Instance {
           "httpfs", /* filesystemtype */
           0,        /* mountflags */
           "");      /* data */
-          printf("mounted all filesystem!!\n");
+    printf("mounted all filesystem!!\n");
  }
-
-  void ChromefsInit(int32_t /* result */, pp::FileSystem fs, std::string fullPath) {
-    int32_t r = (int32_t) fs.pp_resource();
-    char fs_resource[100] = "filesystem_resource=";
-    sprintf(&fs_resource[20], "%d", r);
-    mount(fullPath.c_str(),                     /* source */
-      "/chromefs",                              /* target */
-      "html5fs",                                /* filesystemtype */
-      0,                                        /* mountflags */
-      fs_resource);                             /* data */
-    ShowStatusMessage(fs_resource);
-  }
 
   /// Encapsulates our simple javascript communication protocol
   void ShowErrorMessage(const std::string& message, int32_t result) {

@@ -13,6 +13,12 @@ import 'dart:js' as js;
 class GitSalt {
   // Javascript object to wrap.
   static js.JsObject jsGitSalt = js.context['gitSalt'];
+  static int messageId = 1;
+
+  static String genMessageId() {
+    messageId++;
+    return messageId.toString();
+  }
 
   /**
    * Load the companion NaCl plugin.  This call isn't strictly required as
@@ -25,14 +31,19 @@ class GitSalt {
 
   static void clone(entry, String url) {
 
-    var args = new js.JsObject.jsify({
-      "cmd": "init",
+    var arg = new js.JsObject.jsify({
       "entry": entry.toJs(),
       "filesystem": entry.filesystem.toJs(),
       "fullPath": entry.fullPath,
       "url": url
     });
 
-    jsGitSalt.callMethod('postMessage', [args]);
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "clone",
+      "arg": arg
+    });
+
+    jsGitSalt.callMethod('postMessage', [message]);
   }
 }
