@@ -39,7 +39,7 @@ class GitSalt {
     });
 
     var message = new js.JsObject.jsify({
-      "message_id" : genMessageId(),
+      "subject" : genMessageId(),
       "cmd" : "clone",
       "args": args
     });

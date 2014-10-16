@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #define __STDC_LIMIT_MACROS
 #include <sstream>
 #include <string>
@@ -53,7 +52,7 @@ const char* const kFileSystem = "filesystem";
 const char* const kUrl = "url";
 const char* const kFullPath = "fullPath";
 const char* const kCommand = "cmd";
-const char* const kMessageId = "message_id";
+const char* const kSubject = "subject";
 const char* const kArgs = "args";
 const char* const kCmdClone = "clone";
 const char* const kCmdCommit = "commit";
@@ -76,7 +75,7 @@ int parseString(pp::VarDictionary message, const char* name,
  */
 class GitCommand {
  protected:
-  std::string messageId;
+  std::string subject;
   pp::VarDictionary _args;
 
   int parseFileSystem(pp::VarDictionary message, std::string name,
@@ -100,8 +99,8 @@ class GitCommand {
   int error;
   git_repository* repo;
 
-  GitCommand(const std::string& messageId, const pp::VarDictionary& args)
-      : messageId(messageId), _args(args) {}
+  GitCommand(const std::string& subject, const pp::VarDictionary& args)
+      : subject(subject), _args(args) {}
 
   int parseArgs() {
 
@@ -128,8 +127,8 @@ class GitClone : public GitCommand {
 
  public:
 
-  GitClone(std::string messageId, pp::VarDictionary args)
-      : GitCommand(messageId, args) {
+  GitClone(std::string subject, pp::VarDictionary args)
+      : GitCommand(subject, args) {
         repo = NULL;
   }
 
@@ -146,7 +145,7 @@ class GitClone : public GitCommand {
     if (a != NULL) {
       printf("giterror: %s\n", a->message);
     }
-    printf("cloning done %s\n", messageId.c_str());
+    printf("cloning done %s\n", subject.c_str());
     return 0;
   }
 
@@ -165,8 +164,8 @@ class GitClone : public GitCommand {
 class GitCommit : public GitCommand {
 
  public:
-  GitCommit(std::string messageId, pp::VarDictionary args)
-      : GitCommand(messageId, args) {}
+  GitCommit(std::string subject, pp::VarDictionary args)
+      : GitCommand(subject, args) {}
 
   int runCommand() {
     //TODO(grv): implement.
@@ -178,9 +177,6 @@ class GitCommit : public GitCommand {
 /// The Instance class.  One of these exists for each instance of your NaCl
 /// module on the web page.  The browser will ask the Module object to create
 /// a new Instance for each occurrence of the <embed> tag that has these
-/// attributes:
-///     type="application/x-nacl"
-///     src="file_io.nmf"
 class FileIoInstance : public pp::Instance {
  public:
   /// The constructor creates the plugin-side instance.
@@ -226,7 +222,6 @@ class FileIoInstance : public pp::Instance {
   /// @param[in] var_message The message posted by the browser.
   virtual void HandleMessage(const pp::Var& var_message) {
 
-    printf("comes in handle message\n");
     if (!var_message.is_dictionary()) {
       PostMessage("Error: Message was not a dictionary.");
       return;
@@ -236,13 +231,13 @@ class FileIoInstance : public pp::Instance {
 
     int error = 0;
     std::string cmd;
-    std::string messageId;
+    std::string subject;
 
     if ((error = parseString(var_dictionary_message, kCommand,  cmd))) {
 
     }
 
-    if ((error = parseString(var_dictionary_message, kMessageId,  messageId))) {
+    if ((error = parseString(var_dictionary_message, kSubject,  subject))) {
 
     }
 
@@ -250,12 +245,12 @@ class FileIoInstance : public pp::Instance {
 
 
     if (!cmd.compare(kCmdClone)) {
-      GitClone* clone = new GitClone(messageId, var_dictionary_args);
+      GitClone* clone = new GitClone(subject, var_dictionary_args);
       clone->parseArgs();
       file_thread_.message_loop().PostWork(
           callback_factory_.NewCallback(&FileIoInstance::Clone, clone));
     } else if (!cmd.compare(kCmdCommit)) {
-     GitCommit* commit = new GitCommit(messageId, var_dictionary_args);
+     GitCommit* commit = new GitCommit(subject, var_dictionary_args);
       commit->parseArgs();
       file_thread_.message_loop().PostWork(
         callback_factory_.NewCallback(&FileIoInstance::Commit, commit));
