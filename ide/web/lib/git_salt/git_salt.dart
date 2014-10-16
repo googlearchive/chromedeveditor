@@ -29,6 +29,12 @@ class GitSalt {
     jsGitSalt.callMethod('loadPlugin', ['git_salt', 'lib/git_salt']);
   }
 
+  static void cloneCb(var result) {
+    //TODO(grv): to be implemented.
+    print(result);
+    print("clone successful");
+  }
+
   static void clone(entry, String url) {
 
     var arg = new js.JsObject.jsify({
@@ -44,6 +50,6 @@ class GitSalt {
       "arg": arg
     });
 
-    jsGitSalt.callMethod('postMessage', [message]);
+    jsGitSalt.callMethod('postMessage', [message, cloneCb]);
   }
 }

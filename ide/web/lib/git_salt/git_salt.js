@@ -167,12 +167,11 @@ GitSalt.prototype.handleMessage = function(message_event) {
     }
   }
 
-  if (typeof window.handleMessage !== 'undefined') {
-    window.handleMessage(message_event);
-    return;
-  }
+  this.handleResponse(message_event);
+};
 
-  this.logMessage('Unhandled message: ' + message_event.data);
+GitSalt.prototype.handleResponse = function(response) {
+   console.log(response);
 };
 
 /**
@@ -184,13 +183,12 @@ GitSalt.prototype.loadPlugin = function(name, path) {
   this.createNaClModule(name, path);
 };
 
-GitSalt.prototype.postMessage = function(args) {
-  this.naclModule.postMessage(args);
+GitSalt.prototype.callbacks = {};
+
+GitSalt.prototype.postMessage = function(message, cb) {
+  this.callbacks[message.subject] = cb;
+  this.naclModule.postMessage(message);
 };
 
 var gitSalt = new GitSalt();
 
-// TODO(grv): implement callbacks to git-salt module.
-function handleMessage(message_event) {
-  console.log(message_event);
-}
