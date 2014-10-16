@@ -11,20 +11,9 @@
 #include "ppapi/cpp/file_system.h"
 #include "ppapi/cpp/var_dictionary.h"
 
-namespace {
-/// Used for our simple protocol to communicate with Javascript
-const char* const kSavePrefix = "sv";
-const char* const kChromefsPrefix = "cr";
+#include "constants.h"
 
-const char* const kFileSystem = "filesystem";
-const char* const kUrl = "url";
-const char* const kFullPath = "fullPath";
-const char* const kName = "name";
-const char* const kSubject = "subject";
-const char* const kRegarding = "regarding";
-const char* const kArg = "arg";
-const char* const kCmdClone = "clone";
-const char* const kCmdCommit = "commit";
+namespace {
 
 int parseString(pp::VarDictionary message, const char* name,
     std::string& option) {

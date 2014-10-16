@@ -1,0 +1,17 @@
+// Copyright (c) 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+namespace {
+// Used for our simple protocol to communicate with Javascript
+const char* const kFileSystem = "filesystem";
+const char* const kUrl = "url";
+const char* const kFullPath = "fullPath";
+const char* const kName = "name";
+const char* const kSubject = "subject";
+const char* const kRegarding = "regarding";
+const char* const kArg = "arg";
+const char* const kCmdClone = "clone";
+const char* const kCmdCommit = "commit";
+}
+
