@@ -17,12 +17,12 @@ PromiseCompleter.prototype.reject = function(value) {
   this.reject_(value);
 };
 
-PromiseCompleter.prototype.then = function(callback) {
-  this.promise.then(callback);
+PromiseCompleter.prototype.then = function(onFulfilled, onRejected) {
+  this.promise.then(onFulfilled, onRejected);
 }
 
-PromiseCompleter.prototype.catch = function(callback) {
-  this.promise.catch(callback);
+PromiseCompleter.prototype.catch = function(onRejected) {
+  this.promise.catch(onRejected);
 }
 
 Polymer('cde-polymer-designer', {
