@@ -51,9 +51,9 @@ const char* const kChromefsPrefix = "cr";
 const char* const kFileSystem = "filesystem";
 const char* const kUrl = "url";
 const char* const kFullPath = "fullPath";
-const char* const kCommand = "cmd";
+const char* const kName = "name";
 const char* const kSubject = "subject";
-const char* const kArgs = "args";
+const char* const kArg = "arg";
 const char* const kCmdClone = "clone";
 const char* const kCmdCommit = "commit";
 
@@ -233,7 +233,7 @@ class FileIoInstance : public pp::Instance {
     std::string cmd;
     std::string subject;
 
-    if ((error = parseString(var_dictionary_message, kCommand,  cmd))) {
+    if ((error = parseString(var_dictionary_message, kName,  cmd))) {
 
     }
 
@@ -241,7 +241,7 @@ class FileIoInstance : public pp::Instance {
 
     }
 
-    pp::VarDictionary var_dictionary_args(var_dictionary_message.Get(kArgs));
+    pp::VarDictionary var_dictionary_args(var_dictionary_message.Get(kArg));
 
 
     if (!cmd.compare(kCmdClone)) {

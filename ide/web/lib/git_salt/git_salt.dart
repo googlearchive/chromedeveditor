@@ -31,7 +31,7 @@ class GitSalt {
 
   static void clone(entry, String url) {
 
-    var args = new js.JsObject.jsify({
+    var arg = new js.JsObject.jsify({
       "entry": entry.toJs(),
       "filesystem": entry.filesystem.toJs(),
       "fullPath": entry.fullPath,
@@ -40,8 +40,8 @@ class GitSalt {
 
     var message = new js.JsObject.jsify({
       "subject" : genMessageId(),
-      "cmd" : "clone",
-      "args": args
+      "name" : "clone",
+      "arg": arg
     });
 
     jsGitSalt.callMethod('postMessage', [message]);
