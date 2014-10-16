@@ -17,4 +17,5 @@ const char* const kArg = "arg";
 const char* const kCmdClone = "clone";
 const char* const kCmdCommit = "commit";
 }
+#endif  // GIT_SALT_CONSTANTS_H__
 

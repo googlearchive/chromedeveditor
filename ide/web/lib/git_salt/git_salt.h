@@ -88,3 +88,4 @@ class GitSaltModule : public pp::Module {
   virtual pp::Instance* CreateInstance(PP_Instance instance);
 };
 
+#endif  // GIT_SALT_GIT_SALT_H__

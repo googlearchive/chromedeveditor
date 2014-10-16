@@ -78,3 +78,5 @@ class GitCommit : public GitCommand {
   int runCommand();
 };
 
+#endif  // GIT_SALT_GIT_COMMAND_H__
+
