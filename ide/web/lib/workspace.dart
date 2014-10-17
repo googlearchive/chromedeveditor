@@ -20,7 +20,6 @@ import 'builder.dart';
 import 'enum.dart';
 import 'exception.dart';
 import 'jobs.dart';
-import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart';
 
@@ -508,10 +507,9 @@ class Workspace extends Container {
           // directories on Windows. We only want to realize the packages
           // directory at the top level of a project. Our check for this is the
           // existance of a `pubspec.yaml` file.
-          if (ent.name == pubProperties.packagesDirName) {
+          if (ent.name == 'packages') {
             if (hasPubspec == null) {
-              hasPubspec = entries.any(
-                  (e) => e.name == pubProperties.packageSpecFileName);
+              hasPubspec = entries.any((e) => e.name == 'pubspec.yaml');
             }
 
             // Ignore secondary packages directories.
