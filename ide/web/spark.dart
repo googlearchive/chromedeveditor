@@ -4223,8 +4223,9 @@ class PolymerDesignerAction
     _file = spark._getFile(resources);
     _dialog.dialog.headerTitle = "Polymer Designer: ${_file.name}";
     _show();
-    final js.JsObject promise = _designer.callMethod('load');
-    promise.callMethod('then', [_setCode]);
+    _file.getContents().then((String code) {
+      _designer.callMethod('load', [code]);
+    });
   }
 
   void _commit() {
@@ -4248,7 +4249,9 @@ class PolymerDesignerAction
     });
   }
 
-  void _revertCode([_]) => _setCode();
+  void _revertCode([_]) {
+    _designer.callMethod('revertCode');
+  }
 
   void _clearCode([_]) {
     _designer.callMethod('setCode', ['']);
