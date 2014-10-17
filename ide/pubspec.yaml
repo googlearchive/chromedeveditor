@@ -29,7 +29,7 @@ dependencies:
   markdown: '>=0.7.0 <0.8.0'
   mime: any
   path: any
-  polymer: '>=0.14.3 <0.15.0'
+  polymer: '>=0.15.1 <0.16.0'
   spark_widgets:
     path: ../widgets
   tavern:
