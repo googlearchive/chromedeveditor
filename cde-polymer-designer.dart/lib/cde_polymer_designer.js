@@ -222,19 +222,41 @@ Polymer('cde-polymer-designer', {
     // TODO(ussuri): Some of this will become unnecessary once BUG #3467 is
     // resolved.
     this.insertCssIntoWebview_(
-        "/* Reduce the initial font sizes */" +
-        "html /deep/ *, html /deep/ #tabs > * {" +
+        /* Reduce the initial font sizes */
+        "#designer /deep/ *," +
+        "#designer /deep/ #tabs > * {" +
         "  font-size: 13px;" +
         "}" +
-        "html /deep/ #tabs {" +
+        /* Adjust tabs' height and color */
+        "#designer /deep/ #inspector::shadow > #tabs," +
+        "#designer /deep/ .paletteTree > #tabs {" +
         "  padding-top: 0;" +
         "  padding-bottom: 0;" +
+        "  background-color: #fafafa;" +
         "}" +
-        "html /deep/ core-toolbar," +
-        "html /deep/ core-toolbar::shadow > #topBar {" +
-        "  height: 40px;" +
+        /* Skinnier splitter */
+        "#designer /deep/ core-splitter {" +
+        "  height: 8px;" +
+        "  background-color: #fafafa;" +
         "}" +
-        "/* Hide some UI elements we do not need */" +
+        /* Adjust toolbars' height */
+        "#designer /deep/ core-toolbar," +
+        "#designer /deep/ #topBar," +
+        "#designer /deep/ .designTools {" +
+        "  height: 50px;" +
+        "  background-color: #fafafa;" +
+        "}" +
+        /* Make buttons' smaller and round */
+        "#designer /deep/ core-icon-button {" +
+        "  height: 38px;" +
+        "  width: 38px;" +
+        "  border-radius: 50%;" +
+        "  box-shadow: none;" +
+        "}" +
+        "#designer /deep/ core-icon-button:hover {" +
+        "  background-color: #eee;" +
+        "}" +
+        /* Hide some UI elements we do not need */
         "#designer::shadow > #appbar > * {" +
         "  display: none;" +
         "}" +
@@ -244,11 +266,11 @@ Polymer('cde-polymer-designer', {
         "#designer::shadow > #appbar > .design-controls > .separator:first-child {" +
         "  display: none;" +
         "}" +
-        "/* Revert font size for the current element */" +
+        /* Revert font size for the current element */
         "#designer /deep/ #selectedElement {" +
         "  font-size: 15px;" +
         "}" +
-        "/* Adjust palette elements' style */" +
+        /* Adjust palette elements' style */
         "#designer /deep/ .simple-item {" +
         "  height: 30px;" +
         "  line-height: 30px;" +
