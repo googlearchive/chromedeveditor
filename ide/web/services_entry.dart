@@ -21,20 +21,20 @@ SendPort _sendPort;
 class IsolateWorkerToHostHandler implements WorkerToHostHandler {
   final SendPort _sendPort;
   ReceivePort _receivePort;
-  
+
   IsolateWorkerToHostHandler(this._sendPort) {
     _receivePort = new ReceivePort();
     _sendPort.send(_receivePort.sendPort);
   }
-  
+
   @override
   void sendToHost(dynamic message) {
     _sendPort.send(message);
   }
-  
+
   @override
   void listenFromHost(void onData(var message)) {
-    _receivePort.listen(onData); 
+    _receivePort.listen(onData);
   }
 }
 
@@ -58,6 +58,7 @@ void main(List<String> args, SendPort sendPort) {
 Zone _createIsolateZone() {
   var specification = new ZoneSpecification(
       handleUncaughtError: _handleUncaughtError,
+      createTimer: _createTimer,
       print: _print);
   return Zone.current.fork(specification: specification);
 }
@@ -73,7 +74,46 @@ void _print(Zone self, ZoneDelegate parent, Zone zone, String line) {
 }
 
 /**
+ * Create a 'Timer' implementation for the services isolate that can handle
+ * 0 duration timers. If we need support for non-zero durations, we'll need to
+ * do some communications back to the main isolate and have it run the timer
+ * callbacks for us.
+ */
+Timer _createTimer(Zone self, ZoneDelegate parent, Zone zone, Duration duration,
+    void f()) {
+
+  if (duration.inMilliseconds == 0) {
+    return new _Timer(f);
+  } else {
+    // UnimplementedError: Timers on background isolates are not supported in
+    // the browser.
+    return parent.createTimer(zone, duration, f);
+  }
+}
+
+/**
  * Print to the matching [SendPort]. Host will know it's a print because it's a
  * simple string instead of a map.
  */
 void _printToPort(String str) => _sendPort.send(str);
+
+class _Timer implements Timer {
+  final Function f;
+  bool _active = true;
+
+  _Timer(this.f) {
+    scheduleMicrotask(() {
+      if (isActive) {
+        try {
+          f();
+        } finally {
+          _active = false;
+        }
+      }
+    });
+  }
+
+  void cancel() { _active = false; }
+
+  bool get isActive => _active;
+}
