@@ -44,6 +44,11 @@ Polymer('cde-polymer-designer', {
   entryPoint: 'local',
 
   /**
+   * Initial design code requested in a call to [load].
+   */
+  initialCode_: '',
+
+  /**
    * The dynamically created <webview> element.
    */
   webview_: null,
@@ -80,26 +85,25 @@ Polymer('cde-polymer-designer', {
    *
    * @return: Promise
    */
-  load: function() {
+  load: function(initialCode) {
     if (this.webviewReadyCompleter_ !== null) {
       throw "Already loaded or still loading: call unload() first";
     }
 
+    this.initialCode_ = initialCode;
+
     // This will be completed in [onWebviewContentLoad_].
     this.webviewReadyCompleter_ = new PromiseCompleter();
 
-    // TODO(ussuri): BUG #3466.
-    setTimeout(function() {
-      this.webview_ = document.createElement('webview');
-      this.webview_.addEventListener(
-          'contentload', this.onWebviewContentLoad_.bind(this));
-      this.webview_.partition = this.STORAGE_PARTITION_;
-      this.webview_.src =
-          this.entryPoint === 'local' ?
-          this.LOCAL_ENTRY_POINT_ :
-          this.ONLINE_ENTRY_POINT_;
-      this.shadowRoot.appendChild(this.webview_);
-    }.bind(this), 500);
+    this.webview_ = document.createElement('webview');
+    this.webview_.addEventListener(
+        'contentload', this.onWebviewContentLoad_.bind(this));
+    this.webview_.partition = this.STORAGE_PARTITION_;
+    this.webview_.src =
+        this.entryPoint === 'local' ?
+        this.LOCAL_ENTRY_POINT_ :
+        this.ONLINE_ENTRY_POINT_;
+    this.shadowRoot.appendChild(this.webview_);
 
     return this.webviewReadyCompleter_.promise;
   },
@@ -133,9 +137,9 @@ Polymer('cde-polymer-designer', {
   },
 
   /**
-   * Sets the internal design code inside the Polymer Designer running within
-   * the <webview>. This results in PD re-rendering the design, if it can
-   * parse the code. If it can't, it resets the design to an empty one.
+   * Sets the internal design code inside the Designer. This results in PD
+   * (re-)rendering the design, if it can parse the code. If it can't, it
+   * resets the design to an empty one.
    *
    * @return: Promise
    */
@@ -144,18 +148,25 @@ Polymer('cde-polymer-designer', {
     code = JSON.stringify(code);
     // Just in case we are called too early, wait until the webview is ready.
     return this.webviewReadyCompleter_.then(function() {
-      // TODO(ussuri): This doesn't work without a delay:
-      // find some way to detect when PD is fully ready.
-      return setTimeout(function() {
-        // The request is received and handled by the JS proxy script injected
-        // into [webview_>] by [injectDesignerProxy_].
-        return this.executeScriptInWebview_(
-          "function() { window.postMessage({action: 'set_code', code: " +
-          code +
-          "}, '*'); }"
-        );
-      }.bind(this), 500);
+      // The request is received and handled by the JS proxy script injected
+      // into [webview_>] by [injectDesignerProxy_].
+      return this.executeScriptInWebview_(
+        "function() { window.postMessage({action: 'set_code', code: " +
+        code +
+        "}, '*'); }"
+      );
     }.bind(this));
+  },
+
+  /**
+   * Resets the internal design code to the value originally requested in [load].
+   *
+   * @return: Promise
+   */
+  revertCode: function() {
+      return this.executeScriptInWebview_(
+        "function() { window.postMessage({action: 'revert_code'}, '*'); }"
+      );
   },
 
   /**
@@ -189,6 +200,10 @@ Polymer('cde-polymer-designer', {
    * @return: void
    */
   onWebviewContentLoad_: function(event) {
+    // Nudge Chrome to redo the layout of the Designer. Without this, or some
+    // other trigger, the Designer never settles to fit the viewport perfectly
+    // (overflows to the right). See http://stackoverflow.com/questions/3485365/.
+    this.webview_.style.width = '100%';
     this.tweakDesignerUI_();
     this.injectDesignerProxy_().then(function() {
       this.webviewReadyCompleter_.resolve();
@@ -258,13 +273,14 @@ Polymer('cde-polymer-designer', {
    */
   designerProxyListener_: function(event) {
     // TODO(ussuri): Check the sender?
-    // console.log('event: ' + event.type + '\n' + event.code);
     switch (event.type) {
       case 'get_code_response':
         this.getCodeCompleter_.resolve(event.code + '\n');
         // Null the promise so new [getCode] requests can work properly.
         this.getCodeCompleter_ = null;
         break;
+      default:
+        throw "Unsupported message from proxy";
     }
   },
 
@@ -274,11 +290,24 @@ Polymer('cde-polymer-designer', {
    *
    * @return: string
    */
-  designerProxy_: function() {
+  designerProxy_: function(initialCode) {
+    var designer = document.querySelector('#designer');
+
+    // `designer-ready` is fired when the contained designer-frame becomes
+    // ready, but before the designer-element loads the elements from the
+    // palette (specified in [metadata]) and possibly some design from the user.
+    // Handle it in the capture phase to get ahead of designer-element's handler.
+    designer.$.frame.contentWindow.addEventListener('designer-ready',
+        function(event) {
+      // Prest the design code to be loaded by the Designer while the event is
+      // on the way to it. Setting [firstLoad] is a required hack.
+      designer.pendingHtml = initialCode;
+      designer.firstLoad = false;
+    }, /*useCapture=*/true);
+
     // This will receive events sent by the main code via window.postMessage
     // executed inside [webview_]'s DOM.
     window.addEventListener('message', function(event) {
-      var designer = document.querySelector('#designer');
       switch (event.data.action) {
         case 'get_code':
           chrome.runtime.sendMessage({
@@ -287,10 +316,17 @@ Polymer('cde-polymer-designer', {
           });
           break;
         case 'set_code':
-          // After this, PD will detect the new design code and try to parse
-          // and render it.
+          // PD will try to parse and render the new design code. It will
+          // throw an internal error and clear out the design if the code
+          // doesn't match the expected format: there should be a
+          // <polymer-element> tag at the top level.
           designer.loadHtml(event.data.code);
           break;
+        case 'revert_code':
+          designer.loadHtml(initialCode);
+          breal;
+        default:
+          throw "Unsupported request from client";
       }
     });
   },
@@ -304,7 +340,8 @@ Polymer('cde-polymer-designer', {
    * @return: Promise
    */
   injectDesignerProxy_: function() {
-    return this.injectScriptIntoWebviewMainWorld_(this.designerProxy_);
+    return this.injectScriptIntoWebviewMainWorld_(
+        this.designerProxy_, this.initialCode_);
   },
 
   /**
@@ -317,8 +354,11 @@ Polymer('cde-polymer-designer', {
    *
    * @return: Promise
    */
-  injectScriptIntoWebviewMainWorld_: function(func) {
-    var script = JSON.stringify('(' + func.toString() + ')();');
+  injectScriptIntoWebviewMainWorld_: function(func, args) {
+    // NOTE: Double-stringifying of [args] is intentional.
+    var script = JSON.stringify(
+        '(' + func.toString() + ')(' + JSON.stringify(args) + ');'
+    );
     return this.executeScriptInWebview_(
         "function() {\n" +
         "  var scriptTag = document.createElement('script');\n" +
