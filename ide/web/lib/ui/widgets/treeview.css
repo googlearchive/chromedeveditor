@@ -47,7 +47,7 @@
   -webkit-transform: rotate(0deg) translate(-4px, 2px);
 }
 
-/* From bootstrap.css. */
+/* From bootstrap.css, slightly altered to match CDE's main menu style. */
 
 .dropdown-menu {
   position: absolute;
@@ -57,16 +57,14 @@
   display: none;
   float: left;
   min-width: 160px;
-  padding: 5px 0;
+  padding: 3px 0;
   margin: 2px 0 0;
   font-size: 14px;
   list-style: none;
   background-color: #ffffff;
-  border: 1px solid #cccccc;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 4px;
-  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  border: none;
+  border-radius: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   background-clip: padding-box;
 }
 
@@ -82,10 +80,22 @@
   background-color: #e5e5e5;
 }
 
+.dropdown-menu > li {
+  height: 35px;
+  margin: 0;
+}
+
+.dropdown-menu > li.divider {
+  margin: 2px 0;
+}
+
 .dropdown-menu > li > a {
-  display: block;
+  display: flex;
+  height: 29px;
+  align-items: center;
   padding: 3px 20px;
   clear: both;
+  font-size: 13px;
   font-weight: normal;
   line-height: 1.428571429;
   color: #333333;
@@ -104,7 +114,8 @@
 .dropdown-menu > .active > a:focus {
   color: #ffffff;
   text-decoration: none;
-  background-color: #428bca;
+  background-color: #e4e4e4;
+  background-image: none;
   outline: 0;
 }
 

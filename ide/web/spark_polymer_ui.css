@@ -258,7 +258,6 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
   width: 100%;
 }
 
-/* Override Bootstrap's 'font-weight: bold' style for labels */
 label {
   font-weight: 500;
 }
