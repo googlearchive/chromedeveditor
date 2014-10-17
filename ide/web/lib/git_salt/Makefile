@@ -14,7 +14,7 @@ include $(NACL_SDK_ROOT)/tools/common.mk
 
 
 TARGET = git_salt
-LIBS = git2 ssl crypto ssh  nacl_io glibc-compat ppapi_cpp ppapi pthread z
+LIBS = git2 ssl ssh2 crypto  nacl_io glibc-compat ppapi_cpp ppapi pthread z
 
 CFLAGS = -Wall
 SOURCES = main.cc git_command.cc git_salt.cc
