@@ -4,7 +4,7 @@
 <head>
   <title>``tagName`` Info</title>
 
-  <script src="../webcomponentsjs/webcomponents.js"></script>
+  <script src="../platform/platform.js"></script>
 
   <link rel="import" href="../polymer/polymer.html">
   <link rel="import" href="../core-component-page/core-component-page.html">
