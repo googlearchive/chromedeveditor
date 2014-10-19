@@ -128,10 +128,6 @@ div.ace_search.right {
   z-index: 101;
 }
 
-div.ace_search.right * {
-  border-radius: 0;
-}
-
 div.ace_search_form *,
 div.ace_replace_form * {
   /* Can't use 'inherit' here: Ace overrides that. */
@@ -176,6 +172,12 @@ button.ace_searchbtn:active {
 
 div.ace_search_options {
   display: none;
+  text-align: left;
+  margin-left: -2px;
+}
+
+div.ace_search_options > .ace_button.checked {
+  border-color: #4281f4;
 }
 
 button.ace_searchbtn_close {
@@ -201,16 +203,12 @@ button.ace_searchbtn_close:active {
 
 button.ace_searchbtn.next {
   background: #fff url(images/find-next.svg);
+  background-position-x: 1px;
 }
 
 button.ace_searchbtn.prev {
   background: #fff url(images/find-prev.svg);
-}
-
-button.ace_searchbtn.next,
-button.ace_searchbtn.prev {
   background-position-x: 1px;
-  fill: 0;
 }
 
 button.ace_searchbtn.next:hover,
