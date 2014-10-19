@@ -171,7 +171,6 @@ button.ace_searchbtn:active {
 }
 
 div.ace_search_options {
-  display: none;
   text-align: left;
   margin-left: -2px;
 }
