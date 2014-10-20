@@ -42,13 +42,15 @@ button.close {
 }
 
 .tabview-tabbar {
+  display: flex;
+  position: relative;
+  box-sizing: border-box;
+  height: 48px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  overflow: visible;
   -webkit-transition: height 250ms, padding 250ms;
   -webkit-user-select: none;
-  background: white;
-  display: flex;
-  height: 48px;
-  overflow: visible;
-  position: relative;
 }
 
 .tabview-tabbar.tabview-tabbar-hidden {
@@ -85,7 +87,7 @@ button.close {
 
 .tabview-tablabel-active {
   background-color: #fff;
-  box-shadow: inset 0 -3px #4281f4;
+  box-shadow: inset 0 -4px #4281f4;
 }
 
 .tabview-tablabel:hover {

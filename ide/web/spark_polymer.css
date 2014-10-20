@@ -116,25 +116,24 @@ img.ace-tooltip {
   border-bottom: 1px solid white;
 }
 
-div.ace_search {
-  background: #fafafa;
-  padding-right: 4px;
-  width: 305px;
-  /* Can't use 'inherit' here: Ace overrides that. */
-  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 500;
-  font-size: 12px;
-}
-
 div.ace_search.right {
   background-color: #eee;
-  border-radius: 0px;
+  border-radius: 0;
   border-bottom-left-radius: 2px;
   border-right: none;
   border-left: 1px solid #dadada;
-  width: 305px;
+  width: 298px;
   max-width: none;
+  padding-right: 4px;
   z-index: 101;
+}
+
+div.ace_search_form *,
+div.ace_replace_form * {
+  /* Can't use 'inherit' here: Ace overrides that. */
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  font-size: 12px;
 }
 
 div.ace_search_form,
@@ -142,17 +141,21 @@ div.ace_replace_form {
   width: 275px;
 }
 
-.ace_search_form .ace_search_field {
-  width: 219px;
+.ace_search_form > .ace_search_field {
+  width: 221px;
 }
 
-.ace_replace_form .ace_search_field {
-  width: 194px;
+.ace_replace_form > .ace_search_field {
+  width: 198px;
+}
+
+button.ace_searchbtn,
+button.ace_replacebtn {
+  font-weight: 500;
 }
 
 button.ace_replacebtn {
-  color: #484848;
-  font-weight: 500;
+  color: #7d7d7d;
   padding-left: 5px;
   padding-right: 5px;
 }
@@ -169,6 +172,12 @@ button.ace_searchbtn:active {
 
 div.ace_search_options {
   display: none;
+  text-align: left;
+  margin-left: -2px;
+}
+
+div.ace_search_options > .ace_button.checked {
+  border-color: #4281f4;
 }
 
 button.ace_searchbtn_close {
@@ -194,15 +203,21 @@ button.ace_searchbtn_close:active {
 
 button.ace_searchbtn.next {
   background: #fff url(images/find-next.svg);
+  background-position-x: 1px;
 }
 
 button.ace_searchbtn.prev {
   background: #fff url(images/find-prev.svg);
+  background-position-x: 1px;
 }
 
 button.ace_searchbtn.next:hover,
 button.ace_searchbtn.prev:hover {
   background-color: #eee;
+}
+
+button.ace_searchbtn[action="findAll"] {
+  display: none;
 }
 
 /*
@@ -659,11 +674,12 @@ button.ace_searchbtn.prev:hover {
 }
 
 /*
-  We tweak the default behavior of tab bar to avoids an overlap with the
-  navigation buttons.
+  Tweak the default behavior of tab bar to avoid an overlap with the
+  navigation buttons and put it on top of the Ace container.
 */
 .tabview-tabbar {
   margin-right: 131px;
+  z-index: 1;
 }
 
 /*
