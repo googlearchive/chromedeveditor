@@ -5,7 +5,7 @@
 part of spark.templates;
 
 class ChromeAppWithPolymerJSTemplate extends ProjectTemplate {
-  final String _PACKAGES_DIR = bowerProperties.packagesDirName;
+  static final String _PACKAGES_DIR = bowerProperties.packagesDirName;
 
   ChromeAppWithPolymerJSTemplate(
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
