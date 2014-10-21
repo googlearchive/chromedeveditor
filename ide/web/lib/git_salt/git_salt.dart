@@ -31,7 +31,6 @@ class GitSalt {
 
   static void cloneCb(var result) {
     //TODO(grv): to be implemented.
-    print(result);
     print("clone successful");
   }
 
@@ -51,5 +50,28 @@ class GitSalt {
     });
 
     jsGitSalt.callMethod('postMessage', [message, cloneCb]);
+  }
+
+  static void commitCb(var result) {
+    //TODO(grv): to be implemented.
+    print("commit successful");
+  }
+
+  static void commit(entry, String url) {
+
+    var arg = new js.JsObject.jsify({
+      "entry": entry.toJs(),
+      "filesystem": entry.filesystem.toJs(),
+      "fullPath": entry.fullPath,
+      "url": url
+    });
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "commit",
+      "arg": arg
+    });
+
+    jsGitSalt.callMethod('postMessage', [message, commitCb]);
   }
 }
