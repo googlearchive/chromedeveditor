@@ -16,7 +16,7 @@ int GitCommand::parseFileSystem(pp::VarDictionary message, std::string name,
   pp::Resource resource_filesystem = var_filesystem.AsResource();
   fileSystem = pp::FileSystem(resource_filesystem);
   return 0;
-} 
+}
 
 int GitCommand::parseArgs() {
 
@@ -53,7 +53,10 @@ int GitClone::runCommand() {
   pp::VarDictionary dict;
   dict.Set(kRegarding, subject);
   dict.Set("message", "clone successful");
-  printf("coning done %s\n", subject.c_str());
+
+  char message[100];
+  sprintf(message, "%s", subject.c_str());
+  _gitSalt->PostMessage(pp::Var(message));
   return 0;
 }
 
@@ -70,6 +73,9 @@ void GitClone::ChromefsInit() {
 
 int GitCommit::runCommand() {
   //TODO(grv): implement.
+  char message[100];
+  sprintf(message, "%s", subject.c_str());
+  _gitSalt->PostMessage(pp::Var(message));
   printf("GitCommit: to be implemented");
   return 0;
 }

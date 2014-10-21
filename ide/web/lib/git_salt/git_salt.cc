@@ -1,7 +1,3 @@
-// Copyright (c) 2014 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 #include "git_salt.h"
 
 GitSaltInstance::GitSaltInstance(PP_Instance instance)
@@ -51,12 +47,21 @@ void GitSaltInstance::HandleMessage(const pp::Var& var_message) {
 
 
   if (!cmd.compare(kCmdClone)) {
-    GitClone* clone = new GitClone(subject, var_dictionary_args);
+    if (repo != NULL) {
+      PostMessage("repository already exists.");
+      return;
+    }
+
+    GitClone* clone = new GitClone(this, subject, var_dictionary_args, repo);
     clone->parseArgs();
     file_thread_.message_loop().PostWork(
         callback_factory_.NewCallback(&GitSaltInstance::Clone, clone));
   } else if (!cmd.compare(kCmdCommit)) {
-    GitCommit* commit = new GitCommit(subject, var_dictionary_args);
+    if (repo == NULL) {
+      PostMessage("Git repository not initialized.");
+      return;
+    }
+    GitCommit* commit = new GitCommit(this, subject, var_dictionary_args, repo);
     commit->parseArgs();
     file_thread_.message_loop().PostWork(
         callback_factory_.NewCallback(&GitSaltInstance::Commit, commit));
