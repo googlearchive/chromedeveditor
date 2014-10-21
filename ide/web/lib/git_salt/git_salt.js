@@ -8,6 +8,8 @@
 var GitSalt = function() {
 };
 
+GitSalt.prototype.id = null;
+
 /**
  * Create the Native Client <embed> element as a child of the DOM element
  * named "listener".
@@ -15,10 +17,10 @@ var GitSalt = function() {
  * @param {string} name The name of the example.
  * @param {string} path Directory name where .nmf file can be found.
  */
-GitSalt.prototype.createNaClModule = function(name, path) {
+GitSalt.prototype.createNaClModule = function(name, path, id) {
   var moduleEl = document.createElement('embed');
-  moduleEl.setAttribute('name', 'nacl_module');
-  moduleEl.setAttribute('id', 'nacl_module');
+  moduleEl.setAttribute('name', 'nacl_' + id);
+  moduleEl.setAttribute('id', 'nacl_' + id);
   moduleEl.setAttribute('width', 0);
   moduleEl.setAttribute('height', 0);
   moduleEl.setAttribute('path', path);
@@ -31,7 +33,7 @@ GitSalt.prototype.createNaClModule = function(name, path) {
   // instead of attaching the event listeners directly to the <EMBED> element
   // to ensure that the listeners are active before the NaCl module 'load'
   // event fires.
-  var listenerDiv = document.getElementById('git-salt-container');
+  var listenerDiv = document.getElementById(this.id);
   listenerDiv.appendChild(moduleEl);
 };
 
@@ -54,7 +56,7 @@ GitSalt.prototype.updateStatus = function(opt_message) {
  * C++).
  */
 GitSalt.prototype.attachDefaultListeners = function() {
-  var listenerDiv = document.getElementById('git-salt-container');
+  var listenerDiv = document.getElementById(this.id);
   listenerDiv.addEventListener('load', this.moduleDidLoad.bind(this), true);
   listenerDiv.addEventListener('message', this.handleMessage.bind(this), true);
   listenerDiv.addEventListener('error', this.handleError.bind(this), true);
@@ -69,7 +71,7 @@ GitSalt.prototype.attachDefaultListeners = function() {
 GitSalt.prototype.handleError = function(event) {
   // We can't use GitSalt.naclModule yet because the module has not been
   // loaded.
-  var moduleEl = document.getElementById('nacl_module');
+  var moduleEl = document.getElementById(this.id);
   this.updateStatus('ERROR [' + moduleEl.lastError + ']');
 };
 
@@ -95,7 +97,7 @@ GitSalt.prototype.handleCrash = function(event) {
  * This event listener is registered in attachDefaultListeners above.
  */
 GitSalt.prototype.moduleDidLoad = function() {
-  this.naclModule = document.getElementById('nacl_module');
+  this.naclModule = document.getElementById('nacl_' + this.id);
   this.updateStatus('RUNNING');
   if (typeof window.moduleDidLoad !== 'undefined') {
     window.moduleDidLoad();
@@ -182,9 +184,14 @@ GitSalt.prototype.handleResponse = function(response) {
  * @param {string} name The name of the example.
  * @param {string} path Directory name where .nmf file can be found.
  */
-GitSalt.prototype.loadPlugin = function(name, path) {
+GitSalt.prototype.loadPlugin = function(name, path, id) {
+  this.id = id;
+  var listenerDiv = document.createElement('div');
+  listenerDiv.id = id;
+  var gitSaltContainer = document.getElementById('git-salt-container');
+  gitSaltContainer.appendChild(listenerDiv);
   this.attachDefaultListeners();
-  this.createNaClModule(name, path);
+  this.createNaClModule(name, path, id);
 };
 
 GitSalt.prototype.callbacks = {};
