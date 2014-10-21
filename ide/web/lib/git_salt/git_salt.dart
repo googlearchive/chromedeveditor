@@ -5,6 +5,7 @@
 
 library spark.gitsalt;
 
+import 'dart:async';
 import 'dart:js' as js;
 
 /**
@@ -14,6 +15,7 @@ class GitSalt {
   // Javascript object to wrap.
   static js.JsObject jsGitSalt = js.context['gitSalt'];
   static int messageId = 1;
+  static Completer _completer = null;
 
   static String genMessageId() {
     messageId++;
@@ -32,9 +34,18 @@ class GitSalt {
   static void cloneCb(var result) {
     //TODO(grv): to be implemented.
     print("clone successful");
+    _completer.complete();
+    _completer = null;
   }
 
-  static void clone(entry, String url) {
+  static bool isActive() {
+    return (_completer != null)
+  }
+
+  static Future clone(entry, String url) {
+    if (isActive) {
+      return new Future.error("Another git operation in progress.");
+    }
 
     var arg = new js.JsObject.jsify({
       "entry": entry.toJs(),
@@ -49,7 +60,9 @@ class GitSalt {
       "arg": arg
     });
 
+    _completer = new Completer();
     jsGitSalt.callMethod('postMessage', [message, cloneCb]);
+    return _completer.future;
   }
 
   static void commitCb(var result) {
