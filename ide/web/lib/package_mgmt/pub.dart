@@ -26,6 +26,10 @@ Logger _logger = new Logger('spark.pub');
 final PubProperties pubProperties = new PubProperties();
 
 class PubProperties extends PackageServiceProperties {
+  //
+  // PackageServiceProperties virtual interface:
+  //
+
   String get packageServiceName => 'pub';
   String get packageSpecFileName => 'pubspec.yaml';
   String get packagesDirName => 'packages';

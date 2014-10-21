@@ -13,8 +13,8 @@ import '../workspace.dart';
 // TODO(ussuri): Add comments.
 
 abstract class PackageServiceProperties {
-  bool isFolderWithPackages(Folder project) =>
-      project.getChild(packageSpecFileName) != null;
+  bool isFolderWithPackages(Folder container) =>
+      container.getChild(packageSpecFileName) != null;
 
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
