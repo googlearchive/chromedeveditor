@@ -5,7 +5,6 @@
 @import url("packages/spark_widgets/common/spark_widget.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
-/* Order is important */
 @import url("spark_common.css");
 
 #splitView {
@@ -33,7 +32,7 @@ spark-dialog {
 }
 
 spark-dialog#polymerDesignerDialog {
-  top: 40px;
+  top: 20px;
   bottom: 20px;
   left: 20px;
   right: 20px;
@@ -111,6 +110,7 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
 }
 
 #navigationButtons {
+  box-sizing: border-box;
   border: none;
   border-bottom: 1px solid #ddd;
   position: absolute;
@@ -259,7 +259,6 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
   width: 100%;
 }
 
-/* Override Bootstrap's 'font-weight: bold' style for labels */
 label {
   font-weight: 500;
 }

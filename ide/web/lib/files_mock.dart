@@ -143,6 +143,7 @@ DirectoryEntry createSampleDirectory2(String name) {
 DirectoryEntry createSampleDirectory3(String name) {
   MockFileSystem fs = new MockFileSystem();
   DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/pubspec.yaml', contents: 'name: ${name}\n');
   fs.createFile('${name}/web/index.html', contents:
       '<html><body><script type="application/dart" src="sample.dart"></script></body></html>');
   fs.createFile('${name}/web/sample.dart', contents:

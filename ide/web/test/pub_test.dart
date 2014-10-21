@@ -23,7 +23,7 @@ defineTests() {
       return workspace.link(createWsRoot(dir)).then((Project _project) {
         project = _project;
         pubManager = new PubManager(workspace);
-        return project.createNewFile('pubspec.yaml');
+        return project.getChild('pubspec.yaml');
       }).then((File file) {
         return file.setContents('name: sample\nversion: 0.1.0\n');
       }).then((_) {
@@ -86,6 +86,7 @@ DirectoryEntry _createSampleDirectory([String projectName = 'sample_project']) {
   MockFileSystem fs = new MockFileSystem();
   DirectoryEntry project = fs.createDirectory(projectName);
   fs.createFile('${projectName}/bar.txt');
+  fs.createFile('${projectName}/pubspec.yaml');
   fs.createFile('${projectName}/packages/foo/foo.dart', contents: 'foo() { }');
   fs.createFile('${projectName}/lib/sample.dart', contents: 'sample() { }');
   fs.createFile('${projectName}/web/index.html');
