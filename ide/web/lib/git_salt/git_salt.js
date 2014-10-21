@@ -171,7 +171,11 @@ GitSalt.prototype.handleMessage = function(message_event) {
 };
 
 GitSalt.prototype.handleResponse = function(response) {
-   console.log(response);
+   var cb = this.callbacks[response.data];
+   if (cb != null) {
+     cb("");
+     this.callbacks[response.data] = null;
+   }
 };
 
 /**
