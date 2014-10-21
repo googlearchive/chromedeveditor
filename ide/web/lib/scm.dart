@@ -298,7 +298,8 @@ class GitSaltScmProvider extends ScmProvider {
 
   Future clone(String url, chrome.DirectoryEntry dir,
       {String username, String password, String branchName}) {
-    return GitSalt.clone(dir, url);
+    GitSalt gitSalt = GitSaltFactory.getInstance(dir.fullPath);
+    return gitSalt.clone(dir, url);
   }
 }
 
@@ -359,12 +360,14 @@ class GitScmProvider extends ScmProvider {
 
 class GitSaltScmProjectOperations extends ScmProjectOperations {
   Completer<ObjectStore> _completer;
+  GitSalt _gitSalt;
   StreamController<ScmProjectOperations> _statusController =
       new StreamController.broadcast();
   String _branchName;
 
   GitSaltScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
+      _gitSalt = GitSaltFactory.getInstance(project.entry.fullPath);
   }
 
   String getBranchName() {
