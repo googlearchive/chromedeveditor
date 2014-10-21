@@ -34,7 +34,6 @@ import 'lib/event_bus.dart';
 import 'lib/exception.dart';
 import 'lib/files_mock.dart';
 import 'lib/filesystem.dart' as filesystem;
-import 'lib/git_salt/git_salt.dart';
 import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
@@ -146,10 +145,6 @@ abstract class Spark
     initEditorArea();
     initNavigationManager();
     initAndroidRSA();
-
-    if (SparkFlags.gitSalt) {
-      initGitSalt();
-    }
 
     createActions();
 
@@ -381,10 +376,6 @@ abstract class Spark
 
   void initAndroidRSA() {
     AndroidRSA.loadPlugin();
-  }
-
-  void initGitSalt() {
-    GitSalt.loadPlugin();
   }
 
   void _selectLocation(NavigationLocation location) {
