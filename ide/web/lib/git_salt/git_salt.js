@@ -8,8 +8,6 @@
 var GitSalt = function() {
 };
 
-GitSalt.prototype.id = null;
-
 GitSalt.prototype.listenerDiv = null;
 
 /**
@@ -179,10 +177,8 @@ GitSalt.prototype.handleResponse = function(response) {
  * @param {string} name The name of the example.
  * @param {string} path Directory name where .nmf file can be found.
  */
-GitSalt.prototype.loadPlugin = function(name, path, id) {
-  this.id = id;
+GitSalt.prototype.loadPlugin = function(name, path) {
   this.listenerDiv = document.createElement('div');
-  this.listenerDiv.id = id;
 
   var gitSaltContainer = document.getElementById('git-salt-container');
   gitSaltContainer.appendChild(this.listenerDiv);
