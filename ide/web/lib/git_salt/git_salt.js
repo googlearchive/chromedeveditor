@@ -19,14 +19,13 @@ GitSalt.prototype.id = null;
  */
 GitSalt.prototype.createNaClModule = function(name, path, id) {
   var moduleEl = document.createElement('embed');
-  moduleEl.setAttribute('name', 'nacl_' + id);
-  moduleEl.setAttribute('id', 'nacl_' + id);
   moduleEl.setAttribute('width', 0);
   moduleEl.setAttribute('height', 0);
   moduleEl.setAttribute('path', path);
   moduleEl.setAttribute('src', path + '/' + name + '.nmf');
 
   moduleEl.setAttribute('type', "application/x-nacl");
+  this.naclModule = moduleEl;
 
   // The <EMBED> element is wrapped inside a <DIV>, which has both a 'load'
   // and a 'message' event listener attached.  This wrapping method is used
@@ -97,7 +96,6 @@ GitSalt.prototype.handleCrash = function(event) {
  * This event listener is registered in attachDefaultListeners above.
  */
 GitSalt.prototype.moduleDidLoad = function() {
-  this.naclModule = document.getElementById('nacl_' + this.id);
   this.updateStatus('RUNNING');
   if (typeof window.moduleDidLoad !== 'undefined') {
     window.moduleDidLoad();
