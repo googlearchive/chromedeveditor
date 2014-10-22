@@ -5,23 +5,24 @@
 part of spark.templates;
 
 class ChromeAppWithPolymerJSTemplate extends ProjectTemplate {
-  static final String _PACKAGES_DIR = bowerProperties.packagesDirName;
-
   ChromeAppWithPolymerJSTemplate(
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
       : super._(id, globalVars, localVars);
 
   // TODO(ussuri): Add option to "never show again".
-  Future showIntro(utils.Notifier notifier) {
+  Future showIntro(Folder destRoot, utils.Notifier notifier) {
+    final String packagesDir = bowerProperties.getPackagesDirName(destRoot);
+
     notifier.showMessage(
         "Action required",
-        "Your app will not run as is.\n\n"
+        "Your new app will not run as is.\n\n"
         "This project template uses Polymer elements, which have "
         "known incompatibilities with the Content Security Policy (CSP), "
-        "which is enforced by Chrome apps.\n\n"
+        "which is enforced by the Chrome Apps platform.\n\n"
         "To fix that: wait for the 'Getting Bower packages...' step to "
-        "complete, right-click '$_PACKAGES_DIR' under the project and select "
+        "complete, right-click '$packagesDir' under the project and select "
         "'Refactor for CSP'.");
+
     return new Future.value();
   }
 }

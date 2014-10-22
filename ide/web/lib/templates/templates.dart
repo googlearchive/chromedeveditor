@@ -6,7 +6,6 @@ library spark.templates;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
@@ -41,7 +40,7 @@ class TemplateVar {
  * one another in random order; conflicts will not be detected nor resolved.
  */
 class ProjectBuilder {
-  DirectoryEntry _destRoot;
+  Folder _destRoot;
   List<ProjectTemplate> _templates = [];
   utils.Notifier _notifier;
 
@@ -143,15 +142,15 @@ class ProjectTemplate {
     }
   }
 
-  Future instantiate(DirectoryEntry destRoot, utils.Notifier notifier) =>
-      build(destRoot).then((_) => showIntro(notifier));
+  Future instantiate(Folder destRoot, utils.Notifier notifier) =>
+      build(destRoot).then((_) => showIntro(destRoot, notifier));
 
-  Future build(DirectoryEntry destRoot) {
-    DirectoryEntry sourceRoot;
+  Future build(Folder destRoot) {
+    chrome.DirectoryEntry sourceRoot;
 
-    return utils.getPackageDirectoryEntry().then((root) {
+    return utils.getPackageDirectoryEntry().then((chrome.DirectoryEntry root) {
       return root.getDirectory(_sourceUri);
-    }).then((dir) {
+    }).then((chrome.DirectoryEntry dir) {
       sourceRoot = dir;
       return utils.getAppContents("$_sourceUri/setup.json");
     }).then((String contents) {
@@ -161,7 +160,7 @@ class ProjectTemplate {
     });
   }
 
-  Future showIntro(utils.Notifier notifier) {
+  Future showIntro(Folder destRoot, utils.Notifier notifier) {
     return new Future.value();
   }
 
@@ -173,8 +172,8 @@ class ProjectTemplate {
   }
 
   Future _traverseElement(
-      DirectoryEntry destRoot,
-      DirectoryEntry sourceRoot,
+      Folder destRoot,
+      chrome.DirectoryEntry sourceRoot,
       String sourceUri,
       Map<String, dynamic> element) {
     return _handleDirectories(destRoot, sourceRoot, sourceUri,
@@ -183,18 +182,18 @@ class ProjectTemplate {
   }
 
   Future _handleDirectories(
-      DirectoryEntry destRoot,
-      DirectoryEntry sourceRoot,
+      Folder destRoot,
+      chrome.DirectoryEntry sourceRoot,
       String sourceUri,
       Map<String, dynamic> directories) {
     if (directories == null || directories.isEmpty) return new Future.value();
 
     return Future.forEach(directories.keys, (String directoryName) {
-      DirectoryEntry destDirectoryRoot;
-      return destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
+      Folder destDirectoryRoot;
+      return destRoot.getOrCreateFolder(directoryName, true).then((Folder entry) {
         destDirectoryRoot = entry;
         return sourceRoot.getDirectory(directoryName);
-      }).then((DirectoryEntry sourceDirectoryRoot) {
+      }).then((chrome.DirectoryEntry sourceDirectoryRoot) {
         return _traverseElement(destDirectoryRoot, sourceDirectoryRoot,
             "$sourceUri/$directoryName", directories[directoryName]);
       });
@@ -202,8 +201,8 @@ class ProjectTemplate {
   }
 
   Future _handleFiles(
-      DirectoryEntry destRoot,
-      DirectoryEntry sourceRoot,
+      Folder destRoot,
+      chrome.DirectoryEntry sourceRoot,
       String sourceUri,
       List<Map<String, String>> files) {
     if (files == null || files.isEmpty) return new Future.value();
@@ -211,18 +210,18 @@ class ProjectTemplate {
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];
       String dest = _interpolateTemplateVars(fileElement['dest']);
-      chrome.ChromeFileEntry fileEntry;
+      File fileEntry;
 
-      return destRoot.createFile(dest).then((chrome.ChromeFileEntry entry) {
+      return destRoot.getOrCreateFile(dest).then((File entry) {
         fileEntry = entry;
         if (dest.endsWith(".png")) {
           return utils.getAppContentsBinary("$sourceUri/$source").then(
               (List<int> data) {
-            return fileEntry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
+            return fileEntry.setBytes(data);
           });
         } else {
           return utils.getAppContents("$sourceUri/$source").then((String data) {
-            return fileEntry.writeText(_interpolateTemplateVars(data));
+            return fileEntry.setContents(_interpolateTemplateVars(data));
           });
         }
       });
