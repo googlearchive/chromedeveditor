@@ -280,6 +280,9 @@ class GitSaltScmProvider extends ScmProvider {
   String get id => 'git-salt';
 
   bool isUnderScm(Project project) {
+    if (SparkFlags.gitSalt == false) {
+      return false;
+    }
     Folder gitFolder = project.getChild('.git');
     if (gitFolder is! Folder) return false;
     if (gitFolder.getChild('index') is! File) return false;
