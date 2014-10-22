@@ -8,9 +8,9 @@
 var GitSalt = function() {
 };
 
-GitSalt.prototype.id = null;
-
 GitSalt.prototype.listenerDiv = null;
+
+GitSalt.prototype.loadCb = null;
 
 /**
  * Create the Native Client <embed> element as a child of the DOM element
@@ -97,6 +97,10 @@ GitSalt.prototype.moduleDidLoad = function() {
   if (typeof window.moduleDidLoad !== 'undefined') {
     window.moduleDidLoad();
   }
+  if (this.loadCb != null) {
+    this.loadCb();
+    this.loadCb = null;
+  }
 };
 
 /**
@@ -168,7 +172,6 @@ GitSalt.prototype.handleMessage = function(message_event) {
 };
 
 GitSalt.prototype.handleResponse = function(response) {
-  console.log(response);
    var cb = this.callbacks[response.data.regarding];
    if (cb != null) {
      cb("");
@@ -180,10 +183,9 @@ GitSalt.prototype.handleResponse = function(response) {
  * @param {string} name The name of the example.
  * @param {string} path Directory name where .nmf file can be found.
  */
-GitSalt.prototype.loadPlugin = function(name, path, id) {
-  this.id = id;
+GitSalt.prototype.loadPlugin = function(name, path, cb) {
+  this.loadCb = cb;
   this.listenerDiv = document.createElement('div');
-  this.listenerDiv.id = id;
 
   var gitSaltContainer = document.getElementById('git-salt-container');
   gitSaltContainer.appendChild(this.listenerDiv);
