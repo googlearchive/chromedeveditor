@@ -177,7 +177,7 @@ GitSalt.prototype.handleMessage = function(message_event) {
 GitSalt.prototype.handleResponse = function(response) {
    var cb = this.callbacks[response.data.regarding];
    if (cb != null) {
-     cb("");
+     cb(response.data.arg);
      this.callbacks[response.data] = null;
    }
 };

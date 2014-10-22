@@ -65,7 +65,7 @@ class GitSalt {
 
   void cloneCb(var result) {
     //TODO(grv): to be implemented.
-    print("clone successful");
+    print(result["message"]);
     _completer.complete();
     _completer = null;
   }

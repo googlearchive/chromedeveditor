@@ -42,12 +42,11 @@ int GitClone::runCommand() {
 
   git_threads_init();
 
-  if (!url.length) {
-    git_clone_open(&repo, "/chromefs");
-    printf("loaded repo\n");
-    if (repo != NULL) {
-      printf("success\n");
-    }
+  std::string message = "clone successful";
+
+  if (!url.length()) {
+    git_repository_open(&repo, "/chromefs");
+    message = "repository load successful";
   } else {
     git_clone(&repo, url.c_str(), "/chromefs", NULL);
   }
@@ -59,7 +58,7 @@ int GitClone::runCommand() {
   }
 
   pp::VarDictionary arg;
-  arg.Set("message", "clone successful");
+  arg.Set(kMessage, message);
 
   pp::VarDictionary response;
   response.Set(kRegarding, subject);
