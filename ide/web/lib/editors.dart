@@ -258,9 +258,15 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
               }
             });
             // Restore opened files.
-            for (String filePersistID in openedTabs) {
-              File f = _workspace.restoreResource(filePersistID);
-              ContentProvider contentProvider = new FileContentProvider(f);
+            for (String persistId in openedTabs) {
+              ContentProvider contentProvider;
+              if (persistId.startsWith("PreferenceContentProvider")) {
+                contentProvider = new PreferenceContentProvider(_prefs.prefsStore,
+                    persistId);
+              } else {
+                File file = _workspace.restoreResource(persistId);
+                contentProvider = new FileContentProvider(file);
+              }
               openFile(contentProvider, activateEditor: false);
             }
           }
@@ -533,7 +539,8 @@ class FileContentProvider implements ContentProvider {
   final File file;
 
   String get name => file.name;
-  String get uuid => file.uuid;
+  String get uuid =>
+      file.uuid;
 
   StreamController _changeController;
   StreamSubscription _changeSubscription;
@@ -566,11 +573,12 @@ class PreferenceContentProvider implements ContentProvider {
   Stream get onChange => _changeController.stream;
 
   // TODO(ericarnold): Deal with multiple [PreferenceStore]s?
-  String get uuid => name;
+  String get uuid => "PreferenceContentProvider:$name";
 
   PreferenceContentProvider(this._store, this.name);
 
-  Future<String> read() => _store.getValue(name);
+  Future<String> read() => _store.getValue(name)
+        .then((String content) => content == null ? "" : content);
 
   Future write(String content) => _store.setValue(name, content);
 }

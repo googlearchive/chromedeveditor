@@ -346,13 +346,13 @@ abstract class Spark
     _navigationManager = new NavigationManager(_editorManager);
     _navigationManager.onNavigate.listen((NavigationLocation location) {
       ContentProvider contentProvider = location.contentProvider;
-      if (contentProvider is FileContentProvider) {
+//      if (contentProvider is FileContentProvider) {
         _selectContentProvider(contentProvider).then((_) {
           if (location.selection != null) {
             nextTick().then((_) => _selectLocation(location));
           }
         });
-      }
+//      }
     });
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
       event =
@@ -956,8 +956,15 @@ abstract class Spark
     if (resource is ws.File) {
       EditorTab tab = editorArea.tabByFile(resource);
 
-      ContentProvider contentProvider =
-          (tab == null) ? new FileContentProvider(resource) : tab.contentProvider;
+      ContentProvider contentProvider;
+
+      if (resource.name == "index.html") {
+        contentProvider = (tab == null) ?
+            new PreferenceContentProvider(this.localPrefs, "test") : tab.contentProvider;
+      } else {
+        contentProvider = (tab == null) ? new FileContentProvider(resource) :
+            tab.contentProvider;
+      }
 
       navigationManager.gotoLocation(new NavigationLocation(contentProvider));
       return new Future.value();
@@ -1060,9 +1067,13 @@ abstract class Spark
           if (contentProvider is FileContentProvider) {
             File file = contentProvider.file;
             return (file.project != null) ? file.project : file;
+          } else {
+            return null;
           }
     }));
-    resources.forEach((ws.Resource r) => r.refresh());
+    resources.forEach((ws.Resource r) {
+      if (r != null) r.refresh();
+    });
   }
 
   // TODO(ussuri): Polymerize.
