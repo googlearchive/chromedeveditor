@@ -2237,7 +2237,6 @@ class BuildApkAction extends SparkActionWithDialog {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
-  ws.Folder folder;
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
@@ -2275,8 +2274,6 @@ class NewProjectAction extends SparkActionWithDialog {
       if (location == null) {
         return new Future.value();
       }
-
-      final DirectoryEntry locationEntry = location.entry;
 
       ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
 
@@ -2317,7 +2314,7 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(locationEntry, templates, spark).build();
+        return new ProjectBuilder(root.resource, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');

@@ -827,7 +827,8 @@ class DartChromeAppParticipant extends LaunchParticipant {
    * `container` directory.
    */
   Future _copyPackages(Container container) {
-    Resource r = container.project.getChild(pubProperties.packagesDirName);
+    Resource r =
+        container.project.getChild(pubProperties.getPackagesDirName(container));
 
     if (r is Container) {
       return copyResource(r, container);
