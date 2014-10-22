@@ -5,36 +5,69 @@
 
 library spark.gitsalt;
 
+import 'dart:async';
 import 'dart:js' as js;
+
+/**
+ * GitSalt Factory class which contains the active git-salt instances.
+ * The instances are indexed by the root directotry path of the git
+ * repository.
+ */
+class GitSaltFactory {
+
+  static Map<String, Gitsalt> _instances = {};
+
+  static GitSalt getInstance(String path) {
+    if (getInstanceForPath(path) == null) {
+      GitSalt gitSalt = new GitSalt(path);
+      _instances[path] = gitSalt;
+    }
+    return _instances[path];
+  }
+  static GitSalt getInstanceForPath(String path) => _instances[path];
+}
 
 /**
  * A javascript interface for git-nacl library.
  */
 class GitSalt {
-  // Javascript object to wrap.
-  static js.JsObject jsGitSalt = js.context['gitSalt'];
-  static int messageId = 1;
+  js.JsObject _jsGitSalt;
+  int messageId = 1;
+  String url;
+  Completer _completer = null;
 
-  static String genMessageId() {
+  GitSalt(String path) {
+    _jsGitSalt = new js.JsObject(js.context['GitSalt']);
+    loadPlugin(path);
+  }
+
+  String genMessageId() {
     messageId++;
     return messageId.toString();
   }
 
   /**
-   * Load the companion NaCl plugin.  This call isn't strictly required as
-   * we'll load the plugin the first time its needed.  You may call it
-   * separately if you want to pay the loading cost up front.
+   * Load the companion NaCl plugin.
    */
-  static void loadPlugin() {
-    jsGitSalt.callMethod('loadPlugin', ['git_salt', 'lib/git_salt']);
+  void loadPlugin(path) {
+    _jsGitSalt.callMethod('loadPlugin', ['git_salt', 'lib/git_salt', path]);
   }
 
-  static void cloneCb(var result) {
+  void cloneCb(var result) {
     //TODO(grv): to be implemented.
     print("clone successful");
+    _completer.complete();
+    _completer = null;
   }
 
-  static void clone(entry, String url) {
+  bool isActive() {
+    return (_completer != null)
+  }
+
+  Future clone(entry, String url) {
+    if (isActive) {
+      return new Future.error("Another git operation in progress.");
+    }
 
     var arg = new js.JsObject.jsify({
       "entry": entry.toJs(),
@@ -49,15 +82,21 @@ class GitSalt {
       "arg": arg
     });
 
-    jsGitSalt.callMethod('postMessage', [message, cloneCb]);
+    _completer = new Completer();
+    const delay = const Duration(milliseconds:1000);
+    //TODO(grv) : implement callback completion for loadPlugin.
+     new Timer(delay, () {
+      _jsGitSalt.callMethod('postMessage', [message, cloneCb]);
+     });
+    return _completer.future;
   }
 
-  static void commitCb(var result) {
+  void commitCb(var result) {
     //TODO(grv): to be implemented.
     print("commit successful");
   }
 
-  static void commit(entry, String url) {
+  void commit(entry, String url) {
 
     var arg = new js.JsObject.jsify({
       "entry": entry.toJs(),
@@ -72,6 +111,6 @@ class GitSalt {
       "arg": arg
     });
 
-    jsGitSalt.callMethod('postMessage', [message, commitCb]);
+    _jsGitSalt.callMethod('postMessage', [message, commitCb]);
   }
 }
