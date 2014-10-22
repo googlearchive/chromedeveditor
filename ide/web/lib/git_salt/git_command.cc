@@ -50,13 +50,15 @@ int GitClone::runCommand() {
     printf("giterror: %s\n", a->message);
   }
 
-  pp::VarDictionary dict;
-  dict.Set(kRegarding, subject);
-  dict.Set("message", "clone successful");
+  pp::VarDictionary arg;
+  arg.Set("message", "clone successful");
 
-  char message[100];
-  sprintf(message, "%s", subject.c_str());
-  _gitSalt->PostMessage(pp::Var(message));
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
   return 0;
 }
 
