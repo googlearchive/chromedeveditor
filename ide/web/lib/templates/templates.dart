@@ -6,6 +6,7 @@ library spark.templates;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
+import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
@@ -40,8 +41,9 @@ class TemplateVar {
  * one another in random order; conflicts will not be detected nor resolved.
  */
 class ProjectBuilder {
-  Folder _destRoot;
+  DirectoryEntry _destRoot;
   List<ProjectTemplate> _templates = [];
+  // NOTE: Currently unused, but may be useful in future.
   utils.Notifier _notifier;
 
   ProjectBuilder(this._destRoot, this._templates, this._notifier);
@@ -51,7 +53,7 @@ class ProjectBuilder {
    */
   Future build() {
     return Future.forEach(_templates, (ProjectTemplate template) {
-      return template.instantiate(_destRoot, _notifier);
+      return template.instantiate(_destRoot);
     });
   }
 
@@ -142,15 +144,12 @@ class ProjectTemplate {
     }
   }
 
-  Future instantiate(Folder destRoot, utils.Notifier notifier) =>
-      build(destRoot).then((_) => showIntro(destRoot, notifier));
+  Future instantiate(DirectoryEntry destRoot) {
+    DirectoryEntry sourceRoot;
 
-  Future build(Folder destRoot) {
-    chrome.DirectoryEntry sourceRoot;
-
-    return utils.getPackageDirectoryEntry().then((chrome.DirectoryEntry root) {
+    return utils.getPackageDirectoryEntry().then((root) {
       return root.getDirectory(_sourceUri);
-    }).then((chrome.DirectoryEntry dir) {
+    }).then((dir) {
       sourceRoot = dir;
       return utils.getAppContents("$_sourceUri/setup.json");
     }).then((String contents) {
@@ -160,7 +159,7 @@ class ProjectTemplate {
     });
   }
 
-  Future showIntro(Folder destRoot, utils.Notifier notifier) {
+  Future showIntro(Project finalProject, utils.Notifier notifier) {
     return new Future.value();
   }
 
@@ -172,8 +171,8 @@ class ProjectTemplate {
   }
 
   Future _traverseElement(
-      Folder destRoot,
-      chrome.DirectoryEntry sourceRoot,
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
       String sourceUri,
       Map<String, dynamic> element) {
     return _handleDirectories(destRoot, sourceRoot, sourceUri,
@@ -182,18 +181,18 @@ class ProjectTemplate {
   }
 
   Future _handleDirectories(
-      Folder destRoot,
-      chrome.DirectoryEntry sourceRoot,
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
       String sourceUri,
       Map<String, dynamic> directories) {
     if (directories == null || directories.isEmpty) return new Future.value();
 
     return Future.forEach(directories.keys, (String directoryName) {
-      Folder destDirectoryRoot;
-      return destRoot.getOrCreateFolder(directoryName, true).then((Folder entry) {
+      DirectoryEntry destDirectoryRoot;
+      return destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
         destDirectoryRoot = entry;
         return sourceRoot.getDirectory(directoryName);
-      }).then((chrome.DirectoryEntry sourceDirectoryRoot) {
+      }).then((DirectoryEntry sourceDirectoryRoot) {
         return _traverseElement(destDirectoryRoot, sourceDirectoryRoot,
             "$sourceUri/$directoryName", directories[directoryName]);
       });
@@ -201,8 +200,8 @@ class ProjectTemplate {
   }
 
   Future _handleFiles(
-      Folder destRoot,
-      chrome.DirectoryEntry sourceRoot,
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
       String sourceUri,
       List<Map<String, String>> files) {
     if (files == null || files.isEmpty) return new Future.value();
@@ -210,18 +209,18 @@ class ProjectTemplate {
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];
       String dest = _interpolateTemplateVars(fileElement['dest']);
-      File fileEntry;
+      chrome.ChromeFileEntry fileEntry;
 
-      return destRoot.getOrCreateFile(dest).then((File entry) {
+      return destRoot.createFile(dest).then((chrome.ChromeFileEntry entry) {
         fileEntry = entry;
         if (dest.endsWith(".png")) {
           return utils.getAppContentsBinary("$sourceUri/$source").then(
               (List<int> data) {
-            return fileEntry.setBytes(data);
+            return fileEntry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
           });
         } else {
           return utils.getAppContents("$sourceUri/$source").then((String data) {
-            return fileEntry.setContents(_interpolateTemplateVars(data));
+            return fileEntry.writeText(_interpolateTemplateVars(data));
           });
         }
       });

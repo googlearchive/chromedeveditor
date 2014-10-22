@@ -10,8 +10,8 @@ class ChromeAppWithPolymerJSTemplate extends ProjectTemplate {
       : super._(id, globalVars, localVars);
 
   // TODO(ussuri): Add option to "never show again".
-  Future showIntro(Folder destRoot, utils.Notifier notifier) {
-    final String packagesDir = bowerProperties.getPackagesDirName(destRoot);
+  Future showIntro(Project finalProject, utils.Notifier notifier) {
+    final String packagesDir = bowerProperties.getPackagesDirName(finalProject);
 
     notifier.showMessage(
         "Action required",
@@ -19,9 +19,9 @@ class ChromeAppWithPolymerJSTemplate extends ProjectTemplate {
         "This project template uses Polymer elements, which have "
         "known incompatibilities with the Content Security Policy (CSP), "
         "which is enforced by the Chrome Apps platform.\n\n"
-        "To fix that: wait for the 'Getting Bower packages...' step to "
-        "complete, right-click '$packagesDir' under the project and select "
-        "'Refactor for CSP'.");
+        "In order to fix that, right-click the '$packagesDir' folder under "
+        "your new project, '${finalProject.name}', and select "
+        "'Refactor for CSP' from the context menu.");
 
     return new Future.value();
   }

@@ -1076,19 +1076,24 @@ abstract class Spark
    * Check if this project uses Bower, and if so automatically run a
    * `bower install`.
    */
-  void _checkAutoRunBower(ws.Container container) {
+  Future _checkAutoRunBower(ws.Container container) {
     if (bowerManager.properties.isFolderWithPackages(container)) {
-      jobManager.schedule(new BowerGetJob(this, container));
+      return jobManager.schedule(new BowerGetJob(this, container));
+    } else {
+      return new Future.value();
     }
   }
 
   /**
    * Check if this project uses Pub, and if so automatically run a `pub install`.
    */
-  void _checkAutoRunPub(ws.Container container) {
+  Future _checkAutoRunPub(ws.Container container) {
+    var completer = new Completer();
+
     if (pubManager.canRunPub(container)) {
       // Don't run pub on Windows (#2743).
       if (PlatformInfo.isWin) {
+        // TODO(ussuri): Use Template.showIntro() mechanism instead?
         showMessage(
             'Run Pub Get',
             "This Dart project uses pub packages. Currently, we can't run pub "
@@ -1096,14 +1101,20 @@ abstract class Spark
             "points. In order to run this project, please install Dart's "
             "command-line tools (available at www.dartlang.org), and run "
             "'pub get'.");
+        completer.complete();
       } else {
         // There is issue with the workspace sending duplicate events.
         // TODO(grv): Revisit workspace events.
         Timer.run(() {
-          jobManager.schedule(new PubGetJob(this, container));
+          completer.complete(
+              jobManager.schedule(new PubGetJob(this, container)));
         });
       }
+    } else {
+      completer.complete();
     }
+
+    return completer.future;
   }
 }
 
@@ -2276,11 +2287,10 @@ class NewProjectAction extends SparkActionWithDialog {
       }
 
       ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
+      final List<ProjectTemplate> templates = [];
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
-        final List<ProjectTemplate> templates = [];
-
         final globalVars = [
             new TemplateVar('projectName', name),
             new TemplateVar('sourceName', name.toLowerCase())
@@ -2314,18 +2324,30 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(root.resource, templates, spark).build();
+        return new ProjectBuilder(location.entry, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Created ${project.name}');
+          // Give the builders a chance to receive events about changes in the
+          // workspace and to schedule their build jobs in the queue.
           Timer.run(() {
-            spark._openFile(ProjectBuilder.getMainResourceFor(project));
+            // Wait for the builders to finish before performing tasks that
+            // depend on their results. One such dependency is between
+            // [_BowerBuilder] and [_checkAutoRunBower].
+            spark.workspace.builderManager.waitForAllBuilds().then((_) {
+              spark.showSuccessMessage('Created ${project.name}');
 
-            // Run Pub if the new project has a pubspec file
-            spark._checkAutoRunPub(project);
-
-            // Run Bower if the new project has a bower.json file.
-            spark._checkAutoRunBower(project);
+              // Wait for Pub and Bower to finish before displaying intros, as
+              // they might require some actions on the downloaded packages.
+              Future.wait([
+                spark._openFile(ProjectBuilder.getMainResourceFor(project)),
+                spark._checkAutoRunPub(project),
+                spark._checkAutoRunBower(project)
+              ]).then((_) {
+                // Sequentially displaying intros for all the templates used
+                // to create this project.
+                templates.forEach((t) => t.showIntro(project, spark));
+              });
+            });
           });
         });
       });
