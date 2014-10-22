@@ -86,12 +86,16 @@ class BowerManager extends PackageManager {
  * A package resolver for Bower.
  */
 class _BowerResolver extends PackageResolver {
-  static final PACKAGE_REF_PREFIX_RE =
-      new RegExp('^(../|.*/${bowerProperties.getPackagesDirName}/)');
+  // TODO(ussuri): Right now this class handles only the top-level references.
+  // Expand to account for possible lower-level .bowerrc's.
 
   final Project project;
+  RegExp _packageRefPrefixRe;
 
-  _BowerResolver._(this.project);
+  _BowerResolver._(this.project) {
+    _packageRefPrefixRe =
+        new RegExp('^(../|.*/${bowerProperties.getPackagesDirName(project)}/)');
+  }
 
   //
   // PackageResolver virtual interface:
@@ -104,7 +108,7 @@ class _BowerResolver extends PackageResolver {
     if (folder == null) return null;
 
     if (url.isEmpty) return null;
-    url = url.replaceFirst(PACKAGE_REF_PREFIX_RE, '');
+    url = url.replaceFirst(_packageRefPrefixRe, '');
 
     if (url.startsWith('/')) url = url.substring(1);
 
