@@ -132,58 +132,53 @@ abstract class Spark
     dependencies[Notifier] = this;
     dependencies[preferences.PreferenceStore] = localPrefs;
 
-    initPreferences();
+
     initEventBus();
 
-    initAnalytics();
+    return initPreferences().then((_) {
+      return restoreWorkspace().then((_) {
+        return restoreLocationManager().then((_) {
+          // Besides direct dependencies of the below modules on [Workspace] and
+          // [LocationManager], [restoreLocationManager] may also read
+          // updated [SparkFlags] from `<project location>/.spark.json`.
 
-    initWorkspace();
-    initPackageManagers();
-    initServices();
-    initScmManager();
-    initAceManager();
-    initEditorManager();
-    initEditorArea();
-    initNavigationManager();
-    initAndroidRSA();
+          initAnalytics();
 
-    if (SparkFlags.gitSalt) {
-      initGitSalt();
-    }
+          initPackageManagers();
+          initServices();
+          initScmManager();
+          initAceManager();
 
-    createActions();
+          initAndroidRSA();
 
-    initFilesController();
+          if (SparkFlags.gitSalt) {
+            initGitSalt();
+          }
 
-    initToolbar();
-    buildMenu();
-    initSplitView();
-    initSaveStatusListener();
+          initEditorManager();
+          initNavigationManager();
 
-    initLaunchManager();
+          createActions();
 
-    window.onFocus.listen((Event e) {
-      // When the user switch to an other application, he might change the
-      // content of the workspace from other applications. For that reason, when
-      // the user switch back to Spark, we want to check whether the content of
-      // the workspace changed.
-      _refreshOpenFiles();
-    });
+          initFilesController();
 
-    // Add various builders.
-    addBuilder(new DartBuilder(this.services));
-    if (SparkFlags.performJavaScriptAnalysis) {
-      addBuilder(new JavaScriptBuilder());
-    }
-    addBuilder(new JsonBuilder());
-    addBuilder(new AppManifestBuilder());
+          initLaunchManager();
+          initBuilders();
 
-    return restoreWorkspace().then((_) {
-      return restoreLocationManager().then((_) {
-        // Location manager might have overridden the Ace-related flags from
-        // "<project location>/.spark.json".
-        initAceManagers();
-        initSearchController();
+          initEditorArea();
+          initToolbar();
+          buildMenu();
+          initSplitView();
+          initSaveStatusListener();
+
+          initSearchController();
+
+          window.onFocus.listen((Event e) {
+            // On unfocusing/refocusing CDE, refresh the workspace to account
+            // for possible external changes.
+            _refreshOpenFiles();
+          });
+        });
       });
     });
   }
@@ -293,10 +288,10 @@ abstract class Spark
   // Parts of init():
   //
 
-  void initPreferences() {
+  Future initPreferences() {
     prefs = new preferences.SparkPreferences(localPrefs);
 
-    LocalStateManager.create().then((StateManager state) {
+    return LocalStateManager.create().then((StateManager state) {
       dependencies[StateManager] = state;
     });
   }
@@ -330,10 +325,6 @@ abstract class Spark
         _handleUncaughtException(r.error, r.stackTrace);
       }
     });
-  }
-
-  void initWorkspace() {
-    _workspace = new ws.Workspace(localPrefs, jobManager);
   }
 
   void initScmManager() {
@@ -417,15 +408,18 @@ abstract class Spark
         _textFileExtensions.addAll(JSON.decode(value));
       }
     });
-  }
 
-  void initAceManagers() {
+    if (workspace.getFiles().length == 0) {
+      // No files, just focus the editor.
+      aceManager.focus();
+    }
+
     _aceThemeManager = new ThemeManager(
-        aceManager, prefs, getUIElement('#changeTheme .settings-value'));
+        _aceManager, prefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, prefs, getUIElement('#changeKeys .settings-value'));
+        _aceManager, prefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, prefs, getUIElement('#changeFont .settings-value'));
+        _aceManager, prefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -610,16 +604,21 @@ abstract class Spark
   }
 
   Future restoreWorkspace() {
-    return workspace.restore().then((value) {
-      if (workspace.getFiles().length == 0) {
-        // No files, just focus the editor.
-        aceManager.focus();
-      }
-    });
+    _workspace = new ws.Workspace(localPrefs, jobManager);
+    return _workspace.restore();
   }
 
   Future restoreLocationManager() {
     return filesystem.restoreManager(localPrefs);
+  }
+
+  void initBuilders() {
+    addBuilder(new DartBuilder(this.services));
+    if (SparkFlags.performJavaScriptAnalysis) {
+      addBuilder(new JavaScriptBuilder());
+    }
+    addBuilder(new JsonBuilder());
+    addBuilder(new AppManifestBuilder());
   }
 
   //
