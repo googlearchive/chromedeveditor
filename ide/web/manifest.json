@@ -5,7 +5,7 @@
   "description": "__MSG_app_description__",
   "offline_enabled": true,
   "version": "0.17.0",
-  "minimum_chrome_version": "38",
+  "minimum_chrome_version": "37",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
