@@ -6,11 +6,14 @@
  *@constructor
  */
 var GitSalt = function() {
+  this.callbacks = new Object();
 };
 
 GitSalt.prototype.listenerDiv = null;
 
 GitSalt.prototype.loadCb = null;
+
+GitSalt.prototype.callbacks = {};
 
 /**
  * Create the Native Client <embed> element as a child of the DOM element
@@ -193,8 +196,6 @@ GitSalt.prototype.loadPlugin = function(name, path, cb) {
   this.attachDefaultListeners();
   this.createNaClModule(name, path);
 };
-
-GitSalt.prototype.callbacks = {};
 
 GitSalt.prototype.postMessage = function(message, cb) {
   this.callbacks[message.subject] = cb;

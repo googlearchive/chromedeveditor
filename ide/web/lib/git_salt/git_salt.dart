@@ -92,12 +92,12 @@ class GitSalt {
       "arg": arg
     });
 
-    _completer = new Completer();
     const delay = const Duration(milliseconds:1000);
     //TODO(grv) : implement callback completion for loadPlugin.
      new Timer(delay, () {
       _jsGitSalt.callMethod('postMessage', [message, cloneCb]);
      });
+    _completer = new Completer();
     return _completer.future;
   }
 
