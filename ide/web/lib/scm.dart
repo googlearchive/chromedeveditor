@@ -362,7 +362,7 @@ class GitScmProvider extends ScmProvider {
 
 
 class GitSaltScmProjectOperations extends ScmProjectOperations {
-  Completer<ObjectStore> _completer;
+  Completer _completer;
   GitSalt _gitSalt;
   StreamController<ScmProjectOperations> _statusController =
       new StreamController.broadcast();
@@ -370,7 +370,11 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
 
   GitSaltScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
+      _completer = new Completer();
       _gitSalt = GitSaltFactory.getInstance(project.entry.fullPath);
+      _gitSalt.load(project.entry).then((_) {
+        _completer.complete();
+      });
   }
 
   String getBranchName() {

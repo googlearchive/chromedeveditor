@@ -64,6 +64,10 @@ class GitSalt {
     return (_completer != null)
   }
 
+  Future load(entry) {
+    return clone(entry);
+  }
+
   Future clone(entry, String url) {
     if (isActive) {
       return new Future.error("Another git operation in progress.");

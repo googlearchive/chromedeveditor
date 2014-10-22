@@ -42,7 +42,15 @@ int GitClone::runCommand() {
 
   git_threads_init();
 
-  git_clone(&repo, url.c_str(), "/chromefs", NULL);
+  if (!url.length) {
+    git_clone_open(&repo, "/chromefs");
+    printf("loaded repo\n");
+    if (repo != NULL) {
+      printf("success\n");
+    }
+  } else {
+    git_clone(&repo, url.c_str(), "/chromefs", NULL);
+  }
 
   const git_error *a = giterr_last();
 
