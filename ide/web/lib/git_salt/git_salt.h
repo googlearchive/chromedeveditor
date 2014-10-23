@@ -19,6 +19,9 @@
 
 #include "git_command.h"
 
+class GitClone;
+class GitCommit;
+
 /// The Instance class.  One of these exists for each instance of your NaCl
 /// module on the web page.  The browser will ask the Module object to create
 /// a new Instance for each occurrence of the <embed> tag that has these
@@ -27,11 +30,6 @@ class GitSaltInstance : public pp::Instance {
   /// The constructor creates the plugin-side instance.
   /// @param[in] instance the handle to the browser-side plugin instance.
   explicit GitSaltInstance(PP_Instance instance);
-      /*: pp::Instance(instance),
-        callback_factory_(this),
-        file_system_(this, PP_FILESYSTEMTYPE_LOCALPERSISTENT),
-        file_system_ready_(false),
-        file_thread_(this) {}*/
 
   virtual ~GitSaltInstance();
 
@@ -42,6 +40,7 @@ class GitSaltInstance : public pp::Instance {
  private:
   pp::CompletionCallbackFactory<GitSaltInstance> callback_factory_;
   pp::FileSystem file_system_;
+  git_repository* repo;
 
   // Indicates whether file_system_ was opened successfully. We only read/write
   // this on the file_thread_.
