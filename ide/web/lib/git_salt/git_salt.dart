@@ -19,7 +19,7 @@ class GitSaltFactory {
 
   static GitSalt getInstance(String path) {
     if (getInstanceForPath(path) == null) {
-      GitSalt gitSalt = new GitSalt(path);
+      GitSalt gitSalt = new GitSalt();
       _instances[path] = gitSalt;
     }
     return _instances[path];
@@ -36,9 +36,8 @@ class GitSalt {
   String url;
   Completer _completer = null;
 
-  GitSalt(String path) {
+  GitSalt() {
     _jsGitSalt = new js.JsObject(js.context['GitSalt']);
-    loadPlugin(path);
   }
 
   String genMessageId() {
@@ -46,16 +45,27 @@ class GitSalt {
     return messageId.toString();
   }
 
+  void loadCb() {
+    _completer.complete();
+    _completer = null;
+  }
+
+  void load(entry) {
+    return clone(entry, "");
+  }
+
   /**
    * Load the companion NaCl plugin.
    */
-  void loadPlugin(path) {
-    _jsGitSalt.callMethod('loadPlugin', ['git_salt', 'lib/git_salt', path]);
+  Future loadPlugin() {
+    _completer = new Completer();
+    _jsGitSalt.callMethod('loadPlugin', ['git_salt', 'lib/git_salt', loadCb]);
+    return _completer.future;
   }
 
   void cloneCb(var result) {
     //TODO(grv): to be implemented.
-    print("clone successful");
+    print(result["message"]);
     _completer.complete();
     _completer = null;
   }
@@ -82,12 +92,8 @@ class GitSalt {
       "arg": arg
     });
 
+    _jsGitSalt.callMethod('postMessage', [message, cloneCb]);
     _completer = new Completer();
-    const delay = const Duration(milliseconds:1000);
-    //TODO(grv) : implement callback completion for loadPlugin.
-     new Timer(delay, () {
-      _jsGitSalt.callMethod('postMessage', [message, cloneCb]);
-     });
     return _completer.future;
   }
 

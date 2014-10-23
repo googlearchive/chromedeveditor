@@ -6,9 +6,14 @@
  *@constructor
  */
 var GitSalt = function() {
+  this.callbacks = new Object();
 };
 
 GitSalt.prototype.listenerDiv = null;
+
+GitSalt.prototype.loadCb = null;
+
+GitSalt.prototype.callbacks = {};
 
 /**
  * Create the Native Client <embed> element as a child of the DOM element
@@ -95,6 +100,10 @@ GitSalt.prototype.moduleDidLoad = function() {
   if (typeof window.moduleDidLoad !== 'undefined') {
     window.moduleDidLoad();
   }
+  if (this.loadCb != null) {
+    this.loadCb();
+    this.loadCb = null;
+  }
 };
 
 /**
@@ -166,9 +175,9 @@ GitSalt.prototype.handleMessage = function(message_event) {
 };
 
 GitSalt.prototype.handleResponse = function(response) {
-   var cb = this.callbacks[response.data];
+   var cb = this.callbacks[response.data.regarding];
    if (cb != null) {
-     cb("");
+     cb(response.data.arg);
      this.callbacks[response.data] = null;
    }
 };
@@ -177,7 +186,8 @@ GitSalt.prototype.handleResponse = function(response) {
  * @param {string} name The name of the example.
  * @param {string} path Directory name where .nmf file can be found.
  */
-GitSalt.prototype.loadPlugin = function(name, path) {
+GitSalt.prototype.loadPlugin = function(name, path, cb) {
+  this.loadCb = cb;
   this.listenerDiv = document.createElement('div');
 
   var gitSaltContainer = document.getElementById('git-salt-container');
@@ -186,8 +196,6 @@ GitSalt.prototype.loadPlugin = function(name, path) {
   this.attachDefaultListeners();
   this.createNaClModule(name, path);
 };
-
-GitSalt.prototype.callbacks = {};
 
 GitSalt.prototype.postMessage = function(message, cb) {
   this.callbacks[message.subject] = cb;
