@@ -624,6 +624,8 @@ class AceManager {
     ace.Mode.extensionMap['webapp'] = ace.Mode.JSON;
     ace.Mode.extensionMap['gsp'] = ace.Mode.HTML;
     ace.Mode.extensionMap['jsp'] = ace.Mode.HTML;
+    ace.Mode.extensionMap['sql'] = ace.Mode.SQL;
+    ace.Mode.extensionMap['sqlite'] = ace.Mode.SQL;
     // The extensions used in Spark's own internal templates.
     ace.Mode.extensionMap['html_'] = ace.Mode.HTML;
     ace.Mode.extensionMap['css_'] = ace.Mode.CSS;
