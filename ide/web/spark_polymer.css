@@ -600,6 +600,12 @@ button.ace_searchbtn[action="findAll"] {
 
 .outlineItem a {
   white-space: nowrap;
+  text-decoration: none;
+}
+
+.outlineItem a:hover {
+  white-space: nowrap;
+  text-decoration: underline;
 }
 
 #outlineContainer {
