@@ -370,20 +370,35 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
       new StreamController.broadcast();
   String _branchName;
 
+  Future<GitSalt> get gitSalt => _completer.future;
+
   GitSaltScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
       _completer = new Completer();
       _gitSalt = GitSaltFactory.getInstance(project.entry.fullPath);
       _gitSalt.loadPlugin().then((_) {
         _gitSalt.load(project.entry).then((_) {
-          _completer.complete();
+          _completer.complete(_gitSalt);
         });
       });
 
   }
 
   String getBranchName() {
-    return "dummy-branch-name";
+    // We return the current idea of the branch name immediately. We also ask
+    // git for the actual branch name asynchronously. If the two differ, we fire
+    // a changed event so listeners who were returned the old name can update
+    // themselves.
+    gitSalt.then((git_salt) {
+      return git_salt.getCurrentBranch();
+    }).then((String name) {
+      if (name != _branchName) {
+        _branchName = name;
+        _statusController.add(this);
+      }
+    });
+
+    return _branchName;
   }
 
   ScmFileStatus getFileStatus(Resource resource) {
