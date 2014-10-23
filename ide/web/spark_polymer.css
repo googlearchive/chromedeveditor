@@ -122,7 +122,7 @@ div.ace_search.right {
   border-bottom-left-radius: 2px;
   border-right: none;
   border-left: 1px solid #dadada;
-  width: 298px;
+  width: 307px;
   max-width: none;
   padding-right: 4px;
   z-index: 101;
@@ -138,7 +138,7 @@ div.ace_replace_form * {
 
 div.ace_search_form,
 div.ace_replace_form {
-  width: 275px;
+  width: 277px;
 }
 
 .ace_search_form > .ace_search_field {
