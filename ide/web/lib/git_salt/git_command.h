@@ -60,7 +60,7 @@ class GitCommand {
              git_repository*& repository)
       : _gitSalt(git_salt), subject(subject), _args(args), repo(repository) {}
 
-  int parseArgs();
+  virtual int parseArgs();
   virtual int runCommand() = 0;
 };
 
@@ -86,6 +86,20 @@ class GitCommit : public GitCommand {
             pp::VarDictionary args,
             git_repository*& repo)
       : GitCommand(git_salt, subject, args, repo) {}
+
+  int runCommand();
+};
+
+class GitCurrentBranch : public GitCommand {
+
+ public:
+  GitCurrentBranch(GitSaltInstance* git_salt,
+                   std::string subject,
+                   pp::VarDictionary args,
+                   git_repository*& repo)
+      : GitCommand(git_salt, subject, args, repo) {}
+
+  virtual int parseArgs();
 
   int runCommand();
 };

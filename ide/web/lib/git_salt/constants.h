@@ -16,8 +16,10 @@ const char* const kRegarding = "regarding";
 const char* const kArg = "arg";
 const char* const kCmdClone = "clone";
 const char* const kCmdCommit = "commit";
+const char* const kCmdCurrentBranch = "currentBranch";
 const char* const kResult = "result";
 const char* const kMessage = "message";
+const char* const kBranch = "branch";
 }
 #endif  // GIT_SALT_CONSTANTS_H__
 
