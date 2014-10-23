@@ -121,9 +121,9 @@ class GitGetBranches : public GitCommand {
   int flags;
 
   GitGetBranches(GitSaltInstance* git_salt,
-                   std::string subject,
-                   pp::VarDictionary args,
-                   git_repository*& repo)
+                 std::string subject,
+                 pp::VarDictionary args,
+                 git_repository*& repo)
       : GitCommand(git_salt, subject, args, repo) {}
 
   virtual int parseArgs();
