@@ -97,10 +97,9 @@ int GitCurrentBranch::parseArgs() {
 int GitCurrentBranch::runCommand() {
 
   git_reference* ref = NULL;
-  char buf[100] = "(head detached)";
-  char *branch = buf;
-  int x = git_repository_head(&ref, repo);
-  if (x == 0) {
+  char *branch = NULL;
+  int r= git_repository_head(&ref, repo);
+  if (r == 0) {
     git_branch_name((const char**)&branch, ref);
   }
 
