@@ -1462,12 +1462,16 @@ class ResourceChangeEvent {
  * Indicates a change on a particular resource.
  */
 class ChangeDelta {
+  static const _EMPTY = const [];
+
   final Resource resource;
   final EventType type;
-  Resource originalResource = null;
-  Map<String, String> resourceUuidsMapping = null;
-  List<ChangeDelta> deletions = null;
-  List<ChangeDelta> additions = null;
+
+  Resource originalResource;
+  Map<String, String> resourceUuidsMapping;
+
+  List<ChangeDelta> deletions = _EMPTY;
+  List<ChangeDelta> additions = _EMPTY;
 
   static List<ChangeDelta> containerAdd(Resource resource) {
     if (resource is Container) {
