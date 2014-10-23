@@ -248,7 +248,7 @@ NavigationLocation _mockLocation() {
 }
 
 NavigationLocation _mockLocationWithFile(File mockFile) {
-  return new NavigationLocation(mockFile, new Span(navigationOffset++, 0));
+  return new NavigationLocation(new FileContentProvider(mockFile), new Span(navigationOffset++, 0));
 }
 
 class MockNavigationLocationProvider implements NavigationLocationProvider {

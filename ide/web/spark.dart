@@ -466,7 +466,7 @@ abstract class Spark
         }
         focusManager.setEditedFile(fileContentProvider.file);
       }
-      
+
       localPrefs.setValue('lastFileSelection', tab.contentProvider.uuid);
     });
   }
