@@ -143,6 +143,13 @@ abstract class Spark
 
           initAnalytics();
 
+          initPackageManagers();
+          initServices();
+          initScmManager();
+          initAceManager();
+
+          initAndroidRSA();
+
           initEditorManager();
           initNavigationManager();
 
