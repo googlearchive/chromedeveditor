@@ -306,6 +306,10 @@ class GitSaltScmProvider extends ScmProvider {
       return gitSalt.clone(dir, url);
     });
   }
+
+  void cancelClone() {
+    throw "Not implemented";
+  }
 }
 
 /**
@@ -406,6 +410,60 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
         resource.getMetadata('scmStatus', 'committed'));
   }
 
+  Future<List<String>> getLocalBranchNames() {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future<List<String>> getRemoteBranchNames() {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future<List<String>> getUpdatedRemoteBranchNames() {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future createBranch(String branchName, String sourceBranchName) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future checkoutBranch(String branchName) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future mergeBranch(String branchName, String sourceBranchName) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future diff() {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  void markResolved(Resource resource) {
+    // TODO(grv): Implement.
+  }
+
+  Future revertChanges(List<Resource> resources) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future commit(String userName, String userEmail, String commitMessage) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future push(String username, String password) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
   Future updateForChanges(List<ChangeDelta> changes) {
@@ -417,6 +475,7 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
 
   Future _refreshStatus({Project project, Iterable<Resource> resources}) {
     //TODO(grv): implement
+    return new Future.value();
   }
 }
 

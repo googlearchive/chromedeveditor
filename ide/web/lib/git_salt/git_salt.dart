@@ -15,7 +15,7 @@ import 'dart:js' as js;
  */
 class GitSaltFactory {
 
-  static Map<String, Gitsalt> _instances = {};
+  static Map<String, GitSalt> _instances = {};
 
   static GitSalt getInstance(String path) {
     if (getInstanceForPath(path) == null) {
@@ -50,7 +50,7 @@ class GitSalt {
     _completer = null;
   }
 
-  void load(entry) {
+  Future load(entry) {
     return clone(entry, "");
   }
 
@@ -70,9 +70,7 @@ class GitSalt {
     _completer = null;
   }
 
-  bool isActive() {
-    return (_completer != null);
-  }
+  bool get isActive => _completer != null;
 
   Future clone(entry, String url) {
     if (isActive) {
