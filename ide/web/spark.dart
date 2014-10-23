@@ -1079,8 +1079,6 @@ abstract class Spark
    * Check if this project uses Pub, and if so automatically run a `pub install`.
    */
   Future _checkAutoRunPub(ws.Container container) {
-    var completer = new Completer();
-
     if (pubManager.canRunPub(container)) {
       // Don't run pub on Windows (#2743).
       if (PlatformInfo.isWin) {
@@ -1092,20 +1090,13 @@ abstract class Spark
             "points. In order to run this project, please install Dart's "
             "command-line tools (available at www.dartlang.org), and run "
             "'pub get'.");
-        completer.complete();
+        return new Future.value();
       } else {
-        // There is issue with the workspace sending duplicate events.
-        // TODO(grv): Revisit workspace events.
-        Timer.run(() {
-          completer.complete(
-              jobManager.schedule(new PubGetJob(this, container)));
-        });
+        return jobManager.schedule(new PubGetJob(this, container));
       }
     } else {
-      completer.complete();
+      return new Future.value();
     }
-
-    return completer.future;
   }
 }
 
