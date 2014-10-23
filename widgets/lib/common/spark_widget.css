@@ -5,7 +5,8 @@
 @import url("../resources/roboto/roboto.css");
 
 :host,
-:host * {
+:host *,
+::content * {
   box-sizing: border-box;
   outline: none;
 }
