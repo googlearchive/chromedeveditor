@@ -61,7 +61,7 @@ class GitSalt {
   }
 
   bool isActive() {
-    return (_completer != null)
+    return (_completer != null);
   }
 
   Future clone(entry, String url) {
