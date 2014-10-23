@@ -80,7 +80,7 @@ GitSalt.prototype.handleError = function(event) {
  * This event listener is registered in attachDefaultListeners above.
  */
 GitSalt.prototype.handleCrash = function(event) {
-  if (GitSalt.naclModule.exitStatus == -1) {
+  if (this.naclModule.exitStatus == -1) {
     this.updateStatus('CRASHED');
   } else {
     this.updateStatus('EXITED [' + this.naclModule.exitStatus + ']');

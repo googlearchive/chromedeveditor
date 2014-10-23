@@ -89,3 +89,35 @@ int GitCommit::runCommand() {
   return 0;
 }
 
+
+int GitCurrentBranch::parseArgs() {
+  return 0;
+}
+
+int GitCurrentBranch::runCommand() {
+
+  git_reference* ref = NULL;
+  char *branch = NULL;
+  int r= git_repository_head(&ref, repo);
+  if (r == 0) {
+    git_branch_name((const char**)&branch, ref);
+  }
+
+  const git_error *a = giterr_last();
+
+  if (a != NULL) {
+    printf("giterror: %s\n", a->message);
+  }
+
+  pp::VarDictionary arg;
+  arg.Set(kBranch, branch);
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
+  git_reference_free(ref);
+  return 0;
+}

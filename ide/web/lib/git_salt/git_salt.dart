@@ -117,4 +117,22 @@ class GitSalt {
 
     _jsGitSalt.callMethod('postMessage', [message, commitCb]);
   }
+
+  Future<String> getCurrentBranch() {
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "currentBranch",
+      "arg": {}
+    });
+
+    Completer completer = new Completer();
+
+    function cb = (result) {
+      completer.complete(result["branch"]);
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return completer.future;
+  }
 }
