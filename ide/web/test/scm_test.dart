@@ -11,7 +11,7 @@ import '../lib/scm.dart' as scm;
 defineTests() {
   group('scm', () {
     test('getProviders', () {
-      expect(scm.getProviders().length, 1);
+      expect(scm.getProviders().length, 2);
     });
 
     test('get git provider', () {
