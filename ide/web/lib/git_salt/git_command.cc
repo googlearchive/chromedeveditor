@@ -148,7 +148,6 @@ int GitGetBranches::runCommand() {
       r = git_branch_next(&ref, &type, iter);
       if (r == 0) {
         git_branch_name((const char**)&branch, ref);
-        printf("branch: %s\n", branch);
         branches.Set(index, branch);
         index++;
         git_reference_free(ref);
