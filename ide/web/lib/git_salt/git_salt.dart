@@ -127,7 +127,7 @@ class GitSalt {
 
     Completer completer = new Completer();
 
-    function cb = (result) {
+    var cb = (result) {
       completer.complete(result["branch"]);
     };
 

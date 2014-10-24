@@ -975,14 +975,13 @@ class Folder extends Container {
       });
   }
 
-  //TODO(keertip): remove check for 'cache'
-  bool isScmPrivate() => name == '.git' || name == '.svn'
+  // TODO(keertip): remove check for 'cache'
+  bool isScmPrivate() => name == '.git' || name == '.svn' || name == '.pub'
       || name =='cache';
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
-    if ((name == 'build' || name == 'cache') &&
-        parent is Project) {
+    if ((name == 'build' || name == 'cache') && parent is Project) {
       return true;
     } else {
       return super.isDerived();
