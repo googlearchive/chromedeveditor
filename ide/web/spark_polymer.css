@@ -138,15 +138,12 @@ div.ace_replace_form * {
 
 div.ace_search_form,
 div.ace_replace_form {
+  display: flex;
   width: 277px;
 }
 
-.ace_search_form > .ace_search_field {
-  width: 221px;
-}
-
-.ace_replace_form > .ace_search_field {
-  width: 198px;
+input.ace_search_field {
+  flex: 1;
 }
 
 button.ace_searchbtn,
