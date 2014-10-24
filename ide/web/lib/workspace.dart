@@ -503,6 +503,7 @@ class Workspace extends Container {
           File file = new File(container, ent);
           container.getChildren().add(file);
         } else {
+          // TODO(ussuri): Use PubProperties consts/methods here.
           // Some special cased code to prevent reading in lots of `packages`
           // directories on Windows. We only want to realize the packages
           // directory at the top level of a project. Our check for this is the

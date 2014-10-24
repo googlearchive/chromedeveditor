@@ -26,9 +26,14 @@ Logger _logger = new Logger('spark.pub');
 final PubProperties pubProperties = new PubProperties();
 
 class PubProperties extends PackageServiceProperties {
+  //
+  // PackageServiceProperties virtual interface:
+  //
+
   String get packageServiceName => 'pub';
+  String get configFileName => null;
   String get packageSpecFileName => 'pubspec.yaml';
-  String get packagesDirName => 'packages';
+  String getPackagesDirName(Resource resource) => 'packages';
   String get libDirName => 'lib';
   String get packageRefPrefix => 'package:';
   // This will get both the "package:foo/bar.dart" variant when used directly
@@ -72,7 +77,7 @@ class PubManager extends PackageManager {
 
   Stream<Project> get onSelfReferenceChange => _controller.stream;
 
-  PackageBuilder getBuilder() => new _PubBuilder(this);
+  PackageBuilder getBuilderFor(Workspace workspace) => new _PubBuilder(this);
 
   PackageResolver getResolverFor(Project project) =>
       new _PubResolver._(this, project);
@@ -94,7 +99,7 @@ class PubManager extends PackageManager {
           _PubSpecInfo info = new _PubSpecInfo.parse(str);
           for (String dep in info.getDependencies()) {
             Resource dependency =
-                 container.getChildPath('${properties.packagesDirName}/${dep}');
+                 container.getChildPath('${properties.getPackagesDirName}/${dep}');
             if (dependency is! Folder) {
               return dep;
             }
@@ -210,7 +215,7 @@ class _PubResolver extends PackageResolver {
 
     String ref = match.group(2);
     String selfRefName = properties.getSelfReference(project);
-    Folder packageDir = project.getChild(properties.packagesDirName);
+    Folder packageDir = project.getChild(properties.getPackagesDirName(project));
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
@@ -242,7 +247,7 @@ class _PubResolver extends PackageResolver {
       parent = parent.parent;
     }
 
-    if (resources[0].name == properties.packagesDirName) {
+    if (resources[0].name == properties.getPackagesDirName) {
       resources.removeAt(0);
       return properties.packageRefPrefix + resources.map((r) => r.name).join('/');
     } else if (resources[0].name == properties.libDirName) {
@@ -328,18 +333,20 @@ class _PubBuilder extends PackageBuilder {
   }
 
   Future _analyzePubspec(File file) {
-    file.clearMarkers(_packageServiceName);
+    file.clearMarkers(properties.packageServiceName);
 
     return file.getContents().then((String str) {
+      final String packageServiceName = properties.packageServiceName;
+      final String packagesDirName = properties.getPackagesDirName(file);
       try {
         _PubSpecInfo info = new _PubSpecInfo.parse(str);
         _pubManager.setSelfReference(file.project, info.name);
         for (String dep in info.getDependencies()) {
           Resource dependency =
-              file.project.getChildPath('${_packagesDirName}/${dep}');
+              file.project.getChildPath('${packagesDirName}/${dep}');
           if (dependency is! Folder) {
             // TODO(devoncarew): We should place these markers on the correct line.
-            file.createMarker(_packageServiceName,
+            file.createMarker(packageServiceName,
                 Marker.SEVERITY_WARNING,
                 "'${dep}' does not exist in the packages directory. "
                 "Do you need to run 'pub get'?",
@@ -347,14 +354,10 @@ class _PubBuilder extends PackageBuilder {
           }
         }
       } on Exception catch (e) {
-        file.createMarker(
-            _packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
+        file.createMarker(packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
       }
     });
   }
-
-  String get _packagesDirName => properties.packagesDirName;
-  String get _packageServiceName => properties.packageServiceName;
 }
 
 class _PubSpecInfo {

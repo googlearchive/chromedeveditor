@@ -185,18 +185,6 @@ class SparkPolymer extends Spark {
   //
 
   @override
-  void initAnalytics() => super.initAnalytics();
-
-  @override
-  void initWorkspace() => super.initWorkspace();
-
-  @override
-  void initAceManager() => super.initAceManager();
-
-  @override
-  void initEditorManager() => super.initEditorManager();
-
-  @override
   void initEditorArea() {
     super.initEditorArea();
 
@@ -257,12 +245,6 @@ class SparkPolymer extends Spark {
   }
 
   @override
-  void initFilesController() => super.initFilesController();
-
-  @override
-  void createActions() => super.createActions();
-
-  @override
   void initToolbar() {
     super.initToolbar();
 
@@ -271,15 +253,6 @@ class SparkPolymer extends Spark {
     _bindButtonToAction('rightNav', 'navigate-forward');
     _bindButtonToAction('settingsButton', 'settings');
   }
-
-  @override
-  void buildMenu() => super.buildMenu();
-
-  @override
-  Future restoreWorkspace() => super.restoreWorkspace();
-
-  @override
-  Future restoreLocationManager() => super.restoreLocationManager();
 
   //
   // - End parts of the parent's init().
