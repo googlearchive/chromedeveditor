@@ -94,8 +94,7 @@ class BowerProperties extends PackageServiceProperties {
     // if they themselves are maps: the only possible map key in a .bowerrc is
     // 'registry', and it seems OK to do this.
     var finalConfig = new Map<String, dynamic>.from(_DEFAULT_CONFIG);
-    configs.reversed.forEach(
-        (Map<String, dynamic> config) => finalConfig.addAll(config));
+    configs.reversed.forEach((config) => finalConfig.addAll(config));
     return finalConfig;
   }
 }
