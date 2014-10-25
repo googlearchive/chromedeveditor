@@ -5,7 +5,6 @@
 @import url("packages/spark_widgets/common/spark_widget.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
-/* Order is important */
 @import url("spark_common.css");
 
 #splitView {
@@ -30,6 +29,22 @@ spark-dialog {
   left: 50%;
   width: 512px;
   margin-left: -256px;
+}
+
+spark-dialog#polymerDesignerDialog {
+  top: 20px;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  width: initial;
+  margin-left: initial;
+}
+
+spark-dialog#polymerDesignerDialog #polymerDesigner {
+  display: block;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  flex: 1;
 }
 
 .toolbar {
@@ -95,7 +110,9 @@ spark-dialog {
 }
 
 #navigationButtons {
+  box-sizing: border-box;
   border: none;
+  border-bottom: 1px solid #ddd;
   position: absolute;
   right: 0;
   width: 131px;
@@ -109,7 +126,7 @@ spark-dialog {
 .settings-value {
   flex: 1;
   height: 100%;
-  border: 1px solid #DDD;
+  border: 1px solid #ddd;
   border-radius: 3px;
   padding: 5px;
   color: #666;
@@ -185,6 +202,10 @@ spark-dialog {
   margin-bottom: 0px;
 }
 
+#gitCommitMessage {
+  resize: vertical;
+}
+
 #gitChangeList {
   border-radius: 3px;
   border: 1px solid #cccccc;
@@ -195,7 +216,7 @@ spark-dialog {
   padding: 5px 14px;
 }
 
-#changeLabel {
+#gitChangeLabel {
   top: 0px;
 }
 
@@ -242,7 +263,6 @@ spark-dialog {
   width: 100%;
 }
 
-/* Override Bootstrap's 'font-weight: bold' style for labels */
 label {
   font-weight: 500;
 }

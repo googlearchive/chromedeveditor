@@ -1,0 +1,5 @@
+name: cde_polymer_designer
+version: 0.0.1
+author: Chrome Dev Editor Team
+description: A Polymer Designer wrapped in a webview wrapped in a Polymer element
+homepage: https://github.com/dart-lang/chromedeveditor/cde-polymer-designer.dart

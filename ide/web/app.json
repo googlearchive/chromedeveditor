@@ -2,7 +2,6 @@
   "test-mode": true,
   "live-deploy-mode": true,
   "enable-apk-build": false,
-  "light-ace-themes": false,
   "wip-project-templates": false,
   "analyze-javascript": false,
   "enable-multiselect": false,
@@ -12,5 +11,6 @@
   "bower-override-dependencies": {
   },
   "bower-use-git-clone": false,
-  "package-files-are-editable": false
+  "package-files-are-editable": false,
+  "enable-polymer-designer": false
 }

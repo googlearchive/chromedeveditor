@@ -42,7 +42,7 @@ defineTests() {
     });
   });
 
-  group('test fileProvider', () {
+  group('test FileContentProvider', () {
     test('read / write file', () {
       Workspace workspace = createWorkspace();
       MockFileSystem fs = new MockFileSystem();
@@ -76,6 +76,23 @@ defineTests() {
         return provider.write("foo bar");
       }).then((_) => provider.read()).then((String text) {
         expect(text, 'foo bar');
+      });
+    });
+  });
+  
+  group('test PreferencesContentProvider', () {
+    test('read / write preference values', () {
+      PreferenceStore store = new MapPreferencesStore();
+      PreferenceContentProvider provider = new PreferenceContentProvider(store, "foo");
+
+      provider.write("bar baz");
+      return provider.read().then((String content) {
+        expect(content, "bar baz");
+        return provider.write("altered");
+      }).then((String content) {
+        return provider.read();
+      }).then((String content) {
+        expect(content, "altered");
       });
     });
   });

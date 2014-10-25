@@ -21,13 +21,11 @@ class SparkFlags {
   static bool get developerMode =>
       _flags['test-mode'] == true;
   static bool get liveDeployMode =>
-    _flags['live-deploy-mode'] == true;
+      _flags['live-deploy-mode'] == true;
   static bool get apkBuildMode =>
-    _flags['enable-apk-build'] == true;
+      _flags['enable-apk-build'] == true;
 
   // Editor:
-  static bool get useLightAceThemes =>
-      _flags['light-ace-themes'] == true;
   static bool get enableMultiSelect =>
       _flags['enable-multiselect'] == true;
   static bool get packageFilesAreEditable =>
@@ -48,8 +46,14 @@ class SparkFlags {
   static bool get bowerUseGitClone =>
       _flags['bower-use-git-clone'] == true;
 
+  // Git:
   static bool get gitPull =>
       _flags['enable-git-pull'] == true;
+  static bool get gitSalt =>
+      _flags['enable-git-salt'] == true;
+
+  static bool get polymerDesigner =>
+      _flags['enable-polymer-designer'] == true;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.

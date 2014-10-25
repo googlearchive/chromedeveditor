@@ -11,7 +11,6 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
-import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:logging/logging.dart';
 
 import 'html_utils.dart';
@@ -737,6 +736,9 @@ class FilesController implements TreeViewDelegate {
           _files.remove(resource);
           needsSortTopLevel = true;
         }
+        for (ChangeDelta delta in change.deletions) {
+          _filesMap.remove(delta.resource.uuid);
+        }
         _filesMap.remove(resource.uuid);
         // The current selection was deleted. No selected resource.
         updatedSelection = [];
@@ -907,12 +909,9 @@ class FilesController implements TreeViewDelegate {
     _positionContextMenu(position, contextMenu);
 
     // Show the menu.
-    bootjack.Dropdown dropdown = bootjack.Dropdown.wire(contextMenu);
-    dropdown.toggle();
+    _menuContainer.classes.toggle('open', true);
 
     void _closeContextMenu(html.Event event) {
-      // We workaround an issue with bootstrap/boojack: There's no other way
-      // to close the dropdown. For example dropdown.toggle() won't work.
       _menuContainer.classes.remove('open');
       cancelEvent(event);
 

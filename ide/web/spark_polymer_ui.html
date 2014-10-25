@@ -18,6 +18,8 @@
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
+<link rel="import" href="packages/cde_polymer_designer/cde_polymer_designer.html">
+
 <link rel="import" href="lib/ui/commit_message_view/commit_message_view.html">
 <link rel="import" href="lib/ui/goto_line_view/goto_line_view.html">
 
@@ -28,7 +30,7 @@
     <spark-split-view
         id="splitView"
         direction="left"
-        splitterSize="0"
+        splitterSize="1"
         splitterHandle="false"
         targetSize="{{splitViewPosition}}"
         minTargetSize="200"
@@ -163,8 +165,8 @@
               <path d="M12 4l-1.4 1.4 5.6 5.6h-12.2v2h12.2l-5.6 5.6 1.4 1.4 8-8z"/>
             </svg>
           </spark-button>
-          <spark-button command="toggle-outline" flat round
-              tooltip="Toggle outline">
+          <spark-button id="toggle-outline" command="toggle-outline" flat round
+              tooltip="Toggle outline" disabled>
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <path d="M9.067 15h11.933v-2h-11.933v2zm0 4h11.933v-2h-11.933v2zm0-8h11.933v-2h-11.933v2zm-5.067-6v2h17v-2h-17z"/>
             </svg>
@@ -517,7 +519,7 @@
         </div>
       </div>
       <div class="input-label">
-        <label id="changeLabel">Changes</label>
+        <label id="gitChangeLabel">Changes</label>
         <div id="gitStatusDiv">
            <span id="gitStatus"></span>
            <a href="#" id="gitStatusDetail">Details...</a>
@@ -525,8 +527,8 @@
       </div>
       <div id="gitChangeList"></div>
       <div class="form-group">
-        <label for="commitMessage">Commit message</label>
-        <textarea id="commitMessage" type="text" class="form-control"
+        <label for="gitCommitMessage">Commit message</label>
+        <textarea id="gitCommitMessage" type="text" class="form-control"
             rows="3" wrap="soft" spellcheck autocomplete="on" focused>
         </textarea>
         <span class="help-block">
@@ -874,6 +876,19 @@
         Remove Reference
       </spark-dialog-button>
     </spark-dialog>
+
+    <template if="{{polymerDesigner}}">
+      <spark-dialog id="polymerDesignerDialog" headerTitle="Polymer Designer">
+        <cde-polymer-designer id="polymerDesigner" entryPoint="local">
+        </cde-polymer-designer>
+
+        <spark-dialog-button cancel>Cancel</spark-dialog-button>
+        <spark-dialog-button id="polymerDesignerClear">Clear</spark-dialog-button>
+        <spark-dialog-button id="polymerDesignerRevert">Revert</spark-dialog-button>
+        <spark-dialog-button submit focused>Generate code</spark-dialog-button>
+      </spark-dialog>
+    </template>
+
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>

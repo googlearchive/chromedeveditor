@@ -5,29 +5,37 @@
 @import url("../common/spark_widget.css");
 
 :host {
+  display: none;
   position: absolute;
 }
 
 #modal {
+  display: flex;
+  flex-direction: column;
   position: relative;
+  height: 100%;
+  width: 100%;
   border-radius: 3px;
   box-shadow: 0 12px 15px 0 rgba(0, 0, 0, 0.24);
   background: white;
 }
 
 #body {
-  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px;
 }
 
 #header {
   background: none;
-  padding: 24px 18px 8px 20px;
+  padding: 24px 18px 0 20px;
   fill-opacity: 1;
 }
 
 #footer {
   background: none;
-  padding: 0 24px 24px;
+  padding: 0 24px 20px;
 }
 
 #headerTitle {
@@ -56,6 +64,55 @@
 #progress.hidden {
   display: none;
 }
+
+/* From bootstrap. */
+
+::content label {
+  display: inline-block;
+  margin-bottom: 5px;
+}
+
+::content .form-group {
+  margin-bottom: 15px;
+}
+
+::content .form-control {
+  display: block;
+  width: 100%;
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.428571429;
+  color: #555555;
+  vertical-align: middle;
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+          transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+}
+
+::content a {
+  color: #428bca;
+  text-decoration: none;
+}
+
+::content a:hover,
+::content a:focus {
+  color: #2a6496;
+  text-decoration: underline;
+}
+
+::content a:focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
+/* End from bootstrap. */
 
 /* TODO(ussuri): Replace all these with dedicated Spark widgets. */
 

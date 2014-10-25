@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+  The `entryPoint` attribute can have the following values:
+    - "local": use the locally stored sources for Polymer Designer; this is the
+      faster option of the two, and it also works offline.
+    - "online": use the official online Polymer Designer; this is slower, but
+      provides the most up-to-date Polymer Designer UI. However, if the Designer
+      code changes significantly, this option can result in a broken UI.
+-->
+
+<polymer-element name="cde-polymer-designer" attributes="entryPoint">
+  <template>
+    <link rel="stylesheet" href="cde_polymer_designer.css">
+
+    <div id="splashCont">
+      <svg id="splash" viewBox="0 0 24 24">
+        <polygon points="19,4 15,4 7.1,16.6 4.5,12 9,4 5,4 0.5,12 5,20 9,20 16.9,7.4 19.5,12 15,20 19,20 23.5,12 "/>
+      </svg>
+    </div>
+
+    <!--TODO(ussuri): BUG #3466-->
+    <!--<webview id="webview"-->
+    <!--    src="src/index.html"-->
+    <!--    partition="cde-polymer-designer">-->
+    <!--</webview>-->
+  </template>
+
+  <script src="cde_polymer_designer.js"></script>
+</polymer-element>

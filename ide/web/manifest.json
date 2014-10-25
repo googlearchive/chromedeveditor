@@ -4,8 +4,8 @@
   "short_name": "__MSG_app_name__",
   "description": "__MSG_app_description__",
   "offline_enabled": true,
-  "version": "0.15.0",
-  "minimum_chrome_version": "36",
+  "version": "0.17.0",
+  "minimum_chrome_version": "37",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
@@ -176,7 +176,8 @@
           "description": "0x1004/0x618e LG Ally/Optimus One/Vortex "
         }
       ]
-    }
+    },
+    "webview"
   ],
   "sockets": {
     "tcp": {
@@ -206,6 +207,16 @@
     "client_id": "514253219606-raqk01c6bg2m9h9vgvm1gph4ppdpi88r.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/chromewebstore"
+    ]
+  },
+  "webview": {
+    "partitions": [
+      {
+        "name": "cde-polymer-designer",
+        "accessible_resources": [
+          "*"
+        ]
+      }
     ]
   }
 }

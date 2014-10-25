@@ -7,6 +7,7 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
+import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_testing/testing_app.dart';
@@ -354,8 +355,19 @@ abstract class Spark
       event =
           new ResourceChangeEvent.fromList(event.changes, filterRename: true);
       for (ChangeDelta delta in event.changes) {
-        if (delta.isDelete && delta.resource.isFile) {
-          _navigationManager.removeFile(delta.resource);
+        if (delta.isDelete) {
+          if (delta.deletions.isNotEmpty) {
+            _navigationManager.pause();
+            for (ChangeDelta change in delta.deletions) {
+              if (change.resource.isFile) {
+                _navigationManager.removeFile(change.resource);
+              }
+            }
+            _navigationManager.resume();
+            _navigationManager.gotoLocation(_navigationManager.currentLocation);
+          } else if (delta.resource.isFile){
+            _navigationManager.removeFile(delta.resource);
+          }
         }
       }
     });
@@ -572,6 +584,8 @@ abstract class Spark
     actionManager.registerAction(new ShowSearchView(this));
     actionManager.registerAction(new ShowFilesView(this));
     actionManager.registerAction(new RunPythonAction(this));
+    actionManager.registerAction(new PolymerDesignerAction(this,
+        getDialogElement("#polymerDesignerDialog")));
 
     actionManager.registerKeyListener();
 
@@ -836,8 +850,8 @@ abstract class Spark
           _okCancelCompleter = null;
         }
       });
-      _okCancelDialog.dialog.on['opened'].listen((event) {
-        if (event.detail == false) {
+      _okCancelDialog.dialog.on['transition-start'].listen((event) {
+        if (!event.detail['opening']) {
           if (_okCancelCompleter != null) {
             _okCancelCompleter.complete(false);
             _okCancelCompleter = null;
@@ -1336,6 +1350,7 @@ abstract class SparkActionWithDialog extends SparkAction {
       _dialog.show();
     });
   }
+
   void _hide() => _dialog.hide();
 
   void _showSuccessStatus(String message) {
@@ -2347,6 +2362,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   CheckboxInputElement _ipElement;
   CheckboxInputElement _adbElement;
   InputElement _pushUrlElement;
+  InputElement _liveDeployCheckBox;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
   ws.Resource _resource;
@@ -2355,10 +2371,13 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
     _ipElement = getElement("#ip");
     _adbElement = getElement("#adb");
+    _liveDeployCheckBox = getElement("#liveDeploy");
     _pushUrlElement = _triggerOnReturn("#pushUrl");
 
     _ipElement.onChange.listen(_enableInputs);
     _adbElement.onChange.listen(_enableInputs);
+    _liveDeployCheckBox.onChange.listen((_) =>
+        spark.localPrefs.setValue("live-deployment", _liveDeployCheckBox.checked));
     _enableInputs();
   }
 
@@ -2424,8 +2443,6 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       ws_utils.setDeploymentTime(deployContainer,
           (new DateTime.now()).millisecondsSinceEpoch);
       if (SparkFlags.liveDeployMode) {
-        InputElement liveDeployCheckBox = getElement("#liveDeploy");
-        spark.localPrefs.setValue("live-deployment", liveDeployCheckBox.checked);
         LiveDeployManager.startLiveDeploy(_resource.project);
       }
       spark.showSuccessMessage('Successfully pushed');
@@ -2943,7 +2960,7 @@ class GitCommitAction
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
-    _commitMessageElement = getElement("#commitMessage");
+    _commitMessageElement = getElement("#gitCommitMessage");
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
     _gitStatusElement = getElement('#gitStatus');
@@ -3435,8 +3452,8 @@ class _GitCloneTask {
           password = info['password'];
         }
 
-        return scmProvider.clone(url, location.entry,
-            username: username, password: password).then((_) {
+        return scmProvider.clone(url, location.entry, username: username,
+            password: password).then((_) {
           ws.WorkspaceRoot root;
 
           if (location.isSync) {
@@ -4166,6 +4183,78 @@ class RunPythonAction extends SparkAction {
         });
       });
     });
+  }
+}
+
+class PolymerDesignerAction
+    extends SparkActionWithStatusDialog implements ContextAction {
+  static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
+
+  js.JsObject _designer;
+  File _file;
+
+  PolymerDesignerAction(Spark spark, SparkDialog dialog)
+      : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
+    _designer = new js.JsObject.fromBrowserObject(
+        _dialog.getElement('#polymerDesigner'));
+    _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearCode);
+    _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertCode);
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+    _file = spark._getFile(resources);
+    _dialog.dialog.headerTitle = "Polymer Designer: ${_file.name}";
+    _show();
+    _file.getContents().then((String code) {
+      _designer.callMethod('load', [code]);
+    });
+  }
+
+  void _commit() {
+    final js.JsObject promise = _designer.callMethod('getCode');
+    promise.callMethod('then', [(String code) {
+      _getCode(code);
+      _cleanup();
+    }]);
+
+    super._commit();
+  }
+
+  void _cancel() {
+    _cleanup();
+    super._cancel();
+  }
+
+  void _setCode([_]) {
+    _file.getContents().then((String code) {
+      _designer.callMethod('setCode', [code]);
+    });
+  }
+
+  void _revertCode([_]) {
+    _designer.callMethod('revertCode');
+  }
+
+  void _clearCode([_]) {
+    _designer.callMethod('setCode', ['']);
+  }
+
+  void _getCode(String code) {
+    _file.setContents(code);
+  }
+
+  void _cleanup() {
+    _designer.callMethod('unload');
+    _file = null;
+  }
+
+  String get category => 'design';
+
+  bool appliesTo(Object object) {
+    // NOTE: Flags can get updated from .spark.json after createActions()
+    // runs; therefore, can't conditionally create actions using flags there.
+    return  SparkFlags.polymerDesigner &&
+            _isSingleFileMatchingRegex(object, _HTML_FNAME_RE);
   }
 }
 

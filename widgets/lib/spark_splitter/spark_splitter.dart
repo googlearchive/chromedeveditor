@@ -21,20 +21,20 @@ class SparkSplitter extends SparkWidget {
   /// 1) whether the split is horizontal or vertical;
   /// 2) which sibling will be continuously auto-resized when the splitter is
   ///    dragged.
-  @published String direction = 'left';
+  @published_reflected String direction = 'left';
   /// Height or width of the split bar, depending on the direction.
-  @published int size = 8;
+  @published_reflected int size = 8;
   /// Whether to show a drag handle image within the split bar.
-  @published bool handle = true;
+  @published_reflected bool handle = true;
   /// Initial/current height or width of the splitter target. If unspecified,
   /// the actual target's size will be left unchanged on initialization.
-  @published int targetSize;
+  @published_reflected int targetSize;
   /// Minumum height or width of the splitter target.
-  @published int minTargetSize = 0;
+  @published_reflected int minTargetSize = 0;
   /// Maximum height or width of the splitter target.
-  @published int maxTargetSize = 100000;
+  @published_reflected int maxTargetSize = 100000;
   /// Whether to lock the splitter so it can't be dragged.
-  @published bool locked = false;
+  @published_reflected bool locked = false;
 
   /// Whether the split view is horizontal or vertical.
   bool _isHorizontal;
