@@ -46,9 +46,9 @@ class SparkFlags {
   static bool get bowerUseGitClone =>
       _flags['bower-use-git-clone'] == true;
 
+  // Git:
   static bool get gitPull =>
       _flags['enable-git-pull'] == true;
-
   static bool get gitSalt =>
       _flags['enable-git-salt'] == true;
 
