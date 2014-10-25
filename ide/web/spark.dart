@@ -2969,7 +2969,7 @@ class GitCommitAction
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
-    _commitMessageElement = getElement("#commitMessage");
+    _commitMessageElement = getElement("#gitCommitMessage");
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
     _gitStatusElement = getElement('#gitStatus');

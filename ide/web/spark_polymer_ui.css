@@ -202,6 +202,10 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
   margin-bottom: 0px;
 }
 
+#gitCommitMessage {
+  resize: vertical;
+}
+
 #gitChangeList {
   border-radius: 3px;
   border: 1px solid #cccccc;
@@ -212,7 +216,7 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
   padding: 5px 14px;
 }
 
-#changeLabel {
+#gitChangeLabel {
   top: 0px;
 }
 
