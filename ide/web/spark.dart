@@ -131,54 +131,49 @@ abstract class Spark
     dependencies[Notifier] = this;
     dependencies[preferences.PreferenceStore] = localPrefs;
 
-    initPreferences();
+
     initEventBus();
 
-    initAnalytics();
+    return initPreferences().then((_) {
+      return restoreWorkspace().then((_) {
+        return restoreLocationManager().then((_) {
+          // Besides direct dependencies of the below modules on [Workspace] and
+          // [LocationManager], [restoreLocationManager] may also read
+          // updated [SparkFlags] from `<project location>/.spark.json`.
 
-    initWorkspace();
-    initPackageManagers();
-    initServices();
-    initScmManager();
-    initAceManager();
-    initEditorManager();
-    initEditorArea();
-    initNavigationManager();
-    initAndroidRSA();
+          initAnalytics();
 
-    createActions();
+          initPackageManagers();
+          initServices();
+          initScmManager();
+          initAceManager();
 
-    initFilesController();
+          initAndroidRSA();
 
-    initToolbar();
-    buildMenu();
-    initSplitView();
-    initSaveStatusListener();
+          initEditorManager();
+          initNavigationManager();
 
-    initLaunchManager();
+          createActions();
 
-    window.onFocus.listen((Event e) {
-      // When the user switch to an other application, he might change the
-      // content of the workspace from other applications. For that reason, when
-      // the user switch back to Spark, we want to check whether the content of
-      // the workspace changed.
-      _refreshOpenFiles();
-    });
+          initFilesController();
 
-    // Add various builders.
-    addBuilder(new DartBuilder(this.services));
-    if (SparkFlags.performJavaScriptAnalysis) {
-      addBuilder(new JavaScriptBuilder());
-    }
-    addBuilder(new JsonBuilder());
-    addBuilder(new AppManifestBuilder());
+          initLaunchManager();
+          initBuilders();
 
-    return restoreWorkspace().then((_) {
-      return restoreLocationManager().then((_) {
-        // Location manager might have overridden the Ace-related flags from
-        // "<project location>/.spark.json".
-        initAceManagers();
-        initSearchController();
+          initEditorArea();
+          initToolbar();
+          buildMenu();
+          initSplitView();
+          initSaveStatusListener();
+
+          initSearchController();
+
+          window.onFocus.listen((Event e) {
+            // On unfocusing/refocusing CDE, refresh the workspace to account
+            // for possible external changes.
+            _refreshOpenFiles();
+          });
+        });
       });
     });
   }
@@ -288,10 +283,10 @@ abstract class Spark
   // Parts of init():
   //
 
-  void initPreferences() {
+  Future initPreferences() {
     prefs = new preferences.SparkPreferences(localPrefs);
 
-    LocalStateManager.create().then((StateManager state) {
+    return LocalStateManager.create().then((StateManager state) {
       dependencies[StateManager] = state;
     });
   }
@@ -325,10 +320,6 @@ abstract class Spark
         _handleUncaughtException(r.error, r.stackTrace);
       }
     });
-  }
-
-  void initWorkspace() {
-    _workspace = new ws.Workspace(localPrefs, jobManager);
   }
 
   void initScmManager() {
@@ -408,15 +399,18 @@ abstract class Spark
         _textFileExtensions.addAll(JSON.decode(value));
       }
     });
-  }
 
-  void initAceManagers() {
+    if (workspace.getFiles().length == 0) {
+      // No files, just focus the editor.
+      aceManager.focus();
+    }
+
     _aceThemeManager = new ThemeManager(
-        aceManager, prefs, getUIElement('#changeTheme .settings-value'));
+        _aceManager, prefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, prefs, getUIElement('#changeKeys .settings-value'));
+        _aceManager, prefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, prefs, getUIElement('#changeFont .settings-value'));
+        _aceManager, prefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -601,16 +595,21 @@ abstract class Spark
   }
 
   Future restoreWorkspace() {
-    return workspace.restore().then((value) {
-      if (workspace.getFiles().length == 0) {
-        // No files, just focus the editor.
-        aceManager.focus();
-      }
-    });
+    _workspace = new ws.Workspace(localPrefs, jobManager);
+    return _workspace.restore();
   }
 
   Future restoreLocationManager() {
     return filesystem.restoreManager(localPrefs);
+  }
+
+  void initBuilders() {
+    addBuilder(new DartBuilder(this.services));
+    if (SparkFlags.performJavaScriptAnalysis) {
+      addBuilder(new JavaScriptBuilder());
+    }
+    addBuilder(new JsonBuilder());
+    addBuilder(new AppManifestBuilder());
   }
 
   //
@@ -1068,19 +1067,22 @@ abstract class Spark
    * Check if this project uses Bower, and if so automatically run a
    * `bower install`.
    */
-  void _checkAutoRunBower(ws.Container container) {
+  Future _checkAutoRunBower(ws.Container container) {
     if (bowerManager.properties.isFolderWithPackages(container)) {
-      jobManager.schedule(new BowerGetJob(this, container));
+      return jobManager.schedule(new BowerGetJob(this, container));
+    } else {
+      return new Future.value();
     }
   }
 
   /**
    * Check if this project uses Pub, and if so automatically run a `pub install`.
    */
-  void _checkAutoRunPub(ws.Container container) {
+  Future _checkAutoRunPub(ws.Container container) {
     if (pubManager.canRunPub(container)) {
       // Don't run pub on Windows (#2743).
       if (PlatformInfo.isWin) {
+        // TODO(ussuri): Use Template.showIntro() mechanism instead?
         showMessage(
             'Run Pub Get',
             "This Dart project uses pub packages. Currently, we can't run pub "
@@ -1088,13 +1090,12 @@ abstract class Spark
             "points. In order to run this project, please install Dart's "
             "command-line tools (available at www.dartlang.org), and run "
             "'pub get'.");
+        return new Future.value();
       } else {
-        // There is issue with the workspace sending duplicate events.
-        // TODO(grv): Revisit workspace events.
-        Timer.run(() {
-          jobManager.schedule(new PubGetJob(this, container));
-        });
+        return jobManager.schedule(new PubGetJob(this, container));
       }
+    } else {
+      return new Future.value();
     }
   }
 }
@@ -2229,7 +2230,6 @@ class BuildApkAction extends SparkActionWithDialog {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
-  ws.Folder folder;
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
@@ -2268,14 +2268,11 @@ class NewProjectAction extends SparkActionWithDialog {
         return new Future.value();
       }
 
-      final DirectoryEntry locationEntry = location.entry;
-
       ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
+      final List<ProjectTemplate> templates = [];
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
-        final List<ProjectTemplate> templates = [];
-
         final globalVars = [
             new TemplateVar('projectName', name),
             new TemplateVar('sourceName', name.toLowerCase())
@@ -2309,18 +2306,30 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(locationEntry, templates, spark).build();
+        return new ProjectBuilder(location.entry, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Created ${project.name}');
+          // Give the builders a chance to receive events about changes in the
+          // workspace and to schedule their build jobs in the queue.
           Timer.run(() {
-            spark._openFile(ProjectBuilder.getMainResourceFor(project));
+            // Wait for the builders to finish before performing tasks that
+            // depend on their results. One such dependency is between
+            // [_BowerBuilder] and [_checkAutoRunBower].
+            spark.workspace.builderManager.waitForAllBuilds().then((_) {
+              spark.showSuccessMessage('Created ${project.name}');
 
-            // Run Pub if the new project has a pubspec file
-            spark._checkAutoRunPub(project);
-
-            // Run Bower if the new project has a bower.json file.
-            spark._checkAutoRunBower(project);
+              // Wait for Pub and Bower to finish before displaying intros, as
+              // they might require some actions on the downloaded packages.
+              Future.wait([
+                spark._openFile(ProjectBuilder.getMainResourceFor(project)),
+                spark._checkAutoRunPub(project),
+                spark._checkAutoRunBower(project)
+              ]).then((_) {
+                // Sequentially displaying intros for all the templates used
+                // to create this project.
+                templates.forEach((t) => t.showIntro(project, spark));
+              });
+            });
           });
         });
       });

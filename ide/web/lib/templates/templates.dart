@@ -43,6 +43,7 @@ class TemplateVar {
 class ProjectBuilder {
   DirectoryEntry _destRoot;
   List<ProjectTemplate> _templates = [];
+  // NOTE: Currently unused, but may be useful in future.
   utils.Notifier _notifier;
 
   ProjectBuilder(this._destRoot, this._templates, this._notifier);
@@ -52,7 +53,7 @@ class ProjectBuilder {
    */
   Future build() {
     return Future.forEach(_templates, (ProjectTemplate template) {
-      return template.instantiate(_destRoot, _notifier);
+      return template.instantiate(_destRoot);
     });
   }
 
@@ -143,10 +144,7 @@ class ProjectTemplate {
     }
   }
 
-  Future instantiate(DirectoryEntry destRoot, utils.Notifier notifier) =>
-      build(destRoot).then((_) => showIntro(notifier));
-
-  Future build(DirectoryEntry destRoot) {
+  Future instantiate(DirectoryEntry destRoot) {
     DirectoryEntry sourceRoot;
 
     return utils.getPackageDirectoryEntry().then((root) {
@@ -161,7 +159,7 @@ class ProjectTemplate {
     });
   }
 
-  Future showIntro(utils.Notifier notifier) {
+  Future showIntro(Project finalProject, utils.Notifier notifier) {
     return new Future.value();
   }
 
