@@ -98,8 +98,8 @@ class PubManager extends PackageManager {
         try {
           _PubSpecInfo info = new _PubSpecInfo.parse(str);
           for (String dep in info.getDependencies()) {
-            Resource dependency =
-                 container.getChildPath('${properties.getPackagesDirName}/${dep}');
+            Resource dependency = container.getChildPath(
+                '${properties.getPackagesDirName(container)}/${dep}');
             if (dependency is! Folder) {
               return dep;
             }
@@ -215,7 +215,8 @@ class _PubResolver extends PackageResolver {
 
     String ref = match.group(2);
     String selfRefName = properties.getSelfReference(project);
-    Folder packageDir = project.getChild(properties.getPackagesDirName(project));
+    Folder packageDir = project.getChild(
+        properties.getPackagesDirName(project));
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
@@ -247,7 +248,7 @@ class _PubResolver extends PackageResolver {
       parent = parent.parent;
     }
 
-    if (resources[0].name == properties.getPackagesDirName) {
+    if (resources[0].name == properties.getPackagesDirName(file)) {
       resources.removeAt(0);
       return properties.packageRefPrefix + resources.map((r) => r.name).join('/');
     } else if (resources[0].name == properties.libDirName) {
