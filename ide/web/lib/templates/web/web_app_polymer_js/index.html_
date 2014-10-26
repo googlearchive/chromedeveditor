@@ -57,7 +57,7 @@
 
   <section>
     <template id="toastGroup" is="auto-binding">
-      <paper-button raisedButton right label="Show Toast" on-click="{{showToast}}">
+      <paper-button raised right label="Show Toast" on-click="{{showToast}}">
       </paper-button>
       <paper-toast id="toast" text="Sample toast here."></paper-toast>
     </template>
