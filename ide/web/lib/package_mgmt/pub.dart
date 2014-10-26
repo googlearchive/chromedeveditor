@@ -215,8 +215,7 @@ class _PubResolver extends PackageResolver {
 
     String ref = match.group(2);
     String selfRefName = properties.getSelfReference(project);
-    Folder packageDir = project.getChild(
-        properties.getPackagesDirName(project));
+    Folder packageDir = project.getChild(properties.getPackagesDirName(project));
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
