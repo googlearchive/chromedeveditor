@@ -12,5 +12,5 @@
   },
   "bower-use-git-clone": false,
   "package-files-are-editable": false,
-  "enable-polymer-designer": false
+  "enable-polymer-designer": true
 }
