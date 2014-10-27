@@ -108,8 +108,9 @@ class EditorArea extends TabView {
       : super(parentElement) {
     onClose.listen((EditorTab tab) {
       FileContentProvider fileContentProvider = tab.contentProvider;
-      closeFile(fileContentProvider.file);
+      closeContentProvider(fileContentProvider);
     });
+
     showLabelBar = true;
 
     workspace.onResourceChange.listen((ResourceChangeEvent event) {
@@ -246,15 +247,20 @@ class EditorArea extends TabView {
     manager.persistState();
   }
 
-  /// Closes the tab.
   void closeFile(File file) {
-    EditorTab tab = tabByFile(file);
-    ContentProvider contentProvider = tab.contentProvider;
+    closeTab(tabByFile(file));
+  }
 
+  void closeContentProvider(ContentProvider contentProvider) {
+    closeTab(tabByContentProvider(contentProvider));
+  }
+
+  /// Closes the tab.
+  void closeTab(EditorTab tab) {
     if (tab != null) {
       remove(tab);
       tab.close();
-      editorProvider.close(contentProvider);
+      editorProvider.close(tab.contentProvider);
       _nameController.add(selectedTab == null ? null : selectedTab.label);
       _savePersistedTabs();
     }
