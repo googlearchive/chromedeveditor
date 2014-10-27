@@ -8,6 +8,8 @@ library spark.gitsalt;
 import 'dart:async';
 import 'dart:js' as js;
 
+import 'constants.dart';
+
 /**
  * GitSalt Factory class which contains the active git-salt instances.
  * The instances are indexed by the root directotry path of the git
@@ -119,6 +121,7 @@ class GitSalt {
   }
 
   Future<String> getCurrentBranch() {
+
     var message = new js.JsObject.jsify({
       "subject" : genMessageId(),
       "name" : "currentBranch",
@@ -129,6 +132,40 @@ class GitSalt {
 
     Function cb = (result) {
       completer.complete(result["branch"]);
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return completer.future;
+  }
+
+  Future<List<String>> getLocalBranches() {
+    return getBranches(GitSaltConstants.GIT_SALT_LOCAL_BRANCHES);
+  }
+
+  Future<List<String>> getRemoteBranches() {
+    return getBranches(GitSaltConstants.GIT_SALT_REMOTE_BRANCHES);
+  }
+
+  Future<List<String>> getAllBranches() {
+    return getBranches(GitSaltConstants.GIT_SALT_ALL_BRANCHES);
+  }
+
+  Future<List<String>> getBranches(int flags) {
+    var arg = new js.JsObject.jsify({
+      "flags" : flags
+    });
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "getBranches",
+      "arg": arg
+    });
+
+    Completer completer = new Completer();
+
+    Function cb = (result) {
+      completer.complete(result["branches"].toList());
     };
 
     _jsGitSalt.callMethod('postMessage', [message, cb]);

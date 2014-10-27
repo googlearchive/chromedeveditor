@@ -89,7 +89,6 @@ int GitCommit::runCommand() {
   return 0;
 }
 
-
 int GitCurrentBranch::parseArgs() {
   return 0;
 }
@@ -119,5 +118,51 @@ int GitCurrentBranch::runCommand() {
 
   _gitSalt->PostMessage(response);
   git_reference_free(ref);
+  return 0;
+}
+
+int GitGetBranches::parseArgs() {
+  int error = 0;
+  if ((error = parseInt(_args, kFlags,  &flags))) {
+  }
+  return 0;
+}
+
+int GitGetBranches::runCommand() {
+
+  git_branch_iterator* iter = NULL;
+
+  git_branch_t type = (git_branch_t) flags;
+
+  int r = git_branch_iterator_new(&iter, repo, type);
+
+  pp::VarDictionary arg;
+  pp::VarArray branches;
+  int index = 0;
+
+  char* branch = NULL;
+
+  if (r == 0) {
+    while (r == 0) {
+      git_reference* ref;
+      r = git_branch_next(&ref, &type, iter);
+      if (r == 0) {
+        git_branch_name((const char**)&branch, ref);
+        branches.Set(index, branch);
+        index++;
+        git_reference_free(ref);
+      }
+    }
+  }
+
+  arg.Set(kBranches, branches);
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
+  git_branch_iterator_free(iter);
   return 0;
 }

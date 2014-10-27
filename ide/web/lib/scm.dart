@@ -411,13 +411,15 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
   }
 
   Future<List<String>> getLocalBranchNames() {
-    // TODO(grv): Implement.
-    return new Future.value();
+    return gitSalt.then((git_salt) {
+      return git_salt.getLocalBranches();
+    });
   }
 
   Future<List<String>> getRemoteBranchNames() {
-    // TODO(grv): Implement.
-    return new Future.value();
+    return gitSalt.then((git_salt) {
+      return git_salt.getRemoteBranches();
+    });
   }
 
   Future<List<String>> getUpdatedRemoteBranchNames() {

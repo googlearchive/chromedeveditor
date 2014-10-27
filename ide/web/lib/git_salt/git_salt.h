@@ -22,6 +22,7 @@
 class GitClone;
 class GitCommit;
 class GitCurrentBranch;
+class GitGetBranches;
 
 /// The Instance class.  One of these exists for each instance of your NaCl
 /// module on the web page.  The browser will ask the Module object to create
@@ -63,6 +64,8 @@ class GitSaltInstance : public pp::Instance {
   int Commit(int32_t r, GitCommit* commit);
 
   int CurrentBranch(int32_t r, GitCurrentBranch* branch);
+
+  int GetBranches(int32_t r, GitGetBranches* getBranches);
 
   void OpenFileSystem(int32_t /* result */);
 

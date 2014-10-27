@@ -20,6 +20,9 @@ const char* const kCmdCurrentBranch = "currentBranch";
 const char* const kResult = "result";
 const char* const kMessage = "message";
 const char* const kBranch = "branch";
+const char* const kFlags = "flags";
+const char* const kCmdGetBranches = "getBranches";
+const char* const kBranches = "branches";
 }
 #endif  // GIT_SALT_CONSTANTS_H__
 
