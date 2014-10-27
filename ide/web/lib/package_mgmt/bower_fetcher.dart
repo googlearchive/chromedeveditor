@@ -64,7 +64,7 @@ class BowerFetcher {
     _unresolvedDepsComments.clear();
     _ignoredDepsComments.clear();
 
-    return _gatherAllDeps(
+    return _discoverAllDeps(
         _readLocalSpecFile(specFile), 'top package'
     ).then((_) {
       return _fetchAllDeps(mode);
@@ -74,7 +74,24 @@ class BowerFetcher {
     });
   }
 
-  Future _gatherAllDeps(Future<String> specGetter, String depPath) {
+  /**
+   * Discover all transitive dependencies by walking the dependency graph and
+   * resolving any found version ranges to the maximum satisfying version
+   * along the way.
+   *
+   * By design, the graph is traversed in a breadth-first fashion: the top-level
+   * dependencies from the project's bower.json are resolved first, their
+   * immediate dependencies second, etc. This is critical for correct
+   * precedence: higher levels should get a chance to pin versions before lower
+   * ones.
+   *
+   * For example, if the top-level requests:
+   *   "polymer": "Polymer/polymer#0.4.0",
+   *   "platform": "Polymer/platform#0.3.0"
+   * "platform" should resolve to "0.3.0", even though "polymer#0.4.0" depends
+   * on "platform#^0.4.0".
+   */
+  Future _discoverAllDeps(Future<String> specGetter, String depPath) {
     _monitor.start("Getting Bower packages…");
 
     return specGetter.then((String spec) {
@@ -95,7 +112,7 @@ class BowerFetcher {
           // Recurse into sub-dependencies.
           futures.add(package.resolve().then((_) {
             if (package.isResolved) {
-              return _gatherAllDeps(
+              return _discoverAllDeps(
                   _readRemoteSpecFile(package),
                   '$depPath -> ${package.resolvedFullPath}'
               );
@@ -107,7 +124,7 @@ class BowerFetcher {
       });
 
       // Download all the packages in parallel; also, failure to download some
-      // don't affect the others.
+      // won't affect the others.
       return Future.wait(futures);
     });
   }
