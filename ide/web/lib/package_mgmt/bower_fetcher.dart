@@ -14,9 +14,9 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 
 import 'package:archive/archive.dart' as arc;
+import 'package:bower_semver/bower_semver.dart' as semver;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
-import 'package:bower_semver/bower_semver.dart' as semver;
 
 import '../enum.dart';
 import '../jobs.dart';
@@ -64,14 +64,13 @@ class BowerFetcher {
     _unresolvedDepsComments.clear();
     _ignoredDepsComments.clear();
 
-    return _discoverAllDeps(
-        _readLocalSpecFile(specFile), 'top package'
-    ).then((_) {
-      return _fetchAllDeps(mode);
-    }).then((deps) {
-      _maybePrintResolutionComments();
-      return deps;
-    });
+    return
+        _discoverAllDeps(_readLocalSpecFile(specFile), '<top>').then((_) {
+          return _fetchAllDeps(mode);
+        }).then((deps) {
+          _maybePrintResolutionComments();
+          return deps;
+        });
   }
 
   /**
@@ -91,7 +90,7 @@ class BowerFetcher {
    * "platform" should resolve to "0.3.0", even though "polymer#0.4.0" depends
    * on "platform#^0.4.0".
    */
-  Future _discoverAllDeps(Future<String> specGetter, String depPath) {
+  Future _discoverAllDeps(Future<String> specGetter, String pathDescription) {
     _monitor.start("Getting Bower packages…");
 
     return specGetter.then((String spec) {
@@ -99,7 +98,7 @@ class BowerFetcher {
       try {
         deps = _parseDepsFromSpec(spec);
       } catch (e) {
-        throw "Error processing spec file for $depPath: $e";
+        throw "Error processing spec file for $pathDescription: $e";
       }
 
       List<Future> futures = [];
@@ -117,7 +116,7 @@ class BowerFetcher {
             if (package.isResolved) {
               return _discoverAllDeps(
                   _readRemoteSpecFile(package),
-                  '$depPath -> ${package.resolvedFullPath}'
+                  '$pathDescription -> ${package.resolvedFullPath}'
               );
             } else {
               return new Future.value();
