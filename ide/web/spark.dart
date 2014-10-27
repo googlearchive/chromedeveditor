@@ -2231,14 +2231,14 @@ class BuildApkAction extends SparkActionWithDialog {
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
 
-  // TODO(ussuri): Eliminate all this as per BUG #3619.
+  // TODO(ussuri): Eliminate this and dependencies as per BUG #3619.
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
       'core-elements': 'Polymer/core-elements#master',
       'paper-elements': 'Polymer/paper-elements#master'
   };
-
   // Matches: "proj-template", "proj-template;polymer,core-elements".
+  // TODO(ussuri): Set to '([\/\w_-]+)' when fixing BUG #3619.
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
