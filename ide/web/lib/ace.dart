@@ -40,6 +40,8 @@ export 'package:ace/ace.dart' show EditSession;
 
 dynamic get _spark => html.querySelector('spark-polymer-ui');
 dynamic get _toggleOutlineButton => _spark.$['toggle-outline'];
+dynamic get _polymerDesignerButton =>
+    html.querySelector('#openPolymerDesignerButton');
 
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
@@ -462,6 +464,16 @@ class HtmlEditor extends TextEditor {
 
   HtmlEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
       super._create(aceManager, file, prefs);
+
+  void activate() {
+    _polymerDesignerButton.classes.toggle('hidden', false);
+    super.activate();
+  }
+
+  void deactivate() {
+    _polymerDesignerButton.classes.toggle('hidden', true);
+    super.deactivate();
+  }
 
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
       _simpleNavigateToDeclaration(timeLimit);

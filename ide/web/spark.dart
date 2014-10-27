@@ -4207,21 +4207,27 @@ class PolymerDesignerAction
         _dialog.getElement('#polymerDesigner'));
     _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearDesign);
     _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertDesign);
+
+    querySelector('#openPolymerDesignerButton').onClick.listen((_) {
+      _open(spark.editorManager.currentFile);
+    });
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    _file = spark._getFile(resources);
+    _open(spark._getFile(resources));
+  }
 
-    // Open dialog before reading file to start showing slash.
-    _dialog.dialog.headerTitle = "Polymer Designer: ${_file.name}";
+  void _open(File file) {
+    // Open dialog before reading file to start showing PD's splash.
+    _dialog.dialog.headerTitle = "Polymer Designer: ${file.name}";
     _show();
 
     // Activate existing or open a new editor. The latter gives visibility of
     // changes and a way to recover the old code after exporting from PD.
-    spark.openEditor(_file).then((editor) {
+    spark.openEditor(file).then((editor) {
       _editor = editor;
       _editor.save().then((_) {
-        _file.getContents().then((String code) {
+        file.getContents().then((String code) {
           _designer.callMethod('load', [code]);
         });
       });
