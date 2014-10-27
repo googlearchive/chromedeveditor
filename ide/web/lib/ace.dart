@@ -216,7 +216,7 @@ class TextEditor extends Editor {
 
         if (fileContentsHash != _lastSavedHash) {
           _lastSavedHash = fileContentsHash;
-          replaceContents(text);
+          _replaceContents(text);
         }
       });
     }
@@ -263,11 +263,19 @@ class TextEditor extends Editor {
   }
 
   /**
-   * Replace the editor's contents with the given text. Make sure that we don't
-   * fire a change event.
+   * Replace the editor's contents with the given text.
    */
-  void replaceContents(String newContents) {
-    _aceSubscription.cancel();
+  void replaceContents(String newContents) =>
+      _replaceContents(newContents, fireEvent: true);
+
+  /**
+   * Replace the editor's contents with the given text - internal version.
+   * Suppress firing Ace event by default: internal callers don't need it.
+   */
+  void _replaceContents(String newContents, {fireEvent: false}) {
+    if (!fireEvent) {
+      _aceSubscription.cancel();
+    }
 
     try {
       // Restore the cursor position and scroll location.
@@ -287,7 +295,9 @@ class TextEditor extends Editor {
 
       _invokeReconcile();
     } finally {
-      _aceSubscription = _session.onChange.listen((_) => dirty = true);
+      if (!fireEvent) {
+        _aceSubscription = _session.onChange.listen((_) => dirty = true);
+      }
     }
   }
 
@@ -408,7 +418,7 @@ class CssEditor extends TextEditor {
     String oldValue = _session.value;
     String newValue = new CssBeautify().format(oldValue);
     if (newValue != oldValue) {
-      replaceContents(newValue);
+      _replaceContents(newValue);
       dirty = true;
     }
   }
