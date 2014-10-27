@@ -45,7 +45,8 @@
     </section>
   
     <section>
-      <paper-button raised right on-click="{{showToast}}">Show toast
+      <paper-button raised right on-click="{{showToast}}">
+        Show toast
       </paper-button>
       <paper-toast id="toast" text="Sample toast here."></paper-toast>
     </section>
