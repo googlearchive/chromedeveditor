@@ -4,7 +4,7 @@
 
 part of spark.templates;
 
-class ChromeAppWithPolymerJSTemplate extends ProjectTemplate {
+class ChromeAppWithPolymerJSTemplate extends SparkProjectTemplate {
   ChromeAppWithPolymerJSTemplate(
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
       : super._(id, globalVars, localVars);
