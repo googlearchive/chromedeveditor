@@ -216,7 +216,7 @@ class TextEditor extends Editor {
 
         if (fileContentsHash != _lastSavedHash) {
           _lastSavedHash = fileContentsHash;
-          _replaceContents(text);
+          replaceContents(text);
         }
       });
     }
@@ -258,13 +258,15 @@ class TextEditor extends Editor {
     // By default, all file types use 2-space soft tabs for indentation.
     session.tabSize = 2;
     session.useSoftTabs = true;
+    // Select the range of an undo or redo operation.
+    session.undoSelect = true;
   }
 
   /**
    * Replace the editor's contents with the given text. Make sure that we don't
    * fire a change event.
    */
-  void _replaceContents(String newContents) {
+  void replaceContents(String newContents) {
     _aceSubscription.cancel();
 
     try {
@@ -274,7 +276,10 @@ class TextEditor extends Editor {
       if (aceManager.currentFile == file) {
         cursorPos = aceManager.cursorPosition;
       }
-      _session.value = newContents;
+      // NOTE: Do not use `_session.value = newContents` here: it resets the
+      // undo stack.
+      _session.replace(
+          new ace.Range(0, 0, _session.length + 1, 0), newContents);
       _session.scrollTop = scrollTop;
       if (cursorPos != null) {
         aceManager.cursorPosition = cursorPos;
@@ -403,7 +408,7 @@ class CssEditor extends TextEditor {
     String oldValue = _session.value;
     String newValue = new CssBeautify().format(oldValue);
     if (newValue != oldValue) {
-      _replaceContents(newValue);
+      replaceContents(newValue);
       dirty = true;
     }
   }
