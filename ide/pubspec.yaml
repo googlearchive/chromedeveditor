@@ -12,6 +12,9 @@ dependencies:
   barback: any
   benchmark_harness: '>=1.0.4 <2.0.0'
   bignum: '>=0.0.5 <0.1.0'
+  bower_semver:
+    git: https://github.com/ussuri/pub_semver.git
+    version: '>=1.0.0 <2.0.0'
   cde_polymer_designer:
     path: ../cde-polymer-designer.dart
   chrome: '>=0.6.1 <0.7.0'
