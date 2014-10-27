@@ -42,8 +42,8 @@ dynamic get _spark => html.querySelector('spark-polymer-ui');
 dynamic get _toggleOutlineButton => _spark.$['toggle-outline'];
 
 class TextEditor extends Editor {
-  static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
-  static const int LARGE_FILE_SIZE = 500000;
+  static final RegExp _WHITESPACE_REGEX = new RegExp(r'[\t ]+$', multiLine: false);
+  static const int _LARGE_FILE_SIZE = 500000;
 
   final AceManager aceManager;
   final workspace.File file;
@@ -223,7 +223,7 @@ class TextEditor extends Editor {
   }
 
   bool fileIsLarge(String text) {
-    return (text.length > LARGE_FILE_SIZE);
+    return (text.length > _LARGE_FILE_SIZE);
   }
 
   Future save() {
@@ -236,7 +236,7 @@ class TextEditor extends Editor {
       // Remove the trailing whitespace if asked to do so.
       if (_prefs.stripWhitespaceOnSave.value) {
         if (!fileIsLarge(text)) {
-          text = text.replaceAll(whitespaceRegEx, '');
+          text = text.replaceAll(_WHITESPACE_REGEX, '');
         }
       }
 
