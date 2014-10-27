@@ -50,7 +50,7 @@ class SparkFlags {
   static bool get gitPull =>
       _flags['enable-git-pull'] == true;
   static bool get gitSalt =>
-      _flags['enable-git-salt'] == true;
+      _flags['enable-git-salt'] == false;
 
   static bool get polymerDesigner =>
       _flags['enable-polymer-designer'] == true;
