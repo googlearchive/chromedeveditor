@@ -106,6 +106,9 @@ class BowerFetcher {
 
       deps.forEach((_Package package) {
         // TODO(ussuri): Handle conflicts: same name, but different paths.
+        // Right now:
+        // - a higher-level spec will win;
+        // - for a same-level conflict, a random contender will win.
         if (!_allDeps.containsKey(package.name)) {
           _allDeps[package.name] = package;
 
@@ -397,8 +400,8 @@ class _Unresolved extends _Resolution {
   static const STAR_PATH = const _Unresolved._(
       'replace "*" path with an explicit one');
   static const VERSION_RANGE_UNRESOLVED = const _Unresolved._(
-      'replace complex version with a simple one in "dependencies" '
-      'or override it in "resolutions" keys in top-level "bower.json"');
+      'replace the version range with a pinned version in "dependencies" key '
+      'or override it in "resolutions" key in top-level "bower.json"');
 }
 
 class _Ignored extends _Resolution {
