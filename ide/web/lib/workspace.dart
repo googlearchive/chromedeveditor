@@ -495,12 +495,28 @@ class Workspace extends Container {
     chrome.DirectoryEntry dir = container.entry;
     List futures = [];
 
-    return dir.createReader().readEntries().then((entries) {
+    return dir.createReader().readEntries().then((List<chrome.Entry> entries) {
+      bool hasPubspec;
+
       for (chrome.Entry ent in entries) {
         if (ent.isFile) {
           File file = new File(container, ent);
           container.getChildren().add(file);
         } else {
+          // TODO(ussuri): Use PubProperties consts/methods here.
+          // Some special cased code to prevent reading in lots of `packages`
+          // directories on Windows. We only want to realize the packages
+          // directory at the top level of a project. Our check for this is the
+          // existance of a `pubspec.yaml` file.
+          if (ent.name == 'packages') {
+            if (hasPubspec == null) {
+              hasPubspec = entries.any((e) => e.name == 'pubspec.yaml');
+            }
+
+            // Ignore secondary packages directories.
+            if (!hasPubspec) continue;
+          }
+
           Folder folder = new Folder(container, ent);
           container.getChildren().add(folder);
           futures.add(_gatherChildren(folder));
@@ -960,14 +976,13 @@ class Folder extends Container {
       });
   }
 
-  //TODO(keertip): remove check for 'cache'
-  bool isScmPrivate() => name == '.git' || name == '.svn'
-      || name =='cache';
+  // TODO(keertip): remove check for 'cache'
+  bool isScmPrivate() => name == '.git' || name == '.svn' || name == '.pub'
+      || name =='cache' || name == '.hg';
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
-    if ((name == 'build' || name == 'cache') &&
-        parent is Project) {
+    if ((name == 'build' || name == 'cache') && parent is Project) {
       return true;
     } else {
       return super.isDerived();
@@ -1447,12 +1462,16 @@ class ResourceChangeEvent {
  * Indicates a change on a particular resource.
  */
 class ChangeDelta {
+  static const _EMPTY = const [];
+
   final Resource resource;
   final EventType type;
-  Resource originalResource = null;
-  Map<String, String> resourceUuidsMapping = null;
-  List<ChangeDelta> deletions = null;
-  List<ChangeDelta> additions = null;
+
+  Resource originalResource;
+  Map<String, String> resourceUuidsMapping;
+
+  List<ChangeDelta> deletions = _EMPTY;
+  List<ChangeDelta> additions = _EMPTY;
 
   static List<ChangeDelta> containerAdd(Resource resource) {
     if (resource is Container) {

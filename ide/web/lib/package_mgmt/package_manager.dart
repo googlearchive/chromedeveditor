@@ -13,8 +13,8 @@ import '../workspace.dart';
 // TODO(ussuri): Add comments.
 
 abstract class PackageServiceProperties {
-  bool isFolderWithPackages(Folder project) =>
-      project.getChild(packageSpecFileName) != null;
+  bool isFolderWithPackages(Folder container) =>
+      container.getChild(packageSpecFileName) != null;
 
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
@@ -25,13 +25,14 @@ abstract class PackageServiceProperties {
 
   bool _isPackagesFolder(Resource resource) {
     return resource is Folder &&
-           resource.name == packagesDirName &&
+           resource.name == getPackagesDirName(resource) &&
            isFolderWithPackages(resource.parent);
   }
 
   bool isInPackagesFolder(Resource resource) {
     while (resource.parent != null) {
-      if (resource.name == packagesDirName && resource is Folder) {
+      if (resource is Folder &&
+          resource.name == getPackagesDirName(resource)) {
         return true;
       }
       resource = resource.parent;
@@ -43,7 +44,7 @@ abstract class PackageServiceProperties {
       packageRefPrefixRegexp.matchAsPrefix(url) != null;
 
   bool isSecondaryPackage(Resource resource) {
-    return resource.path.contains('/$packagesDirName/') &&
+    return resource.path.contains('/$getPackagesDirName/') &&
            !isInPackagesFolder(resource);
   }
 
@@ -52,8 +53,9 @@ abstract class PackageServiceProperties {
   //
 
   String get packageServiceName;
+  String get configFileName;
   String get packageSpecFileName;
-  String get packagesDirName;
+  String getPackagesDirName(Resource resource);
   String get libDirName;
   String get packageRefPrefix;
   RegExp get packageRefPrefixRegexp;
@@ -65,7 +67,7 @@ abstract class PackageServiceProperties {
 
 abstract class PackageManager {
   PackageManager(Workspace workspace) {
-    workspace.builderManager.builders.add(getBuilder());
+    workspace.builderManager.builders.add(getBuilderFor(workspace));
   }
 
   //
@@ -74,7 +76,7 @@ abstract class PackageManager {
 
   PackageServiceProperties get properties;
 
-  PackageBuilder getBuilder();
+  PackageBuilder getBuilderFor(Workspace workspace);
   PackageResolver getResolverFor(Project project);
 
   Future installPackages(Folder container, ProgressMonitor monitor);

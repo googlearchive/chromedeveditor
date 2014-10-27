@@ -5,7 +5,6 @@
 @import url("packages/spark_widgets/common/spark_widget.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
-/* Order is important */
 @import url("spark_common.css");
 
 #splitView {
@@ -33,17 +32,19 @@ spark-dialog {
 }
 
 spark-dialog#polymerDesignerDialog {
-  top: 5%;
-  width: 90%;
-  margin-left: -45%;
+  top: 20px;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  width: initial;
+  margin-left: initial;
 }
 
 spark-dialog#polymerDesignerDialog #polymerDesigner {
   display: block;
   box-sizing: border-box;
-  /* TODO(ussuri): Find a way to use percentage height (hasn't worked so far). */
-  height: 600px;
   border: 1px solid #ccc;
+  flex: 1;
 }
 
 .toolbar {
@@ -112,7 +113,9 @@ cde-fab[command=show-new-project] {
 }
 
 #navigationButtons {
+  box-sizing: border-box;
   border: none;
+  border-bottom: 1px solid #ddd;
   position: absolute;
   right: 0;
   width: 131px;
@@ -126,7 +129,7 @@ cde-fab[command=show-new-project] {
 .settings-value {
   flex: 1;
   height: 100%;
-  border: 1px solid #DDD;
+  border: 1px solid #ddd;
   border-radius: 3px;
   padding: 5px;
   color: #666;
@@ -202,6 +205,10 @@ cde-fab[command=show-new-project] {
   margin-bottom: 0px;
 }
 
+#gitCommitMessage {
+  resize: vertical;
+}
+
 #gitChangeList {
   border-radius: 3px;
   border: 1px solid #cccccc;
@@ -212,7 +219,7 @@ cde-fab[command=show-new-project] {
   padding: 5px 14px;
 }
 
-#changeLabel {
+#gitChangeLabel {
   top: 0px;
 }
 
@@ -259,7 +266,6 @@ cde-fab[command=show-new-project] {
   width: 100%;
 }
 
-/* Override Bootstrap's 'font-weight: bold' style for labels */
 label {
   font-weight: 500;
 }

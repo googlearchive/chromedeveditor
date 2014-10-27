@@ -4,11 +4,43 @@
 
 :host {
   display: block;
+  position: relative;
   box-sizing: border-box;
+}
+
+#splashCont {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+#splash {
+  width: 200px;
+  height: 200px;
+  fill: #666;
 }
 
 webview {
   display: block;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  /* The Designer loads in a jittery fashion, especially given that we feed
+     a design's code into it mid-flight. Mask that via an animation. */
+  -webkit-animation-name: reveal;
+  -webkit-animation-duration: 3s;
+}
+
+@-webkit-keyframes reveal {
+  0% { opacity: 0; }
+  25% { opacity: 0; }
+  50% { opacity: 0; }
+  75% { opacity: 0; }
+  100% { opacity: 1; }
 }

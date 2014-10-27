@@ -7,9 +7,6 @@ if [ "$DRONE" = "true" ]; then
   export HAS_DARTIUM=true
 fi
 
-# Turn on fast fail for the bash script.
-#set -e
-
 # Display installed versions.
 dart --version
 /usr/bin/google-chrome --version
@@ -28,6 +25,9 @@ else
 fi
 
 ./grind mode-test
+
+# Turn on fast fail for the bash script.
+set -e
 
 # Run tests the Dart version of the app.
 if [ "$HAS_DARTIUM" = "true" ]; then

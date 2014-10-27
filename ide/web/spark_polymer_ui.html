@@ -257,12 +257,14 @@
               </option>
             </optgroup>
             <optgroup label="Web apps">
-              <option value="web/web_app_dart">
+              <option value="stagehand/webapp">
                 Dart web app
               </option>
-              <option value="web/web_app_dart_polymer">
+              <!-- TODO(devoncarew): Removed until we can launch into -->
+              <!-- Dartium, or Dart Polymer can run without transformers. -->
+              <!-- option value="stagehand/polymerapp">
                 Dart web app (using Polymer paper elements)
-              </option>
+              </option -->
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
@@ -280,7 +282,7 @@
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome App
               </option>
-              <option value="chrome/chrome_app_polymer_js;polymer,paper-elements">
+              <option value="chrome/chrome_app_polymer_js">
                 JavaScript Chrome App (using Polymer paper elements)
               </option>
               <!-- This one works when installed in Chrome manually, but
@@ -289,13 +291,16 @@
                 JavaScript Chrome extension
               </option>
             </optgroup>
-            <optgroup label="Polymer elements">
-              <option value="polymer/polymer_element_js">
-                JavaScript Polymer custom element
+            <optgroup label="Other">
+              <option value="stagehand/package">
+                Dart package
               </option>
               <!-- This one just needs some additional work. -->
               <option value="polymer/polymer_element_dart">
                 Dart Polymer custom element
+              </option>
+              <option value="polymer/polymer_element_js">
+                JavaScript Polymer custom element
               </option>
               <!-- This one is internal for now. -->
               <option value="polymer/spark_widget">
@@ -313,12 +318,14 @@
               </option>
             </optgroup>
             <optgroup label="Web apps">
-              <option value="web/web_app_dart">
+              <option value="stagehand/webapp">
                 Dart web app
               </option>
-              <option value="web/web_app_dart_polymer">
+              <!-- TODO(devoncarew): Removed until we can launch into -->
+              <!-- Dartium, or Dart Polymer can run without transformers. -->
+              <!-- option value="stagehand/polymerapp">
                 Dart web app (using Polymer paper elements)
-              </option>
+              </option -->
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
@@ -340,7 +347,10 @@
                 JavaScript Chrome App (using Polymer paper elements)
               </option>
             </optgroup>
-            <optgroup label="Polymer elements">
+            <optgroup label="Other">
+              <option value="stagehand/package">
+                Dart package
+              </option>
               <option value="polymer/polymer_element_js">
                 JavaScript Polymer custom element
               </option>
@@ -525,7 +535,7 @@
         </div>
       </div>
       <div class="input-label">
-        <label id="changeLabel">Changes</label>
+        <label id="gitChangeLabel">Changes</label>
         <div id="gitStatusDiv">
            <span id="gitStatus"></span>
            <a href="#" id="gitStatusDetail">Details...</a>
@@ -533,8 +543,8 @@
       </div>
       <div id="gitChangeList"></div>
       <div class="form-group">
-        <label for="commitMessage">Commit message</label>
-        <textarea id="commitMessage" type="text" class="form-control"
+        <label for="gitCommitMessage">Commit message</label>
+        <textarea id="gitCommitMessage" type="text" class="form-control"
             rows="3" wrap="soft" spellcheck autocomplete="on" focused>
         </textarea>
         <span class="help-block">
@@ -889,7 +899,8 @@
         </cde-polymer-designer>
 
         <spark-dialog-button cancel>Cancel</spark-dialog-button>
-        <spark-dialog-button id="polymerDesignerReset">Reset</spark-dialog-button>
+        <spark-dialog-button id="polymerDesignerClear">Clear</spark-dialog-button>
+        <spark-dialog-button id="polymerDesignerRevert">Revert</spark-dialog-button>
         <spark-dialog-button submit focused>Generate code</spark-dialog-button>
       </spark-dialog>
     </template>

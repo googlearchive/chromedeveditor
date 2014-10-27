@@ -4,7 +4,7 @@
 
 part of spark.templates;
 
-class PolymerTemplate extends ProjectTemplate {
+class PolymerTemplate extends SparkProjectTemplate {
   PolymerTemplate(
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
       : super._(id, globalVars, localVars) {

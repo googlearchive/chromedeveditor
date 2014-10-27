@@ -9,6 +9,7 @@ import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:stagehand/stagehand.dart' as stagehand;
 
 import '../package_mgmt/bower_properties.dart';
 import '../utils.dart' as utils;
@@ -43,6 +44,7 @@ class TemplateVar {
 class ProjectBuilder {
   DirectoryEntry _destRoot;
   List<ProjectTemplate> _templates = [];
+  // NOTE: Currently unused, but may be useful in future.
   utils.Notifier _notifier;
 
   ProjectBuilder(this._destRoot, this._templates, this._notifier);
@@ -52,7 +54,7 @@ class ProjectBuilder {
    */
   Future build() {
     return Future.forEach(_templates, (ProjectTemplate template) {
-      return template.instantiate(_destRoot, _notifier);
+      return template.instantiate(_destRoot);
     });
   }
 
@@ -83,6 +85,9 @@ class ProjectBuilder {
     Resource match = fileMatch(project.getChildren());
     if (match != null) return match;
 
+    File file = project.getChild('pubspec.yaml');
+    if (file != null) return file;
+
     return project;
   }
 }
@@ -97,14 +102,18 @@ class ProjectBuilder {
  * In addition, each source file's contents is pre-interpolated using the
  * provided global and local template variables.
  */
-class ProjectTemplate {
-  String _sourceUri;
-  Map<String, TemplateVar> _vars = {};
-
+abstract class ProjectTemplate {
   factory ProjectTemplate(
       String id,
       [List<TemplateVar> globalVars = const [],
        List<TemplateVar> localVars = const []]) {
+    const String stagehandPrefix = "stagehand/";
+
+    if (id.startsWith(stagehandPrefix)) {
+      return new StagehandProjectTemplate(
+          id.substring(stagehandPrefix.length), globalVars, localVars);
+    }
+
     switch (id) {
       case 'addons/bower_deps':
         return new BowerDepsTemplate(id, globalVars, localVars);
@@ -117,14 +126,23 @@ class ProjectTemplate {
       case 'polymer/spark_widget':
         return new SparkWidgetTemplate(id, globalVars, localVars);
       default:
-        return new ProjectTemplate._(id, globalVars, localVars);
+        return new SparkProjectTemplate._(id, globalVars, localVars);
     }
   }
+
+  Future instantiate(DirectoryEntry destRoot);
+
+  Future showIntro(Project finalProject, utils.Notifier notifier);
+}
+
+class SparkProjectTemplate implements ProjectTemplate {
+  String _sourceUri;
+  Map<String, TemplateVar> _vars = {};
 
   /**
    * Subclasses can add or redefine any of the variables in the resulting _vars.
    */
-  ProjectTemplate._(
+  SparkProjectTemplate._(
       String id,
       List<TemplateVar> globalVars,
       List<TemplateVar> localVars) {
@@ -137,16 +155,7 @@ class ProjectTemplate {
     ]);
   }
 
-  void _addOrReplaceVars(List<TemplateVar> vars) {
-    for (var v in vars) {
-      _vars[v.name] = v;
-    }
-  }
-
-  Future instantiate(DirectoryEntry destRoot, utils.Notifier notifier) =>
-      build(destRoot).then((_) => showIntro(notifier));
-
-  Future build(DirectoryEntry destRoot) {
+  Future instantiate(DirectoryEntry destRoot) {
     DirectoryEntry sourceRoot;
 
     return utils.getPackageDirectoryEntry().then((root) {
@@ -161,8 +170,14 @@ class ProjectTemplate {
     });
   }
 
-  Future showIntro(utils.Notifier notifier) {
+  Future showIntro(Project finalProject, utils.Notifier notifier) {
     return new Future.value();
+  }
+
+  void _addOrReplaceVars(List<TemplateVar> vars) {
+    for (var v in vars) {
+      _vars[v.name] = v;
+    }
   }
 
   String _interpolateTemplateVars(String text) {
@@ -227,5 +242,53 @@ class ProjectTemplate {
         }
       });
     });
+  }
+}
+
+class StagehandProjectTemplate implements ProjectTemplate {
+  final String id;
+
+  StagehandProjectTemplate(this.id, List<TemplateVar> globalVars,
+      List<TemplateVar> localVars);
+
+  Future instantiate(DirectoryEntry destination) {
+    stagehand.Generator generator = stagehand.getGenerator(id);
+    var target = new _StagehandGeneratorTarget(destination);
+    return generator.generate(_normalizeName(destination.name), target);
+  }
+
+  Future showIntro(Project finalProject, utils.Notifier notifier) {
+    return new Future.value();
+  }
+
+  String _normalizeName(String name) => name.replaceAll('-', '_');
+}
+
+class _StagehandGeneratorTarget implements stagehand.GeneratorTarget {
+  final DirectoryEntry root;
+
+  _StagehandGeneratorTarget(this.root);
+
+  Future createFile(String path, List<int> contents) {
+    List<String> segments = path.split('/');
+    return _createFile(root, segments.take(segments.length - 1),
+        segments.last, contents);
+  }
+
+  Future _createFile(DirectoryEntry dir, Iterable<String> dirs, String fileName,
+      List<int> contents) {
+    if (dirs.isNotEmpty) {
+      return dir.createDirectory(dirs.first).then((DirectoryEntry newDir) {
+        return _createFile(newDir, dirs.skip(1), fileName, contents);
+      });
+    } else {
+      return dir.createFile(fileName).then((entry) {
+        if (entry is chrome.ChromeFileEntry) {
+          return entry.writeBytes(new chrome.ArrayBuffer.fromBytes(contents));
+        } else {
+          return new Future.error('todo');
+        }
+      });
+    }
   }
 }

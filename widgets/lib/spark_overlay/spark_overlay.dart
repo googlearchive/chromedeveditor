@@ -213,7 +213,7 @@ class SparkOverlay extends SparkWidget {
       SparkWidget.removeEventHandlers(_eventSubs);
     }
 
-    asyncFire('opened', detail: opened);
+    fire('transition-start', detail: {'opening': opened});
   }
 
   void _applyFocus() {
@@ -242,7 +242,8 @@ class SparkOverlay extends SparkWidget {
     classes.remove('closing');
     classes.toggle('revealed', opened);
     _applyFocus();
-    asyncFire('transition-complete', detail: {"opened": opened});
+
+    fire('transition-end', detail: {'opened': opened});
   }
 
   void _openedAnimationEnd(AnimationEvent e) {

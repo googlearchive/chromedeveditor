@@ -19,6 +19,7 @@ import 'builder.dart';
 import 'decorators.dart';
 import 'exception.dart';
 import 'jobs.dart';
+import 'spark_flags.dart';
 import 'workspace.dart';
 import 'git/config.dart';
 import 'git/objectstore.dart';
@@ -40,8 +41,9 @@ import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
 import 'git/commands/status.dart';
+import 'git_salt/git_salt.dart';
 
-final List<ScmProvider> _providers = [new GitScmProvider()];
+final List<ScmProvider> _providers = [new GitScmProvider(), new GitSaltScmProvider()];
 
 final Logger _logger = new Logger('spark.scm');
 
@@ -62,8 +64,12 @@ List<ScmProvider> getProviders() => _providers;
  * Return the [ScmProvider] cooresponding to the given type. The only valid
  * value for [type] currently is `git`.
  */
-ScmProvider getProviderType(String type) =>
-    _providers.firstWhere((p) => p.id == type, orElse: () => null);
+ScmProvider getProviderType(String type) {
+  if (SparkFlags.gitSalt) {
+    return _providers.firstWhere((p) => p.id == "git-salt", orElse: () => null);
+  }
+  return _providers.firstWhere((p) => p.id == type, orElse: () => null);
+}
 
 /**
  * This class manages SCM information for a given [Workspace]. It is used to
@@ -266,6 +272,47 @@ class CommitInfo {
 }
 
 /**
+ * The GitSalt scm provider.
+ */
+class GitSaltScmProvider extends ScmProvider {
+  GitSaltScmProvider();
+
+  String get id => 'git-salt';
+
+  bool isUnderScm(Project project) {
+    if (SparkFlags.gitSalt == false) {
+      return false;
+    }
+    Folder gitFolder = project.getChild('.git');
+    if (gitFolder is! Folder) return false;
+    if (gitFolder.getChild('index') is! File) return false;
+    return true;
+  }
+
+  bool isScmEndpoint(String uri) => isGitUri(uri);
+
+  ScmProjectOperations createOperationsFor(Project project) {
+    if (isUnderScm(project)) {
+      return new GitSaltScmProjectOperations(this, project);
+    }
+
+    return null;
+  }
+
+  Future clone(String url, chrome.DirectoryEntry dir,
+      {String username, String password, String branchName}) {
+    GitSalt gitSalt = GitSaltFactory.getInstance(dir.fullPath);
+    return gitSalt.loadPlugin().then((_) {
+      return gitSalt.clone(dir, url);
+    });
+  }
+
+  void cancelClone() {
+    throw "Not implemented";
+  }
+}
+
+/**
  * The Git SCM provider.
  */
 class GitScmProvider extends ScmProvider {
@@ -316,6 +363,121 @@ class GitScmProvider extends ScmProvider {
     if (_activeClone != null) {
       _activeClone.cancel();
     }
+  }
+}
+
+
+class GitSaltScmProjectOperations extends ScmProjectOperations {
+  Completer _completer;
+  GitSalt _gitSalt;
+  StreamController<ScmProjectOperations> _statusController =
+      new StreamController.broadcast();
+  String _branchName;
+
+  Future<GitSalt> get gitSalt => _completer.future;
+
+  GitSaltScmProjectOperations(ScmProvider provider, Project project) :
+    super(provider, project) {
+      _completer = new Completer();
+      _gitSalt = GitSaltFactory.getInstance(project.entry.fullPath);
+      _gitSalt.loadPlugin().then((_) {
+        _gitSalt.load(project.entry).then((_) {
+          _completer.complete(_gitSalt);
+        });
+      });
+
+  }
+
+  String getBranchName() {
+    // We return the current idea of the branch name immediately. We also ask
+    // git for the actual branch name asynchronously. If the two differ, we fire
+    // a changed event so listeners who were returned the old name can update
+    // themselves.
+    gitSalt.then((git_salt) {
+      return git_salt.getCurrentBranch();
+    }).then((String name) {
+      if (name != _branchName) {
+        _branchName = name;
+        _statusController.add(this);
+      }
+    });
+
+    return _branchName;
+  }
+
+  ScmFileStatus getFileStatus(Resource resource) {
+    return new ScmFileStatus.createFrom(
+        resource.getMetadata('scmStatus', 'committed'));
+  }
+
+  Future<List<String>> getLocalBranchNames() {
+    return gitSalt.then((git_salt) {
+      return git_salt.getLocalBranches();
+    });
+  }
+
+  Future<List<String>> getRemoteBranchNames() {
+    return gitSalt.then((git_salt) {
+      return git_salt.getRemoteBranches();
+    });
+  }
+
+  Future<List<String>> getUpdatedRemoteBranchNames() {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future createBranch(String branchName, String sourceBranchName) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future checkoutBranch(String branchName) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future mergeBranch(String branchName, String sourceBranchName) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future diff() {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  void markResolved(Resource resource) {
+    // TODO(grv): Implement.
+  }
+
+  Future revertChanges(List<Resource> resources) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future commit(String userName, String userEmail, String commitMessage) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Future push(String username, String password) {
+    // TODO(grv): Implement.
+    return new Future.value();
+  }
+
+  Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
+
+  Future updateForChanges(List<ChangeDelta> changes) {
+    return _refreshStatus(resources: changes
+        .where((d) => d.type != EventType.DELETE)
+        .map((d) => d.resource)
+        .where((Resource f) => f.parent != null && !f.parent.isScmPrivate()));
+  }
+
+  Future _refreshStatus({Project project, Iterable<Resource> resources}) {
+    //TODO(grv): implement
+    return new Future.value();
   }
 }
 
