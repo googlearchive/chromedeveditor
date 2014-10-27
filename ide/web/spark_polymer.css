@@ -643,7 +643,8 @@ button.ace_searchbtn[action="findAll"] {
 #outlineResizer {
 }
 
-#toggleMarkdownPreviewButton {
+#toggleMarkdownPreviewButton,
+#openPolymerDesignerButton {
   position: absolute;
   width: 36px;
   height: 36px;
@@ -655,7 +656,8 @@ button.ace_searchbtn[action="findAll"] {
   opacity: 0.7;
 }
 
-#toggleMarkdownPreviewButton:hover {
+#toggleMarkdownPreviewButton:hover,
+#openPolymerDesignerButton:hover {
   opacity: 1;
 }
 

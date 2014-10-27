@@ -136,10 +136,12 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   PreferenceStore get _prefStore => _prefs.prefsStore;
 
   File get currentFile => _currentState != null ? _currentState.file : null;
+  Editor get currentEditor => getEditor(currentFile);
 
   Iterable<File> get files => _openedEditorStates.map((s) => s.file);
   Future<bool> get loaded => _loadedCompleter.future;
   Iterable<Editor> get editors => _editorMap.values;
+  Editor getEditor(File file) => _editorMap[file];
 
   Stream<File> get onSelectedChange => _selectedController.stream;
 
@@ -533,7 +535,7 @@ class FileContentProvider implements ContentProvider {
 class PreferenceContentProvider implements ContentProvider {
   final PreferenceStore _store;
   final String _filename;
-  
+
   StreamController _changeController = new StreamController.broadcast();
 
   Stream get onChange => _changeController.stream;

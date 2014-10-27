@@ -732,13 +732,7 @@ abstract class Spark
     }
   }
 
-  Editor getCurrentEditor() {
-    ws.File file = editorManager.currentFile;
-    for (Editor editor in editorManager.editors) {
-      if (editor.file == file) return editor;
-    }
-    return null;
-  }
+  Editor getCurrentEditor() => editorManager.currentEditor;
 
   // TODO(ussuri): The whole show...Message/Dialog() family: polymerize,
   // generalize and offload to SparkPolymerUI.
@@ -989,8 +983,10 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
-  void openEditor(ws.File file, {Span selection}) {
+  Future<Editor> openEditor(ws.File file, {Span selection}) {
     navigationManager.gotoLocation(new NavigationLocation(file, selection));
+    // TODO(ussuri): Is there something better than nextTick?
+    return nextTick().then((_) => editorManager.currentEditor);
   }
 
   //
@@ -4203,28 +4199,47 @@ class PolymerDesignerAction
 
   js.JsObject _designer;
   File _file;
+  HtmlEditor _editor;
 
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
       : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
     _designer = new js.JsObject.fromBrowserObject(
         _dialog.getElement('#polymerDesigner'));
-    _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearCode);
-    _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertCode);
+    _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearDesign);
+    _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertDesign);
+
+    querySelector('#openPolymerDesignerButton').onClick.listen((_) {
+      _open(spark.editorManager.currentFile);
+    });
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    _file = spark._getFile(resources);
-    _dialog.dialog.headerTitle = "Polymer Designer: ${_file.name}";
+    _open(spark._getFile(resources));
+  }
+
+  void _open(File file) {
+    // Open dialog before reading file to start showing PD's splash.
+    _dialog.dialog.headerTitle = "Polymer Designer: ${file.name}";
     _show();
-    _file.getContents().then((String code) {
-      _designer.callMethod('load', [code]);
+
+    // Activate existing or open a new editor. The latter gives visibility of
+    // changes and a way to recover the old code after exporting from PD.
+    spark.openEditor(file).then((editor) {
+      _editor = editor;
+      _editor.save().then((_) {
+        file.getContents().then((String code) {
+          _designer.callMethod('load', [code]);
+        });
+      });
     });
   }
 
   void _commit() {
     final js.JsObject promise = _designer.callMethod('getCode');
     promise.callMethod('then', [(String code) {
-      _getCode(code);
+      // Set the new code via [_editor], not [_file] to ensure that the old
+      // code is recoverable via undo.
+      _editor.replaceContents(code);
       _cleanup();
     }]);
 
@@ -4236,22 +4251,12 @@ class PolymerDesignerAction
     super._cancel();
   }
 
-  void _setCode([_]) {
-    _file.getContents().then((String code) {
-      _designer.callMethod('setCode', [code]);
-    });
-  }
-
-  void _revertCode([_]) {
+  void _revertDesign([_]) {
     _designer.callMethod('revertCode');
   }
 
-  void _clearCode([_]) {
+  void _clearDesign([_]) {
     _designer.callMethod('setCode', ['']);
-  }
-
-  void _getCode(String code) {
-    _file.setContents(code);
   }
 
   void _cleanup() {
@@ -4259,7 +4264,7 @@ class PolymerDesignerAction
     _file = null;
   }
 
-  String get category => 'design';
+  String get category => 'refactor';
 
   bool appliesTo(Object object) {
     // NOTE: Flags can get updated from .spark.json after createActions()
