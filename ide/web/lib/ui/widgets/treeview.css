@@ -106,7 +106,7 @@
 .dropdown-menu > li > a:focus {
   color: #262626;
   text-decoration: none;
-  background-color: #f5f5f5;
+  background-color: #e4e4e4;
 }
 
 .dropdown-menu > .active > a,
