@@ -4258,7 +4258,7 @@ class PolymerDesignerAction
     _file = null;
   }
 
-  String get category => 'design';
+  String get category => 'refactor';
 
   bool appliesTo(Object object) {
     // NOTE: Flags can get updated from .spark.json after createActions()
