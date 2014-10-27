@@ -128,7 +128,8 @@ class _BowerResolver extends PackageResolver {
  */
 class _BowerBuilder extends PackageBuilder {
   _BowerBuilder(Workspace workspace) {
-    // Pre-initilize Bower configurations from .bowerrc files on app start.
+    // Initialize local Bower configurations from .bowerrc files in project
+    // subirectories on app start.
     _initConfigs(
         new ResourceChangeEvent.fromList(ChangeDelta.containerAdd(workspace)));
   }
