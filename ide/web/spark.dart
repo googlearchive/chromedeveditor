@@ -25,6 +25,7 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/apps/app_manifest_builder.dart';
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
+import 'lib/commands.dart';
 import 'lib/dependency.dart';
 import 'lib/decorators.dart';
 import 'lib/dart/dart_builder.dart';
@@ -133,6 +134,7 @@ abstract class Spark
 
 
     initEventBus();
+    initCommandManager();
 
     return initPreferences().then((_) {
       return restoreWorkspace().then((_) {
@@ -227,6 +229,7 @@ abstract class Spark
   preferences.PreferenceStore get localPrefs => preferences.localStore;
   preferences.PreferenceStore get syncPrefs => preferences.syncStore;
   StateManager get stateManager => dependencies[StateManager];
+  CommandManager get commands => dependencies[CommandManager];
 
   //
   // - End SparkModel interface.
@@ -301,6 +304,11 @@ abstract class Spark
         (ErrorMessageBusEvent event) {
       showErrorMessage(event.title, message: event.error.toString());
     });
+  }
+
+  void initCommandManager() {
+    dependencies[CommandManager] = new CommandManager();
+    commands.listenToDom(document.body);
   }
 
   void initAnalytics() {
@@ -586,6 +594,11 @@ abstract class Spark
     actionManager.registerKeyListener();
 
     DeployToMobileDialog._init(this);
+
+    // Bind the 'show-new-project' command to the 'project-new' action.
+    commands.registerHandler('show-new-project',
+        new FunctionCommandHandler(
+            () => actionManager.invokeAction('project-new')));
   }
 
   void initToolbar() {

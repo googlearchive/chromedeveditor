@@ -31,6 +31,8 @@ dependencies:
   logging: any
   markdown: '>=0.7.0 <0.8.0'
   mime: any
+  paper:
+    path: ../paper
   path: any
   polymer: '>=0.15.1 <0.16.0'
   spark_widgets:
