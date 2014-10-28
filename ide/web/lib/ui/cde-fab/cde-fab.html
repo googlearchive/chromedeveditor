@@ -7,13 +7,8 @@
 
 <polymer-element name="cde-fab" attributes="command icon tooltip">
   <template>
-    <style>
-:host {
-  fill: #fff;
-  color: #fff;
-  z-index: 1;
-}
-    </style>
+    <link rel="stylesheet" href="cde-fab.css">
+
     <paper-fab icon="{{icon}}" class="mini"
         on-click="{{handleClick}}" title="{{tooltip}}">
     </paper-fab>
