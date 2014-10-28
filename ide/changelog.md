@@ -1,6 +1,45 @@
 # Chrome Dev Editor Release Notes
 
-## M16 (0.16.x, October 1, 2014)
+## M17 (0.17.x, November 4, 2014)
+
+### New features
+- integrated [Polymer Designer](https://www.polymer-project.org/tools/designer/) into CDE; some notes:
+
+    - enabled for all HTML files, but meaningful only for HTMLs with a `<polymer-element>` at the top
+    - can be opened via a context menu item in the file tree and via a floating action button (FAB) in the editor
+    - to start a new element design, simply create a new empty HTML and click the Polymer FAB in it
+    - will only generate the HTML output for a design; you must add any dependencies the design requires to a companion `bower.json`
+    - currently is very sensitive to the inputs: may reset or fail to render the design if its internal parsing fails; improvements on the way
+    - the undo stack is properly updated for a generated output: the original source can be restored via the usual `Undo` action
+
+- improved Bower support
+
+    - support [semantic version ranges](http://semver.org/) for dependencies in `bower.json` (`~`, `^`, `<`, `<=`, `>`, `>=`, `latest`; unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`
+    - support for configuring the destination directory for downloaded packages via hierarchically traversed `.bowerrc` files (other fields in `.bowerrc` are currently ignored)
+
+### Project templates
+- now access the `New Project` dialog via a new floating action "+" button (FAB)
+- add Stagehand project templates: the new recommended way to generate Dart projects
+- Polymer-related project templates now depend on the latest stable versions of Polymer components (depended on `master` before)
+- fixed/upgraded some previously/recently broken templates
+
+### Other changes
+- support loading of local git repositories into the workspace
+- enabled syntax highighting for `.sql` and `.sqlite` file extensions
+- add options to the `Search/Replace` dialog (regular expressions, case-sensitive, whole words only)
+
+- UI tweaks:
+
+    - modified the `Live Deploy` dialog's UI
+    - restricted resizing of the commit message text area in the `Git Commit` dialog to vertical only (could be resized horizontally before)
+    - moved the Dart outline view's toggle button from inside the editor to the toolbar
+    - added 11 light color themes for the editor
+
+### Bug fixes
+- the undo stack in the editor would reset when the rereading the contents of an externally modified file, making it impossible to go back to the original code
+- source navigation would become broken when an involved project got deleted
+
+## M16 (0.16.3226, October 1, 2014)
 ### New features
 - added the 'Live Deploy' mode when pushing to mobile: see your changes reflected on the device in real time!
 - added real-time validation for Chrome apps' manifests
