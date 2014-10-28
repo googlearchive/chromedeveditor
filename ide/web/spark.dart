@@ -366,7 +366,9 @@ abstract class Spark
   }
 
   void initAndroidRSA() {
-    AndroidRSA.loadPlugin();
+    if (isDart2js()) {
+      AndroidRSA.loadPlugin();
+    }
   }
 
   void _selectLocation(NavigationLocation location) {
