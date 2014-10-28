@@ -33,8 +33,9 @@ fi
 # Turn on fast fail for the bash script.
 set -e
 
-# Run tests the Dart version of the app.
+# Run tests on the Dart version of the app.
 #if [ "$HAS_DARTIUM" = "true" ]; then
+# TODO: Temporarily commented out until the Dartium / NaCl issue is sorted out.
 #  dart tool/test_runner.dart --dartium
 #fi
 
