@@ -52,14 +52,18 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
   border-bottom: 1px solid #ddd;
 }
 
-.toolbar > * {
-  height: 36px;
-}
-
 .toolbar > spark-button,
 .toolbar > spark-menu-button {
   width: 36px;
+  height: 36px;
   margin: 0;
+}
+
+cde-fab[command=show-new-project] {
+  position: absolute;
+  top: -20px;
+  right: 10px;
+  z-index: 1;
 }
 
 #fileFilterGroup {
