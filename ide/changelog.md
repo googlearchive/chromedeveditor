@@ -15,7 +15,7 @@
 
 - improved Bower support
 
-    - support [semantic version ranges](http://semver.org/) for dependencies in `bower.json` (`~`, `^`, `<`, `<=`, `>`, `>=`, `latest`; unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`
+    - support most of [semantic version range](http://semver.org/) formats for dependencies in `bower.json`: operators `<`, `<=`, `>`, `>=`, `~` ("approximate"), `^` ("latest compatible"); special tag `latest` ("latest stable tag"); unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`, `"Polymer/polymer#latest"`
     - the destination directory for downloaded packages can be configured via `"directory"` field in hierarchically traversed `.bowerrc` files (other fields are currently ignored); see [Bower configuration page](http://bower.io/config/)
 
 ### Project templates
