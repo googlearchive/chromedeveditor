@@ -1,9 +1,0 @@
-{
-  "name": "paper-calculator",
-  "private": true,
-  "dependencies": {
-    "core-media-query": "Polymer/core-media-query#master",
-    "font-roboto": "Polymer/font-roboto#master",
-    "paper-ripple": "Polymer/paper-ripple#master"
-  }
-}

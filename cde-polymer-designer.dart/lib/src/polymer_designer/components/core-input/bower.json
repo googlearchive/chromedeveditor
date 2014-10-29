@@ -1,6 +1,0 @@
-{
-  "name": "core-input",
-  "dependencies": {
-    "polymer": "Polymer/polymer#master"
-  }
-}

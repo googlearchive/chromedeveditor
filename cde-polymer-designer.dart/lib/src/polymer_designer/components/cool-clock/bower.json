@@ -1,7 +1,0 @@
-{
-  "name": "cool-clock",
-  "private": true,
-  "dependencies": {
-    "polymer": "Polymer/polymer#master"
-  }
-}
