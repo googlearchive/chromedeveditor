@@ -653,6 +653,7 @@ button.ace_searchbtn[action="findAll"] {
   z-index: 90;
   fill: #7d7d7d;
   background-color: #fafafa;
+  border: 1px solid #ddd;
   opacity: 0.7;
 }
 
