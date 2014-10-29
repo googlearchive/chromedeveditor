@@ -10,11 +10,12 @@
     - to start a new element design, simply create a new empty HTML and click the Polymer FAB in it
     - will only generate the HTML output for a design; you must add any dependencies the design requires to a companion `bower.json`
     - currently is very sensitive to the inputs: may reset or fail to render the design if its internal parsing fails; improvements on the way
+    - `<link>` tags importing external files are currently ignored, including outline stylesheets and polymer components not natively known to the Designer (i.e. ones not found it its design palette)
     - the undo stack is properly updated for a generated output: the original source can be restored via the usual `Undo` action
 
 - improved Bower support
 
-    - support [semantic version ranges](http://semver.org/) for dependencies in `bower.json` (`~`, `^`, `<`, `<=`, `>`, `>=`, `latest`; unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`
+    - support [semantic version ranges](http://semver.org/) for dependencies in `bower.json` (`~`, `^`, `<`, `<=`, `>`, `>=`, `latest`; unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`
     - support for configuring the destination directory for downloaded packages via hierarchically traversed `.bowerrc` files (other fields in `.bowerrc` are currently ignored)
 
 ### Project templates
