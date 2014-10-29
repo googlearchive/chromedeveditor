@@ -3,36 +3,38 @@
 ## M17 (0.17.x, November 4, 2014)
 
 ### New features
-- integrated [Polymer Designer](https://www.polymer-project.org/tools/designer/) into CDE; some notes:
-
-    - enabled for all HTML files, but meaningful only for HTMLs with a `<polymer-element>` at the top
-    - can be opened via a context menu item in the file tree and via a floating action button (FAB) in the editor
-    - to start a new element design, simply create a new empty HTML and click the Polymer FAB in it
-    - will only generate the HTML output for a design; you must add any dependencies the design requires to a companion `bower.json`
-    - currently is very sensitive to the inputs: may reset or fail to render the design if its internal parsing fails; improvements on the way
-    - `<link>` tags importing external files are currently ignored, including outline stylesheets and polymer components not natively known to the Designer (i.e. ones not found it its design palette)
-    - the undo stack is properly updated for a generated output: the original source can be restored via the usual `Undo` action
-
 - improved Bower support
 
-    - support [semantic version ranges](http://semver.org/) for dependencies in `bower.json` (`~`, `^`, `<`, `<=`, `>`, `>=`, `latest`; unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`
+    - support most of the [semantic version range formats](http://semver.org/) for dependencies in `bower.json`: operators `<`, `<=`, `>`, `>=`, `~` ("approximate"), `^` ("latest compatible"); special tag `latest` ("latest stable tag"); unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`, `"Polymer/polymer#latest"`
     - the destination directory for downloaded packages can be configured via `"directory"` field in hierarchically traversed `.bowerrc` files (other fields are currently ignored); see [Bower configuration page](http://bower.io/config/)
 
+- integrated [Polymer Designer](https://www.polymer-project.org/tools/designer/) into CDE; some notes:
+
+    - however, is enabled for all HTML files, but meaningful only for HTMLs with a `<polymer-element>` at the top
+    - the primary indended use right now is to jump-start a new Polymer element from scratch, get it to a workable state, then continue more advanced development manually
+    - currently is very sensitive to the input: may fail to render a design if the internal parsing fails; improvements on the way
+    - can be opened via a context menu item in the file tree and via a floating action button (FAB) in the editor
+    - to start a new element design, simply create a new empty HTML and click the Polymer FAB in it
+    - will only generate the `.html` source for a design; you need to manually add any dependencies the design requires to a companion `bower.json`
+    - `<link>` tags importing external files are currently ignored, including outline stylesheets and polymer components not natively known to the Designer (i.e. ones not found it its design palette)
+    - lists of CSS selectors in inline `<style>` are not supported: use duplicate rules for each individual selector, if editing the source manually
+    - the undo stack is properly updated for a generated output: the original source can be restored via the usual `Undo` action
+
 ### Project templates
-- now access the `New Project` dialog via a new floating action "+" button (FAB)
-- the now much improved `Dart Web App` and the newly added `Dart Package` project templates are now based on [Stagehand](http://stagehand.pub/) -- a new set of best-of-breed prescriptive templates for creating Dart projects
+- now access the `New Project` dialog via the new floating action button (FAB): the red round "+"
+- the much improved `Dart Web App` and the newly added `Dart Package` project templates are now based on [Stagehand](http://stagehand.pub/) -- a new set of best-of-breed prescriptive templates for creating Dart projects
 - Polymer-related project templates now depend on the latest stable versions of Polymer components (depended on `master` before)
 - fixed/upgraded some previously/recently broken templates
 
 ### Other changes
+- significant improvements in the editing speed and responsiveness!
 - add options to the `Search/Replace` dialog (regular expressions, case-sensitive, whole words only)
 - enabled syntax highighting for `.sql` and `.sqlite` file extensions
 
 - UI tweaks:
 
-    - modified the `Live Deploy` dialog's UI
+    - improved the `Live Deploy` dialog's UI
     - restricted resizing of the commit message text area in the `Git Commit` dialog to vertical only (could be resized horizontally before)
-    - moved the Dart outline view's toggle button from inside the editor to the toolbar
     - added 11 light color themes for the editor
 
 ### Bug fixes
