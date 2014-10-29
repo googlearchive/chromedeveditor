@@ -18,17 +18,8 @@ import 'package:spark_widgets/common/spark_widget.dart';
 
 import '../../spark_polymer_ui.dart';
 
-class SparkUIAccess {
-  static SparkUIAccess _instance;
-
-  OkCancelDialogAccess okCancelDialog = new OkCancelDialogAccess();
-  AboutDialogAccess aboutDialog = new AboutDialogAccess();
-  NewProjectDialogAccess newProjectDialog = new NewProjectDialogAccess();
-  DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
-
-  MenuItemAccess newProjectMenu;
-  MenuItemAccess gitCloneMenu;
-  MenuItemAccess aboutMenu;
+class SparkDomAccess {
+  static SparkDomAccess _instance;
 
   SparkMenuButton get menu => getUIElement("#mainMenu");
   Stream get onMenuTransitioned => _menuOverlay.on['transition-end'];
@@ -37,18 +28,14 @@ class SparkUIAccess {
   SparkButton get _sparkMenuButton => getUIElement("#mainMenu > spark-button");
   SparkOverlay get _menuOverlay => menu.getShadowDomElement("#overlay");
 
-  static SparkUIAccess get instance {
-    if (_instance == null) _instance = new SparkUIAccess._internal();
+  Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
+
+  static SparkDomAccess get instance {
+    if (_instance == null) _instance = new SparkDomAccess._internal();
     return _instance;
   }
 
-  SparkUIAccess._internal() {
-    newProjectMenu = new MenuItemAccess("project-new", newProjectDialog);
-    gitCloneMenu = new MenuItemAccess("git-clone", gitCloneDialog);
-    aboutMenu = new MenuItemAccess("help-about", aboutDialog);
-  }
-
-  Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
+  SparkDomAccess._internal();
 
   void _sendMouseEvent(Element element, String eventType) {
     Rectangle<int> bounds = element.getBoundingClientRect();
@@ -64,13 +51,16 @@ class SparkUIAccess {
 
   Future selectSparkMenu() {
     Future transitionFuture = onMenuTransitioned.first;
-    _sparkMenuButton.click();
+    var sparkMenuButton = _sparkMenuButton;
+    clickElement(sparkMenuButton);
     return transitionFuture;
   }
 
   void clickElement(Element element) {
     _sendMouseEvent(element, "mouseover");
+    _sendMouseEvent(element, "mousedown");
     _sendMouseEvent(element, "click");
+    _sendMouseEvent(element, "mouseup");
   }
 
   // TODO(ericarnold): This doesn't work
@@ -97,13 +87,38 @@ class SparkUIAccess {
   }
 }
 
+class SparkUIAccess {
+  static SparkUIAccess _instance;
+
+  OkCancelDialogAccess okCancelDialog = new OkCancelDialogAccess();
+  AboutDialogAccess aboutDialog = new AboutDialogAccess();
+  NewProjectDialogAccess newProjectDialog = new NewProjectDialogAccess();
+  DialogAccess gitCloneDialog = new DialogAccess("gitCloneDialog");
+
+  MenuItemAccess newProjectMenu;
+  MenuItemAccess gitCloneMenu;
+  MenuItemAccess aboutMenu;
+
+  static SparkUIAccess get instance {
+    if (_instance == null) _instance = new SparkUIAccess._internal();
+    return _instance;
+  }
+
+  SparkUIAccess._internal() {
+    newProjectMenu = new MenuItemAccess("project-new", newProjectDialog);
+    gitCloneMenu = new MenuItemAccess("git-clone", gitCloneDialog);
+    aboutMenu = new MenuItemAccess("help-about", aboutDialog);
+  }
+}
+
 class MenuItemAccess {
   final String _menuItemId;
   DialogAccess _dialogAccess = null;
 
   DialogAccess get dialogAccess => _dialogAccess;
 
-  SparkUIAccess get _sparkAccess => SparkUIAccess.instance;
+  SparkUIAccess get _sparkUiAccess => SparkUIAccess.instance;
+  SparkDomAccess get _sparkDomAccess => SparkDomAccess.instance;
 
   SparkMenuItem get _menuItem => _getMenuItem(_menuItemId);
 
@@ -111,10 +126,10 @@ class MenuItemAccess {
     _dialogAccess = (linkedDialogAccess == null) ? null : linkedDialogAccess;
   }
 
-  void select() => _sparkAccess.clickElement(_menuItem);
+  void select() => _sparkDomAccess.clickElement(_menuItem);
 
   SparkMenuItem _getMenuItem(String id) =>
-      _sparkAccess.menu.querySelector("spark-menu-item[action-id=$id]");
+      _sparkDomAccess.menu.querySelector("spark-menu-item[action-id=$id]");
 }
 
 class DialogAccess {
@@ -126,23 +141,31 @@ class DialogAccess {
 
   bool get fullyVisible {
     Rectangle<int> bounds = modalElement.getBoundingClientRect();
-    var elementFromPoint = _sparkAccess._ui.shadowRoot.elementFromPoint(
+    var elementFromPoint = _sparkDomAccess._ui.shadowRoot.elementFromPoint(
         bounds.left.toInt() + bounds.width ~/ 2,
         bounds.top.toInt() + bounds.height ~/ 2);
     SparkDialog dialog = _dialog;
     return elementFromPoint == _dialog || _dialog.contains(elementFromPoint);
   }
 
-  Stream get onTransitionComplete => modalElement.on['transition-end'];
+  Stream get onTransitionComplete => transitionCompleteController.stream;
+  StreamController transitionCompleteController = new StreamController.broadcast();
 
-  SparkUIAccess get _sparkAccess => SparkUIAccess.instance;
-  SparkDialog get _dialog => _sparkAccess.getUIElement("#$id");
+  SparkUIAccess get _sparkUiAccess => SparkUIAccess.instance;
+
+  SparkDomAccess get _sparkDomAccess => SparkDomAccess.instance;
+  SparkDialog get _dialog => _sparkDomAccess.getUIElement("#$id");
   List<SparkDialogButton> get _dialogButtons =>
       _dialog.querySelectorAll("spark-dialog-button");
 
-  DialogAccess(this.id);
+  DialogAccess(this.id) {
+    SparkModal m = modalElement;
+    m.on['transition-end'].listen((e) {
+      transitionCompleteController.add(e);
+    });
+  }
 
-  void clickButton(SparkWidget button) => _sparkAccess.clickElement(button);
+  void clickButton(SparkWidget button) => _sparkDomAccess.clickElement(button);
 //  void clickButtonWithTitle(String title) => clickButton(_getButtonByTitle(title));
 //  void clickButtonWithSelector(String query) =>
 //      clickButton(_getButtonBySelector(query));
@@ -167,8 +190,8 @@ class OkCancelDialogAccess extends DialogAccess {
 
   OkCancelDialogAccess() : super("okCancelDialog");
 
-  void clickOkButton() => _sparkAccess.clickElement(okButton);
-  void clickCancelButton() => _sparkAccess.clickElement(cancelButton);
+  void clickOkButton() => _sparkDomAccess.clickElement(okButton);
+  void clickCancelButton() => _sparkDomAccess.clickElement(cancelButton);
 }
 
 class AboutDialogAccess extends DialogAccess {
@@ -176,7 +199,7 @@ class AboutDialogAccess extends DialogAccess {
 
   AboutDialogAccess() : super("aboutDialog");
 
-  void clickDoneButton() => _sparkAccess.clickElement(doneButton);
+  void clickDoneButton() => _sparkDomAccess.clickElement(doneButton);
 }
 
 class NewProjectDialogAccess extends DialogAccess {
@@ -186,10 +209,10 @@ class NewProjectDialogAccess extends DialogAccess {
 
   NewProjectDialogAccess() : super("newProjectDialog");
 
-  void clickCreateButton() => _sparkAccess.clickElement(createButton);
+  void clickCreateButton() => _sparkDomAccess.clickElement(createButton);
 
   void setNameField(String text) {
     var nameField = this.nameField;
-    _sparkAccess.sendString(nameField, text, false);
+    _sparkDomAccess.sendString(nameField, text, false);
   }
 }
