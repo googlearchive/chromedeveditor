@@ -20,7 +20,7 @@
 
 ### Project templates
 - now access the `New Project` dialog via a new floating action "+" button (FAB)
-- add Stagehand project templates: the new recommended way to generate Dart projects
+- the now much improved `Dart Web App` and the newly added `Dart Package` project templates are now based on [Stagehand](http://stagehand.pub/) -- a new set of best-of-breed prescriptive templates for creating Dart projects
 - Polymer-related project templates now depend on the latest stable versions of Polymer components (depended on `master` before)
 - fixed/upgraded some previously/recently broken templates
 
