@@ -25,9 +25,8 @@
 - fixed/upgraded some previously/recently broken templates
 
 ### Other changes
-- support loading of local git repositories into the workspace
-- enabled syntax highighting for `.sql` and `.sqlite` file extensions
 - add options to the `Search/Replace` dialog (regular expressions, case-sensitive, whole words only)
+- enabled syntax highighting for `.sql` and `.sqlite` file extensions
 
 - UI tweaks:
 
