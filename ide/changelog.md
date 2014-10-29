@@ -16,7 +16,7 @@
 - improved Bower support
 
     - support [semantic version ranges](http://semver.org/) for dependencies in `bower.json` (`~`, `^`, `<`, `<=`, `>`, `>=`, `latest`; unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`
-    - support for configuring the destination directory for downloaded packages via hierarchically traversed `.bowerrc` files (other fields in `.bowerrc` are currently ignored)
+    - the destination directory for downloaded packages can be configured via `"directory"` field in hierarchically traversed `.bowerrc` files (other fields are currently ignored); see [Bower configuration page](http://bower.io/config/)
 
 ### Project templates
 - now access the `New Project` dialog via a new floating action "+" button (FAB)
