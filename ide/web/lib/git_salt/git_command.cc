@@ -178,7 +178,7 @@ int GitStatus::runCommand() {
   git_status_cb cb = StatusCb;
 
   pp::VarDictionary statuses;
-  int r = git_status_foreach(repo, cb, &statuses);
+  git_status_foreach(repo, cb, &statuses);
 
   const git_error *a = giterr_last();
 
