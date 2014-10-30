@@ -51,7 +51,8 @@ void deleteDemos(GrinderContext context) {
     if (entity is File) {
       String name = path.basename(entity.path);
 
-      if (name == 'index.html' || name == 'demo.html' || name.endsWith('.md')) {
+      if (name == 'index.html' || name == 'demo.html' ||
+          name == '.bower.json' || name.endsWith('.md')) {
         deleteEntity(entity, context);
       }
     }
