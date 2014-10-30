@@ -5,24 +5,33 @@
 ### New features
 - improved Bower support
 
-    - support most of the [semantic version range formats](http://semver.org/) for dependencies in `bower.json`: operators `<`, `<=`, `>`, `>=`, `~` ("approximate"), `^` ("latest compatible"); special tag `latest` ("latest stable tag"); unspecified version defaults to `latest`); e.g. `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`, `"Polymer/polymer#latest"`
+    - added support for most of the [semantic version range formats](http://semver.org/) under `"dependencies"` in `bower.json`:
+
+        - operators `<`, `<=`, `>`, `>=`, `~` ("approximate"), `^` ("latest compatible")
+        - special tag `latest` ("latest stable tag")
+        - unspecified version defaults to `latest`)
+        - examples: `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`, `"Polymer/polymer#latest"`
+
     - the destination directory for downloaded packages can be configured via `"directory"` field in hierarchically traversed `.bowerrc` files (other fields are currently ignored); see [Bower configuration page](http://bower.io/config/)
 
-- integrated [Polymer Designer](https://www.polymer-project.org/tools/designer/) into CDE; some notes:
+- alpha version of [Polymer Designer](https://www.polymer-project.org/tools/designer/) integration into CDE; some notes:
 
-    - however, is enabled for all HTML files, but meaningful only for HTMLs with a `<polymer-element>` at the top
-    - the primary indended use right now is to jump-start a new Polymer element from scratch, get it to a workable state, then continue more advanced development manually
-    - currently is very sensitive to the input: may fail to render a design if the internal parsing fails; improvements on the way
-    - can be opened via a context menu item in the file tree and via a floating action button (FAB) in the editor
+    - enabled for all HTML files, but meaningful only for HTMLs with a `<polymer-element>` at the top
+    - very sensitive to the input: may fail to render a design if the internal parsing fails; improvements on the way
+    - therefore, the primary indended use for now is to jump-start a new Polymer element from scratch, get it to a workable state, then continue more advanced development manually
+    - accessible via a new context menu item in the file tree and via a new floating action button (FAB) in the editor
     - to start a new element design, simply create a new empty HTML and click the Polymer FAB in it
-    - will only generate the `.html` source for a design; you need to manually add any dependencies the design requires to a companion `bower.json`
-    - `<link>` tags importing external files are currently ignored, including outline stylesheets and polymer components not natively known to the Designer (i.e. ones not found it its design palette)
-    - lists of CSS selectors in inline `<style>` are not supported: use duplicate rules for each individual selector, if editing the source manually
-    - the undo stack is properly updated for a generated output: the original source can be restored via the usual `Undo` action
+    - generates only the `.html` source for a design; you will need to manually add any dependencies the design requires to a sibling `bower.json` and run `Bower Install` on it
+    - the undo stack is properly updated with the generated output: the original source can be restored via the usual `Undo` action
+    - known limitations:
+
+        - `<link>` tags importing external sources are ignored, including outline stylesheets and polymer components not natively known to the Designer (i.e. ones not found it its design palette); use inline tags wherever possible
+        - lists of CSS selectors before a single rule are not supported: use duplicate rules for each individual selector
+        - HTML tags containing both text content and sub-tags are parsed incorrectly: the text contents is lost; e.g. `Some text` in `<p>Some text <a>some link</a></p>` will be lost on import
 
 ### Project templates
-- now access the `New Project` dialog via the new floating action button (FAB): the red round "+"
-- the much improved `Dart Web App` and the newly added `Dart Package` project templates are now based on [Stagehand](http://stagehand.pub/) -- a new set of best-of-breed prescriptive templates for creating Dart projects
+- the `New Project` dialog can now also be accessed via a new floating action button (FAB) at the bottom of the file tree view
+- the much improved `Dart Web App` and the newly added `Dart Package` project templates are now based on [Stagehand](http://stagehand.pub/) - a new set of best-of-breed prescriptive templates for creating Dart projects
 - Polymer-related project templates now depend on the latest stable versions of Polymer components (depended on `master` before)
 - fixed/upgraded some previously/recently broken templates
 
