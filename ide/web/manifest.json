@@ -173,7 +173,12 @@
         {
           "vendorId": 4100,
           "productId": 24974,
-          "description": "0x1004/0x618e LG Ally/Optimus One/Vortex "
+          "description": "0x1004/0x618e LG Ally/Optimus One/Vortex"
+        },
+        {
+          "vendorId": 4100,
+          "productId": 25081,
+          "description": "0x1004/0x61f9 LG Optimus Vu3"
         }
       ]
     },
