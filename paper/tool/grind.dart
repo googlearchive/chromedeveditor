@@ -43,6 +43,19 @@ void deleteDemos(GrinderContext context) {
   Iterable toDelete = directories.expand((d) => d.listSync().where(fn));
   toDelete.forEach(
       (FileSystemEntity entity) => entity.deleteSync(recursive: true));
+
+  // Delete un-needed .md, index.html, and demo.html files
+  List entities = LIB_DIR.listSync(recursive: true, followLinks: false);
+
+  for (FileSystemEntity entity in entities) {
+    if (entity is File) {
+      String name = path.basename(entity.path);
+
+      if (name == 'index.html' || name == 'demo.html' || name.endsWith('.md')) {
+        deleteEntity(entity, context);
+      }
+    }
+  }
 }
 
 /**
