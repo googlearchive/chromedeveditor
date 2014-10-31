@@ -172,4 +172,24 @@ class GitSalt {
 
     return completer.future;
   }
+
+  Future<List> status() {
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "status",
+      "arg": {}
+    });
+
+    Completer completer = new Completer();
+
+    Function cb = (result) {
+      completer.complete(result["statuses"]);
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return completer.future;
+
+  }
 }

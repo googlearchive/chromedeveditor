@@ -131,5 +131,19 @@ class GitGetBranches : public GitCommand {
   int runCommand();
 };
 
+class GitStatus : public GitCommand {
+
+ public:
+  int flags;
+
+  GitStatus(GitSaltInstance* git_salt,
+            std::string subject,
+            pp::VarDictionary args,
+            git_repository*& repo)
+      : GitCommand(git_salt, subject, args, repo) {}
+
+  int runCommand();
+};
+
 #endif  // GIT_SALT_GIT_COMMAND_H__
 

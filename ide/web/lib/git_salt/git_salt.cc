@@ -89,6 +89,15 @@ void GitSaltInstance::HandleMessage(const pp::Var& var_message) {
     getBranches->parseArgs();
     file_thread_.message_loop().PostWork(
         callback_factory_.NewCallback(&GitSaltInstance::GetBranches, getBranches));
+  } else if (!cmd.compare(kCmdStatus)) {
+    if (repo == NULL) {
+      PostMessage("Git repository not initialized.");
+      return;
+    }
+    GitStatus* status = new GitStatus(this, subject, var_dictionary_args, repo);
+    status->parseArgs();
+    file_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&GitSaltInstance::Status, status));
   }
 }
 
@@ -109,6 +118,11 @@ int GitSaltInstance::Commit(int32_t r, GitCommit* commit) {
 
 int GitSaltInstance::GetBranches(int32_t r, GitGetBranches* getBranches) {
   getBranches->runCommand();
+  return 0;
+}
+
+int GitSaltInstance::Status(int32_t r, GitStatus* status) {
+  status->runCommand();
   return 0;
 }
 
