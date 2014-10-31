@@ -41,7 +41,7 @@ void update(GrinderContext context) {
  */
 void deleteDemos(GrinderContext context) {
   const List delNames = const [
-      '.bower.json', 'demo.html', 'index.html', 'metadata.html'
+      '.bower.json', 'bower.json', 'demo.html', 'index.html', 'metadata.html'
    ];
 
   Iterable directories = _directoriesInLib;
