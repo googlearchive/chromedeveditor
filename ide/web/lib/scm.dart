@@ -9,7 +9,6 @@
 library spark.scm;
 
 import 'dart:async';
-import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
