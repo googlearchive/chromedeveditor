@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include<iostream>
+
 #include "git_command.h"
 
 int GitCommand::parseFileSystem(pp::VarDictionary message, std::string name,
@@ -164,5 +166,25 @@ int GitGetBranches::runCommand() {
 
   _gitSalt->PostMessage(response);
   git_branch_iterator_free(iter);
+  return 0;
+}
+
+
+int GitAdd::parseArgs() {
+  int error = 0;
+  pp::VarArray entryArray;
+  if ((error = parseArray(_args, kEntries, entryArray))) {
+  }
+
+  uint32_t length = entryArray.GetLength();
+
+  for (uint32_t i = 0; i < length; ++i) {
+    entries.push_back(entryArray.Get(i).AsString());
+    std::cout << entries[i] << "\n";
+  }
+  return 0;
+}
+
+int GitAdd::runCommand() {
   return 0;
 }

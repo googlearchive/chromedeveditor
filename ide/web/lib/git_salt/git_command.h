@@ -10,6 +10,7 @@
 #include <git2.h>
 #include <sys/mount.h>
 #include <stdio.h>
+#include<vector>
 
 #include "ppapi/cpp/file_system.h"
 #include "ppapi/cpp/var_dictionary.h"
@@ -38,6 +39,17 @@ int parseInt(pp::VarDictionary message, const char* name,
     return 1;
   }
   *option = var_option.AsInt();
+  return 0;
+}
+
+int parseArray(pp::VarDictionary message, const char* name,
+    pp::VarArray& option) {
+  pp::Var var_option = message.Get(name);
+  if (!var_option.is_array()) {
+    //TODO(grv): return error code;
+    return 1;
+  }
+  option = pp::VarArray(var_option);
   return 0;
 }
 }
@@ -124,6 +136,22 @@ class GitGetBranches : public GitCommand {
                  std::string subject,
                  pp::VarDictionary args,
                  git_repository*& repo)
+      : GitCommand(git_salt, subject, args, repo) {}
+
+  virtual int parseArgs();
+
+  int runCommand();
+};
+
+class GitAdd : public GitCommand {
+
+ public:
+  std::vector<std::string> entries;
+
+  GitAdd(GitSaltInstance* git_salt,
+         std::string subject,
+         pp::VarDictionary args,
+         git_repository*& repo)
       : GitCommand(git_salt, subject, args, repo) {}
 
   virtual int parseArgs();
