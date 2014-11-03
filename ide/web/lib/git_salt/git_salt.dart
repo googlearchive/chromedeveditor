@@ -5,6 +5,8 @@
 
 library spark.gitsalt;
 
+import 'package:chrome/chrome_app.dart' as chrome;
+
 import 'dart:async';
 import 'dart:js' as js;
 
@@ -36,6 +38,7 @@ class GitSalt {
   js.JsObject _jsGitSalt;
   int messageId = 1;
   String url;
+  chrome.DirectoryEntry root;
   Completer _completer = null;
 
   GitSalt() {
@@ -75,9 +78,8 @@ class GitSalt {
   bool get isActive => _completer != null;
 
   Future clone(entry, String url) {
-    if (isActive) {
-      return new Future.error("Another git operation in progress.");
-    }
+
+    root = entry;
 
     var arg = new js.JsObject.jsify({
       "entry": entry.toJs(),
@@ -166,6 +168,37 @@ class GitSalt {
 
     Function cb = (result) {
       completer.complete(result["branches"].toList());
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return completer.future;
+  }
+
+  Future add(List<chrome.Entry> entries) {
+
+    entries = entries.map((entry) {
+      if (entry.fullPath.length > root.fullPath.length) {
+        return entry.fullPath.substring(root.fullPath.length + 1);
+      } else {
+        return entry.fullPath;
+      }
+    }).toList();
+
+    var arg = new js.JsObject.jsify({
+      "entries" : entries
+    });
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "add",
+      "arg": arg
+    });
+
+    Completer completer = new Completer();
+
+    Function cb = (result) {
+      completer.complete();
     };
 
     _jsGitSalt.callMethod('postMessage', [message, cb]);
