@@ -20,6 +20,8 @@ import 'builder.dart';
 import 'enum.dart';
 import 'exception.dart';
 import 'jobs.dart';
+import 'package_mgmt/pub.dart';
+import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart';
 
@@ -964,6 +966,12 @@ class Folder extends Container {
   }
 
   Future delete() {
+    if (PlatformInfo.isWin && pubProperties.isManagedFolder(name)) {
+      return new Future.error(
+          'Unable to delete a Pub managed folder on Windows. '
+          'See https://github.com/dart-lang/chromedeveditor/issues/3669 for more information.');
+    }
+
     return _dirEntry.removeRecursively()
       .then((_) => _parent._removeChild(this, fireEvent: true))
       .catchError((e) {

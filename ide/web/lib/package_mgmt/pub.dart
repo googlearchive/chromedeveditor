@@ -26,6 +26,11 @@ Logger _logger = new Logger('spark.pub');
 final PubProperties pubProperties = new PubProperties();
 
 class PubProperties extends PackageServiceProperties {
+  final List _managedFolders = const [
+      'benchmark', 'bin', 'example', 'packages', 'test', 'tool', 'web'
+  ];
+
+  PubProperties();
   //
   // PackageServiceProperties virtual interface:
   //
@@ -46,6 +51,8 @@ class PubProperties extends PackageServiceProperties {
 
   String getSelfReference(Project project) =>
     project.getMetadata('${packageServiceName}SelfReference');
+
+  bool isManagedFolder(String name) => _managedFolders.contains(name);
 }
 
 File findPubspec(Container container) {
