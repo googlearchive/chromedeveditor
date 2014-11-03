@@ -169,7 +169,6 @@ int GitGetBranches::runCommand() {
   return 0;
 }
 
-
 int GitAdd::parseArgs() {
   int error = 0;
   pp::VarArray entryArray;
@@ -186,5 +185,36 @@ int GitAdd::parseArgs() {
 }
 
 int GitAdd::runCommand() {
+  return 0;
+}
+
+int StatusCb(const char* path, unsigned int status, void* payload) {
+  pp::VarDictionary* statuses = (pp::VarDictionary*) payload;
+  statuses->Set(path, (int)status);
+  return 0;
+}
+
+int GitStatus::runCommand() {
+
+  git_status_cb cb = StatusCb;
+
+  pp::VarDictionary statuses;
+  git_status_foreach(repo, cb, &statuses);
+
+  const git_error *a = giterr_last();
+
+  if (a != NULL) {
+    printf("giterror: %s\n", a->message);
+  }
+
+  pp::VarDictionary arg;
+  arg.Set(kStatuses, statuses);
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
   return 0;
 }

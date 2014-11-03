@@ -11,6 +11,7 @@ final Directory LIB_DIR = new Directory('lib');
 
 void main([List<String> args]) {
   task('init', init);
+  task('update', update, ['init']);
   task('deleteDemos', deleteDemos, ['init']);
   task('vulcanize', vulcanize, ['deleteDemos']);
   task('clean', clean);
@@ -29,20 +30,43 @@ void init(GrinderContext context) {
 }
 
 /**
- * TODO: doc
+ * Run `bower update`.
+ */
+void update(GrinderContext context) {
+  runProcess(context, 'bower', arguments: ['update']);
+}
+
+/**
+ * Remove un-needed demo and sample content.
  */
 void deleteDemos(GrinderContext context) {
+  const List delNames = const [
+      '.bower.json', 'bower.json', 'demo.html', 'index.html', 'metadata.html'
+   ];
+
   Iterable directories = _directoriesInLib;
 
   var fn = (dir) {
     if (dir is! Directory) return false;
     String name = path.basename(dir.path);
-    return name == 'demos' || name == 'tests';
+    return name == 'demos' || name == 'test' || name == 'tests';
   };
 
   Iterable toDelete = directories.expand((d) => d.listSync().where(fn));
-  toDelete.forEach(
-      (FileSystemEntity entity) => entity.deleteSync(recursive: true));
+  toDelete.forEach((FileSystemEntity entity) => deleteEntity(entity, context));
+
+  // Delete un-needed .md, index.html, and demo.html files
+  List entities = LIB_DIR.listSync(recursive: true, followLinks: false);
+
+  for (FileSystemEntity entity in entities) {
+    if (entity is File) {
+      String name = path.basename(entity.path);
+
+      if (delNames.contains(name) || name.endsWith('.md')) {
+        deleteEntity(entity, context);
+      }
+    }
+  }
 }
 
 /**
