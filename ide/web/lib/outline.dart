@@ -7,6 +7,8 @@ library spark.outline;
 import 'dart:async';
 import 'dart:html' as html;
 
+import 'package:ace/ace.dart' as ace;
+
 import 'commands.dart';
 import 'dependency.dart';
 import 'enum.dart';
@@ -53,6 +55,7 @@ class Outline {
   html.DivElement _outlineDiv;
   html.DivElement _rootListDiv;
   html.UListElement _rootList;
+  html.DivElement _positionDiv;
 
   final PreferenceStore _prefs;
   bool _visible = true;
@@ -65,7 +68,9 @@ class Outline {
     _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
         event.stopPropagation());
     _rootListDiv = _outlineDiv.querySelector('#outline');
-    _rootList = _rootListDiv.querySelector('ul');
+    _rootList = new html.UListElement();
+    _rootListDiv.append(_rootList);
+    _positionDiv = _outlineDiv.querySelector('#cursorPosition');
 
     _commands.registerHandler(
         'toggle-outline', new FunctionCommandHandler(toggle));
@@ -202,6 +207,10 @@ class Outline {
     if (itemAtCursor != null) {
       setSelected(itemAtCursor);
     }
+  }
+
+  void setPosition(ace.Point point) {
+    _positionDiv.text = 'Line: ${point.row + 1}, Column: ${point.column + 1}';
   }
 
   void scrollOffsetRangeIntoView(
