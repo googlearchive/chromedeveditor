@@ -371,8 +371,8 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath) 
 }
 
 void _changeMode({bool useTestMode: true}) {
-  _changeModeImpl(useTestMode, joinFile(Directory.current, ['web', 'app.json']));
-  _changeModeImpl(useTestMode, joinFile(BUILD_DIR, ['web', 'app.json']));
+  _changeModeImpl(useTestMode, joinFile(Directory.current, ['web', 'user.json']));
+  _changeModeImpl(useTestMode, joinFile(BUILD_DIR, ['web', 'user.json']));
 }
 
 void _changeModeImpl(bool useTestMode, File file) {
