@@ -379,8 +379,10 @@ void _changeModeImpl(bool useTestMode, File file) {
   if (!file.parent.existsSync()) return;
   file.createSync();
   String content = file.readAsStringSync();
-  var dict = JSON.decode(content);
-  if (dict == null) {
+  var dict;
+  try {
+   dict = JSON.decode(content);
+  } catch (e) {
     dict = new Map();
   }
   dict['test-mode'] = useTestMode;
