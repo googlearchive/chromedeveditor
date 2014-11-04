@@ -371,15 +371,20 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath) 
 }
 
 void _changeMode({bool useTestMode: true}) {
-  _changeModeImpl(useTestMode, joinFile(Directory.current, ['web', 'app.json']));
-  _changeModeImpl(useTestMode, joinFile(BUILD_DIR, ['web', 'app.json']));
+  _changeModeImpl(useTestMode, joinFile(Directory.current, ['web', 'user.json']));
+  _changeModeImpl(useTestMode, joinFile(BUILD_DIR, ['web', 'user.json']));
 }
 
 void _changeModeImpl(bool useTestMode, File file) {
   if (!file.parent.existsSync()) return;
-
+  file.createSync();
   String content = file.readAsStringSync();
-  var dict = JSON.decode(content);
+  var dict;
+  try {
+    dict = JSON.decode(content);
+  } catch (e) {
+    dict = new Map();
+  }
   dict['test-mode'] = useTestMode;
   file.writeAsStringSync(new JsonPrinter().print(dict));
 }
