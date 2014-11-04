@@ -206,7 +206,7 @@ class GitSalt {
     return completer.future;
   }
 
-  Future<List> status() {
+  Future<Map<String, String>> status() {
 
     var message = new js.JsObject.jsify({
       "subject" : genMessageId(),
