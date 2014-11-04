@@ -1,8 +1,0 @@
-{
-  "name": "paper-fab",
-  "private": true,
-  "dependencies": {
-    "polymer": "Polymer/polymer#master",
-    "paper-icon-button": "Polymer/paper-icon-button#master"
-  }
-}
