@@ -176,15 +176,24 @@ int GitAdd::parseArgs() {
   }
 
   uint32_t length = entryArray.GetLength();
-
   for (uint32_t i = 0; i < length; ++i) {
     entries.push_back(entryArray.Get(i).AsString());
-    std::cout << entries[i] << "\n";
   }
   return 0;
 }
 
 int GitAdd::runCommand() {
+  git_index* index = NULL;
+  int error = git_repository_index(&index, repo);
+  if (error) {
+    //TODO(grv): handle errors.
+  }
+  for (uint32_t i = 0; i < entries.size(); i++) {
+    std::cout << entries[i] << "\n";
+    //TODO(grv) : This only works for filepaths. Add support for adding
+    // directory paths recursively.
+    git_index_add_bypath(index, entries[i].c_str());
+  }
   return 0;
 }
 
