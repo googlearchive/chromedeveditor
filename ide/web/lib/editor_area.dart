@@ -122,7 +122,7 @@ class EditorArea extends TabView {
             closeFile(delta.resource);
           }
           for (ChangeDelta change in delta.deletions) {
-            if(change.resource.isFile) {
+            if (change.resource.isFile) {
               closeFile(change.resource);
             }
           }

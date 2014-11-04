@@ -110,6 +110,8 @@ class MockAceEditor implements TextEditor {
 
   void customizeSession(EditSession session) { }
 
+  void replaceContents(String newContents) { }
+
   StateManager get state => null;
 
   void restoreState() => null;

@@ -7,8 +7,8 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
+import 'dart:js' as js;
 
-import 'package:cde_polymer_designer/cde_polymer_designer.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_testing/testing_app.dart';
 import 'package:intl/intl.dart';
@@ -25,6 +25,7 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/apps/app_manifest_builder.dart';
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
+import 'lib/commands.dart';
 import 'lib/dependency.dart';
 import 'lib/decorators.dart';
 import 'lib/dart/dart_builder.dart';
@@ -131,54 +132,50 @@ abstract class Spark
     dependencies[Notifier] = this;
     dependencies[preferences.PreferenceStore] = localPrefs;
 
-    initPreferences();
+
     initEventBus();
+    initCommandManager();
 
-    initAnalytics();
+    return initPreferences().then((_) {
+      return restoreWorkspace().then((_) {
+        return restoreLocationManager().then((_) {
+          // Besides direct dependencies of the below modules on [Workspace] and
+          // [LocationManager], [restoreLocationManager] may also read
+          // updated [SparkFlags] from `<project location>/.spark.json`.
 
-    initWorkspace();
-    initPackageManagers();
-    initServices();
-    initScmManager();
-    initAceManager();
-    initEditorManager();
-    initEditorArea();
-    initNavigationManager();
-    initAndroidRSA();
+          initAnalytics();
 
-    createActions();
+          initPackageManagers();
+          initServices();
+          initScmManager();
+          initAceManager();
 
-    initFilesController();
+          initAndroidRSA();
 
-    initToolbar();
-    buildMenu();
-    initSplitView();
-    initSaveStatusListener();
+          initEditorManager();
+          initNavigationManager();
 
-    initLaunchManager();
+          createActions();
 
-    window.onFocus.listen((Event e) {
-      // When the user switch to an other application, he might change the
-      // content of the workspace from other applications. For that reason, when
-      // the user switch back to Spark, we want to check whether the content of
-      // the workspace changed.
-      _refreshOpenFiles();
-    });
+          initFilesController();
 
-    // Add various builders.
-    addBuilder(new DartBuilder(this.services));
-    if (SparkFlags.performJavaScriptAnalysis) {
-      addBuilder(new JavaScriptBuilder());
-    }
-    addBuilder(new JsonBuilder());
-    addBuilder(new AppManifestBuilder());
+          initLaunchManager();
+          initBuilders();
 
-    return restoreWorkspace().then((_) {
-      return restoreLocationManager().then((_) {
-        // Location manager might have overridden the Ace-related flags from
-        // "<project location>/.spark.json".
-        initAceManagers();
-        initSearchController();
+          initEditorArea();
+          initToolbar();
+          buildMenu();
+          initSplitView();
+          initSaveStatusListener();
+
+          initSearchController();
+
+          window.onFocus.listen((Event e) {
+            // On unfocusing/refocusing CDE, refresh the workspace to account
+            // for possible external changes.
+            _refreshOpenFiles();
+          });
+        });
       });
     });
   }
@@ -232,6 +229,7 @@ abstract class Spark
   preferences.PreferenceStore get localPrefs => preferences.localStore;
   preferences.PreferenceStore get syncPrefs => preferences.syncStore;
   StateManager get stateManager => dependencies[StateManager];
+  CommandManager get commands => dependencies[CommandManager];
 
   //
   // - End SparkModel interface.
@@ -288,10 +286,10 @@ abstract class Spark
   // Parts of init():
   //
 
-  void initPreferences() {
+  Future initPreferences() {
     prefs = new preferences.SparkPreferences(localPrefs);
 
-    LocalStateManager.create().then((StateManager state) {
+    return LocalStateManager.create().then((StateManager state) {
       dependencies[StateManager] = state;
     });
   }
@@ -306,6 +304,11 @@ abstract class Spark
         (ErrorMessageBusEvent event) {
       showErrorMessage(event.title, message: event.error.toString());
     });
+  }
+
+  void initCommandManager() {
+    dependencies[CommandManager] = new CommandManager();
+    commands.listenToDom(document.body);
   }
 
   void initAnalytics() {
@@ -325,10 +328,6 @@ abstract class Spark
         _handleUncaughtException(r.error, r.stackTrace);
       }
     });
-  }
-
-  void initWorkspace() {
-    _workspace = new ws.Workspace(localPrefs, jobManager);
   }
 
   void initScmManager() {
@@ -378,7 +377,9 @@ abstract class Spark
   }
 
   void initAndroidRSA() {
-    AndroidRSA.loadPlugin();
+    if (isDart2js()) {
+      AndroidRSA.loadPlugin();
+    }
   }
 
   void _selectLocation(NavigationLocation location) {
@@ -411,15 +412,18 @@ abstract class Spark
         _textFileExtensions.addAll(JSON.decode(value));
       }
     });
-  }
 
-  void initAceManagers() {
+    if (workspace.getFiles().length == 0) {
+      // No files, just focus the editor.
+      aceManager.focus();
+    }
+
     _aceThemeManager = new ThemeManager(
-        aceManager, prefs, getUIElement('#changeTheme .settings-value'));
+        _aceManager, prefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, prefs, getUIElement('#changeKeys .settings-value'));
+        _aceManager, prefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, prefs, getUIElement('#changeFont .settings-value'));
+        _aceManager, prefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -597,6 +601,11 @@ abstract class Spark
     actionManager.registerKeyListener();
 
     DeployToMobileDialog._init(this);
+
+    // Bind the 'show-new-project' command to the 'project-new' action.
+    commands.registerHandler('show-new-project',
+        new FunctionCommandHandler(
+            () => actionManager.invokeAction('project-new')));
   }
 
   void initToolbar() {
@@ -608,16 +617,21 @@ abstract class Spark
   }
 
   Future restoreWorkspace() {
-    return workspace.restore().then((value) {
-      if (workspace.getFiles().length == 0) {
-        // No files, just focus the editor.
-        aceManager.focus();
-      }
-    });
+    _workspace = new ws.Workspace(localPrefs, jobManager);
+    return _workspace.restore();
   }
 
   Future restoreLocationManager() {
     return filesystem.restoreManager(localPrefs);
+  }
+
+  void initBuilders() {
+    addBuilder(new DartBuilder(this.services));
+    if (SparkFlags.performJavaScriptAnalysis) {
+      addBuilder(new JavaScriptBuilder());
+    }
+    addBuilder(new JsonBuilder());
+    addBuilder(new AppManifestBuilder());
   }
 
   //
@@ -742,13 +756,7 @@ abstract class Spark
     }
   }
 
-  Editor getCurrentEditor() {
-    ContentProvider contentProvider = editorManager.currentProvider;
-    for (Editor editor in editorManager.editors) {
-      if (editor.contentProvider.uuid == contentProvider.uuid) return editor;
-    }
-    return null;
-  }
+  Editor getCurrentEditor() => editorManager.currentEditor;
 
   // TODO(ussuri): The whole show...Message/Dialog() family: polymerize,
   // generalize and offload to SparkPolymerUI.
@@ -859,8 +867,8 @@ abstract class Spark
           _okCancelCompleter = null;
         }
       });
-      _okCancelDialog.dialog.on['opened'].listen((event) {
-        if (event.detail == false) {
+      _okCancelDialog.dialog.on['transition-start'].listen((event) {
+        if (!event.detail['opening']) {
           if (_okCancelCompleter != null) {
             _okCancelCompleter.complete(false);
             _okCancelCompleter = null;
@@ -1011,7 +1019,7 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
-  void openEditor(ws.File file, {Span selection}) {
+Future<Editor> openEditor(ws.File file, {Span selection}) {
     EditorTab tab = editorArea.tabByFile(file);
     ContentProvider contentProvider = tab.contentProvider;
     if (tab != null) {
@@ -1021,6 +1029,8 @@ abstract class Spark
     }
 
     navigationManager.gotoLocation(new NavigationLocation(contentProvider, selection));
+    // TODO(ussuri): Is there something better than nextTick?
+    return nextTick().then((_) => editorManager.currentEditor);
   }
 
   //
@@ -1106,19 +1116,22 @@ abstract class Spark
    * Check if this project uses Bower, and if so automatically run a
    * `bower install`.
    */
-  void _checkAutoRunBower(ws.Container container) {
+  Future _checkAutoRunBower(ws.Container container) {
     if (bowerManager.properties.isFolderWithPackages(container)) {
-      jobManager.schedule(new BowerGetJob(this, container));
+      return jobManager.schedule(new BowerGetJob(this, container));
+    } else {
+      return new Future.value();
     }
   }
 
   /**
    * Check if this project uses Pub, and if so automatically run a `pub install`.
    */
-  void _checkAutoRunPub(ws.Container container) {
+  Future _checkAutoRunPub(ws.Container container) {
     if (pubManager.canRunPub(container)) {
       // Don't run pub on Windows (#2743).
       if (PlatformInfo.isWin) {
+        // TODO(ussuri): Use Template.showIntro() mechanism instead?
         showMessage(
             'Run Pub Get',
             "This Dart project uses pub packages. Currently, we can't run pub "
@@ -1126,13 +1139,12 @@ abstract class Spark
             "points. In order to run this project, please install Dart's "
             "command-line tools (available at www.dartlang.org), and run "
             "'pub get'.");
+        return new Future.value();
       } else {
-        // There is issue with the workspace sending duplicate events.
-        // TODO(grv): Revisit workspace events.
-        Timer.run(() {
-          jobManager.schedule(new PubGetJob(this, container));
-        });
+        return jobManager.schedule(new PubGetJob(this, container));
       }
+    } else {
+      return new Future.value();
     }
   }
 }
@@ -2268,14 +2280,15 @@ class BuildApkAction extends SparkActionWithDialog {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
-  ws.Folder folder;
 
+  // TODO(ussuri): Eliminate this and dependencies as per BUG #3619.
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
       'core-elements': 'Polymer/core-elements#master',
       'paper-elements': 'Polymer/paper-elements#master'
   };
   // Matches: "proj-template", "proj-template;polymer,core-elements".
+  // TODO(ussuri): Set to '([\/\w_-]+)' when fixing BUG #3619.
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
@@ -2307,14 +2320,11 @@ class NewProjectAction extends SparkActionWithDialog {
         return new Future.value();
       }
 
-      final DirectoryEntry locationEntry = location.entry;
-
       ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
+      final List<ProjectTemplate> templates = [];
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
-        final List<ProjectTemplate> templates = [];
-
         final globalVars = [
             new TemplateVar('projectName', name),
             new TemplateVar('sourceName', name.toLowerCase())
@@ -2348,18 +2358,30 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
 
-        return new ProjectBuilder(locationEntry, templates, spark).build();
+        return new ProjectBuilder(location.entry, templates, spark).build();
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Created ${project.name}');
+          // Give the builders a chance to receive events about changes in the
+          // workspace and to schedule their build jobs in the queue.
           Timer.run(() {
-            spark._openFile(ProjectBuilder.getMainResourceFor(project));
+            // Wait for the builders to finish before performing tasks that
+            // depend on their results. One such dependency is between
+            // [_BowerBuilder] and [_checkAutoRunBower].
+            spark.workspace.builderManager.waitForAllBuilds().then((_) {
+              spark.showSuccessMessage('Created ${project.name}');
 
-            // Run Pub if the new project has a pubspec file
-            spark._checkAutoRunPub(project);
-
-            // Run Bower if the new project has a bower.json file.
-            spark._checkAutoRunBower(project);
+              // Wait for Pub and Bower to finish before displaying intros, as
+              // they might require some actions on the downloaded packages.
+              Future.wait([
+                spark._openFile(ProjectBuilder.getMainResourceFor(project)),
+                spark._checkAutoRunPub(project),
+                spark._checkAutoRunBower(project)
+              ]).then((_) {
+                // Sequentially displaying intros for all the templates used
+                // to create this project.
+                templates.forEach((t) => t.showIntro(project, spark));
+              });
+            });
           });
         });
       });
@@ -2999,7 +3021,7 @@ class GitCommitAction
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
-    _commitMessageElement = getElement("#commitMessage");
+    _commitMessageElement = getElement("#gitCommitMessage");
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
     _gitStatusElement = getElement('#gitStatus');
@@ -3491,8 +3513,8 @@ class _GitCloneTask {
           password = info['password'];
         }
 
-        return scmProvider.clone(url, location.entry,
-            username: username, password: password).then((_) {
+        return scmProvider.clone(url, location.entry, username: username,
+            password: password).then((_) {
           ws.WorkspaceRoot root;
 
           if (location.isSync) {
@@ -4229,42 +4251,74 @@ class PolymerDesignerAction
     extends SparkActionWithStatusDialog implements ContextAction {
   static final _HTML_FNAME_RE = new RegExp(r'^.+\.(htm|html|HTM|HTML)$');
 
-  CdePolymerDesigner _designer;
+  js.JsObject _designer;
   File _file;
+  HtmlEditor _editor;
 
   PolymerDesignerAction(Spark spark, SparkDialog dialog)
       : super(spark, "polymer-designer", "Edit in Polymer Designer…", dialog) {
-    _designer = _dialog.getElement('#polymerDesigner');
-    _dialog.getElement('#polymerDesignerReset').onClick.listen((_) {
-      _designer.reload();
+    _designer = new js.JsObject.fromBrowserObject(
+        _dialog.getElement('#polymerDesigner'));
+    _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearDesign);
+    _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertDesign);
+
+    querySelector('#openPolymerDesignerButton').onClick.listen((_) {
+      // TODO(ericarnold): Will throw if invoked on a non-FileContentProvider.
+      // Make sure it can't be.
+      FileContentProvider contentProvider = spark.editorManager.currentProvider;
+      _open(contentProvider.file);
     });
   }
 
   void _invoke([List<ws.Resource> resources]) {
+    _open(spark._getFile(resources));
+  }
+
+  void _open(File file) {
+    // Open dialog before reading file to start showing PD's splash.
+    _dialog.dialog.headerTitle = "Polymer Designer: ${file.name}";
     _show();
-    _file = spark._getFile(resources);
-    _designer.load().then((_) {
-      _file.getContents().then((String contents) {
-        _designer.setCode(contents);
+
+    // Activate existing or open a new editor. The latter gives visibility of
+    // changes and a way to recover the old code after exporting from PD.
+    spark.openEditor(file).then((editor) {
+      _editor = editor;
+      _editor.save().then((_) {
+        file.getContents().then((String code) {
+          _designer.callMethod('load', [code]);
+        });
       });
     });
   }
 
   void _commit() {
-    _designer.getCode().then((String code) {
-      _file.setContents(code);
-      _file = null;
-      _designer.unload();
-    });
+    final js.JsObject promise = _designer.callMethod('getCode');
+    promise.callMethod('then', [(String code) {
+      // Set the new code via [_editor], not [_file] to ensure that the old
+      // code is recoverable via undo.
+      _editor.replaceContents(code);
+      _cleanup();
+    }]);
 
     super._commit();
   }
 
   void _cancel() {
-    _file = null;
-    _designer.unload();
-
+    _cleanup();
     super._cancel();
+  }
+
+  void _revertDesign([_]) {
+    _designer.callMethod('revertCode');
+  }
+
+  void _clearDesign([_]) {
+    _designer.callMethod('setCode', ['']);
+  }
+
+  void _cleanup() {
+    _designer.callMethod('unload');
+    _file = null;
   }
 
   String get category => 'refactor';

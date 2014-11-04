@@ -137,11 +137,14 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   ContentProvider get currentProvider =>
       _currentState != null ? _currentState.contentProvider : null;
+  Editor get currentEditor => getEditor(currentProvider);
 
   Iterable<ContentProvider> get contentProviders =>
       _openedEditorStates.map((_EditorState s) => s.contentProvider);
   Future<bool> get loaded => _loadedCompleter.future;
   Iterable<Editor> get editors => _editorUuidMap.values;
+  Editor getEditor(ContentProvider contentProvider) =>
+      _editorUuidMap[contentProvider.uuid];
 
   Stream<ContentProvider> get onSelectedChange => _selectedController.stream;
 
@@ -578,7 +581,8 @@ class PreferenceContentProvider implements ContentProvider {
   PreferenceContentProvider(this._store, this.name);
 
   Future<String> read() => _store.getValue(name)
-        .then((String content) => content == null ? "" : content);
+        .then((String content) =>
+            content == null ? "" : content);
 
   Future write(String content) => _store.setValue(name, content);
 }

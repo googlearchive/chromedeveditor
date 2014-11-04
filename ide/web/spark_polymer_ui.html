@@ -19,7 +19,10 @@
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <link rel="import" href="packages/cde_polymer_designer/cde_polymer_designer.html">
+<link rel="import" href="packages/paper/core-icons/core-icons.html">
+<link rel="import" href="packages/paper/paper-fab/paper-fab.html">
 
+<link rel="import" href="lib/ui/cde-fab/cde-fab.html">
 <link rel="import" href="lib/ui/commit_message_view/commit_message_view.html">
 <link rel="import" href="lib/ui/goto_line_view/goto_line_view.html">
 
@@ -138,13 +141,15 @@
 
         <spark-toolbar id="bottom-toolbar" class="toolbar" spacing="small"
             layout horizontal justify="right">
-          <spark-status id="sparkStatus" flex></spark-status>
           <spark-button id="settingsButton" flat round tooltip="Settings...">
             <svg width="24px" height="24px" viewBox="0 0 24 24">
               <!-- settings icon from core-icons -->
               <path d="M19.4 13c0-.3.1-.6.1-1s0-.7-.1-1l2.1-1.7c.2-.2.2-.4.1-.6l-2-3.5c-.1-.1-.3-.2-.6-.1l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c.1-.3-.2-.5-.4-.5h-4c-.2 0-.5.2-.5.4l-.4 2.7c-.6.2-1.1.6-1.7 1l-2.4-1c-.3-.1-.5 0-.7.2l-2 3.5c-.1.1 0 .4.2.6l2.1 1.6c0 .3-.1.6-.1 1s0 .7.1 1l-2.1 1.7c-.2.2-.2.4-.1.6l2 3.5c.1.1.3.2.6.1l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.2 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6l-2.3-1.6zm-7.4 2.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
             </svg>
           </spark-button>
+          <spark-status id="sparkStatus" flex></spark-status>
+          <cde-fab icon="add" command="show-new-project" tooltip="New Project...">
+          </cde-fab>
         </spark-toolbar>
       </div>
 
@@ -251,12 +256,14 @@
               </option>
             </optgroup>
             <optgroup label="Web apps">
-              <option value="web/web_app_dart">
+              <option value="stagehand/webapp">
                 Dart web app
               </option>
-              <option value="web/web_app_dart_polymer">
+              <!-- TODO(devoncarew): Removed until we can launch into -->
+              <!-- Dartium, or Dart Polymer can run without transformers. -->
+              <!-- option value="stagehand/polymerapp">
                 Dart web app (using Polymer paper elements)
-              </option>
+              </option -->
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
@@ -274,7 +281,7 @@
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome App
               </option>
-              <option value="chrome/chrome_app_polymer_js;polymer,paper-elements">
+              <option value="chrome/chrome_app_polymer_js">
                 JavaScript Chrome App (using Polymer paper elements)
               </option>
               <!-- This one works when installed in Chrome manually, but
@@ -283,13 +290,16 @@
                 JavaScript Chrome extension
               </option>
             </optgroup>
-            <optgroup label="Polymer elements">
-              <option value="polymer/polymer_element_js">
-                JavaScript Polymer custom element
+            <optgroup label="Other">
+              <option value="stagehand/package">
+                Dart package
               </option>
               <!-- This one just needs some additional work. -->
               <option value="polymer/polymer_element_dart">
                 Dart Polymer custom element
+              </option>
+              <option value="polymer/polymer_element_js">
+                JavaScript Polymer custom element
               </option>
               <!-- This one is internal for now. -->
               <option value="polymer/spark_widget">
@@ -307,12 +317,14 @@
               </option>
             </optgroup>
             <optgroup label="Web apps">
-              <option value="web/web_app_dart">
+              <option value="stagehand/webapp">
                 Dart web app
               </option>
-              <option value="web/web_app_dart_polymer">
+              <!-- TODO(devoncarew): Removed until we can launch into -->
+              <!-- Dartium, or Dart Polymer can run without transformers. -->
+              <!-- option value="stagehand/polymerapp">
                 Dart web app (using Polymer paper elements)
-              </option>
+              </option -->
               <option value="web/web_app_js">
                 JavaScript web app
               </option>
@@ -334,7 +346,10 @@
                 JavaScript Chrome App (using Polymer paper elements)
               </option>
             </optgroup>
-            <optgroup label="Polymer elements">
+            <optgroup label="Other">
+              <option value="stagehand/package">
+                Dart package
+              </option>
               <option value="polymer/polymer_element_js">
                 JavaScript Polymer custom element
               </option>
@@ -519,7 +534,7 @@
         </div>
       </div>
       <div class="input-label">
-        <label id="changeLabel">Changes</label>
+        <label id="gitChangeLabel">Changes</label>
         <div id="gitStatusDiv">
            <span id="gitStatus"></span>
            <a href="#" id="gitStatusDetail">Details...</a>
@@ -527,8 +542,8 @@
       </div>
       <div id="gitChangeList"></div>
       <div class="form-group">
-        <label for="commitMessage">Commit message</label>
-        <textarea id="commitMessage" type="text" class="form-control"
+        <label for="gitCommitMessage">Commit message</label>
+        <textarea id="gitCommitMessage" type="text" class="form-control"
             rows="3" wrap="soft" spellcheck autocomplete="on" focused>
         </textarea>
         <span class="help-block">
@@ -883,7 +898,8 @@
         </cde-polymer-designer>
 
         <spark-dialog-button cancel>Cancel</spark-dialog-button>
-        <spark-dialog-button id="polymerDesignerReset">Reset</spark-dialog-button>
+        <spark-dialog-button id="polymerDesignerClear">Clear</spark-dialog-button>
+        <spark-dialog-button id="polymerDesignerRevert">Revert</spark-dialog-button>
         <spark-dialog-button submit focused>Generate code</spark-dialog-button>
       </spark-dialog>
     </template>

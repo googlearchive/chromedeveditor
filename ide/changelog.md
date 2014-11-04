@@ -1,6 +1,56 @@
 # Chrome Dev Editor Release Notes
 
-## M16 (0.16.x, October 1, 2014)
+## M17 (0.17.x, November 4, 2014)
+
+### New features
+- improved Bower support
+
+    - added support for most of the [semantic version range formats](http://semver.org/) under `"dependencies"` in `bower.json`:
+
+        - operators `<`, `<=`, `>`, `>=`, `~` ("approximate"), `^` ("latest compatible")
+        - special tag `latest` ("latest stable tag")
+        - unspecified version defaults to `latest`)
+        - examples: `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`, `"Polymer/polymer#latest"`
+
+    - the destination directory for downloaded packages can be configured via `"directory"` field in hierarchically traversed `.bowerrc` files (other fields are currently ignored); see [Bower configuration page](http://bower.io/config/)
+
+- alpha version of [Polymer Designer](https://www.polymer-project.org/tools/designer/) integration into CDE; some notes:
+
+    - enabled for all HTML files, but meaningful only for HTMLs with a `<polymer-element>` at the top
+    - very sensitive to the input: may fail to render a design if the internal parsing fails; improvements on the way
+    - therefore, the primary indended use for now is to jump-start a new Polymer element from scratch, get it to a workable state, then continue more advanced development manually
+    - accessible via a new context menu item in the file tree and via a new floating action button (FAB) in the editor
+    - to start a new element design, simply create a new empty HTML and click the Polymer FAB in it
+    - generates only the `.html` source for a design; you will need to manually add any dependencies the design requires to a sibling `bower.json` and run `Bower Install` on it
+    - the undo stack is properly updated with the generated output: the original source can be restored via the usual `Undo` action
+    - known limitations:
+
+        - `<link>` tags importing external sources are ignored, including outline stylesheets and polymer components not natively known to the Designer (i.e. ones not found it its design palette); use inline tags wherever possible
+        - lists of CSS selectors before a single rule are not supported: use duplicate rules for each individual selector
+        - HTML tags containing both text content and sub-tags are parsed incorrectly: the text contents is lost; e.g. `Some text` in `<p>Some text <a>some link</a></p>` will be lost on import
+
+### Project templates
+- the `New Project` dialog can now also be accessed via a new floating action button (FAB) at the bottom of the file tree view
+- the much improved `Dart Web App` and the newly added `Dart Package` project templates are now based on [Stagehand](http://stagehand.pub/) - a new set of best-of-breed prescriptive templates for creating Dart projects
+- Polymer-related project templates now depend on the latest stable versions of Polymer components (depended on `master` before)
+- fixed/upgraded some previously/recently broken templates
+
+### Other changes
+- significant improvements in the editing speed and responsiveness!
+- add options to the `Search/Replace` dialog (regular expressions, case-sensitive, whole words only)
+- enabled syntax highighting for `.sql` and `.sqlite` file extensions
+
+- UI tweaks:
+
+    - improved the `Live Deploy` dialog's UI
+    - restricted resizing of the commit message text area in the `Git Commit` dialog to vertical only (could be resized horizontally before)
+    - added 11 light color themes for the editor
+
+### Bug fixes
+- the undo stack in the editor would reset when the rereading the contents of an externally modified file, making it impossible to go back to the original code
+- source navigation would become broken when an involved project got deleted
+
+## M16 (0.16.3226, October 1, 2014)
 ### New features
 - added the 'Live Deploy' mode when pushing to mobile: see your changes reflected on the device in real time!
 - added real-time validation for Chrome apps' manifests

@@ -31,7 +31,7 @@ class SparkUIAccess {
   MenuItemAccess aboutMenu;
 
   SparkMenuButton get menu => getUIElement("#mainMenu");
-  Stream get onMenuTransitioned => _menuOverlay.on['transition-complete'];
+  Stream get onMenuTransitioned => _menuOverlay.on['transition-end'];
 
   SparkPolymerUI get _ui => document.querySelector('#topUi');
   SparkButton get _sparkMenuButton => getUIElement("#mainMenu > spark-button");
@@ -133,7 +133,7 @@ class DialogAccess {
     return elementFromPoint == _dialog || _dialog.contains(elementFromPoint);
   }
 
-  Stream get onTransitionComplete => modalElement.on['transition-complete'];
+  Stream get onTransitionComplete => modalElement.on['transition-end'];
 
   SparkUIAccess get _sparkAccess => SparkUIAccess.instance;
   SparkDialog get _dialog => _sparkAccess.getUIElement("#$id");

@@ -201,7 +201,7 @@ class SparkSuggestBox extends SparkWidget {
       // TODO(ussuri): A temporary plug to make spark-overlay see changes
       // in 'opened' when run as deployed code. Just binding via {{opened}}
       // alone isn't detected and the menu doesn't open. Also, try
-      // _overlay.deliverChanges() instead.
+      // _overlay.deliverChanges() instead. BUG #2252.
       if (IS_DART2JS) {
         _overlay.opened = opened;
       }
@@ -213,12 +213,12 @@ class SparkSuggestBox extends SparkWidget {
   }
 
   /**
-   * Handle the on-opened event from the dropdown. It will be fired e.g. when
-   * mouse is clicked outside the dropdown (with [autoClose]).
+   * Handle the on-transition-start event from the dropdown. It will be fired
+   * e.g. when mouse is clicked outside the dropdown (with [autoClose]).
    */
-  void overlayOpenedHandler(CustomEvent e) {
+  void overlayOpenedHandler(CustomEvent event, dynamic detail) {
     // Autoclosing is the only event we're interested in.
-    if (e.detail == false) {
+    if (!detail['opening']) {
       _hideSuggestions();
     }
   }
@@ -226,7 +226,7 @@ class SparkSuggestBox extends SparkWidget {
   /**
    *  Handle the 'activate' events from the menu.
    */
-  void menuActivateHandler(Event event, var detail) {
+  void menuActivateHandler(Event event, dynamic detail) {
     if (detail['isSelected']) {
       final int idx = int.parse(detail['value']);
       suggestions[idx].onSelected();

@@ -101,6 +101,11 @@ class ActionManager {
    */
   Action getAction(String id) => _actionMap[id];
 
+  void invokeAction(String actionId, [Object context]) {
+    Action action = getAction(actionId);
+    if (action != null) action.invoke(context);
+  }
+
   /**
    * Return an [Iterable] of all the registered [Actions]s.
    */

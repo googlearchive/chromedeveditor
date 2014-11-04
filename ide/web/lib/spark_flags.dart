@@ -26,8 +26,6 @@ class SparkFlags {
       _flags['enable-apk-build'] == true;
 
   // Editor:
-  static bool get useLightAceThemes =>
-      _flags['light-ace-themes'] == true;
   static bool get enableMultiSelect =>
       _flags['enable-multiselect'] == true;
   static bool get packageFilesAreEditable =>
@@ -48,8 +46,11 @@ class SparkFlags {
   static bool get bowerUseGitClone =>
       _flags['bower-use-git-clone'] == true;
 
+  // Git:
   static bool get gitPull =>
       _flags['enable-git-pull'] == true;
+  static bool get gitSalt => false;
+      //_flags['enable-git-salt'] == true;
 
   static bool get polymerDesigner =>
       _flags['enable-polymer-designer'] == true;
@@ -107,7 +108,7 @@ class SparkFlags {
    */
   static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
     return fileReader
-      .timeout(new Duration(milliseconds: 1000))
+      .timeout(new Duration(milliseconds: 3000))
       .then((String contents) => JSON.decode(contents))
       .catchError((e) {
         if (e is FormatException) {

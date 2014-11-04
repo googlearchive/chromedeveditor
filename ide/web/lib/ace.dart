@@ -40,6 +40,8 @@ export 'package:ace/ace.dart' show EditSession;
 
 dynamic get _spark => html.querySelector('spark-polymer-ui');
 dynamic get _toggleOutlineButton => _spark.$['toggle-outline'];
+dynamic get _polymerDesignerButton =>
+    html.querySelector('#openPolymerDesignerButton');
 
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
@@ -263,23 +265,36 @@ class TextEditor extends Editor {
     // By default, all file types use 2-space soft tabs for indentation.
     session.tabSize = 2;
     session.useSoftTabs = true;
+    // Select the range of an undo or redo operation.
+    session.undoSelect = true;
   }
 
   /**
-   * Replace the editor's contents with the given text. Make sure that we don't
-   * fire a change event.
+   * Replace the editor's contents with the given text.
    */
-  void _replaceContents(String newContents) {
-    _aceSubscription.cancel();
+  void replaceContents(String newContents) =>
+      _replaceContents(newContents, fireEvent: true);
+
+  /**
+   * Replace the editor's contents with the given text - internal version.
+   * Suppress firing Ace event by default: internal callers don't need it.
+   */
+  void _replaceContents(String newContents, {fireEvent: false}) {
+    if (!fireEvent) {
+      _aceSubscription.cancel();
+    }
 
     try {
       // Restore the cursor position and scroll location.
-      int scrollTop = _session.scrollTop;
+      num scrollTop = _session.scrollTop;
       html.Point cursorPos = null;
       if (aceManager.currentProvider == contentProvider) {
         cursorPos = aceManager.cursorPosition;
       }
-      _session.value = newContents;
+      // NOTE: Do not use `_session.value = newContents` here: it resets the
+      // undo stack.
+      _session.replace(
+          new ace.Range(0, 0, _session.length + 1, 0), newContents);
       _session.scrollTop = scrollTop;
       if (cursorPos != null) {
         aceManager.cursorPosition = cursorPos;
@@ -287,7 +302,9 @@ class TextEditor extends Editor {
 
       _invokeReconcile();
     } finally {
-      _aceSubscription = _session.onChange.listen((_) => dirty = true);
+      if (!fireEvent) {
+        _aceSubscription = _session.onChange.listen((_) => dirty = true);
+      }
     }
   }
 
@@ -300,7 +317,7 @@ class TextEditor extends Editor {
   /**
    * Handle navigating to file references in strings. So, things like:
    *
-   *     @import url("packages/bootjack/css/bootstrap.min.css");
+   *     @import url("packages/bootstrap/bootstrap.min.css");
    */
   Future<svc.Declaration> _simpleNavigateToDeclaration([Duration timeLimit]) {
     if (!(contentProvider is FileContentProvider)) {
@@ -467,6 +484,16 @@ class HtmlEditor extends TextEditor {
 
   HtmlEditor._create(AceManager aceManager, ContentProvider contentProvider,
       SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs);
+
+  void activate() {
+    _polymerDesignerButton.classes.toggle('hidden', false);
+    super.activate();
+  }
+
+  void deactivate() {
+    _polymerDesignerButton.classes.toggle('hidden', true);
+    super.deactivate();
+  }
 
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
       _simpleNavigateToDeclaration(timeLimit);
@@ -647,6 +674,8 @@ class AceManager {
     ace.Mode.extensionMap['webapp'] = ace.Mode.JSON;
     ace.Mode.extensionMap['gsp'] = ace.Mode.HTML;
     ace.Mode.extensionMap['jsp'] = ace.Mode.HTML;
+    ace.Mode.extensionMap['sql'] = ace.Mode.SQL;
+    ace.Mode.extensionMap['sqlite'] = ace.Mode.SQL;
     // The extensions used in Spark's own internal templates.
     ace.Mode.extensionMap['html_'] = ace.Mode.HTML;
     ace.Mode.extensionMap['css_'] = ace.Mode.CSS;
@@ -1050,26 +1079,8 @@ class AceManager {
 }
 
 class ThemeManager {
-  static final LIGHT_THEMES = [
-      // White bg color themes:
-      'chrome',
-      'clouds',
-      'crimson_editor',
-      'dreamweaver',
-      'eclipse',
-      // This one uses bold font for keywords: doesn't work well with Monaco.
-      // 'github',
-      'textmate',
-      'tomorrow',
-      'xcode',
-      // Non-white bg color themes:
-      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
-      // 'dawn',
-      'katzenmilch',
-      'kuroir',
-      'solarized_light',
-  ];
-  static final DARK_THEMES = [
+  static final _THEMES = [
+      // Dark bg color themes:
       'ambiance',
       'chaos',
       'clouds_midnight',
@@ -1089,21 +1100,35 @@ class ThemeManager {
       'tomorrow_night_eighties',
       'twilight',
       'vibrant_ink',
+      // White bg color themes:
+      'chrome',
+      'clouds',
+      'crimson_editor',
+      'dreamweaver',
+      'eclipse',
+      // This one uses bold font for keywords: doesn't work well with Monaco.
+      // 'github',
+      'textmate',
+      'tomorrow',
+      'xcode',
+      // Non-white bg color themes:
+      // This one has the same bg color as CDE: looks bad, esp. with the tab bar.
+      // 'dawn',
+      'katzenmilch',
+      'kuroir',
+      'solarized_light',
   ];
 
   ace.Editor _aceEditor;
   SparkPreferences _prefs;
   html.Element _label;
-  List<String> _themes = [];
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    _themes.addAll(DARK_THEMES);
-    if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
     String theme = _prefs.editorTheme.value;
-    if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
-      theme = _themes[0];
+    if (theme == null || theme.isEmpty || !_THEMES.contains(theme)) {
+      theme = _THEMES[0];
     }
     _updateTheme(theme);
   }
@@ -1119,9 +1144,9 @@ class ThemeManager {
   }
 
   void _changeTheme(int direction) {
-    int index = _themes.indexOf(_aceEditor.theme.name);
-    index = (index + direction) % _themes.length;
-    String newTheme = _themes[index];
+    int index = _THEMES.indexOf(_aceEditor.theme.name);
+    index = (index + direction) % _THEMES.length;
+    String newTheme = _THEMES[index];
     _updateTheme(newTheme);
   }
 

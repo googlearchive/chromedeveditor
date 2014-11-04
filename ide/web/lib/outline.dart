@@ -7,28 +7,13 @@ library spark.outline;
 import 'dart:async';
 import 'dart:html' as html;
 
+import 'commands.dart';
+import 'dependency.dart';
 import 'enum.dart';
 import 'services.dart' as services;
 import 'preferences.dart';
 
-/**
- * Listen for the given command event on an element. Call the given function
- * when we receive the command.
- *
- * TODO(devoncarew): Move this into a command specific library.
- */
-void _handleCommand(html.Element element, String commandId, Function fn) {
-   element.on['command'].listen((e) {
-    if (e is html.CustomEvent && e.type == 'command') {
-      String command = e.detail['command'];
-
-      if (command == commandId) {
-        e.stopPropagation();
-        fn(e.detail);
-      }
-    }
-  });
-}
+CommandManager get _commands => Dependencies.dependency[CommandManager];
 
 class OffsetRange {
   int top;
@@ -82,7 +67,8 @@ class Outline {
     _rootListDiv = _outlineDiv.querySelector('#outline');
     _rootList = _rootListDiv.querySelector('ul');
 
-    _handleCommand(html.document.body, 'toggle-outline', (_) => toggle());
+    _commands.registerHandler(
+        'toggle-outline', new FunctionCommandHandler(toggle));
 
     _prefs.getValue('OutlineCollapsed').then((String data) {
       if (data == 'true') {
