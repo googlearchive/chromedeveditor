@@ -70,6 +70,8 @@ body {
 
 #aceContainer {
   height: 100%;
+  /* The initial state with no opened tabs. Otherwise, there are UI artifacts. */
+  visibility: hidden;
 }
 
 /*
