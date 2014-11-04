@@ -485,33 +485,33 @@ class _Package {
   }
 
   Future _resolvePath() {
-    // TODO(ussuri): See above. This, too, allows only either a "*" path,
-    // or a non-* path with a hash, but not a direct version/tag without a path.
+    // Regular path - no special resolution required.
     if (path != null && path != '*') {
       return new Future.value();
-    } else {
-      return util.downloadFileViaXhr(getRegistryInfoUrl()).then(
-          (String regResponse) {
-        Map<String, dynamic> regInfo;
-        try {
-          regInfo = JSON.decode(regResponse);
-        } on FormatException catch (e) {
-          // Also handles registryResponse=='Package not found'.
-          return _resolveWith(_Unresolved.STAR_PATH_FOR_UNKNOWN_PACKAGE);
-        }
-
-        Match m = _BOWER_REGISTRY_INFO_URL_REGEXP.matchAsPrefix(regInfo['url']);
-        if (m == null) {
-          return _resolveWith(_Unresolved.MALFORMED_BOWER_REGISTRY_INFO);
-        }
-        path = m.group(1);
-        if (path == null) {
-          return _resolveWith(_Unresolved.MALFORMED_BOWER_REGISTRY_INFO);
-        }
-        path = path.replaceFirst(new RegExp(r'.git$'), '');
-        return new Future.value();
-      });
     }
+
+    // A "*" or an empty path: resolve using Bower registry.
+    return util.downloadFileViaXhr(getRegistryInfoUrl()).then(
+        (String regResponse) {
+      Map<String, dynamic> regInfo;
+      try {
+        regInfo = JSON.decode(regResponse);
+      } on FormatException catch (e) {
+        // Also handles registryResponse=='Package not found'.
+        return _resolveWith(_Unresolved.STAR_PATH_FOR_UNKNOWN_PACKAGE);
+      }
+
+      Match m = _BOWER_REGISTRY_INFO_URL_REGEXP.matchAsPrefix(regInfo['url']);
+      if (m == null) {
+        return _resolveWith(_Unresolved.MALFORMED_BOWER_REGISTRY_INFO);
+      }
+      path = m.group(1);
+      if (path == null) {
+        return _resolveWith(_Unresolved.MALFORMED_BOWER_REGISTRY_INFO);
+      }
+      path = path.replaceFirst(new RegExp(r'.git$'), '');
+      return new Future.value();
+    });
   }
 
   Future _resolveTag() {
