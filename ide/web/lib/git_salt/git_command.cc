@@ -167,6 +167,33 @@ int GitGetBranches::runCommand() {
   return 0;
 }
 
+int GitAdd::parseArgs() {
+  int error = 0;
+  pp::VarArray entryArray;
+  if ((error = parseArray(_args, kEntries, entryArray))) {
+  }
+
+  uint32_t length = entryArray.GetLength();
+  for (uint32_t i = 0; i < length; ++i) {
+    entries.push_back(entryArray.Get(i).AsString());
+  }
+  return 0;
+}
+
+int GitAdd::runCommand() {
+  git_index* index = NULL;
+  int error = git_repository_index(&index, repo);
+  if (error) {
+    //TODO(grv): handle errors.
+  }
+  for (uint32_t i = 0; i < entries.size(); i++) {
+    //TODO(grv) : This only works for filepaths. Add support for adding
+    // directory paths recursively.
+    git_index_add_bypath(index, entries[i].c_str());
+  }
+  return 0;
+}
+
 int StatusCb(const char* path, unsigned int status, void* payload) {
   pp::VarDictionary* statuses = (pp::VarDictionary*) payload;
   statuses->Set(path, (int)status);

@@ -466,6 +466,14 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
     return new Future.value();
   }
 
+  Future addFiles(List<chrome.Entry> files) {
+    return gitSalt.then((git_salt) {
+      git_salt.add(files).then((_) {
+        return _refreshStatus(project: project);
+      });
+    });
+  }
+
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
   Future updateForChanges(List<ChangeDelta> changes) {

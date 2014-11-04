@@ -19,6 +19,7 @@
 
 #include "git_command.h"
 
+class GitAdd;
 class GitClone;
 class GitCommit;
 class GitCurrentBranch;
@@ -67,6 +68,8 @@ class GitSaltInstance : public pp::Instance {
   int CurrentBranch(int32_t r, GitCurrentBranch* branch);
 
   int GetBranches(int32_t r, GitGetBranches* getBranches);
+
+  int Add(int32_t, GitAdd* add);
 
   int Status(int32_t r, GitStatus* status);
 
