@@ -381,7 +381,7 @@ void _changeModeImpl(bool useTestMode, File file) {
   String content = file.readAsStringSync();
   var dict;
   try {
-   dict = JSON.decode(content);
+    dict = JSON.decode(content);
   } catch (e) {
     dict = new Map();
   }
