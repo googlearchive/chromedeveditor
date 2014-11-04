@@ -22,7 +22,7 @@ const char* const kStatuses = "statuses";
 const char* const kSubject = "subject";
 const char* const kUrl = "url";
 
-
+// Git command constants.
 const char* const kCmdAdd = "add";
 const char* const kCmdClone = "clone";
 const char* const kCmdCommit = "commit";

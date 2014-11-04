@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include<iostream>
-
 #include "git_command.h"
 
 int GitCommand::parseFileSystem(pp::VarDictionary message, std::string name,
@@ -189,7 +187,6 @@ int GitAdd::runCommand() {
     //TODO(grv): handle errors.
   }
   for (uint32_t i = 0; i < entries.size(); i++) {
-    std::cout << entries[i] << "\n";
     //TODO(grv) : This only works for filepaths. Add support for adding
     // directory paths recursively.
     git_index_add_bypath(index, entries[i].c_str());
