@@ -598,18 +598,19 @@ Future<String> downloadFileViaXhr(
     } else if (request.status == 403) {
       // Access forbidden. It's possible that we've hit a rate limit.
       final String rateLimitRemaining =
-          request.responseHeaders['X-RateLimit-Remaining'];
+          request.responseHeaders['x-ratelimit-remaining'];
       if (rateLimitRemaining == '0') {
-        String rateLimitReset = request.responseHeaders['X-RateLimit-Reset'];
+        String rateLimitReset = request.responseHeaders['x-ratelimit-reset'];
         if (rateLimitReset != null) {
+          final int msSinceEpoch = int.parse(rateLimitReset) * 1000;
           rateLimitReset = new DateTime.fromMillisecondsSinceEpoch(
-              int.parse(rateLimitReset), isUtc: true).toLocal().toString();
+              msSinceEpoch, isUtc: true).toLocal().toString();
         } else {
           rateLimitReset = "unknown time";
         }
         completer.completeError(
-            "Reached a rate limit with the domain when requesting '$url': "
-            "will reset at $rateLimitReset");
+            "Reached the access rate limit when requesting '$url': "
+            "the limit will reset at $rateLimitReset");
       } else {
         completer.completeError("Access to '$url' is (temporarily) forbidden");
       }
