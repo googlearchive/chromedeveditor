@@ -633,6 +633,19 @@ Future<String> downloadFileViaXhr(
   return completer.future;
 }
 
+Future<String> getRedirectedUrlViaXhr(String url) {
+  final completer = new Completer();
+  final request = new html.HttpRequest();
+
+  request.open('HEAD', url);
+  request.onLoadEnd.listen((event) {
+    completer.complete(request.responseUrl);
+  });
+  request.send();
+
+  return completer.future;
+}
+
 class DelayedTimer {
   Timer _timer;
   final Duration _delay;

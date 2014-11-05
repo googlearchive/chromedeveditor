@@ -481,7 +481,9 @@ class _Package {
       return _resolveWith(_Resolved.USED_AS_IS);
     }
 
-    return _resolvePath().then((_) => _resolveTag());
+    return _resolvePath().then(
+        (_) => _maybeRedirectPath().then(
+            (_) => _resolveTag()));
   }
 
   Future _resolvePath() {
@@ -511,6 +513,14 @@ class _Package {
       }
       path = path.replaceFirst(new RegExp(r'.git$'), '');
       return new Future.value();
+    });
+  }
+
+  Future _maybeRedirectPath() {
+    return util.getRedirectedUrlViaXhr(getRootUrl()).then((String newUrl) {
+      if (newUrl != null) {
+        path = newUrl.replaceFirst('$_GITHUB_ROOT_URL/', '');
+      }
     });
   }
 
@@ -577,6 +587,8 @@ class _Package {
 
   bool operator ==(_Package another) =>
       path == another.path && hash == another.hash;
+
+  String getRootUrl() => '$_GITHUB_ROOT_URL/$path';
 
   String getCloneUrl() => '$_GITHUB_ROOT_URL/$path/$resolvedTag';
 
