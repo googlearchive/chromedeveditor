@@ -536,15 +536,14 @@ class _Package {
     }
 
     return _fetchTags().then((List<Map<String, dynamic>> tags) {
-      if (tags == null || tags.isEmpty)
+      if (tags == null || tags.isEmpty) {
         return _resolveWith(_Unresolved.BAD_OR_MISSING_GITHUB_TAGS);
-
+      }
 
       List<semver.Version> candidateVersions = [];
 
       for (final tag in tags) {
         final String tagName = tag['name'];
-        bool matches = false;
         try {
           final ver = new semver.Version.parse(tagName);
           if (constraint.allows(ver)) {
