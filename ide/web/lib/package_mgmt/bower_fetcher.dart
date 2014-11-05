@@ -139,11 +139,13 @@ class BowerFetcher {
 
     List<Future> futures = [];
     _allDeps.values.forEach((_Package package) {
-      final Future f = _fetchPackage(package, mode)
-          .catchError((e) => _logger.warning(
-              "Failed to fetch package ${package.name}: $e"))
-          .whenComplete(() => _monitor.worked(1));
-      futures.add(f);
+      if (package.isResolved) {
+        final Future f = _fetchPackage(package, mode)
+            .catchError((e) => _logger.warning(
+                "Failed to fetch package ${package.name}: $e"))
+            .whenComplete(() => _monitor.worked(1));
+        futures.add(f);
+      }
     });
     return Future.wait(futures);
   }
@@ -512,6 +514,8 @@ class _Package {
   }
 
   Future _maybeRedirectPath() {
+    if (_resolutionCompleter.isCompleted) return _resolutionCompleter.future;
+
     return util.getRedirectedUrlViaXhr(getRootUrl()).then((String newUrl) {
       if (newUrl != null) {
         path = newUrl.replaceFirst('$_GITHUB_ROOT_URL/', '');
