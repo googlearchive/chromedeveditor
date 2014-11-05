@@ -117,7 +117,8 @@ class FileSystemAccess {
    * will be the sync filesystem. This method can return `null` if the user
    * cancels the folder selection dialog.
    */
-  Future<LocationResult> getProjectLocation() => locationManager.getProjectLocation();
+  Future<LocationResult> getProjectLocation([bool chooseIfNone = true]) =>
+      locationManager.getProjectLocation(chooseIfNone);
 
   /**
    * This will create a new folder in default project location. It will attempt
@@ -228,7 +229,7 @@ class ProjectLocationManager {
    * will be the sync filesystem. This method can return `null` if the user
    * cancels the folder selection dialog.
    */
-  Future<LocationResult> getProjectLocation() {
+  Future<LocationResult> getProjectLocation([bool chooseIfNone = true]) {
     if (_projectLocation != null) {
       // Check if the saved location exists. If so, return it. Otherwise, get a
       // new location.
@@ -251,8 +252,12 @@ class ProjectLocationManager {
       });
     }*/
 
-    // Show a dialog with explaination about what this folder is for.
-    return chooseNewProjectLocation(true);
+    if (chooseIfNone) {
+      // Show a dialog with explaination about what this folder is for.
+      return chooseNewProjectLocation(true);
+    } else {
+      return new Future.value(null);
+    }
   }
 
   /**
@@ -377,9 +382,9 @@ class MockProjectLocationManager extends ProjectLocationManager {
     });
   }
 
-  Future<LocationResult> getProjectLocation() {
+  Future<LocationResult> getProjectLocation([bool chooseIfNone = true]) {
     if (_projectLocation == null) {
-      return super.getProjectLocation();
+      return super.getProjectLocation(chooseIfNone);
     } else {
       return new Future.value(_projectLocation);
     }
