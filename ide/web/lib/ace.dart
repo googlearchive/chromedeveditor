@@ -103,8 +103,8 @@ class TextEditor extends Editor {
     if (value != _dirty) {
       _dirty = value;
       _dirtyController.add(value);
+      _modificationController.add(dirty);
     }
-    _modificationController.add(dirty);
   }
 
   html.Element get element => aceManager.parentElement;
@@ -126,7 +126,9 @@ class TextEditor extends Editor {
     restoreState();
 
     if (_aceSubscription != null) _aceSubscription.cancel();
-    _aceSubscription = _session.onChange.listen((_) => dirty = true);
+    _aceSubscription = _session.onChange.listen((_) =>
+        dirty = true
+        );
     if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
 
     _invokeReconcile();
