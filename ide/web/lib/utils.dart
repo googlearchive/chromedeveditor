@@ -595,13 +595,6 @@ Future<String> downloadFileViaXhr(
   request.onLoadEnd.listen((event) {
     if (request.status == 200) {
       completer.complete(request.responseText);
-
-      // Access forbidden. It's possible that we've hit a rate limit.
-      final String rateLimitRemaining =
-          request.responseHeaders['X-RateLimit-Remaining'];
-      if (rateLimitRemaining != null) {
-        print("Rate limit remaining for '$url': $rateLimitRemaining");
-      }
     } else if (request.status == 403) {
       // Access forbidden. It's possible that we've hit a rate limit.
       final String rateLimitRemaining =
