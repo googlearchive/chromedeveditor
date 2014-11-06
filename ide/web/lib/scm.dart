@@ -456,9 +456,18 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
     return new Future.value();
   }
 
+
   Future commit(String userName, String userEmail, String commitMessage) {
-    // TODO(grv): Implement.
-    return new Future.value();
+    return gitSalt.then((git_salt) {
+      Map<String, String> options = {
+        "commitMessage": commitMessage,
+        "userName": userName,
+        "userEmail": userEmail
+      };
+      return git_salt.commit(options).then((_) {
+        return _refreshStatus(project: project);
+      }).catchError((e) => throw SparkException.fromExcetption(e));
+    });
   }
 
   Future push(String username, String password) {
@@ -466,9 +475,13 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
     return new Future.value();
   }
 
+  Future<List<String>> getDeletedFiles() {
+    return new Future.value([]);
+  }
+
   Future addFiles(List<chrome.Entry> files) {
     return gitSalt.then((git_salt) {
-      git_salt.add(files).then((_) {
+      return git_salt.add(files).then((_) {
         return _refreshStatus(project: project);
       });
     });
