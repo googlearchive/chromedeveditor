@@ -95,18 +95,14 @@ int GitCommit::parseArgs() {
 }
 
 git_commit* GitCommit::getLastCommit() {
-  int rc;
-  git_commit * commit = NULL; /* the result */
-  git_oid oid_parent_commit;  /* the SHA1 for last commit */
+  git_commit * commit = NULL;
+  git_oid oid_parent_commit;
 
-  /* resolve HEAD into a SHA1 */
-  rc = git_reference_name_to_id(&oid_parent_commit, repo, "HEAD");
-  if ( rc == 0 )
-  {
-    /* get the actual commit structure */
-    rc = git_commit_lookup(&commit, repo, &oid_parent_commit);
-    if ( rc == 0 )
-    {
+  /* resolve HEAD into a SHA1 value */
+  error = git_reference_name_to_id(&oid_parent_commit, repo, "HEAD");
+  if (!error) {
+    error = git_commit_lookup(&commit, repo, &oid_parent_commit);
+    if (!error) {
       return commit;
     }
   }
