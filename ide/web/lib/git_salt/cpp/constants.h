@@ -10,6 +10,7 @@ namespace {
 const char* const kArg = "arg";
 const char* const kBranch = "branch";
 const char* const kBranches = "branches";
+const char* const kCommitMessage = "commitMessage";
 const char* const kEntries = "entries";
 const char* const kFlags = "flags";
 const char* const kFileSystem = "filesystem";
@@ -21,6 +22,8 @@ const char* const kResult = "result";
 const char* const kStatuses = "statuses";
 const char* const kSubject = "subject";
 const char* const kUrl = "url";
+const char* const kUserEmail = "userEmail";
+const char* const kUserName = "userName";
 
 // Git command constants.
 const char* const kCmdAdd = "add";

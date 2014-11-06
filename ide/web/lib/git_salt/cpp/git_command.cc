@@ -20,8 +20,6 @@ int GitCommand::parseFileSystem(pp::VarDictionary message, std::string name,
 
 int GitCommand::parseArgs() {
 
-  int error = 0;
-
   if ((error = parseFileSystem(_args, kFileSystem, fileSystem))) {
 
   }
@@ -80,12 +78,90 @@ void GitClone::ChromefsInit() {
       fs_resource);                           /* data */
 }
 
+int GitCommit::parseArgs() {
+  if ((error = parseString(_args, kUserName, userName))) {
+
+  }
+
+  if ((error = parseString(_args, kUserEmail, userEmail))) {
+
+  }
+
+  if ((error = parseString(_args, kCommitMessage, commitMsg))) {
+
+  }
+
+  return 0;
+}
+
+git_commit* GitCommit::getLastCommit() {
+  git_commit * commit = NULL;
+  git_oid oid_parent_commit;
+
+  /* resolve HEAD into a SHA1 value */
+  error = git_reference_name_to_id(&oid_parent_commit, repo, "HEAD");
+  if (!error) {
+    error = git_commit_lookup(&commit, repo, &oid_parent_commit);
+    if (!error) {
+      return commit;
+    }
+  }
+  return NULL;
+}
+
+bool GitCommit::commitStage() {
+  git_index* repo_idx;
+  git_oid oid_idx_tree;
+  git_oid oid_commit;
+  git_tree* tree_cmt;
+  // Head commit.
+  git_commit* parent_commit;
+
+  parent_commit = getLastCommit();
+  git_signature* sign = NULL;
+  git_signature_now(&sign, userName.c_str(), userEmail.c_str());
+  if (parent_commit != NULL ) {
+    error = git_repository_index(&repo_idx, repo);
+    if (!error) {
+      git_index_read(repo_idx, false);
+      error = git_index_write_tree(&oid_idx_tree, repo_idx);
+      if (!error) {
+        error = git_tree_lookup(&tree_cmt, repo, &oid_idx_tree);
+        if (!error) {
+          error = git_commit_create(
+              &oid_commit,
+              repo,
+              "HEAD",
+              sign,
+              sign,
+              NULL,
+              commitMsg.c_str(),
+              tree_cmt,
+              1,
+              (const git_commit**)&parent_commit);
+        }
+      }
+      git_index_free(repo_idx);
+    }
+    git_commit_free(parent_commit);
+    git_signature_free(sign);
+  }
+  return !error;
+}
+
 int GitCommit::runCommand() {
-  //TODO(grv): implement.
-  char message[100];
-  sprintf(message, "%s", subject.c_str());
-  _gitSalt->PostMessage(pp::Var(message));
-  printf("GitCommit: to be implemented");
+  int r = commitStage();
+
+  pp::VarDictionary arg;
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+  if (r != 0) {
+    //TODO(grv): handle error.
+  }
+  _gitSalt->PostMessage(response);
   return 0;
 }
 
@@ -122,7 +198,6 @@ int GitCurrentBranch::runCommand() {
 }
 
 int GitGetBranches::parseArgs() {
-  int error = 0;
   if ((error = parseInt(_args, kFlags,  &flags))) {
   }
   return 0;
@@ -168,7 +243,6 @@ int GitGetBranches::runCommand() {
 }
 
 int GitAdd::parseArgs() {
-  int error = 0;
   pp::VarArray entryArray;
   if ((error = parseArray(_args, kEntries, entryArray))) {
   }
@@ -182,7 +256,7 @@ int GitAdd::parseArgs() {
 
 int GitAdd::runCommand() {
   git_index* index = NULL;
-  int error = git_repository_index(&index, repo);
+  error = git_repository_index(&index, repo);
   if (error) {
     //TODO(grv): handle errors.
   }

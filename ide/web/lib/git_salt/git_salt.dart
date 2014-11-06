@@ -99,19 +99,9 @@ class GitSalt {
     return _completer.future;
   }
 
-  void commitCb(var result) {
-    //TODO(grv): to be implemented.
-    print("commit successful");
-  }
+  Future commit(Map options) {
 
-  void commit(entry, String url) {
-
-    var arg = new js.JsObject.jsify({
-      "entry": entry.toJs(),
-      "filesystem": entry.filesystem.toJs(),
-      "fullPath": entry.fullPath,
-      "url": url
-    });
+    var arg = new js.JsObject.jsify(options);
 
     var message = new js.JsObject.jsify({
       "subject" : genMessageId(),
@@ -119,7 +109,15 @@ class GitSalt {
       "arg": arg
     });
 
-    _jsGitSalt.callMethod('postMessage', [message, commitCb]);
+    Completer completer = new Completer();
+
+    Function cb = (result) {
+      completer.complete();
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return completer.future;
   }
 
   Future<String> getCurrentBranch() {

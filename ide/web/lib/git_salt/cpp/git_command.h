@@ -54,7 +54,6 @@ int parseArray(pp::VarDictionary message, const char* name,
 }
 }
 
-
 class GitSaltInstance;
 
 /**
@@ -104,11 +103,21 @@ class GitClone : public GitCommand {
 class GitCommit : public GitCommand {
 
  public:
+  std::string userName;
+  std::string userEmail;
+  std::string commitMsg;
+
   GitCommit(GitSaltInstance* git_salt,
             std::string subject,
             pp::VarDictionary args,
             git_repository*& repo)
       : GitCommand(git_salt, subject, args, repo) {}
+
+  git_commit* getLastCommit();
+
+  virtual int parseArgs();
+
+  bool commitStage();
 
   int runCommand();
 };
