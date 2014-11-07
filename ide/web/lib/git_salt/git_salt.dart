@@ -215,7 +215,13 @@ class GitSalt {
     Completer completer = new Completer();
 
     Function cb = (result) {
-      completer.complete(result["statuses"]);
+      js.JsObject statuses = result["statuses"];
+      Map<String, String> statusMap = {};
+      List<String> keys = js.context['Object'].callMethod('keys', [statuses]);
+      keys.forEach((key) {
+        statusMap[key] = statuses[key];
+      });
+      completer.complete(statusMap);
     };
 
     _jsGitSalt.callMethod('postMessage', [message, cb]);
