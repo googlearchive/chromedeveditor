@@ -11,7 +11,26 @@ import 'dart:convert' show JSON;
  * Stores global developer flags.
  */
 class SparkFlags {
-  static final _flags = new Map<String, dynamic>();
+  // Default value of flags. These flags will be first overriden by user.json
+  // and then by .spark.json.
+  static final Map<String, dynamic> _flags = {
+    "test-mode": true,
+    "live-deploy-mode": true,
+    "bower-map-complex-ver-to-latest-stable": true,
+    "enable-polymer-designer": true,
+
+    "enable-git-salt": false,
+    "enable-apk-build": false,
+    "wip-project-templates": false,
+    "analyze-javascript": false,
+    "enable-multiselect": false,
+    "bower-ignore-dependencies": [
+    ],
+    "bower-override-dependencies": {
+    },
+    "bower-use-git-clone": false,
+    "package-files-are-editable": false
+  };
 
   /**
    * Accessors to the currently supported flags.
@@ -49,8 +68,8 @@ class SparkFlags {
   // Git:
   static bool get gitPull =>
       _flags['enable-git-pull'] == true;
-  static bool get gitSalt => false;
-      //_flags['enable-git-salt'] == true;
+  static bool get gitSalt =>
+      _flags['enable-git-salt'] == true;
 
   static bool get polymerDesigner =>
       _flags['enable-polymer-designer'] == true;
@@ -108,7 +127,6 @@ class SparkFlags {
    */
   static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
     return fileReader
-      .timeout(new Duration(milliseconds: 3000))
       .then((String contents) => JSON.decode(contents))
       .catchError((e) {
         if (e is FormatException) {

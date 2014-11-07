@@ -28,7 +28,8 @@ class DialogTester {
 class SparkUITester {
   static SparkUITester _instance;
 
-  SparkUIAccess get sparkAccess => SparkUIAccess.instance;
+  SparkUIAccess get sparkUiAccess => SparkUIAccess.instance;
+  SparkDomAccess get sparkDomAccess => SparkDomAccess.instance;
 
   static SparkUITester get instance {
     if (_instance == null) _instance = new SparkUITester._internal();
@@ -41,11 +42,13 @@ class SparkUITester {
     expect(dialogTester.functionallyOpened, false);
     expect(dialogTester.visuallyOpened, false);
 
-    return sparkAccess.selectSparkMenu().then((_) {
+    return sparkDomAccess.selectSparkMenu().then((_) {
       menuItem.select();
-    }).then((_) => dialogTester.dialogAccess.onTransitionComplete.first
+    }).then((_) =>
+        dialogTester.dialogAccess.onTransitionComplete.first
         // Let any other transitions finish before continuing
-    ).then((_) => new Future.delayed(Duration.ZERO)
+    ).then((_) =>
+        new Future.delayed(Duration.ZERO)
     ).then((_) {
       expect(dialogTester.visuallyOpened, true);
       expect(dialogTester.functionallyOpened, true);
@@ -93,20 +96,23 @@ class SparkUITester {
 
 oneTest() {
   SparkUITester sparkTester = SparkUITester.instance;
-  SparkUIAccess sparkAccess = SparkUIAccess.instance;
+  SparkUIAccess sparkUiAccess = SparkUIAccess.instance;
+  SparkDomAccess sparkDomAccess = SparkDomAccess.instance;
+
   group('one dev', () {
     test('one dev', () {
-      return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu,
-          sparkAccess.okCancelDialog.cancelButton, sparkAccess.okCancelDialog)
-          .then((_) => sparkAccess.selectSparkMenu())
-          .then((_) => sparkAccess.newProjectMenu.select());
+      return sparkTester.openAndCloseWithButton(sparkUiAccess.newProjectMenu,
+          sparkUiAccess.okCancelDialog.cancelButton, sparkUiAccess.okCancelDialog)
+          .then((_) => sparkDomAccess.selectSparkMenu())
+          .then((_) => sparkUiAccess.newProjectMenu.select());
     });
   });
 }
 
 defineTests() {
   SparkUITester sparkTester = SparkUITester.instance;
-  SparkUIAccess sparkAccess = SparkUIAccess.instance;
+  SparkUIAccess sparkUiAccess = SparkUIAccess.instance;
+  SparkDomAccess sparkDomAccess = SparkDomAccess.instance;
 
   group('first run', () {
     // TODO(ericarnold): Disabled for local testing
@@ -117,7 +123,7 @@ defineTests() {
 //    });
 
     test('close dialog', () {
-      DialogTester dialogTester = new DialogTester(sparkAccess.aboutDialog);
+      DialogTester dialogTester = new DialogTester(sparkUiAccess.aboutDialog);
       if (!dialogTester.functionallyOpened) return null;
       AboutDialogAccess aboutDialog = dialogTester.dialogAccess;
       dialogTester.clickButton(aboutDialog.doneButton);
@@ -131,12 +137,9 @@ defineTests() {
 
   group('about dialog', () {
     test('open and close the dialog via x button', () {
-      // TODO: Disabled - see #3302.
-      if (isDartium()) return new Future.value();
-
-      AboutDialogAccess aboutDialog = sparkAccess.aboutMenu.dialogAccess;
-      return sparkTester.openAndCloseWithX(sparkAccess.aboutMenu).then((_) {
-        return sparkTester.openAndCloseWithButton(sparkAccess.aboutMenu,
+      AboutDialogAccess aboutDialog = sparkUiAccess.aboutMenu.dialogAccess;
+      return sparkTester.openAndCloseWithX(sparkUiAccess.aboutMenu).then((_) {
+        return sparkTester.openAndCloseWithButton(sparkUiAccess.aboutMenu,
             aboutDialog.doneButton);
       });
     });
@@ -144,48 +147,65 @@ defineTests() {
 
   group('Menu items with no projects root selected', () {
     test('New project menu item', () {
-      // TODO: Disabled - see #3302.
-      if (isDartium()) return new Future.value();
+      return fileSystemAccess.getProjectLocation(false).then((LocationResult r) {
+        if (r != null) {
+          return null;
+        }
 
-      OkCancelDialogAccess okCancelDialog = sparkAccess.okCancelDialog;
-      return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu,
-          sparkAccess.okCancelDialog).then((_) {
-            return sparkTester.openAndCloseWithButton(sparkAccess.newProjectMenu,
-                okCancelDialog.cancelButton, sparkAccess.okCancelDialog);
-          });
+        OkCancelDialogAccess okCancelDialog = sparkUiAccess.okCancelDialog;
+        return sparkTester.openAndCloseWithX(sparkUiAccess.newProjectMenu,
+            sparkUiAccess.okCancelDialog).then((_) {
+              return sparkTester.openAndCloseWithButton(sparkUiAccess.newProjectMenu,
+                  okCancelDialog.cancelButton, sparkUiAccess.okCancelDialog);
+            });
+      });
     });
 
-    test('Git clone menu item', () {
-      // TODO: Disabled - see #3302.
-      if (isDartium()) return new Future.value();
+    test('Git clone menu item with no projects root selected', () {
+      return fileSystemAccess.getProjectLocation(false).then((LocationResult r) {
+        if (r != null) {
+          return null;
+        }
 
-      OkCancelDialogAccess okCancelDialog = sparkAccess.okCancelDialog;
-      return sparkTester.openAndCloseWithX(sparkAccess.gitCloneMenu,
-          sparkAccess.okCancelDialog).then((_) {
-            return sparkTester.openAndCloseWithButton(sparkAccess.gitCloneMenu,
-                okCancelDialog.cancelButton, sparkAccess.okCancelDialog);
-          });
+        OkCancelDialogAccess okCancelDialog = sparkUiAccess.okCancelDialog;
+        return sparkTester.openAndCloseWithX(sparkUiAccess.gitCloneMenu,
+            sparkUiAccess.okCancelDialog).then((_) {
+              return sparkTester.openAndCloseWithButton(sparkUiAccess.gitCloneMenu,
+                  okCancelDialog.cancelButton, sparkUiAccess.okCancelDialog);
+            });
+      });
     });
   });
 
   group('Menu items with mock project root selected', () {
     test('New project menu item', () {
-      // TODO: Disabled - see #3302.
-      if (isDartium()) return new Future.value();
-
-      // TODO(devoncarew): We should figure out why we need this guard.
-      if (fileSystemAccess is! MockFileSystemAccess) return new Future.value();
-
-      MockFileSystemAccess mockFsa = fileSystemAccess;
-      return mockFsa.locationManager.setupRoot().then((_) {
-        return sparkTester.openAndCloseWithX(sparkAccess.newProjectMenu);
-      }).then((_) => sparkTester.openAndCloseWith(sparkAccess.newProjectMenu, (_) {
-        sparkAccess.newProjectDialog.setNameField("foo");
-        sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton);
-      })).then((_) => sparkTester.openAndCloseWith(sparkAccess.newProjectMenu, (_) {
-        sparkAccess.newProjectDialog.setNameField("bar");
-        sparkAccess.clickElement(sparkAccess.newProjectDialog.createButton);
-      }));
+      return new Future.value().then((_) {
+        if (fileSystemAccess is MockFileSystemAccess) {
+          MockFileSystemAccess mockFsa = fileSystemAccess;
+          return mockFsa.locationManager.setupRoot().then((_) => true);
+        } else {
+          return fileSystemAccess.getProjectLocation(false).then((LocationResult r) {
+            // If there is no root and we're not using MockFilesystemAccess, we
+            // can't continue this test.
+            return new Future.value((r != null));
+          });
+        }
+      }).then((bool rootReady) {
+        if (rootReady) {
+          return sparkTester.openAndCloseWithX(sparkUiAccess.newProjectMenu).then((_) {
+            return sparkTester.openAndCloseWith(sparkUiAccess.newProjectMenu, (_) {
+              sparkUiAccess.newProjectDialog.setNameField("foo");
+              sparkDomAccess.clickElement(sparkUiAccess.newProjectDialog.createButton);
+            });
+          }).then((_) {
+              sparkTester.openAndCloseWith(sparkUiAccess.newProjectMenu, (_) {
+                sparkUiAccess.newProjectDialog.setNameField("bar");
+                sparkDomAccess.clickElement(
+                    sparkUiAccess.newProjectDialog.createButton);
+              });
+          });
+        }
+      });
     });
   });
 }

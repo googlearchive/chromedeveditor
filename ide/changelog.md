@@ -12,6 +12,7 @@
         - unspecified version defaults to `latest`)
         - examples: `"Polymer/polymer#>=0.4.1 <0.4.3"`, `"Polymer/polymer#^0.4.1"`, `"Polymer/polymer#~0.3.0"`, `"Polymer/polymer#latest"`
 
+    - added support for `"*"` package paths in `bower.json`: such paths will be resolved using Bower registry based on the package name; e.g. `"codemirror": "*"`
     - the destination directory for downloaded packages can be configured via `"directory"` field in hierarchically traversed `.bowerrc` files (other fields are currently ignored); see [Bower configuration page](http://bower.io/config/)
 
 - alpha version of [Polymer Designer](https://www.polymer-project.org/tools/designer/) integration into CDE; some notes:

@@ -3,6 +3,14 @@
 /* license that can be found in the LICENSE file. */
 
 paper-fab {
-  fill: #fff;
   color: #fff;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+paper-fab /deep/ #icon {
+  margin: 0;
 }

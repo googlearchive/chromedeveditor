@@ -648,13 +648,13 @@ button.ace_searchbtn[action="findAll"] {
   position: absolute;
   width: 36px;
   height: 36px;
-  top: 55px;
-  right: 15px;
+  bottom: 20px;
+  right: 20px;
   z-index: 90;
   fill: #7d7d7d;
-  background-color: #fafafa;
-  border: 1px solid #ddd;
-  opacity: 0.7;
+  background-color: #ddd;
+  border: 1px solid #777;
+  opacity: 0.8;
 }
 
 #toggleMarkdownPreviewButton:hover,

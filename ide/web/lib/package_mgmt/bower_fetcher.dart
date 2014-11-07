@@ -139,10 +139,13 @@ class BowerFetcher {
 
     List<Future> futures = [];
     _allDeps.values.forEach((_Package package) {
-      final Future f = _fetchPackage(package, mode)
-          .catchError((e) => _logger.warning(e))
-          .then((_) => _monitor.worked(1));
-      futures.add(f);
+      if (package.isResolved) {
+        final Future f = _fetchPackage(package, mode)
+            .catchError((e) => _logger.warning(
+                "Failed to fetch package ${package.name}: $e"))
+            .whenComplete(() => _monitor.worked(1));
+        futures.add(f);
+      }
     });
     return Future.wait(futures);
   }
@@ -349,23 +352,9 @@ Some dependencies have been ignored:
       _logger.warning(
 '''
 Some dependencies could not be resolved and have been skipped.
-To fix, add or modify the following entry in .spark.json under your workspace
-directory:
+To fix, modify "dependencies" key in your bower.json as outlined below:
 
-  "bower-override-dependencies": {
-    ${_unresolvedDepsComments.join('\n    ')}
-  }
-
-Alternatively, you can have any dependency ignored by adding its name to
-the following list in .spark.json:
-
-  "bower-ignore-dependencies": [
-  ]
-
-Finally, you can also map unsupported complex versions to latest stable
-by adding the following to .spark.json:
-
-  "bower-map-complex-ver-to-latest-stable": true
+  ${_unresolvedDepsComments.join('\n    ')}
 '''
       );
     }
@@ -382,8 +371,6 @@ class _Resolved extends _Resolution {
   String get enumName => '_Resolved';
 
   static const USED_AS_IS = const _Resolved._('');
-  static const STAR_PATH_MAPPED = const _Resolved._(
-      '"*" path resolved using mappings from config files');
   static const NORMAL_PATH_OVERRIDDEN = const _Resolved._(
       'original path overridden using mappings from config files');
   static const VERSION_RANGE_RESOLVED = const _Resolved._(
@@ -396,11 +383,17 @@ class _Unresolved extends _Resolution {
 
   static const MALFORMED_SPEC = const _Unresolved._(
       'unrecognized dependency specification; replace with a supported one');
-  static const STAR_PATH = const _Unresolved._(
-      'replace "*" path with an explicit one');
+  static const STAR_PATH_FOR_UNKNOWN_PACKAGE = const _Unresolved._(
+      '"*" path unresolved using Bower registry: package not found');
+  static const BAD_OR_MISSING_BOWER_REGISTRY_INFO = const _Unresolved._(
+      'Bower registry returned bad or missing entry for the package: '
+      'use explicit GitHub path in your "bower.json"->"dependencies"');
+  static const BAD_OR_MISSING_GITHUB_TAGS = const _Unresolved._(
+      'GitHub returned bad or missing tag list for the package: '
+      'use a pinned version/tag in your "bower.json"->"dependencies"');
   static const VERSION_RANGE_UNRESOLVED = const _Unresolved._(
-      'replace the version range with a pinned version in "dependencies" key '
-      'or override it in "resolutions" key in top-level "bower.json"');
+      'replace the version range with a pinned version/tag '
+      'in your "bower.json"->"dependencies"');
 }
 
 class _Ignored extends _Resolution {
@@ -413,15 +406,25 @@ class _Ignored extends _Resolution {
 
 class _Package {
   /// E.g.: "Polymer/platform".
-  static const _PACKAGE_PATH = r"[-\w.]+(?:/[-\w.]+)+";
-  /// E.g.: "Polymer/platform#1.2.3", "Polymer/platform#>=1.2.3 <2.0.0".
-  // TODO(ussuri): Support "*" as well (=> "ask Bower registry").
-  static const _PACKAGE_SPEC = "^($_PACKAGE_PATH)(?:#(.+))?\$";
+  static const _PACKAGE_REGULAR_PATH = r'[-\w.]+(?:/[-\w.]+)+';
+  static const _PACKAGE_STAR_PATH = r'\*';
+  static const _PACKAGE_PATH = '$_PACKAGE_REGULAR_PATH|$_PACKAGE_STAR_PATH';
+  /// [_resolve] will handle all the possible formats.
+  static const _PACKAGE_HASH = r'.+';
+  /// E.g.: "Polymer/platform#1.2.3", "Polymer/platform#>=1.2.3 <2.0.0", "*".
+  // TODO(ussuri): Support non-* hashes without a path, e.g. "1.2.3", "~1.2.3"...
+  static const _PACKAGE_SPEC = '^($_PACKAGE_PATH)(?:#($_PACKAGE_HASH))?\$';
   static final _PACKAGE_SPEC_REGEXP = new RegExp(_PACKAGE_SPEC);
 
   static const _GITHUB_ROOT_URL = 'https://github.com';
   static const _GITHUB_API_ROOT_URL = 'https://api.github.com/repos';
   static const _GITHUB_USER_CONTENT_URL = 'https://raw.githubusercontent.com';
+  static const _BOWER_REGISTRY_URL = 'http://bower.herokuapp.com/packages';
+
+  static const _BOWER_REGISTRY_INFO_URL =
+      r'^(?:git|http|https)://github.com/(.+)';
+  static final _BOWER_REGISTRY_INFO_URL_REGEXP =
+      new RegExp(_BOWER_REGISTRY_INFO_URL);
 
   final String name;
   final String fullPath;
@@ -466,15 +469,62 @@ class _Package {
       return _resolveWith(_Ignored.PER_CONFIG_DIRECTIVE);
     }
 
-    if (fullPath == '*') {
-      // Handle "*" in the dependency path.
-      return _resolveWith(_Unresolved.STAR_PATH);
-    }
-
     if (hash == 'master') {
       _resolvedDirectTag = 'master';
       return _resolveWith(_Resolved.USED_AS_IS);
     }
+
+    return _resolvePath().then(
+        (_) => _maybeRedirectPath().then(
+            (_) => _resolveTag()));
+  }
+
+  Future _resolvePath() {
+    if (_resolutionCompleter.isCompleted) return _resolutionCompleter.future;
+
+    // Regular path - no special resolution required.
+    if (path != null && path != '*') {
+      return new Future.value();
+    }
+
+    // A "*" or an empty path: resolve using Bower registry.
+    return util.downloadFileViaXhr(getRegistryInfoUrl()).then(
+        (String regResponse) {
+      Map<String, dynamic> regInfo;
+      try {
+        regInfo = JSON.decode(regResponse);
+      } on FormatException catch (e) {
+        // Also handles [registryResponse]=='Package not found'.
+        return _resolveWith(_Unresolved.STAR_PATH_FOR_UNKNOWN_PACKAGE);
+      }
+
+      Match m = _BOWER_REGISTRY_INFO_URL_REGEXP.matchAsPrefix(regInfo['url']);
+      if (m == null) {
+        // Handles unrecognized URLs and error-signalling [regInfo], such as
+        // when GitHub API usage rate limit has been reached.
+        return _resolveWith(_Unresolved.BAD_OR_MISSING_BOWER_REGISTRY_INFO);
+      }
+      path = m.group(1);
+      if (path == null) {
+        return _resolveWith(_Unresolved.BAD_OR_MISSING_BOWER_REGISTRY_INFO);
+      }
+      path = path.replaceFirst(new RegExp(r'.git$'), '');
+      return new Future.value();
+    });
+  }
+
+  Future _maybeRedirectPath() {
+    if (_resolutionCompleter.isCompleted) return _resolutionCompleter.future;
+
+    return util.getRedirectedUrlViaXhr(getRootUrl()).then((String newUrl) {
+      if (newUrl != null) {
+        path = newUrl.replaceFirst('$_GITHUB_ROOT_URL/', '');
+      }
+    });
+  }
+
+  Future _resolveTag() {
+    if (_resolutionCompleter.isCompleted) return _resolutionCompleter.future;
 
     semver.VersionConstraint constraint;
 
@@ -490,11 +540,14 @@ class _Package {
     }
 
     return _fetchTags().then((List<Map<String, dynamic>> tags) {
+      if (tags == null || tags.isEmpty) {
+        return _resolveWith(_Unresolved.BAD_OR_MISSING_GITHUB_TAGS);
+      }
+
       List<semver.Version> candidateVersions = [];
 
       for (final tag in tags) {
         final String tagName = tag['name'];
-        bool matches = false;
         try {
           final ver = new semver.Version.parse(tagName);
           if (constraint.allows(ver)) {
@@ -524,30 +577,34 @@ class _Package {
     });
   }
 
+  Future<List<Map<String, dynamic>>> _fetchTags() {
+    return util.downloadFileViaXhr(getTagsUrl()).then((String tagsStr) {
+      try {
+        return JSON.decode(tagsStr);
+      } on FormatException catch (e) {
+        return null;
+      }
+    });
+  }
+
   Future<_Resolution> _resolveWith(_Resolution resolution) {
     _resolution = resolution;
     _resolutionCompleter.complete(resolution);
     return _resolutionCompleter.future;
   }
 
-  Future<List<Map<String, dynamic>>> _fetchTags() {
-    return util.downloadFileViaXhr(getTagsUrl()).then((String tagsStr) {
-      return JSON.decode(tagsStr);
-    });
-  }
-
   bool operator ==(_Package another) =>
       path == another.path && hash == another.hash;
 
-  String getCloneUrl() =>
-      '$_GITHUB_ROOT_URL/$path/$resolvedTag';
+  String getRootUrl() => '$_GITHUB_ROOT_URL/$path';
 
-  String getZipUrl() =>
-      //'$_GITHUB_API_ROOT_URL/$path/zipball/$resolvedTag';
-      '$_GITHUB_ROOT_URL/$path/archive/$resolvedTag.zip';
+  String getCloneUrl() => '$_GITHUB_ROOT_URL/$path/$resolvedTag';
 
-  String getTagsUrl() =>
-      '$_GITHUB_API_ROOT_URL/$path/tags';
+  String getZipUrl() => '$_GITHUB_ROOT_URL/$path/archive/$resolvedTag.zip';
+
+  String getRegistryInfoUrl() => '$_BOWER_REGISTRY_URL/$name';
+
+  String getTagsUrl() => '$_GITHUB_API_ROOT_URL/$path/tags';
 
   String getSingleFileUrl(String remoteFilePath) =>
       '$_GITHUB_USER_CONTENT_URL/$path/$resolvedTag/$remoteFilePath';
@@ -560,7 +617,7 @@ class _Package {
     } else if (_resolution == _Resolved.USED_AS_IS) {
       return '';
     } else {
-      return '$spec, <== ${_resolution.comment} to $resolvedTag';
+      return '$spec, <== ${_resolution.comment} to $path#$resolvedTag';
     }
   }
 }
