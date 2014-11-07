@@ -126,9 +126,7 @@ class TextEditor extends Editor {
     restoreState();
 
     if (_aceSubscription != null) _aceSubscription.cancel();
-    _aceSubscription = _session.onChange.listen((_) =>
-        dirty = true
-        );
+    _aceSubscription = _session.onChange.listen((_) => dirty = true);
     if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
 
     _invokeReconcile();

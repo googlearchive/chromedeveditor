@@ -30,8 +30,7 @@ class LocalStateManager extends StateManager {
 
   LocalStateManager._(this._map);
 
-  dynamic getState(String key) =>
-      _map[key];
+  dynamic getState(String key) => _map[key];
 
   void setState(String key, dynamic data) {
     _map[key] = data;

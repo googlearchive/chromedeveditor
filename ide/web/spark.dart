@@ -345,13 +345,11 @@ abstract class Spark
     _navigationManager = new NavigationManager(_editorManager);
     _navigationManager.onNavigate.listen((NavigationLocation location) {
       ContentProvider contentProvider = location.contentProvider;
-//      if (contentProvider is FileContentProvider) {
         _selectContentProvider(contentProvider).then((_) {
           if (location.selection != null) {
             nextTick().then((_) => _selectLocation(location));
           }
         });
-//      }
     });
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
       event =

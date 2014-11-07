@@ -542,8 +542,7 @@ class FileContentProvider implements ContentProvider {
   final File file;
 
   String get name => file.name;
-  String get uuid =>
-      file.uuid;
+  String get uuid => file.uuid;
 
   StreamController _changeController;
   StreamSubscription _changeSubscription;
