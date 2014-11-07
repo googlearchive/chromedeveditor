@@ -389,7 +389,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
       return;
     }
     // If the file is open in an editor, the editor will take care of closing.
-    if (_editorUuidMap.containsKey(file)) {
+    if (_editorUuidMap.containsKey(file.uuid)) {
       return;
     }
 
@@ -402,7 +402,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   void _handleFileChanged(File file) {
     // If the file is open in an editor, the editor will take care of updating.
-    if (_editorUuidMap.containsKey(file)) {
+    if (_editorUuidMap.containsKey(file.uuid)) {
       return;
     }
 
