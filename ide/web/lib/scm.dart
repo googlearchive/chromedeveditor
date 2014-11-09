@@ -476,7 +476,17 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
   }
 
   Future<List<String>> getDeletedFiles() {
-    return new Future.value([]);
+    return gitSalt.then((git_salt) {
+      return git_salt.status().then((Map<String, String> statuses) {
+        List<String> deletedFiles = [];
+        statuses.forEach((k,v ) {
+          if (v == 512) {
+            deletedFiles.add(k);
+          }
+        });
+        return deletedFiles;
+      });
+    });
   }
 
   Future addFiles(List<chrome.Entry> files) {
