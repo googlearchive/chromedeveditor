@@ -9,10 +9,26 @@ import 'dart:async';
 //import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
+import '../lib/filesystem.dart';
 import '../lib/preferences.dart';
 import '../lib/utils.dart';
 
 defineTests() {
+  group('editorConfig', () {
+    test('glob test', () {
+      Glob glob = new Glob("a*/b**/d?");
+      expect(glob.matchPath("alpha/bravo/charlie/delta"), 1);
+      expect(glob.matchPath("alpha/bravo/charlie/d"), 1);
+      expect(glob.matchPath("alpha/bravo/charlie/do"), 2);
+      expect(glob.matchPath("abc/do"), 1);
+      expect(glob.matchPath("foo/bar"), 0);
+      expect(glob.matchPath(""), 0);
+
+      glob = new Glob("a*/b*");
+      expect(glob.matchPath("abc/"), 1);
+    });
+  });
+
   group('preferences.chrome', () {
     test('writeRead', () {
       localStore.setValue("foo1", "bar1");
