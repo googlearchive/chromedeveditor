@@ -13,6 +13,21 @@ import '../lib/preferences.dart';
 import '../lib/utils.dart';
 
 defineTests() {
+  group('editorConfig', () {
+    test('glob test', () {
+      Glob glob = new Glob("a*/b**/d?");
+      expect(glob.matchPath("alpha/bravo/charlie/delta"), Glob.PREFIX_MATCH);
+      expect(glob.matchPath("alpha/bravo/charlie/d"), Glob.PREFIX_MATCH);
+      expect(glob.matchPath("alpha/bravo/charlie/do"), Glob.COMPLETE_MATCH);
+      expect(glob.matchPath("abc/do"), Glob.PREFIX_MATCH);
+      expect(glob.matchPath("foo/bar"), Glob.NO_MATCH);
+      expect(glob.matchPath(""), Glob.NO_MATCH);
+
+      glob = new Glob("a*/b*");
+      expect(glob.matchPath("abc/"), Glob.PREFIX_MATCH);
+    });
+  });
+
   group('preferences.chrome', () {
     test('writeRead', () {
       localStore.setValue("foo1", "bar1");
