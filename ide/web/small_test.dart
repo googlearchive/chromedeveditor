@@ -85,14 +85,14 @@ class GlobPattern implements Pattern {
       }
       matches.add(match);
       start = match.end + 1;
-    } while(true);
+    } while(start < string.length);
 
     return matches;
   }
 
   GlobMatcher matchAsPrefix(String string, [int start = 0]) {
     do {
-      int n = string.indexOf("[\\*?\[\{", start);
+      int n = string.indexOf(new RegExp(r"[\\*?\[\{]"), start);
       GlobMatcher matcher;
 
       // Identifies the first char as escape and ignores the second)
@@ -102,7 +102,7 @@ class GlobPattern implements Pattern {
           start = n + 1;
           continue;
         case "*":
-          if (string[n] == "*") {
+          if (string.length > n && string[n] == "*") {
             return new PathWildcardMatcher(string, this, start, n);
           } else {
             return new FileWildcardMatcher(string, this, start, n);
