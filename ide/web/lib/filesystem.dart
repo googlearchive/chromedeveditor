@@ -361,49 +361,6 @@ class LocationResult {
   }
 }
 
-/**
- * Defines a matcher for recursively matching of globs.
- */
-class Glob {
-  static int NO_MATCH = 0;
-  static int PREFIX_MATCH = 1;
-  static int COMPLETE_MATCH = 2;
-
-  String pattern;
-
-  Glob(this.pattern);
-
-  // Matches a path to the glob pattern.  Returns one of three values:
-  //
-  // NO_MATCH - No match found ("foo" won't match "bar")
-  // PREFIX_MATCH - Prefix match found ("f*/b*/" partially matches "foo/")
-  // COMPLETE_MATCH - Prefix match found ("f**/b*" completely matches "foo/bar/baz")
-  int matchPath(String path) {
-    RegExp r = new RegExp(r"\*\*|\*|\?");
-    int lastIndex = 0;
-    List<String> globParts = r.allMatches(pattern).map((Match m) =>
-        pattern.substring(lastIndex, lastIndex = m.end)).toList();
-
-    String globSoFar = "";
-    int globIndex = 0;
-
-    for (;globIndex < globParts.length; globIndex++) {
-      String globPart = globParts[globIndex];
-      globSoFar += ((globSoFar != "") ? ".*" : "") +
-          globPart.replaceAll("*", "[^/]*").replaceAll("?", "[^/]");
-      if (globIndex == globParts.length - 1) globSoFar = globSoFar + "\$";
-      if (new RegExp(globSoFar).matchAsPrefix(path) == null) break;
-    }
-
-    if (globIndex > 0) {
-      if (globIndex == globParts.length) {
-        return COMPLETE_MATCH;
-      }
-      return PREFIX_MATCH;
-    }
-    return NO_MATCH;
-  }
-}
 
 class MockProjectLocationManager extends ProjectLocationManager {
   LocationResult _projectLocation;
