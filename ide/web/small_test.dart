@@ -1,5 +1,3 @@
-//import "lib/filesystem.dart" show Glob;
-
 abstract class GlobMatcher extends Match {
   String operator [](int group) => this.group(group);
 
@@ -25,12 +23,21 @@ abstract class GlobMatcher extends Match {
     return [this.group(groupIndices[0])];
   }
 
-  String toRegEx();
+  String toRegExp();
 }
+
+class StaticMatcher extends GlobMatcher {
+  int get end => tokenStart;
+  String toRegExp() => "";
+
+  StaticMatcher(String input, GlobPattern pattern, int start, int end) :
+      super(input, pattern, start, end);
+}
+
 
 class FileWildcardMatcher extends GlobMatcher {
   int get end => tokenStart + 1;
-  String toRegEx() => "[^/]*";
+  String toRegExp() => "[^/]*";
 
   FileWildcardMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
       super(input, pattern, start, tokenStart);
@@ -38,7 +45,7 @@ class FileWildcardMatcher extends GlobMatcher {
 
 class PathWildcardMatcher extends GlobMatcher {
   int get end => tokenStart + 2;
-  String toRegEx() => ".*";
+  String toRegExp() => ".*";
 
   PathWildcardMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
       super(input, pattern, start, tokenStart);
@@ -46,7 +53,7 @@ class PathWildcardMatcher extends GlobMatcher {
 
 class SingleCharMatcher  extends GlobMatcher {
   int get end => tokenStart + 1;
-  String toRegEx() => "[^/]";
+  String toRegExp() => "[^/]";
 
   SingleCharMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
       super(input, pattern, start, tokenStart);
@@ -55,7 +62,7 @@ class SingleCharMatcher  extends GlobMatcher {
 class CharRangeMatcher extends GlobMatcher {
   int _end = null;
   int get end => (_end == null) ? _end = input.indexOf("]", tokenStart) : _end;
-  String toRegEx() => "[" + (negate ? "^" : "") + "$rangeString]";
+  String toRegExp() => "[" + (negate ? "^" : "") + "$rangeString]";
   bool get negate => input[tokenStart + 1] == "!";
   String get rangeString => input.substring(tokenStart + (negate ? 1 : 2), end - 1);
 
@@ -66,7 +73,7 @@ class CharRangeMatcher extends GlobMatcher {
 class IdentifierListMatcher extends GlobMatcher {
   int _end = null;
   int get end => (_end == null) ? _end = input.indexOf("}", tokenStart) : _end;
-  String toRegEx() => "(" + identifiers.join('|') + ")";
+  String toRegExp() => "(" + identifiers.join('|') + ")";
   String get _matcherContent => input.substring(tokenStart + 1, end - 1);
   List<String> get identifiers => _matcherContent.split(new RegExp(r",\s*"));
 
@@ -91,18 +98,23 @@ class GlobPattern implements Pattern {
   }
 
   GlobMatcher matchAsPrefix(String string, [int start = 0]) {
+    int n = start;
     do {
-      int n = string.indexOf(new RegExp(r"[\\*?\[\{]"), start);
+      n = string.indexOf(new RegExp(r"[\\*?\[\{]"), n);
       GlobMatcher matcher;
 
+      if (n == -1) {
+        return new StaticMatcher(string, this, start, string.length);
+      }
+
       // Identifies the first char as escape and ignores the second)
-      switch(string[n++]) {
+      switch(string[n]) {
         case "\\":
           // Ignore next char after escape
-          start = n + 1;
+          n = n + 2;
           continue;
         case "*":
-          if (string.length > n && string[n] == "*") {
+          if (string.length > n + 1 && string[n + 1] == "*") {
             return new PathWildcardMatcher(string, this, start, n);
           } else {
             return new FileWildcardMatcher(string, this, start, n);
@@ -114,10 +126,8 @@ class GlobPattern implements Pattern {
           return new SingleCharMatcher(string, this, start, n);
         case "{":
           return new IdentifierListMatcher(string, this, start, n);
-        default:
-          return null;
       }
-    } while(start < string.length);
+    } while(n < string.length);
 
     throw "Unexpected end of line";
   }
@@ -130,14 +140,21 @@ class Glob {
   static int NO_MATCH = 0;
   static int PREFIX_MATCH = 1;
   static int COMPLETE_MATCH = 2;
+  static final RegExp _escapePattern = new RegExp("[!@#\$%^&()-.,<>+=\\/~`|]");
 
-  final String pattern;
+  List<String> _globRegExpParts;
 
-  Glob(this.pattern);
+  Glob(String pattern) {
+    Iterable<Match> globMatchers = new GlobPattern().allMatches(pattern);
+    _globRegExpParts = globMatchers.map((GlobMatcher m) =>
+        _escape(pattern.substring(m.start, m.tokenStart)) + m.toRegExp()).toList();
+  }
 
   String _escape(String toEscape) {
-    // TODO(ericarnold): Implement regexp escaping
-    return toEscape;
+    int start = 0;
+    return _escapePattern.allMatches(toEscape).fold("", (String s, Match m) =>
+        s + toEscape.substring(start, (start = m.end) - 1) + "\\" + m[0]) +
+        toEscape.substring(start);
   }
 
 
@@ -149,25 +166,19 @@ class Glob {
   int matchPath(String path) {
     int lastIndex = 0;
 
-    GlobPattern p = new GlobPattern();
-    List<String> globParts = p.allMatches(pattern).map((GlobMatcher m) =>
-        _escape(pattern.substring(m.start, m.tokenStart)) + m.toRegEx()).toList();
-
-    /*%TRACE3*/ print("""(4> 11/10/14): globParts: ${globParts}"""); // TRACE%
-
     String globSoFar = "";
     int globIndex = 0;
 
-    for (;globIndex < globParts.length; globIndex++) {
-      String globPart = globParts[globIndex];
+    for (;globIndex < _globRegExpParts.length; globIndex++) {
+      String globPart = _globRegExpParts[globIndex];
       globSoFar += ((globSoFar != "") ? ".*" : "") +
           globPart.replaceAll("*", "[^/]*").replaceAll("?", "[^/]");
-      if (globIndex == globParts.length - 1) globSoFar = globSoFar + "\$";
+      if (globIndex == _globRegExpParts.length - 1) globSoFar = globSoFar + "\$";
       if (new RegExp(globSoFar).matchAsPrefix(path) == null) break;
     }
 
     if (globIndex > 0) {
-      if (globIndex == globParts.length) {
+      if (globIndex == _globRegExpParts.length) {
         return COMPLETE_MATCH;
       }
       return PREFIX_MATCH;
@@ -187,9 +198,19 @@ main() {
 
   glob = new Glob("a*/b*");
   expect(glob.matchPath("abc/"), Glob.PREFIX_MATCH);
+
+  glob = new Glob("a**/foo\\ bar");
+  expect(glob.matchPath("aaa/bbb"), Glob.PREFIX_MATCH);
+  expect(glob.matchPath("aaa/bbb/foo ba"), Glob.PREFIX_MATCH);
+  expect(glob.matchPath("aaa/bbb/foo bar"), Glob.COMPLETE_MATCH);
+  expect(glob.matchPath("aaa/bbb/foo barb"), Glob.PREFIX_MATCH);
+
+  glob = new Glob("foo.dart");
+  expect(glob.matchPath("foo.dart"), Glob.COMPLETE_MATCH);
+  expect(glob.matchPath("foo!dart"), Glob.NO_MATCH);
 }
 
 expect(dynamic v1, dynamic v2) {
-  print("${v1==v2} -- v1");
+  print("${v1==v2} -- $v1");
 }
 
