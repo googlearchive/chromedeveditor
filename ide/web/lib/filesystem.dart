@@ -369,7 +369,9 @@ class Glob {
   static int PREFIX_MATCH = 1;
   static int COMPLETE_MATCH = 2;
 
-  String pattern;
+  final String pattern;
+  static final RegExp globRegExp = new RegExp(r"\*\*|\*|\?");
+
 
   Glob(this.pattern);
 
@@ -379,9 +381,8 @@ class Glob {
   // PREFIX_MATCH - Prefix match found ("f*/b*/" partially matches "foo/")
   // COMPLETE_MATCH - Prefix match found ("f**/b*" completely matches "foo/bar/baz")
   int matchPath(String path) {
-    RegExp r = new RegExp(r"\*\*|\*|\?");
     int lastIndex = 0;
-    List<String> globParts = r.allMatches(pattern).map((Match m) =>
+    List<String> globParts = globRegExp.allMatches(pattern).map((Match m) =>
         pattern.substring(lastIndex, lastIndex = m.end)).toList();
 
     String globSoFar = "";
