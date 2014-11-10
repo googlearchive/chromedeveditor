@@ -9,13 +9,12 @@ import 'dart:async';
 //import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
-import '../lib/filesystem.dart';
 import '../lib/preferences.dart';
 import '../lib/utils.dart';
 
 defineTests() {
   group('editorConfig', () {
-    test('glob test', () {
+    test('glob test - general', () {
       Glob glob = new Glob("a*/b**/d?");
       expect(glob.matchPath("alpha/bravo/charlie/delta"), Glob.PREFIX_MATCH);
       expect(glob.matchPath("alpha/bravo/charlie/d"), Glob.PREFIX_MATCH);
@@ -26,6 +25,18 @@ defineTests() {
 
       glob = new Glob("a*/b*");
       expect(glob.matchPath("abc/"), Glob.PREFIX_MATCH);
+    });
+
+    test('glob test - escaping', () {
+      Glob glob = new Glob("a**/foo\\ bar");
+      expect(glob.matchPath("aaa/bbb"), Glob.PREFIX_MATCH);
+      expect(glob.matchPath("aaa/bbb/foo ba"), Glob.PREFIX_MATCH);
+      expect(glob.matchPath("aaa/bbb/foo bar"), Glob.COMPLETE_MATCH);
+      expect(glob.matchPath("aaa/bbb/foo barb"), Glob.PREFIX_MATCH);
+
+      glob = new Glob("foo.dart");
+      expect(glob.matchPath("foo.dart"), Glob.COMPLETE_MATCH);
+      expect(glob.matchPath("foo!dart"), Glob.NO_MATCH);
     });
   });
 

@@ -361,7 +361,6 @@ class LocationResult {
   }
 }
 
-
 class MockProjectLocationManager extends ProjectLocationManager {
   LocationResult _projectLocation;
 
