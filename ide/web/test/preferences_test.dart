@@ -9,7 +9,6 @@ import 'dart:async';
 //import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
-import '../lib/filesystem.dart';
 import '../lib/preferences.dart';
 import '../lib/utils.dart';
 
