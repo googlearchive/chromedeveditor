@@ -12,6 +12,38 @@ import 'package:unittest/unittest.dart';
 import '../lib/preferences.dart';
 import '../lib/utils.dart';
 
+String editorConfigContent = """
+
+# EditorConfig is awesome: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = false
+
+# 4 space indentation
+[*.py]
+indent_style = tab
+indent_size = 4
+
+# Tab indentation (no size specified)
+[[!a-g]]
+tab_width = 3
+indent_size = tab
+
+# Indentation override for all JS under lib directory
+[lib/**.js]
+indent_size = 5
+
+# Matches the exact files either package.json or .travis.yml
+[{package.json,.travis.yml}]
+indent_style = space
+indent_size = tab
+""";
+
 defineTests() {
   group('editorConfig', () {
     test('glob test - general', () {
@@ -37,6 +69,24 @@ defineTests() {
       glob = new Glob("foo.dart");
       expect(glob.matchPath("foo.dart"), Glob.COMPLETE_MATCH);
       expect(glob.matchPath("foo!dart"), Glob.NO_MATCH);
+    });
+
+    test('EditorConfig - parsing', () {
+      EditorConfig e = new EditorConfig.fromString(editorConfigContent);
+
+      expect(e.root, true);
+      EditorConfigSection section = e.sections["*"];
+      expect(section.lineEnding, EditorConfigSection.ENDING_LF);
+      expect(section.insertFinalNewline, false);
+      section = e.sections["*.py"];
+      expect(section.useSpaces, false);
+      expect(section.indentSize, 4);
+      section = e.sections["lib/**.js"];
+      expect(section.tabWidth, 5);
+      expect(section.indentSize, 5);
+      section = e.sections["lib/**.js"];
+      expect(section.tabWidth, 2);
+      expect(section.indentSize, 2);
     });
   });
 
