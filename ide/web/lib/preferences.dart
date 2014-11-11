@@ -16,6 +16,7 @@ import 'dart:convert';
 import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:ini/ini.dart' as ini;
 
 /**
  * A PreferenceStore backed by `chome.storage.local`.
@@ -534,5 +535,166 @@ class Glob {
       return PREFIX_MATCH;
     }
     return NO_MATCH;
+  }
+}
+
+class EditorConfig {
+  ini.Config _iniConfig;
+  bool get root => _iniConfig.get("default", "root") == "true";
+  Map<String, EditorConfigSection> sections = {};
+
+  EditorConfig.fromString(String content) {
+    _iniConfig = ini.Config.fromStrings(content.split("\n"));
+    _iniConfig.sections().forEach((String id) =>
+        sections[id] = new EditorConfigSection(_iniConfig, id));
+  }
+}
+
+class EditorConfigSection {
+  static final int ENDING_CR = 1;
+  static final int ENDING_LF = 2;
+  static final int ENDING_CRLF = 3;
+
+  static final int CHARSET_LATIN = 1;
+  static final int CHARSET_UTF8 = 2;
+  static final int CHARSET_UTF8BOM = 3;
+  static final int CHARSET_UTF16BE = 4;
+  static final int CHARSET_UTF16LE = 5;
+
+  bool useSpaces;
+  int indentSize;
+  int tabWidth;
+  int lineEnding;
+  int charSet;
+  bool trimWhitespace;
+  bool insertFinalNewline;
+
+  _EditorConfigProperties _properties;
+
+  EditorConfigSection(ini.Config _config, String id) {
+    _properties = new _EditorConfigProperties(_config, id);
+    _validateAndInit(id);
+  }
+
+  _validateAndInit(String id) {
+    // indent_style
+    switch (_properties.indentStyle) {
+      case "space":
+        useSpaces = true;
+        break;
+      case "tab":
+        useSpaces = false;
+        break;
+      default:
+        _throwExceptionFor("indent_style");
+    }
+
+    // tab_width
+    String tabWidthProp = _properties.tabWidth;
+    tabWidth = int.parse(tabWidthProp);
+    if (tabWidth.toString() != tabWidthProp || tabWidth < 1) {
+      _throwExceptionFor("tab_width");
+    }
+
+    // indent_size
+    String indentSizeProp = _properties.indentSize;
+    if (indentSizeProp == "tab") {
+      indentSize = tabWidth;
+    } else {
+      indentSize = int.parse(indentSizeProp);
+      if (indentSize.toString() != indentSizeProp || indentSize < 1) {
+        _throwExceptionFor("indent_size");
+      }
+    }
+
+    // end_of_line
+    String endOfLineProp = _properties.endOfLine;
+    if (endOfLineProp == "cr") {
+      lineEnding = ENDING_CR;
+    } else if (endOfLineProp == "lf") {
+      lineEnding = ENDING_LF;
+    } else if (endOfLineProp == "crlf") {
+      lineEnding = ENDING_CRLF;
+    } else {
+      _throwExceptionFor("end_of_line");
+    }
+
+    // charset
+    String charSetProp = _properties.charSet;
+    if (charSetProp == "latin1") {
+      charSet = CHARSET_LATIN;
+    } else if (charSetProp == "utf-8") {
+      charSet = CHARSET_UTF8;
+    } else if (charSetProp == "utf-8-bom") {
+      charSet = CHARSET_UTF8BOM;
+    } else if (charSetProp == "utf-16be") {
+      charSet = CHARSET_UTF16BE;
+    } else if (charSetProp == "utf-16le") {
+      charSet = CHARSET_UTF16LE;
+    } else {
+      _throwExceptionFor("charset");
+    }
+
+    // trim_trailing_whitespace
+    switch (_properties.trimWhitespace) {
+      case "true":
+        trimWhitespace = true;
+        break;
+      case "false":
+        trimWhitespace = false;
+        break;
+      default:
+        _throwExceptionFor("trim_trailing_whitespace");
+    }
+
+    // insert_final_newline
+    switch (_properties.insertFinalNewline) {
+      case "true":
+        insertFinalNewline = true;
+        break;
+      case "false":
+        insertFinalNewline = false;
+        break;
+      default:
+        _throwExceptionFor("insert_final_newline");
+    }
+  }
+
+  void _throwExceptionFor(String key) {
+    throw "Invalid $key for ${_properties.id}";
+  }
+}
+
+class _EditorConfigProperties {
+  ini.Config _config;
+  String id;
+
+  String get indentStyle => _getValue("indent_style", "space");
+  String get indentSize => _getValue("indent_size", "2");
+
+  String get _indentSizeValue => _getValue("indent_size", null);
+  String get tabWidth {
+    String value = _getValue("tab_width", null);
+    if (value != null) {
+      return value;
+    }
+
+    if (_indentSizeValue == "tab") {
+      // Default if no tab size is specified and "tab" is used for indent_size.
+      return "2";
+    }
+
+    return indentSize;
+  }
+  String get endOfLine => _getValue("end_of_line", "cr");
+  String get charSet => _getValue("charset", "utf-8");
+  String get trimWhitespace => _getValue("trim_trailing_whitespace", "true");
+  String get insertFinalNewline => _getValue("insert_final_newline", "true");
+
+  _EditorConfigProperties(this._config, this.id);
+
+  String _getValue(String propertyName, dynamic defaultValue) {
+    String value = _config.get(id, propertyName);
+    return (value == null) ? defaultValue : value.toLowerCase();
   }
 }
