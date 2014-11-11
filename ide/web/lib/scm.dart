@@ -466,7 +466,7 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
       };
       return git_salt.commit(options).then((_) {
         return _refreshStatus(project: project);
-      }).catchError((e) => throw SparkException.fromExcetption(e));
+      }).catchError((e) => throw SparkException.fromException(e));
     });
   }
 
