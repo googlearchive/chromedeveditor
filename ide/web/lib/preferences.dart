@@ -386,7 +386,6 @@ class StaticMatcher extends GlobMatcher {
       super(input, pattern, start, end);
 }
 
-
 class FileWildcardMatcher extends GlobMatcher {
   int get end => tokenStart + 1;
   String toRegExp() => "[^/]*";
@@ -508,7 +507,6 @@ class Glob {
         s + toEscape.substring(start, (start = m.end) - 1) + "\\" + m[0]) +
         toEscape.substring(start);
   }
-
 
   // Matches a path to the glob pattern.  Returns one of three values:
   //
