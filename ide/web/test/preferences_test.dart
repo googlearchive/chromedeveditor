@@ -14,8 +14,6 @@ import '../lib/utils.dart';
 
 String editorConfigContent = """
 
-# EditorConfig is awesome: http://EditorConfig.org
-
 # top-most EditorConfig file
 root = true
 
@@ -42,6 +40,13 @@ indent_size = 5
 [{package.json,.travis.yml}]
 indent_style = space
 indent_size = tab
+""";
+
+String editorConfigTooManyOptions = """
+[*]
+end_of_line = lf
+insert_final_newline = false
+should_not_be_here = true
 """;
 
 defineTests() {
@@ -81,12 +86,17 @@ defineTests() {
       section = e.sections["*.py"];
       expect(section.useSpaces, false);
       expect(section.indentSize, 4);
+      section = e.sections["[!a-g]"];
+      expect(section.tabWidth, 3);
+      expect(section.indentSize, 3);
       section = e.sections["lib/**.js"];
       expect(section.tabWidth, 5);
       expect(section.indentSize, 5);
-      section = e.sections["lib/**.js"];
-      expect(section.tabWidth, 2);
+      section = e.sections["{package.json,.travis.yml}"];
+      expect(section.useSpaces, true);
       expect(section.indentSize, 2);
+      expect(() => new EditorConfig.fromString(editorConfigTooManyOptions),
+          throws);
     });
   });
 
