@@ -700,6 +700,7 @@ class AceManager {
       if (lastCursorPosition != currentPosition) {
         outline.selectItemAtOffset(
             currentSession.document.positionToIndex(currentPosition));
+        outline.setPosition(currentPosition);
         lastCursorPosition = currentPosition;
       }
     });

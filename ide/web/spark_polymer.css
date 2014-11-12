@@ -606,7 +606,7 @@ button.ace_searchbtn[action="findAll"] {
 
 #outlineContainer {
   display: flex;
-  flex-flow: row;
+  flex-flow: column;
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
   bottom: 13px;
@@ -625,6 +625,16 @@ button.ace_searchbtn[action="findAll"] {
   pointer-events: none;
 }
 
+#outlineContainer #cursorPosition {
+  position: inherit;
+  bottom: 0;
+  color: #888;
+  border-top: 1px solid #333;
+  height: 36px;
+  width: 100%;
+  padding: 8px;
+}
+
 #outline ul {
   margin: 0;
   margin-left: 15px;
@@ -638,6 +648,8 @@ button.ace_searchbtn[action="findAll"] {
 #outline {
   padding: 7px;
   overflow-y: auto;
+  height: 100%;
+  margin-bottom: 36px;
 }
 
 #outlineResizer {
