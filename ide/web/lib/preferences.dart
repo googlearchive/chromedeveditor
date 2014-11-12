@@ -667,34 +667,51 @@ class EditorConfigSection {
 
 class _EditorConfigProperties {
   ini.Config _config;
+
   String id;
 
-  String get indentStyle => _getValue("indent_style", "space");
-  String get indentSize => _getValue("indent_size", "2");
+  String indentStyle;
+  String indentSize;
+  String tabWidth;
+  String endOfLine;
+  String charSet;
+  String trimWhitespace;
+  String insertFinalNewline;
 
-  String get _indentSizeValue => _getValue("indent_size", null);
-  String get tabWidth {
-    String value = _getValue("tab_width", null);
+  _EditorConfigProperties(this._config, this.id) {
+    indentStyle = _takeValue("indent_style", "space");
+    String indentSizeProp = _getValue("indent_size", null);
+    indentSize = _takeValue("indent_size", "2");
+
+    String value = _takeValue("tab_width", null);
     if (value != null) {
-      return value;
-    }
-
-    if (_indentSizeValue == "tab") {
+      tabWidth = value;
+    } else if (indentSizeProp == "tab") {
       // Default if no tab size is specified and "tab" is used for indent_size.
-      return "2";
+      tabWidth = "2";
+    } else tabWidth = indentSize;
+
+    endOfLine = _takeValue("end_of_line", "cr");
+    charSet = _takeValue("charset", "utf-8");
+    trimWhitespace = _takeValue("trim_trailing_whitespace", "true");
+    insertFinalNewline = _takeValue("insert_final_newline", "true");
+
+    List<String> currentOptions = _config.options(id).toList();
+
+    if (currentOptions.length > 0) {
+      String errorKeys = currentOptions.join(", ");
+      throw "Invalid options in $id: $errorKeys";
     }
-
-    return indentSize;
   }
-  String get endOfLine => _getValue("end_of_line", "cr");
-  String get charSet => _getValue("charset", "utf-8");
-  String get trimWhitespace => _getValue("trim_trailing_whitespace", "true");
-  String get insertFinalNewline => _getValue("insert_final_newline", "true");
-
-  _EditorConfigProperties(this._config, this.id);
 
   String _getValue(String propertyName, dynamic defaultValue) {
     String value = _config.get(id, propertyName);
     return (value == null) ? defaultValue : value.toLowerCase();
+  }
+
+  String _takeValue(String propertyName, dynamic defaultValue) {
+    String value = _getValue(propertyName, defaultValue);
+    _config.remove_option(id, propertyName);
+    return value;
   }
 }
