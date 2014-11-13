@@ -2407,6 +2407,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
         spark.localPrefs.setValue("live-deployment", _liveDeployCheckBox.checked));
     if (SparkFlags.enableNewUsbApi) {
       _usbDevices.hidden = false;
+
       _loadUsbDevices();
       _addDeviceButton.onClick.listen((e) {
         _addDevice();

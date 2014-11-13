@@ -220,7 +220,7 @@ abstract class AbstractDeployer {
       }
 
       DeviceInfo di = _knownDevices[index];
-;     return device.open(di.vendorId, di.productId).catchError((e) {
+      return device.open(di.vendorId, di.productId).catchError((e) {
         if ((e == 'no-device') || (e == 'no-connection')) {
           // No matching device found, try again.
           return doOpen(index + 1);
