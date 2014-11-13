@@ -41,6 +41,7 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/android_rsa.dart';
 import 'lib/mobile/deploy.dart';
+import 'lib/mobile/usb.dart';
 import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
@@ -2447,22 +2448,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
     }
   }
 
-  Future<List> _loadDevices() {
-    Completer completer = new Completer();
-
-    Function cb = (result) {
-      completer.complete(result);
-    };
-
-    var context = js.context['chrome']['usb'];
-    var options = new js.JsObject.jsify({});
-    try {
-      context.callMethod("getDevices", [options, cb]);
-    } catch (e) {
-      // user cancelled the operation.
-    }
-    return completer.future;
-  }
+  Future<List> _loadDevices() => UsbUtil.getDevices();
 
   void _loadUsbDevices() {
     _usbDevices.length = 0;
@@ -2476,36 +2462,20 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
     });
   }
 
-  void _enableInputs([_]) {
-    _pushUrlElement.disabled = !_ipElement.checked;
-    _usbDevices.disabled = _ipElement.checked;
-    _addDeviceButton.disabled = _ipElement.checked;
-  }
-
    /**
    * Opens a dialog and provides a list of active adb devices to select from.
    * It allows to select a single device at a time.
   */
   Future _addDevice() {
-    Completer completer = new Completer();
-
-    Function cb = (result) {
-      completer.complete();
+    return UsbUtil.getUserSelectedDevices().then((devices) {
       _loadUsbDevices();
-    };
+    });
+  }
 
-    var context = js.context['chrome']['usb'];
-    var options = new js.JsObject.jsify({'filters': [new js.JsObject.jsify({
-      'interfaceClass': 0xff,
-      'interfaceSubclass': 0x42,
-      'interfaceProtocol': 0x01
-    })]});
-    try {
-      context.callMethod("getUserSelectedDevices", [options, cb]);
-    } catch (e) {
-      // user cancelled the operation.
-    }
-    return completer.future;
+  void _enableInputs([_]) {
+    _pushUrlElement.disabled = !_ipElement.checked;
+    _usbDevices.disabled = _ipElement.checked;
+    _addDeviceButton.disabled = _ipElement.checked;
   }
 
   void _toggleProgressVisible(bool visible) {
