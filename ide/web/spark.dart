@@ -2469,7 +2469,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
     _loadDevices().then((deviceInfos) {
       deviceInfos.forEach((info) {
         String option =
-            "(productId:${info['productId']}, vendorId:${info['vendorId']}";
+            "(productId:${info['productId']}, vendorId:${info['vendorId']})";
         String value = "${info['productId']}:${info['vendorId']}";
         _usbDevices.append(new OptionElement(data: option, value: value ));
       });
