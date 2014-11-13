@@ -9,6 +9,7 @@ library spark.deploy;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_net/tcp.dart';
@@ -88,7 +89,7 @@ class MobileDeploy {
    * Push the application via ADB. We try connecting to a local ADB server
    * first. If that fails, then we try pushing via a USB connection.
    */
-  Future pushAdb(ProgressMonitor monitor) {
+  Future pushAdb(ProgressMonitor monitor,{int productId: -1, int vendorId: -1}) {
     monitor.start('Deploying…', maxWork: 10);
 
     // Try to find a local ADB server. If we fail, try to use USB.
@@ -99,7 +100,12 @@ class MobileDeploy {
       _logger.info('deploying application via ADB over USB');
 
       // No server found, so use our own USB code.
-      return _pushViaUSB(monitor);
+      if (SparkFlags.enableNewUsbApi) {
+        DeviceInfo info = new DeviceInfo(vendorId, productId, '');
+        return _pushViaUSB(monitor, info);
+      } else {
+        return _pushViaUSB(monitor);
+      }
     });
   }
 
@@ -115,8 +121,11 @@ class MobileDeploy {
     });
   }
 
-  Future _pushViaUSB(ProgressMonitor monitor) {
+  Future _pushViaUSB(ProgressMonitor monitor, [DeviceInfo info]) {
     USBDeployer dep = new USBDeployer(appContainer, _prefs);
+    if (info != null) {
+      dep.addToKnownDevices(info);
+    }
     return dep.init().then((_) {
       return dep.deploy(monitor);
     });
@@ -211,7 +220,7 @@ abstract class AbstractDeployer {
       }
 
       DeviceInfo di = _knownDevices[index];
-      return device.open(di.vendorId, di.productId).catchError((e) {
+;     return device.open(di.vendorId, di.productId).catchError((e) {
         if ((e == 'no-device') || (e == 'no-connection')) {
           // No matching device found, try again.
           return doOpen(index + 1);
@@ -369,6 +378,10 @@ class USBDeployer extends AbstractDeployer {
     return _device.sendHttpRequest(httpRequest, DEPLOY_PORT, timeout);
   }
 
+  void addToKnownDevices(DeviceInfo info) {
+    _knownDevices = [info];
+  }
+
   String _getTarget() {
     return TARGET;
   }
@@ -460,6 +473,7 @@ class LiveDeployManager {
 
       // Invoke the deployer methods in Futures in order to capture exceptions.
       Future f = new Future(() {
+        //TODO(grv): add support for new usb api.
         return deployer.pushAdb(_monitor);
       });
 
