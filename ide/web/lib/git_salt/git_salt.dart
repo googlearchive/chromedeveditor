@@ -228,4 +228,26 @@ class GitSalt {
 
     return completer.future;
   }
+
+    Future<List<String>> lsRemote(String url) {
+    var arg = new js.JsObject.jsify({
+      "url" : url
+    });
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "lsRemote",
+      "arg": arg
+    });
+
+    Completer completer = new Completer();
+
+    Function cb = (result) {
+      completer.complete(result["tags"].toList());
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return completer.future;
+  }
 }
