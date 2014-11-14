@@ -216,12 +216,8 @@ class GitSalt {
 
     Function cb = (result) {
       js.JsObject statuses = result["statuses"];
-      Map<String, String> statusMap = {};
-      List<String> keys = js.context['Object'].callMethod('keys', [statuses]);
-      keys.forEach((key) {
-        statusMap[key] = statuses[key];
-      });
-      completer.complete(statusMap);
+
+      completer.complete(toDartMap(statusMap));
     };
 
     _jsGitSalt.callMethod('postMessage', [message, cb]);
@@ -243,11 +239,20 @@ class GitSalt {
     Completer completer = new Completer();
 
     Function cb = (result) {
-      completer.complete(result["tags"].toList());
+      completer.complete(result["refs"].toList());
     };
 
     _jsGitSalt.callMethod('postMessage', [message, cb]);
 
     return completer.future;
+  }
+
+  Map toDartMap(js.JsObject jsMap) {
+    Map map = {};
+    List<String> keys = js.context['Object'].callMethod('keys', [jsMap]);
+    keys.forEach((key) {
+      map[key] = jsMap[key];
+    });
+    return map;
   }
 }
