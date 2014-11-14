@@ -309,9 +309,8 @@ int GitLsRemote::parseArgs() {
 int GitLsRemote::runCommand() {
   git_remote* remote = NULL;
   error = git_remote_create_anonymous(&remote, repo, url.c_str(), NULL);
-  git_direction dir = GIT_DIRECTION_FETCH;
 
-  error = git_remote_connect(remote, dir);
+  error = git_remote_connect(remote, GIT_DIRECTION_FETCH);
 
   size_t size = 0;
   git_remote_head** heads = NULL;

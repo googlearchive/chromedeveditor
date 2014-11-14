@@ -216,8 +216,7 @@ class GitSalt {
 
     Function cb = (result) {
       js.JsObject statuses = result["statuses"];
-
-      completer.complete(toDartMap(statusMap));
+      completer.complete(toDartMap(statuses));
     };
 
     _jsGitSalt.callMethod('postMessage', [message, cb]);
@@ -225,7 +224,7 @@ class GitSalt {
     return completer.future;
   }
 
-    Future<List<String>> lsRemote(String url) {
+  Future<List<String>> lsRemoteRefs(String url) {
     var arg = new js.JsObject.jsify({
       "url" : url
     });
