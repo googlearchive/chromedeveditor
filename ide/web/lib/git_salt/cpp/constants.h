@@ -17,6 +17,7 @@ const char* const kFileSystem = "filesystem";
 const char* const kFullPath = "fullPath";
 const char* const kMessage = "message";
 const char* const kName = "name";
+const char* const kRefs = "refs";
 const char* const kRegarding = "regarding";
 const char* const kResult = "result";
 const char* const kStatuses = "statuses";
@@ -31,6 +32,7 @@ const char* const kCmdClone = "clone";
 const char* const kCmdCommit = "commit";
 const char* const kCmdCurrentBranch = "currentBranch";
 const char* const kCmdGetBranches = "getBranches";
+const char* const kLsRemote = "lsRemote";
 const char* const kCmdStatus = "status";
 }
 #endif  // GIT_SALT_CONSTANTS_H__
