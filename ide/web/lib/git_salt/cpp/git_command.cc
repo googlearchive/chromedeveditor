@@ -321,12 +321,13 @@ int GitLsRemote::runCommand() {
   pp::VarArray refs;
 
   for (size_t i = 0; i < size; ++i) {
-    printf("name: %s", heads[i]->name);
     refs.Set(i, heads[i]->name);
   }
 
+  git_remote_free(remote);
+
   pp::VarDictionary arg;
-  arg.Set(kStatuses, refs);
+  arg.Set(kRefs, refs);
 
   pp::VarDictionary response;
   response.Set(kRegarding, subject);

@@ -17,6 +17,7 @@ const char* const kFileSystem = "filesystem";
 const char* const kFullPath = "fullPath";
 const char* const kMessage = "message";
 const char* const kName = "name";
+const char* const kRefs = "refs";
 const char* const kRegarding = "regarding";
 const char* const kResult = "result";
 const char* const kStatuses = "statuses";
