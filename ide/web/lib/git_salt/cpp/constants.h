@@ -31,6 +31,7 @@ const char* const kCmdClone = "clone";
 const char* const kCmdCommit = "commit";
 const char* const kCmdCurrentBranch = "currentBranch";
 const char* const kCmdGetBranches = "getBranches";
+const char* const kLsRemote = "lsRemote";
 const char* const kCmdStatus = "status";
 }
 #endif  // GIT_SALT_CONSTANTS_H__

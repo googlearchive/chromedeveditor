@@ -298,3 +298,41 @@ int GitStatus::runCommand() {
   _gitSalt->PostMessage(response);
   return 0;
 }
+
+int GitLsRemote::parseArgs() {
+  pp::VarArray entryArray;
+  if ((error = parseString(_args, kUrl, url))) {
+  }
+  return 0;
+}
+
+int GitLsRemote::runCommand() {
+  git_remote* remote = NULL;
+  error = git_remote_create_anonymous(&remote, repo, url.c_str(), NULL);
+  git_direction dir = GIT_DIRECTION_FETCH;
+
+  error = git_remote_connect(remote, dir);
+
+  size_t size = 0;
+  git_remote_head** heads = NULL;
+
+  git_remote_ls((const git_remote_head***)&heads, &size, remote);
+
+  pp::VarArray refs;
+
+  for (size_t i = 0; i < size; ++i) {
+    printf("name: %s", heads[i]->name);
+    refs.Set(i, heads[i]->name);
+  }
+
+  pp::VarDictionary arg;
+  arg.Set(kStatuses, refs);
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
+  return 0;
+}
