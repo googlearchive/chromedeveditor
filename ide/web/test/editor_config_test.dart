@@ -9,8 +9,10 @@ library preferences_test;
 import 'package:unittest/unittest.dart';
 
 import '../lib/editor_config.dart';
+import '../lib/files_mock.dart';
+import '../lib/workspace.dart' as ws;
 
-String editorConfigContent = """
+const String EDITOR_CONFIG_CONTENT = """
 
 # top-most EditorConfig file
 root = true
@@ -19,6 +21,7 @@ root = true
 [*]
 end_of_line = lf
 insert_final_newline = false
+indent_size = 8
 
 # 4 space indentation
 [*.py]
@@ -48,8 +51,8 @@ should_not_be_here = true
 """;
 
 defineTests() {
-  group('editorConfig', () {
-    test('glob test - general', () {
+  group('globs', () {
+    test('general test', () {
       Glob glob = new Glob("a*/b**/d?");
       expect(glob.matchPath("alpha/bravo/charlie/delta"), Glob.PREFIX_MATCH);
       expect(glob.matchPath("alpha/bravo/charlie/d"), Glob.PREFIX_MATCH);
@@ -62,7 +65,7 @@ defineTests() {
       expect(glob.matchPath("abc/"), Glob.PREFIX_MATCH);
     });
 
-    test('glob test - escaping', () {
+    test('escaping test', () {
       Glob glob = new Glob("a**/foo\\ bar");
       expect(glob.matchPath("aaa/bbb"), Glob.PREFIX_MATCH);
       expect(glob.matchPath("aaa/bbb/foo ba"), Glob.PREFIX_MATCH);
@@ -72,6 +75,23 @@ defineTests() {
       glob = new Glob("foo.dart");
       expect(glob.matchPath("foo.dart"), Glob.COMPLETE_MATCH);
       expect(glob.matchPath("foo!dart"), Glob.NO_MATCH);
+    });
+
+    test('EditorConfig', () {
+      ws.Workspace workspace = createWorkspace();
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('.editorConfig', contents: EDITOR_CONFIG_CONTENT);
+      DirectoryEntry dirEntry = fs.createDirectory('dir');
+      fs.createFile('dir/.editorConfig', contents: """[*]
+indent_size = 2
+""");
+      FileEntry sourceEntry = fs.createFile('dir/file.py', contents: "");
+
+      var sourceResource = new ws.File(workspace, sourceEntry);
+      EditorConfig e = new EditorConfig(sourceResource);
+      return e.whenReady.then((_) {
+        expect(e.indentSize, 2);
+      });
     });
 
 //    test('EditorConfig - parsing', () {
@@ -98,3 +118,5 @@ defineTests() {
 //    });
   });
 }
+
+ws.Workspace createWorkspace() => new ws.Workspace(new MapPreferencesStore());
