@@ -27,6 +27,7 @@ class EditorConfig {
   int charSet;
   bool trimWhitespace;
   bool insertFinalNewline;
+  Future whenReady;
 
   void _throwExceptionFor(String key, String value) {
     if (value == null) {
@@ -38,7 +39,7 @@ class EditorConfig {
 
   EditorConfig(workspace.File file) {
     ConfigSectionMatcher matcher = new ConfigSectionMatcher(file);
-    matcher.getSections().then((_) {
+    whenReady = matcher.getSections().then((_) {
       // indent_style
       useSpaces = _propertyToBool(matcher, "indent_style", trueValue: "space",
           falseValue: "tab");
@@ -119,7 +120,7 @@ class EditorConfig {
 }
 
 class ConfigSectionMatcher {
-  List<ConfigSection> configSections;
+  List<ConfigSection> configSections = [];
   workspace.File file;
   chrome.ChromeFileEntry get fileEntry => file.entry;
 
@@ -132,6 +133,7 @@ class ConfigSectionMatcher {
   }
 
   Future<ConfigFile> getSectionsForPath(chrome.DirectoryEntry dir) {
+    int insertIndex = configSections.length;
     return dir.getFile(".editorConfig").then((chrome.ChromeFileEntry configFile) {
       return configFile.readText();
     }).catchError((e) {
@@ -145,7 +147,7 @@ class ConfigSectionMatcher {
           (ConfigSection section) {
         var fullPath = fileEntry.fullPath;
         if (section.matchesPath(fullPath)) {
-          configSections.add(section);
+          configSections.insert(insertIndex, section);
         }
       });
 
@@ -163,11 +165,13 @@ class ConfigSectionMatcher {
 
   String getValue(String propertyName) {
     String value;
-    configSections.firstWhere((ConfigSection configSection) {
+    for (ConfigSection configSection in configSections) {
       value = configSection.getValue(propertyName);
-      return value != null;
-    });
-    return value;
+      if (value != null) {
+        return value;
+      }
+    }
+    return null;
   }
 }
 
@@ -181,17 +185,6 @@ class ConfigFile {
 
   ConfigFile(String content) {
     parseConfig(content);
-  }
-
-//  EditorConfigSection findSectionMatching
-
-  String getValue(String propertyName, String path) {
-    String value = null;
-    sections.firstWhere((ConfigSection section) {
-      value = section.getValue(propertyName);
-      return value != null;
-    });
-    return value;
   }
 
   void parseConfig(String content) {
@@ -218,7 +211,8 @@ class ConfigSection {
   }
 
   String getValue(String propertyName) {
-    return _config.get(sectionId, propertyName).toLowerCase();
+    var value = _config.get(sectionId, propertyName);
+    return (value != null) ? value.toLowerCase() : null;
   }
 }
 
@@ -248,6 +242,14 @@ abstract class GlobMatcher extends Match {
   }
 
   String toRegExp();
+}
+
+class PartialPathMatcher extends GlobMatcher {
+  int get end => tokenStart;
+  String toRegExp() => "^(.*/|)";
+
+  PartialPathMatcher(String input, GlobPattern pattern, int location) :
+      super(input, pattern, location, location);
 }
 
 class StaticMatcher extends GlobMatcher {
@@ -307,6 +309,9 @@ class IdentifierListMatcher extends GlobMatcher {
 class GlobPattern implements Pattern {
   Iterable<Match> allMatches(String string, [int start = 0]) {
     List<Match> matches = [];
+    if (string.substring(0,1) != "/") {
+      matches.add(new PartialPathMatcher(string, this, 0));
+    }
 
     do {
       GlobMatcher match = matchAsPrefix(string, start);
