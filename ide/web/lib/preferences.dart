@@ -16,7 +16,6 @@ import 'dart:convert';
 import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:ini/ini.dart' as ini;
 
 /**
  * A PreferenceStore backed by `chome.storage.local`.
