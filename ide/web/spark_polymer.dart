@@ -63,7 +63,9 @@ void main() {
 
       maybeRunGuarded(() {
         SparkPolymer spark = new SparkPolymer._();
-        spark.start();
+        spark.start().then((_) {
+          spark.actionManager.getAction("run-tests").invoke();
+        });
       });
     }).catchError((error) {
       _logger.logError(error);
