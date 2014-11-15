@@ -7,7 +7,7 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:ini/ini.dart' as ini;
 
-class SparkEditorConfig {
+class EditorConfig {
   static final int ENDING_CR = 1;
   static final int ENDING_LF = 2;
   static final int ENDING_CRLF = 3;
@@ -26,120 +26,114 @@ class SparkEditorConfig {
   bool trimWhitespace;
   bool insertFinalNewline;
 
-  void _throwExceptionFor(String key) {
-    throw "Invalid $key for ${properties.sectionId}";
+  void _throwExceptionFor(String key, String value) {
+    if (value == null) {
+      throw "Missing value for $key";
+    } else {
+      throw "Invalid value for $key: $value";
+    }
   }
 
-  SparkEditorConfig() {
-    EditorConfigMatcher matcher = new EditorConfigMatcher(someFile);
+  EditorConfig(chrome.ChromeFileEntry file) {
+    ConfigSectionMatcher matcher = new ConfigSectionMatcher(file);
     matcher.getSections().then((_) {
       // indent_style
-      switch (matcher.getValue("indent_style")) {
-        case "space":
-          useSpaces = true;
-          break;
-        case "tab":
-          useSpaces = false;
-          break;
-        default:
-          _throwExceptionFor("indent_style");
-      }
+      useSpaces = _propertyToBool(matcher, "indent_style", trueValue: "space",
+          falseValue: "tab");
 
       // tab_width
-      String tabWidthProp = matcher.getValue("tab_width");
-      if (tabWidthProp == null) {
+      String value = matcher.getValue("tab_width");
+      if (value == null) {
         matcher.getValue("indent_size");
       }
 
-      tabWidth = int.parse(tabWidthProp);
-      if (tabWidth.toString() != tabWidthProp || tabWidth < 1) {
-        _throwExceptionFor("tab_width");
+      tabWidth = int.parse(value);
+      if (tabWidth.toString() != value || tabWidth < 1) {
+        _throwExceptionFor("tab_width", value);
       }
 
       // indent_size
-      String indentSizeProp = matcher.getValue("indent_size");
-      if (indentSizeProp == "tab") {
+      value = matcher.getValue("indent_size");
+      if (value == "tab") {
         indentSize = tabWidth;
       } else {
-        indentSize = int.parse(indentSizeProp);
-        if (indentSize.toString() != indentSizeProp || indentSize < 1) {
-          _throwExceptionFor("indent_size");
+        indentSize = int.parse(value);
+        if (indentSize.toString() != value || indentSize < 1) {
+          _throwExceptionFor("indent_size", value);
         }
       }
 
       // end_of_line
-      String endOfLineProp = matcher.getValue("end_of_line");
-      if (endOfLineProp == "cr") {
+      value = matcher.getValue("end_of_line");
+      if (value == "cr") {
         lineEnding = ENDING_CR;
-      } else if (endOfLineProp == "lf") {
+      } else if (value == "lf") {
         lineEnding = ENDING_LF;
-      } else if (endOfLineProp == "crlf") {
+      } else if (value == "crlf") {
         lineEnding = ENDING_CRLF;
       } else {
-        _throwExceptionFor("end_of_line");
+        _throwExceptionFor("end_of_line", value);
       }
 
       // charset
-      String charSetProp = matcher.getValue("charset");
-      if (charSetProp == "latin1") {
+      value = matcher.getValue("charset");
+      if (value == "latin1") {
         charSet = CHARSET_LATIN;
-      } else if (charSetProp == "utf-8") {
+      } else if (value == "utf-8") {
         charSet = CHARSET_UTF8;
-      } else if (charSetProp == "utf-8-bom") {
+      } else if (value == "utf-8-bom") {
         charSet = CHARSET_UTF8BOM;
-      } else if (charSetProp == "utf-16be") {
+      } else if (value == "utf-16be") {
         charSet = CHARSET_UTF16BE;
-      } else if (charSetProp == "utf-16le") {
+      } else if (value == "utf-16le") {
         charSet = CHARSET_UTF16LE;
       } else {
-        _throwExceptionFor("charset");
+        _throwExceptionFor("charset", value);
       }
 
       // trim_trailing_whitespace
-      switch (matcher.getValue("trim_trailing_whitespace")) {
-        case "true":
-          trimWhitespace = true;
-          break;
-        case "false":
-          trimWhitespace = false;
-          break;
-        default:
-          _throwExceptionFor("trim_trailing_whitespace");
-      }
+      trimWhitespace = _propertyToBool(matcher, "trim_trailing_whitespace");
 
       // insert_final_newline
-      switch (matcher.getValue("insert_final_newline")) {
-        case "true":
-          insertFinalNewline = true;
-          break;
-        case "false":
-          insertFinalNewline = false;
-          break;
-        default:
-          _throwExceptionFor("insert_final_newline");
-      }
+      insertFinalNewline = _propertyToBool(matcher, "insert_final_newline");
     });
+  }
+
+  bool _propertyToBool(ConfigSectionMatcher matcher, String propertyName,
+      {String trueValue: "true", String falseValue: "false"}) {
+    String value = matcher.getValue(propertyName);
+
+    if (value == trueValue) {
+      return true;
+    } else if (value == falseValue) {
+      return false;
+    }
+
+    _throwExceptionFor(propertyName, value);
+
+    // To keep analyzer happy
+    return false;
   }
 }
 
-class EditorConfigMatcher {
-  List<EditorConfigSection> configSections;
+class ConfigSectionMatcher {
+  List<ConfigSection> configSections;
   chrome.ChromeFileEntry file;
 
-  EditorConfigMatcher(this.file);
+  ConfigSectionMatcher(this.file);
 
-  Future<EditorConfigFile> getSections() {
+  Future<ConfigFile> getSections() {
     return file.getParent().then((chrome.DirectoryEntry dir) {
       getSectionsForPath(dir);
     });
   }
 
-  Future<EditorConfigFile> getSectionsForPath(chrome.DirectoryEntry dir) {
+  Future<ConfigFile> getSectionsForPath(chrome.DirectoryEntry dir) {
     return dir.getFile(".editorConfig").then((chrome.ChromeFileEntry configFile) {
       return configFile.readText();
     }).then((String configContent) {
-      new EditorConfigFile(configContent).sections.forEach(
-          (EditorConfigSection section) {
+      new ConfigFile(configContent).sections.forEach(
+          (ConfigSection section) {
         if (section.matchesPath(file.fullPath)) configSections.add(section);
       });
       return dir.getParent();
@@ -153,7 +147,7 @@ class EditorConfigMatcher {
 
   String getValue(String propertyName) {
     String value;
-    configSections.firstWhere((EditorConfigSection configSection) {
+    configSections.firstWhere((ConfigSection configSection) {
       value = configSection.getValue(propertyName);
       return value != null;
     });
@@ -164,12 +158,12 @@ class EditorConfigMatcher {
 /**
  *
  */
-class EditorConfigFile {
+class ConfigFile {
   ini.Config _iniConfig;
   bool get root => _iniConfig.get("default", "root") == "true";
-  List<EditorConfigSection> sections = [];
+  List<ConfigSection> sections = [];
 
-  EditorConfigFile(String content) {
+  ConfigFile(String content) {
     parseConfig(content);
   }
 
@@ -177,7 +171,7 @@ class EditorConfigFile {
 
   String getValue(String propertyName, String path) {
     String value = null;
-    sections.firstWhere((EditorConfigSection section) {
+    sections.firstWhere((ConfigSection section) {
       value = section.getValue(propertyName);
       return value != null;
     });
@@ -187,19 +181,19 @@ class EditorConfigFile {
   void parseConfig(String content) {
     _iniConfig = ini.Config.fromStrings(content.split("\n"));
     _iniConfig.sections().forEach((String sectionId) {
-      EditorConfigSection section = new EditorConfigSection(_iniConfig, sectionId);
+      ConfigSection section = new ConfigSection(_iniConfig, sectionId);
       sections.add(section);
     });
   }
 }
 
-class EditorConfigSection {
+class ConfigSection {
   ini.Config _config;
 
   String sectionId;
   Glob glob;
 
-  EditorConfigSection(this._config, this.sectionId) {
+  ConfigSection(this._config, this.sectionId) {
     glob = new Glob(sectionId);
   }
 
