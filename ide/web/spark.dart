@@ -31,6 +31,7 @@ import 'lib/decorators.dart';
 import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
+import 'lib/editor_config.dart';
 import 'lib/event_bus.dart';
 import 'lib/exception.dart';
 import 'lib/files_mock.dart';
@@ -3909,6 +3910,13 @@ class RunTestsAction extends SparkAction {
   void checkForTestListener() => _initTestDriver();
 
   _invoke([Object context]) {
+    /*%TRACE3*/ print("(4> 11/15/14): _invoke!"); // TRACE%
+    EditorConfig e = new EditorConfig(spark.aceManager.currentFile);
+    /*%TRACE3*/ print("(4> 11/15/14): EditorConfig!"); // TRACE%
+    /*%TRACE3*/ print("""(4> 11/15/14): e.indentSize: ${e.indentSize}"""); // TRACE%
+    /*%TRACE3*/ print("(4> 11/15/14): _invoke! ${spark.aceManager.currentFile.entry.fullPath}"); // TRACE%
+
+    return;
     if (SparkFlags.developerMode) {
 
       _initTestDriver();

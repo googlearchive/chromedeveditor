@@ -7,6 +7,8 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:ini/ini.dart' as ini;
 
+import 'workspace.dart' as workspace;
+
 class EditorConfig {
   static final int ENDING_CR = 1;
   static final int ENDING_LF = 2;
@@ -34,7 +36,7 @@ class EditorConfig {
     }
   }
 
-  EditorConfig(chrome.ChromeFileEntry file) {
+  EditorConfig(workspace.File file) {
     ConfigSectionMatcher matcher = new ConfigSectionMatcher(file);
     matcher.getSections().then((_) {
       // indent_style
@@ -118,30 +120,44 @@ class EditorConfig {
 
 class ConfigSectionMatcher {
   List<ConfigSection> configSections;
-  chrome.ChromeFileEntry file;
+  workspace.File file;
+  chrome.ChromeFileEntry get fileEntry => file.entry;
 
   ConfigSectionMatcher(this.file);
 
   Future<ConfigFile> getSections() {
-    return file.getParent().then((chrome.DirectoryEntry dir) {
-      getSectionsForPath(dir);
+    return fileEntry.getParent().then((chrome.DirectoryEntry dir) {
+      return getSectionsForPath(dir);
     });
   }
 
   Future<ConfigFile> getSectionsForPath(chrome.DirectoryEntry dir) {
     return dir.getFile(".editorConfig").then((chrome.ChromeFileEntry configFile) {
       return configFile.readText();
+    }).catchError((e) {
+      if (e.name == "NotFoundError") {
+        return "";
+      }
+
+      return e;
     }).then((String configContent) {
       new ConfigFile(configContent).sections.forEach(
           (ConfigSection section) {
-        if (section.matchesPath(file.fullPath)) configSections.add(section);
+        var fullPath = fileEntry.fullPath;
+        if (section.matchesPath(fullPath)) {
+          configSections.add(section);
+        }
       });
-      return dir.getParent();
-    }).then((chrome.DirectoryEntry parent) {
-      if (parent == null) {
-        return null;
+
+      chrome.DirectoryEntry rootEntry = file.project.entry;
+      /*%TRACE3*/ print("""(4> 11/15/14): rootEntry: ${rootEntry}"""); // TRACE%
+      if (rootEntry.fullPath != dir.fullPath) {
+        return dir.getParent();
       }
-      return getSectionsForPath(parent);
+    }).then((chrome.DirectoryEntry parent) {
+      if (parent != null) {
+        return getSectionsForPath(parent);
+      }
     });
   }
 
