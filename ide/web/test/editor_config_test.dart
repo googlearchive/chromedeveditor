@@ -2,14 +2,15 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library preferences_test;
+library editor_config_test;
 
-//import 'dart:async';
+import 'dart:async';
 
 import 'package:unittest/unittest.dart';
 
 import '../lib/editor_config.dart';
 import '../lib/files_mock.dart';
+import '../lib/preferences.dart';
 import '../lib/workspace.dart' as ws;
 
 const String EDITOR_CONFIG_CONTENT = """
@@ -22,6 +23,10 @@ root = true
 end_of_line = lf
 insert_final_newline = false
 indent_size = 8
+indent_style = space
+tab_width = 2
+charset = latin1
+trim_trailing_whitespace = true
 
 # 4 space indentation
 [*.py]
@@ -43,7 +48,15 @@ indent_style = space
 indent_size = tab
 """;
 
-String editorConfigTooManyOptions = """
+const String EDITOR_CONFIG_SUBFOLDER_CONTENT = """
+[*]
+indent_size = 2
+
+[*.py]
+indent_size = 1
+""";
+
+String EDITOR_CONFIG_TOO_MANY_OPTIONS_CONTENT = """
 [*]
 end_of_line = lf
 insert_final_newline = false
@@ -53,7 +66,7 @@ should_not_be_here = true
 defineTests() {
   group('globs', () {
     test('general test', () {
-      Glob glob = new Glob("a*/b**/d?");
+      Glob glob = new Glob("/a*/b**/d?");
       expect(glob.matchPath("alpha/bravo/charlie/delta"), Glob.PREFIX_MATCH);
       expect(glob.matchPath("alpha/bravo/charlie/d"), Glob.PREFIX_MATCH);
       expect(glob.matchPath("alpha/bravo/charlie/do"), Glob.COMPLETE_MATCH);
@@ -66,13 +79,13 @@ defineTests() {
     });
 
     test('escaping test', () {
-      Glob glob = new Glob("a**/foo\\ bar");
+      Glob glob = new Glob("/a**/foo\\ bar");
       expect(glob.matchPath("aaa/bbb"), Glob.PREFIX_MATCH);
       expect(glob.matchPath("aaa/bbb/foo ba"), Glob.PREFIX_MATCH);
       expect(glob.matchPath("aaa/bbb/foo bar"), Glob.COMPLETE_MATCH);
       expect(glob.matchPath("aaa/bbb/foo barb"), Glob.PREFIX_MATCH);
 
-      glob = new Glob("foo.dart");
+      glob = new Glob("/foo.dart");
       expect(glob.matchPath("foo.dart"), Glob.COMPLETE_MATCH);
       expect(glob.matchPath("foo!dart"), Glob.NO_MATCH);
     });
@@ -80,18 +93,33 @@ defineTests() {
     test('EditorConfig', () {
       ws.Workspace workspace = createWorkspace();
       MockFileSystem fs = new MockFileSystem();
-      fs.createFile('.editorConfig', contents: EDITOR_CONFIG_CONTENT);
-      DirectoryEntry dirEntry = fs.createDirectory('dir');
-      fs.createFile('dir/.editorConfig', contents: """[*]
-indent_size = 2
-""");
-      FileEntry sourceEntry = fs.createFile('dir/file.py', contents: "");
-
-      var sourceResource = new ws.File(workspace, sourceEntry);
-      EditorConfig e = new EditorConfig(sourceResource);
-      return e.whenReady.then((_) {
-        expect(e.indentSize, 2);
-      });
+      DirectoryEntry workspaceRootEntry = fs.createDirectory('root');
+      WorkspaceRoot workspaceRoot = new MockWorkspaceRoot(workspaceRootEntry);
+      ws.Project project = new ws.Project(workspace, workspaceRoot);
+      File pySourceResource, dartSourceResource;
+      return Future.wait([project.createNewFile('.editorConfig').then((File file) {
+        return file.setContents(EDITOR_CONFIG_CONTENT);
+      }), project.createNewFolder('dir').then((Folder folder) {
+        return Future.wait([folder.createNewFile('.editorConfig').then((File file) {
+          return file.setContents(EDITOR_CONFIG_SUBFOLDER_CONTENT);
+        }), folder.createNewFile('file.py').then((File file) {
+          pySourceResource = file;
+          return file.setContents("");
+        }), folder.createNewFile('file.dart').then((File file) {
+          dartSourceResource = file;
+          return file.setContents("");
+        })]);
+      })]).then((_) => Future.wait([new Future.value().then((_) {
+        EditorConfig e = new EditorConfig(pySourceResource);
+        return e.whenReady.then((_) {
+          expect(e.indentSize, 1);
+        });
+      }),new Future.value().then((_) {
+        EditorConfig e = new EditorConfig(dartSourceResource);
+        return e.whenReady.then((_) {
+          expect(e.indentSize, 4);
+        });
+      })]));
     });
 
 //    test('EditorConfig - parsing', () {

@@ -309,9 +309,6 @@ class IdentifierListMatcher extends GlobMatcher {
 class GlobPattern implements Pattern {
   Iterable<Match> allMatches(String string, [int start = 0]) {
     List<Match> matches = [];
-    if (string.substring(0,1) != "/") {
-      matches.add(new PartialPathMatcher(string, this, 0));
-    }
 
     do {
       GlobMatcher match = matchAsPrefix(string, start);
@@ -373,7 +370,17 @@ class Glob {
   List<String> _globRegExpParts;
 
   Glob(String pattern) {
-    Iterable<Match> globMatchers = new GlobPattern().allMatches(pattern);
+    bool matchFull = pattern.substring(0,1) == "/";
+    GlobPattern globPattern = new GlobPattern();
+
+    if (matchFull) pattern = pattern.substring(1);
+
+    List<GlobMatcher> globMatchers = globPattern.allMatches(pattern).toList();
+
+    if (!matchFull) {
+      globMatchers.insert(0, new PartialPathMatcher(pattern, globPattern, 0));
+    }
+
     _globRegExpParts = globMatchers.map((GlobMatcher m) =>
         _escape(pattern.substring(m.start, m.tokenStart)) + m.toRegExp()).toList();
   }
