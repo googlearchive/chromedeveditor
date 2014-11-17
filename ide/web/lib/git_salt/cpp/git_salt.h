@@ -24,6 +24,7 @@ class GitClone;
 class GitCommit;
 class GitCurrentBranch;
 class GitGetBranches;
+class GitInit;
 class GitLsRemote;
 class GitStatus;
 
@@ -63,6 +64,8 @@ class GitSaltInstance : public pp::Instance {
   virtual void HandleMessage(const pp::Var& var_message);
 
   int Clone(int32_t r, GitClone* clone);
+
+  int InitRepo(int32_t r, GitInit* init);
 
   int Commit(int32_t r, GitCommit* commit);
 

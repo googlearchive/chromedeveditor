@@ -116,11 +116,21 @@ void GitSaltInstance::HandleMessage(const pp::Var& var_message) {
     lsRemote->parseArgs();
     file_thread_.message_loop().PostWork(
         callback_factory_.NewCallback(&GitSaltInstance::LsRemote, lsRemote));
+  } else if (!cmd.compare(kCmdInit)) {
+    GitInit* init = new GitInit(this, subject, var_dictionary_args, repo);
+    init->parseArgs();
+    file_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&GitSaltInstance::InitRepo, init));
   }
 }
 
 int GitSaltInstance::Clone(int32_t r, GitClone* clone) {
   clone->runCommand();
+  return 0;
+}
+
+int GitSaltInstance::InitRepo(int32_t r, GitInit* init) {
+  init->runCommand();
   return 0;
 }
 
