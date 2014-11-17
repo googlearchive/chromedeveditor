@@ -384,7 +384,7 @@ class GitScmProvider extends ScmProvider {
 
   Future init(chrome.DirectoryEntry dir) {
     //TODO(grv): to be implemented.
-    return new Future.value()
+    return new Future.value();
   }
 
   void cancelClone() {
