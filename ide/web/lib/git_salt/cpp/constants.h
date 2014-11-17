@@ -34,6 +34,7 @@ const char* const kCmdCurrentBranch = "currentBranch";
 const char* const kCmdGetBranches = "getBranches";
 const char* const kLsRemote = "lsRemote";
 const char* const kCmdStatus = "status";
+const char* const kCmdInit = "init";
 }
 #endif  // GIT_SALT_CONSTANTS_H__
 

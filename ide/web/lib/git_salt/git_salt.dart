@@ -99,6 +99,33 @@ class GitSalt {
     return _completer.future;
   }
 
+  Future init(entry) {
+
+    root = entry;
+
+    var arg = new js.JsObject.jsify({
+      "entry": entry.toJs(),
+      "filesystem": entry.filesystem.toJs(),
+      "fullPath": entry.fullPath,
+      "url": ""
+    });
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "init",
+      "arg": arg
+    });
+
+    Function cb = (result) {
+      _completer.complete();
+      _completer = null;
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+    _completer = new Completer();
+    return _completer.future;
+  }
+
   Future commit(Map options) {
 
     var arg = new js.JsObject.jsify(options);

@@ -67,6 +67,26 @@ int GitClone::runCommand() {
   return 0;
 }
 
+int GitInit::runCommand() {
+  ChromefsInit();
+
+  git_threads_init();
+
+  git_repository_init(&repo, "/chromefs", true);
+
+  pp::VarDictionary arg;
+  arg.Set(kMessage, "Git init success.");
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
+
+  return 0;
+}
+
 void GitClone::ChromefsInit() {
   int32_t r = (int32_t) fileSystem.pp_resource();
   char fs_resource[100] = "filesystem_resource=";
