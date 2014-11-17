@@ -411,9 +411,10 @@ class _Package {
   static const _PACKAGE_PATH = '$_PACKAGE_REGULAR_PATH|$_PACKAGE_STAR_PATH';
   /// [_resolve] will handle all the possible formats.
   static const _PACKAGE_HASH = r'.+';
-  /// E.g.: "Polymer/platform#1.2.3", "Polymer/platform#>=1.2.3 <2.0.0", "*".
-  // TODO(ussuri): Support non-* hashes without a path, e.g. "1.2.3", "~1.2.3"...
-  static const _PACKAGE_SPEC = '^($_PACKAGE_PATH)(?:#($_PACKAGE_HASH))?\$';
+  /// More-or-less full range of semver.org specification formats, e.g.:
+  /// "Polymer/platform#1.2.3", "Polymer/platform#>=1.2.3 <2.0.0", "*",
+  /// "1.2.3", "~1.2.3", "*#^1.2.3"...
+  static const _PACKAGE_SPEC = '^($_PACKAGE_PATH)?(?:#?($_PACKAGE_HASH))?\$';
   static final _PACKAGE_SPEC_REGEXP = new RegExp(_PACKAGE_SPEC);
 
   static const _GITHUB_ROOT_URL = 'https://github.com';
