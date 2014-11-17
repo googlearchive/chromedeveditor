@@ -1,4 +1,4 @@
-// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -9,6 +9,10 @@ import 'package:ini/ini.dart' as ini;
 
 import 'workspace.dart' as workspace;
 
+/**
+ * Defines class for finding and understanding .editorConfig options file for a
+ * given source.  For more information: http://editorconfig.org/
+ */
 class EditorConfig {
   static final int ENDING_CR = 1;
   static final int ENDING_LF = 2;
@@ -151,9 +155,7 @@ class ConfigSectionMatcher {
         }
       });
 
-      chrome.DirectoryEntry rootEntry = file.project.entry;
-      /*%TRACE3*/ print("""(4> 11/15/14): rootEntry: ${rootEntry}"""); // TRACE%
-      if (rootEntry.fullPath != dir.fullPath) {
+      if (file.project.entry.fullPath != dir.fullPath) {
         return dir.getParent();
       }
     }).then((chrome.DirectoryEntry parent) {
@@ -176,7 +178,9 @@ class ConfigSectionMatcher {
 }
 
 /**
- *
+ * Defines a "ConfigFile" which is an .ini format file with globs for the
+ * section headers (to match files) and options relating to those file matches
+ * under the headers.
  */
 class ConfigFile {
   ini.Config _iniConfig;

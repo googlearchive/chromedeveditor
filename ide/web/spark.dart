@@ -3910,13 +3910,6 @@ class RunTestsAction extends SparkAction {
   void checkForTestListener() => _initTestDriver();
 
   _invoke([Object context]) {
-    /*%TRACE3*/ print("(4> 11/15/14): _invoke!"); // TRACE%
-    EditorConfig e = new EditorConfig(spark.aceManager.currentFile);
-    /*%TRACE3*/ print("(4> 11/15/14): EditorConfig!"); // TRACE%
-    /*%TRACE3*/ print("""(4> 11/15/14): e.indentSize: ${e.indentSize}"""); // TRACE%
-    /*%TRACE3*/ print("(4> 11/15/14): _invoke! ${spark.aceManager.currentFile.entry.fullPath}"); // TRACE%
-
-    return;
     if (SparkFlags.developerMode) {
 
       _initTestDriver();

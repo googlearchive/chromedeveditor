@@ -89,8 +89,10 @@ defineTests() {
       expect(glob.matchPath("foo.dart"), Glob.COMPLETE_MATCH);
       expect(glob.matchPath("foo!dart"), Glob.NO_MATCH);
     });
+  });
 
-    test('EditorConfig', () {
+  group('EditorConfig', () {
+    test('traverse filesystem for .editorConfigs', () {
       ws.Workspace workspace = createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       DirectoryEntry workspaceRootEntry = fs.createDirectory('root');
@@ -117,7 +119,7 @@ defineTests() {
       }),new Future.value().then((_) {
         EditorConfig e = new EditorConfig(dartSourceResource);
         return e.whenReady.then((_) {
-          expect(e.indentSize, 4);
+          expect(e.indentSize, 2);
         });
       })]));
     });
