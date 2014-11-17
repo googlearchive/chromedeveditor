@@ -100,6 +100,18 @@ class GitClone : public GitCommand {
   void ChromefsInit();
 };
 
+class GitInit : public GitClone {
+
+ public:
+  GitInit(GitSaltInstance* git_salt,
+           std::string subject,
+           pp::VarDictionary args,
+           git_repository*& repo)
+      : GitClone(git_salt, subject, args, repo) {}
+
+  int runCommand();
+};
+
 class GitCommit : public GitCommand {
 
  public:
