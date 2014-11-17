@@ -41,6 +41,30 @@ class _PrepareDirRes {
   _PrepareDirRes(this.entry, this.existed);
 }
 
+/**
+ * Provides a way to query meta data associated with remote git repos.
+ */
+class GitProvider {
+  static final ScmProvider _git = getProviderType('git-salt');
+
+  chrome.DirectoryEntry _bowerDir;
+  ScmProjectOperations _gitOperations;
+
+  Future<ScmProjectOperations> get operations => _completer.future;
+
+  Completer _completer;
+
+  GitProvider(this._bowerDir);
+
+  void load() {
+    _completer = new Completer();
+    _git.init(_bowerDir).then((_) {
+      _gitOperations = _git.createOperationsForDir(_bowerDir);
+      _completer.complete(_gitOperations);
+    });
+  }
+}
+
 class BowerFetcher {
   static final _ZIP_TOP_LEVEL_DIR_RE = new RegExp('[^/]*\/');
 
@@ -56,7 +80,14 @@ class BowerFetcher {
   final _unresolvedDepsComments = new Set<String>();
   final _ignoredDepsComments = new Set<String>();
 
-  BowerFetcher(this._packagesDir, this._packageSpecFileName, this._monitor);
+  GitProvider _gitProvider = null;
+
+  BowerFetcher(this._packagesDir, this._packageSpecFileName, this._monitor) {
+    _packagesDir.createDirectory('.bower-git').then((dir) {
+      _gitProvider = new GitProvider(dir);
+      _gitProvider.load();
+    });
+  }
 
   Future fetchDependencies(chrome.ChromeFileEntry specFile, FetchMode mode) {
     _allDeps.clear();
