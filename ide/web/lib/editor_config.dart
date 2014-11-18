@@ -8,6 +8,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:ini/ini.dart' as ini;
 
 import 'workspace.dart' as workspace;
+import 'exception.dart';
 
 /**
  * Defines class for finding and understanding .editorConfig options file for a
@@ -33,14 +34,6 @@ class EditorConfig {
   bool insertFinalNewline;
   Future whenReady;
 
-  void _throwExceptionFor(String key, String value) {
-    if (value == null) {
-      throw "Missing value for $key";
-    } else {
-      throw "Invalid value for $key: $value";
-    }
-  }
-
   EditorConfig(workspace.File file) {
     ConfigSectionMatcher matcher = new ConfigSectionMatcher(file);
     whenReady = matcher.getSections().then((_) {
@@ -56,7 +49,7 @@ class EditorConfig {
 
       tabWidth = int.parse(value);
       if (tabWidth.toString() != value || tabWidth < 1) {
-        _throwExceptionFor("tab_width", value);
+        throw new EditorConfigException.forProperty("tab_width", value);
       }
 
       // indent_size
@@ -66,7 +59,7 @@ class EditorConfig {
       } else {
         indentSize = int.parse(value);
         if (indentSize.toString() != value || indentSize < 1) {
-          _throwExceptionFor("indent_size", value);
+          throw new EditorConfigException.forProperty("indent_size", value);
         }
       }
 
@@ -79,7 +72,7 @@ class EditorConfig {
       } else if (value == "crlf") {
         lineEnding = ENDING_CRLF;
       } else {
-        _throwExceptionFor("end_of_line", value);
+        throw new EditorConfigException.forProperty("end_of_line", value);
       }
 
       // charset
@@ -95,7 +88,7 @@ class EditorConfig {
       } else if (value == "utf-16le") {
         charSet = CHARSET_UTF16LE;
       } else {
-        _throwExceptionFor("charset", value);
+        throw new EditorConfigException.forProperty("charset", value);
       }
 
       // trim_trailing_whitespace
@@ -116,10 +109,16 @@ class EditorConfig {
       return false;
     }
 
-    _throwExceptionFor(propertyName, value);
+    throw new EditorConfigException.forProperty(propertyName, value);
 
     // To keep analyzer happy
     return false;
+  }
+}
+
+class EditorConfigException extends SparkException {
+  EditorConfigException.forProperty(String key, String value) : super(
+      (value == null) ? "Missing value for $key" : "Invalid value for $key: $value") {
   }
 }
 
