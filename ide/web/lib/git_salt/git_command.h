@@ -10,6 +10,7 @@
 #include <git2.h>
 #include <sys/mount.h>
 #include <stdio.h>
+#include<vector>
 
 #include "ppapi/cpp/file_system.h"
 #include "ppapi/cpp/var_dictionary.h"
@@ -40,8 +41,18 @@ int parseInt(pp::VarDictionary message, const char* name,
   *option = var_option.AsInt();
   return 0;
 }
-}
 
+int parseArray(pp::VarDictionary message, const char* name,
+    pp::VarArray& option) {
+  pp::Var var_option = message.Get(name);
+  if (!var_option.is_array()) {
+    //TODO(grv): return error code;
+    return 1;
+  }
+  option = pp::VarArray(var_option);
+  return 0;
+}
+}
 
 class GitSaltInstance;
 
@@ -92,11 +103,21 @@ class GitClone : public GitCommand {
 class GitCommit : public GitCommand {
 
  public:
+  std::string userName;
+  std::string userEmail;
+  std::string commitMsg;
+
   GitCommit(GitSaltInstance* git_salt,
             std::string subject,
             pp::VarDictionary args,
             git_repository*& repo)
       : GitCommand(git_salt, subject, args, repo) {}
+
+  git_commit* getLastCommit();
+
+  virtual int parseArgs();
+
+  bool commitStage();
 
   int runCommand();
 };
@@ -131,5 +152,51 @@ class GitGetBranches : public GitCommand {
   int runCommand();
 };
 
+class GitAdd : public GitCommand {
+
+ public:
+  std::vector<std::string> entries;
+
+  GitAdd(GitSaltInstance* git_salt,
+         std::string subject,
+         pp::VarDictionary args,
+         git_repository*& repo)
+      : GitCommand(git_salt, subject, args, repo) {}
+
+  virtual int parseArgs();
+
+  int runCommand();
+};
+
+class GitStatus : public GitCommand {
+
+ public:
+  int flags;
+
+  GitStatus(GitSaltInstance* git_salt,
+            std::string subject,
+            pp::VarDictionary args,
+            git_repository*& repo)
+      : GitCommand(git_salt, subject, args, repo) {}
+
+  int runCommand();
+};
+
+class GitLsRemote : public GitCommand {
+
+ public:
+  std::string url;
+  std::string name;
+
+  virtual int parseArgs();
+
+  GitLsRemote(GitSaltInstance* git_salt,
+              std::string subject,
+              pp::VarDictionary args,
+              git_repository*& repo)
+      : GitCommand(git_salt, subject, args, repo) {}
+
+  int runCommand();
+};
 #endif  // GIT_SALT_GIT_COMMAND_H__
 

@@ -427,6 +427,12 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
     return new Future.value();
   }
 
+    Future<List<String>> lsRemoteRefs(String url) {
+    return gitSalt.then((git_salt) {
+      return git_salt.lsRemoteRefs(url);
+    });
+  }
+
   Future createBranch(String branchName, String sourceBranchName) {
     // TODO(grv): Implement.
     return new Future.value();
