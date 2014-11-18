@@ -203,6 +203,7 @@ class TabView {
     _selectedTab = tab;
     if (tab != null) tab.activate();
     _onSelectedStreamController.add(tab);
+    tab.focus();
   }
 
   bool get showLabelBar => !_tabBar.classes.contains('tabview-tabbar-hidden');
