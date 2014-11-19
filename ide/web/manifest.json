@@ -29,9 +29,9 @@
   "permissions": [
     "http://*/*",
     "https://*/*",
-    "identity",
     "clipboardRead",
     "clipboardWrite",
+    "contextMenus",
     "developerPrivate",
     {
       "fileSystem": [
@@ -40,13 +40,19 @@
         "directory"
       ]
     },
+    "identity",
     "management",
     "nativeMessaging",
+    {
+      "socket": [
+        "tcp-connect",
+        "resolve-host"
+      ]
+    },
+    "storage",
     "syncFileSystem",
     "system.network",
-    "storage",
     "unlimitedStorage",
-    "contextMenus",
     "usb",
     {
       "usbDevices": [
