@@ -65,6 +65,8 @@ class GitProvider {
   }
 }
 
+GitProvider _gitProvider = null;
+
 class BowerFetcher {
   static final _ZIP_TOP_LEVEL_DIR_RE = new RegExp('[^/]*\/');
 
@@ -79,8 +81,6 @@ class BowerFetcher {
   final _alteredDepsComments = new Set<String>();
   final _unresolvedDepsComments = new Set<String>();
   final _ignoredDepsComments = new Set<String>();
-
-  GitProvider _gitProvider = null;
 
   BowerFetcher(this._packagesDir, this._packageSpecFileName, this._monitor) {
     _packagesDir.createDirectory('.bower-git').then((dir) {
@@ -456,6 +456,9 @@ class _Package {
   static final _BOWER_REGISTRY_INFO_URL_REGEXP =
       new RegExp(_BOWER_REGISTRY_INFO_URL);
 
+  static const _GIT_TAG = r'refs/tags/(.+)';
+  static final _GIT_TAG_REGEXP = new RegExp(_GIT_TAG);
+
   final String name;
   final String fullPath;
   String path;
@@ -567,7 +570,7 @@ class _Package {
       }
     }
 
-    return _fetchTags().then((List<Map<String, dynamic>> tags) {
+    return _fetchTags().then((List<String> tags) {
       if (tags == null || tags.isEmpty) {
         return _resolveWith(_Unresolved.BAD_OR_MISSING_GITHUB_TAGS);
       }
@@ -575,7 +578,10 @@ class _Package {
       List<semver.Version> candidateVersions = [];
 
       for (final tag in tags) {
-        final String tagName = tag['name'];
+        final Match match = _GIT_TAG_REGEXP.matchAsPrefix(tag);
+        if (match == null) continue;
+        final String tagName = match.group(1);
+
         try {
           final ver = new semver.Version.parse(tagName);
           if (constraint.allows(ver)) {
@@ -605,14 +611,8 @@ class _Package {
     });
   }
 
-  Future<List<Map<String, dynamic>>> _fetchTags() {
-    return util.downloadFileViaXhr(getTagsUrl()).then((String tagsStr) {
-      try {
-        return JSON.decode(tagsStr);
-      } on FormatException catch (e) {
-        return null;
-      }
-    });
+  Future<List<String>> _fetchTags() {
+    return _gitProvider.operations.then((ops) => ops.lsRemoteRefs(getRootUrl()));
   }
 
   Future<_Resolution> _resolveWith(_Resolution resolution) {
