@@ -219,16 +219,6 @@ class EditorArea extends TabView {
     return editorReadyFuture;
   }
 
-  void set selectedTab(Tab tab) {
-    document.activeElement == super.selectedTab;
-    if (selectedTab is AceEditorTab) {
-      AceEditorTab editorTab = selectedTab;
-      /*%TRACE3*/ print("""(4> 11/19/14): document.activeElement: ${document.activeElement == editorTab.editor.element}"""); // TRACE%
-    }
-
-    super.selectedTab = tab;
-  }
-
   void persistTab(File file) {
     EditorTab tab = _tabOfFile[file];
     if (tab != null) tab.persisted = true;

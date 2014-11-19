@@ -122,10 +122,7 @@ class Tab {
     if (forceFocus) focus();
   }
 
-  void focus() {
-    /*%TRACE3*/ print("(4> 11/19/14): focus!"); // TRACE%
-    _pageContainer.focus();
-  }
+  void focus() => _pageContainer.focus();
 
   bool close() {
     deactivate();
@@ -201,7 +198,6 @@ class TabView {
 
   Tab get selectedTab => _selectedTab;
   void set selectedTab(Tab tab) {
-    /*%TRACE3*/ print("""(4> 11/19/14): document.activeElement: ${document.activeElement.id}"""); // TRACE%
     if (_selectedTab == tab) return;
     if (_selectedTab != null) _selectedTab.deactivate();
     _selectedTab = tab;
@@ -351,15 +347,17 @@ class TabView {
     if (tabs.length < 2) return;
     int index = tabs.indexOf(selectedTab);
     if (index == 0) index = tabs.length;
-    selectedTab = tabs[index - 1];
+    focusTab(tabs[index - 1]);
   }
 
   void gotoNextTab() {
     if (tabs.length < 2) return;
     int index = tabs.indexOf(selectedTab);
     if (index == tabs.length - 1) index = -1;
-    selectedTab = tabs[index + 1];
+    focusTab(tabs[index + 1]);
   }
+
+  focusTab(Tab tab) => selectedTab = tab..focus();
 
   Stream<Tab> get onClose => _onCloseStreamController.stream;
   Stream<TabBeforeCloseEvent> get onBeforeClose =>
