@@ -41,6 +41,7 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/android_rsa.dart';
 import 'lib/mobile/deploy.dart';
+import 'lib/mobile/usb.dart';
 import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
@@ -2385,6 +2386,9 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   CheckboxInputElement _adbElement;
   InputElement _pushUrlElement;
   InputElement _liveDeployCheckBox;
+  SelectElement _usbDevices;
+  InputElement _addDeviceButton;
+  int _selectedDeviceIndex = -1;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
   ws.Resource _resource;
@@ -2393,13 +2397,26 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
     _ipElement = getElement("#ip");
     _adbElement = getElement("#adb");
+    _usbDevices = getElement("#usbDevices");
     _liveDeployCheckBox = getElement("#liveDeploy");
     _pushUrlElement = _triggerOnReturn("#pushUrl");
+    _addDeviceButton = getElement('#addDevice');
 
     _ipElement.onChange.listen(_enableInputs);
     _adbElement.onChange.listen(_enableInputs);
     _liveDeployCheckBox.onChange.listen((_) =>
         spark.localPrefs.setValue("live-deployment", _liveDeployCheckBox.checked));
+    if (SparkFlags.enableNewUsbApi) {
+      _usbDevices.hidden = false;
+
+      _loadUsbDevices();
+      _addDeviceButton.onClick.listen((e) {
+        _addDevice();
+      });
+      _usbDevices.onChange.listen((e) {
+        _selectedDeviceIndex = _usbDevices.selectedIndex;
+      });
+    }
     _enableInputs();
   }
 
@@ -2425,13 +2442,40 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
       spark.showErrorMessage(
           'Unable to deploy', message: 'No USB devices available.');
     } else {
+       MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
       _restoreDialog();
       _show();
     }
   }
 
+  Future<List> _loadDevices() => UsbUtil.getDevices();
+
+  void _loadUsbDevices() {
+    _usbDevices.length = 0;
+    _loadDevices().then((deviceInfos) {
+      deviceInfos.forEach((info) {
+        String option =
+            "(productId:${info['productId']}, vendorId:${info['vendorId']})";
+        String value = "${info['productId']}:${info['vendorId']}";
+        _usbDevices.append(new OptionElement(data: option, value: value ));
+      });
+    });
+  }
+
+   /**
+   * Opens a dialog and provides a list of active adb devices to select from.
+   * It allows to select a single device at a time.
+  */
+  Future _addDevice() {
+    return UsbUtil.getUserSelectedDevices().then((devices) {
+      _loadUsbDevices();
+    });
+  }
+
   void _enableInputs([_]) {
     _pushUrlElement.disabled = !_ipElement.checked;
+    _usbDevices.disabled = _ipElement.checked;
+    _addDeviceButton.disabled = _ipElement.checked;
   }
 
   void _toggleProgressVisible(bool visible) {
@@ -2454,11 +2498,25 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
 
     MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
 
-    // Invoke the deployer methods in Futures in order to capture exceptions.
-    Future f = new Future(() {
-      return useAdb ?
-          deployer.pushAdb(_monitor) : deployer.pushToHost(url, _monitor);
-    });
+    Future f;
+
+    if (useAdb && SparkFlags.enableNewUsbApi == true) {
+      int index = _usbDevices.selectedIndex;
+       String deviceInfo =
+           (_usbDevices.children[index] as OptionElement).value;
+       List<String> info = deviceInfo.split(':');
+       int productId = int.parse(info[0]);
+       int vendorId = int.parse(info[1]);
+       f = new Future(() {
+         return deployer.pushAdb(_monitor, productId: productId, vendorId: vendorId);
+       });
+    } else {
+      // Invoke the deployer methods in Futures in order to capture exceptions.
+      f = new Future(() {
+        return useAdb ?
+            deployer.pushAdb(_monitor) : deployer.pushToHost(url, _monitor);
+      });
+    }
 
     _monitor.runCancellableFuture(f).then((_) {
       _hide();
