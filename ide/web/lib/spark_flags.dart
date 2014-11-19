@@ -77,6 +77,7 @@ class SparkFlags {
   static bool get polymerDesigner =>
       _flags['enable-polymer-designer'] == true;
 
+  //TODO(grv): Remove the flag once usb api is in chrome stable.
   static bool get enableNewUsbApi =>
       _flags['enable-new-usb-api'] == true && PlatformInfo.chromeVersion >= 40;
 

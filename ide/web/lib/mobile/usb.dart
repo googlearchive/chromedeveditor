@@ -8,7 +8,6 @@
 library spark.usb;
 
 import 'dart:async';
-import 'dart:js' as js;
 
 /**
  * Utility class to query new features in the USB api. These should eventually
@@ -40,6 +39,7 @@ class UsbUtil {
     var options = new js.JsObject.jsify({
       'filters': [
         new js.JsObject.jsify({
+          // filter to get adb devices.
           'interfaceClass': 0xff,
           'interfaceSubclass': 0x42,
           'interfaceProtocol': 0x01
