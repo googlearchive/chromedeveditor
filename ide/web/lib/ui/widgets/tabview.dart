@@ -122,7 +122,10 @@ class Tab {
     if (forceFocus) focus();
   }
 
-  void focus() => _pageContainer.focus();
+  void focus() {
+    /*%TRACE3*/ print("(4> 11/19/14): focus!"); // TRACE%
+    _pageContainer.focus();
+  }
 
   bool close() {
     deactivate();
@@ -198,12 +201,12 @@ class TabView {
 
   Tab get selectedTab => _selectedTab;
   void set selectedTab(Tab tab) {
+    /*%TRACE3*/ print("""(4> 11/19/14): document.activeElement: ${document.activeElement.id}"""); // TRACE%
     if (_selectedTab == tab) return;
     if (_selectedTab != null) _selectedTab.deactivate();
     _selectedTab = tab;
     if (tab != null) tab.activate();
     _onSelectedStreamController.add(tab);
-    tab.focus();
   }
 
   bool get showLabelBar => !_tabBar.classes.contains('tabview-tabbar-hidden');
