@@ -222,6 +222,8 @@ abstract class ScmProjectOperations {
 
   Future commit(String userName, String userEmail, String commitMessage);
 
+  Future<List<CommitInfo>> getPendingCommits(String username, String password);
+
   Future push(String username, String password);
 
   Future updateForChanges(List<ChangeDelta> changes);
@@ -468,6 +470,11 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
     });
   }
 
+  Future<List<CommitInfo>> getPendingCommits(String username, String password) {
+    //TODO(grv): to be implemented.
+    return new Future.value([]);
+  }
+
   Future createBranch(String branchName, String sourceBranchName) {
     // TODO(grv): Implement.
     return new Future.value();
@@ -512,8 +519,14 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
   }
 
   Future push(String username, String password) {
-    // TODO(grv): Implement.
-    return new Future.value();
+    return gitSalt.then((git_salt) {
+      Map<String, String> options = {
+        "userName": username,
+        "password": password
+      };
+      return git_salt.push(options)
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
+    });
   }
 
   Future<List<String>> getDeletedFiles() {
