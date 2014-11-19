@@ -9,7 +9,6 @@ library spark.deploy;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_net/tcp.dart';
