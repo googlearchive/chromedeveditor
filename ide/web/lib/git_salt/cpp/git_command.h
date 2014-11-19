@@ -210,5 +210,22 @@ class GitLsRemote : public GitCommand {
 
   int runCommand();
 };
+
+class GitPush : public GitCommand {
+
+ public:
+  std::string username;
+  std::string password;
+
+  virtual int parseArgs();
+
+  GitPush(GitSaltInstance* git_salt,
+          std::string subject,
+          pp::VarDictionary args,
+          git_repository*& repo)
+      : GitCommand(git_salt, subject, args, repo) {}
+
+  int runCommand();
+};
 #endif  // GIT_SALT_GIT_COMMAND_H__
 
