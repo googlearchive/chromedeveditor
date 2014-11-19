@@ -363,6 +363,10 @@ class GitScmProvider extends ScmProvider {
     return null;
   }
 
+  ScmProjectOperations createOperationsForDir(chrome.DirectoryEntry dir) {
+    throw new UnsupportedError('GitScmProvider.createOperationsForDir not supported');
+  }
+
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
