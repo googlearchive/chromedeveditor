@@ -346,6 +346,8 @@ abstract class Spark
   void initNavigationManager() {
     _navigationManager = new NavigationManager(_editorManager);
     _navigationManager.onNavigate.listen((NavigationLocation location) {
+      if (location == null) return;
+
       _selectFile(location.file).then((_) {
         if (location.selection != null) {
           nextTick().then((_) => _selectLocation(location));
