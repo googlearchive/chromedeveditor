@@ -203,7 +203,6 @@ class TabView {
     _selectedTab = tab;
     if (tab != null) tab.activate();
     _onSelectedStreamController.add(tab);
-    tab.focus();
   }
 
   bool get showLabelBar => !_tabBar.classes.contains('tabview-tabbar-hidden');
@@ -348,15 +347,17 @@ class TabView {
     if (tabs.length < 2) return;
     int index = tabs.indexOf(selectedTab);
     if (index == 0) index = tabs.length;
-    selectedTab = tabs[index - 1];
+    focusTab(tabs[index - 1]);
   }
 
   void gotoNextTab() {
     if (tabs.length < 2) return;
     int index = tabs.indexOf(selectedTab);
     if (index == tabs.length - 1) index = -1;
-    selectedTab = tabs[index + 1];
+    focusTab(tabs[index + 1]);
   }
+
+  focusTab(Tab tab) => selectedTab = tab..focus();
 
   Stream<Tab> get onClose => _onCloseStreamController.stream;
   Stream<TabBeforeCloseEvent> get onBeforeClose =>

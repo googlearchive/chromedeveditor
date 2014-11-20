@@ -1738,7 +1738,7 @@ class SpecificTabAction extends SparkAction {
 
     // Ctrl-1 to Ctrl-8. The user types in a 1-based key event; we convert that
     // into a 0-based into into the tabs.
-    spark.editorArea.selectedTab = spark.editorArea.tabs[_binding.index - 1];
+    spark.editorArea.focusTab(spark.editorArea.tabs[_binding.index - 1]);
   }
 }
 
@@ -2176,8 +2176,8 @@ class HistoryAction extends SparkAction {
     _init(true);
   }
 
-  void _init(bool value) {
-    _forward = value;
+  void _init(bool forward) {
+    _forward = forward;
     enabled = false;
 
     spark.navigationManager.onNavigate.listen((_) {
@@ -2196,6 +2196,7 @@ class HistoryAction extends SparkAction {
     } else {
       spark.navigationManager.goBack();
     }
+    spark.editorArea.selectedTab.focus();
   }
 }
 
