@@ -13,7 +13,8 @@ class StagehandProjectTemplate implements ProjectTemplate {
   Future instantiate(DirectoryEntry destination) {
     stagehand.Generator generator = stagehand.getGenerator(id);
     var target = new _StagehandGeneratorTarget(destination);
-    return generator.generate(_normalizeName(destination.name), target);
+    return generator.generate(_normalizeName(destination.name), target,
+        additionalVars: {});
   }
 
   Future showIntro(Project finalProject, utils.Notifier notifier) {
