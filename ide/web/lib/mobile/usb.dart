@@ -8,6 +8,7 @@
 library spark.usb;
 
 import 'dart:async';
+import 'dart:js' as js;
 
 /**
  * Utility class to query new features in the USB api. These should eventually
