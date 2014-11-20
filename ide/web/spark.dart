@@ -14,6 +14,7 @@ import 'package:chrome_testing/testing_app.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
+import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
 import 'package:spark_widgets/spark_progress/spark_progress.dart';
@@ -2388,7 +2389,7 @@ class DeployToMobileDialog extends SparkActionWithProgressDialog {
   InputElement _pushUrlElement;
   InputElement _liveDeployCheckBox;
   SelectElement _usbDevices;
-  InputElement _addDeviceButton;
+  SparkButton _addDeviceButton;
   int _selectedDeviceIndex = -1;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
