@@ -345,11 +345,12 @@ abstract class Spark
   void initNavigationManager() {
     _navigationManager = new NavigationManager(_editorManager);
     _navigationManager.onNavigate.listen((NavigationLocation location) {
-      _selectFile(location.file).then((_) {
-        if (location.selection != null) {
-          nextTick().then((_) => _selectLocation(location));
-        }
-      });
+      ContentProvider contentProvider = location.contentProvider;
+        _selectContentProvider(contentProvider).then((_) {
+          if (location.selection != null) {
+            nextTick().then((_) => _selectLocation(location));
+          }
+        });
     });
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
       event =
@@ -382,7 +383,7 @@ abstract class Spark
 
   void _selectLocation(NavigationLocation location) {
     for (Editor editor in editorManager.editors) {
-      if (editor.file == location.file) {
+      if (editor.contentProvider == location.contentProvider) {
         if (editor is TextEditor) {
           editor.select(location.selection);
         }
@@ -429,9 +430,9 @@ abstract class Spark
         workspace, aceManager, prefs, eventBus, services);
 
     editorManager.loaded.then((_) {
-      List<ws.Resource> files = editorManager.files.toList();
-      editorManager.files.forEach((file) {
-        editorArea.selectFile(file, forceOpen: true, switchesTab: false,
+      List<ContentProvider> contentProviders = editorManager.contentProviders.toList();
+      editorManager.contentProviders.forEach((ContentProvider contentProvider) {
+        editorArea.selectFile(contentProvider, forceOpen: true, switchesTab: false,
             replaceCurrent: false);
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
@@ -461,11 +462,15 @@ abstract class Spark
     _editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
-      if (!_filesController.isFileSelected(tab.file)) {
-        _filesController.selectFile(tab.file);
+      if (tab.contentProvider is FileContentProvider) {
+        FileContentProvider fileContentProvider = tab.contentProvider;
+        if (!_filesController.isFileSelected(tab.contentProvider)) {
+          _filesController.selectFile(fileContentProvider.file);
+        }
+        focusManager.setEditedFile(fileContentProvider.file);
       }
-      localPrefs.setValue('lastFileSelection', tab.file.uuid);
-      focusManager.setEditedFile(tab.file);
+
+      localPrefs.setValue('lastFileSelection', tab.contentProvider.uuid);
     });
   }
 
@@ -484,7 +489,7 @@ abstract class Spark
     });
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
         .listen((FilesControllerPersistTabEvent event) {
-      editorArea.persistTab(event.file);
+      editorArea.persistTab(editorArea.tabByFile(event.file));
     });
     querySelector('#showFileViewButton').onClick.listen((_) {
       Action action = actionManager.getAction('show-files-view');
@@ -669,7 +674,9 @@ abstract class Spark
         return nextTick().then((_) {
           return folder.importFileEntry(entry);
         }).then((File file) {
-          navigationManager.gotoLocation(new NavigationLocation(file));
+          ContentProvider contentProvider = new FileContentProvider(file);
+          NavigationLocation navLocation = new NavigationLocation(contentProvider);
+          navigationManager.gotoLocation(navLocation);
         });
       }
     }).catchError((e) {
@@ -931,11 +938,12 @@ abstract class Spark
     return null;
   }
 
-  void _closeOpenEditor(ws.Resource resource) {
-    if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
-      editorArea.closeFile(resource);
-    }
-  }
+  // _closeOpenEditor is removed for now: #1037
+//  void _closeOpenEditor(ws.Resource resource) {
+//    if (resource is ws.File && editorManager.isFileOpened(resource)) {
+//      editorArea.closeFile(resource);
+//    }
+//  }
 
   /**
    * Refreshes the file name on an opened editor tab.
@@ -953,21 +961,32 @@ abstract class Spark
     }
 
     if (resource is ws.File) {
-      navigationManager.gotoLocation(new NavigationLocation(resource));
+      EditorTab tab = editorArea.tabByFile(resource);
+
+      ContentProvider contentProvider;
+
+      if (resource.name == "index.html") {
+        contentProvider = (tab == null) ?
+            new PreferenceContentProvider(this.localPrefs, "test") : tab.contentProvider;
+      } else {
+        contentProvider = (tab == null) ? new FileContentProvider(resource) :
+            tab.contentProvider;
+      }
+
+      navigationManager.gotoLocation(new NavigationLocation(contentProvider));
       return new Future.value();
     } else {
-      return _selectFile(resource);
+      return _selectNonFileResource(resource);
     }
   }
 
-  Future _selectFile(ws.Resource resource) {
-    if (resource.isFile) {
-      return editorArea.selectFile(resource);
-    } else {
-      _filesController.selectFile(resource);
-      _filesController.setFolderExpanded(resource);
-      return new Future.value();
-    }
+  Future _selectContentProvider(ContentProvider contentProvider) =>
+      editorArea.selectFile(contentProvider);
+
+  Future _selectNonFileResource(ws.Resource resource) {
+    _filesController.selectFile(resource);
+    _filesController.setFolderExpanded(resource);
+    return new Future.value();
   }
 
   //
@@ -999,8 +1018,16 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
-  Future<Editor> openEditor(ws.File file, {Span selection}) {
-    navigationManager.gotoLocation(new NavigationLocation(file, selection));
+Future<Editor> openEditor(ws.File file, {Span selection}) {
+    EditorTab tab = editorArea.tabByFile(file);
+    ContentProvider contentProvider = tab.contentProvider;
+    if (tab != null) {
+      contentProvider = new FileContentProvider(file);
+    } else {
+      contentProvider = tab.contentProvider;
+    }
+
+    navigationManager.gotoLocation(new NavigationLocation(contentProvider, selection));
     // TODO(ussuri): Is there something better than nextTick?
     return nextTick().then((_) => editorManager.currentEditor);
   }
@@ -1045,8 +1072,17 @@ abstract class Spark
     // deleted files. For any other changes it is the user's responsibility to
     // explicitly refresh the affected project.
     Set<ws.Resource> resources = new Set.from(
-        editorManager.files.map((r) => r.project != null ? r.project : r));
-    resources.forEach((ws.Resource r) => r.refresh());
+        editorManager.contentProviders.map((ContentProvider contentProvider) {
+          if (contentProvider is FileContentProvider) {
+            File file = contentProvider.file;
+            return (file.project != null) ? file.project : file;
+          } else {
+            return null;
+          }
+    }));
+    resources.forEach((ws.Resource r) {
+      if (r != null) r.refresh();
+    });
   }
 
   // TODO(ussuri): Polymerize.
@@ -1482,7 +1518,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // this to occur.
           Timer.run(() {
             spark._openFile(file).then((_) {
-              spark.editorArea.persistTab(file);
+              spark.editorArea.persistTab(spark.editorArea.tabByFile(file));
             });
             spark._aceManager.focus();
           });
@@ -1682,28 +1718,29 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
       _isSingleResource(object) && !_isTopLevel(object);
 }
 
-class ResourceCloseAction extends SparkAction implements ContextAction {
-  ResourceCloseAction(Spark spark) : super(spark, "file-close", "Close");
-
-  void _invoke([List<ws.Resource> resources]) {
-    if (resources == null) {
-      resources = spark._getSelection();
-    }
-
-    for (ws.Resource resource in resources) {
-      spark.workspace.unlink(resource);
-      if (resource is ws.File) {
-        spark._closeOpenEditor(resource);
-      } else if (resource is ws.Project) {
-        resource.traverse().forEach(spark._closeOpenEditor);
-      }
-    }
-  }
-
-  String get category => 'resource';
-
-  bool appliesTo(Object object) => _isTopLevel(object);
-}
+//ResourceCloseAction is removed for now: #1037
+//class ResourceCloseAction extends SparkAction implements ContextAction {
+//  ResourceCloseAction(Spark spark) : super(spark, "file-close", "Close");
+//
+//  void _invoke([List<ws.Resource> resources]) {
+//    if (resources == null) {
+//      resources = spark._getSelection();
+//    }
+//
+//    for (ws.Resource resource in resources) {
+//      spark.workspace.unlink(resource);
+//      if (resource is ws.File) {
+//        spark._closeOpenEditor(resource);
+//      } else if (resource is ws.Project) {
+//        resource.traverse().forEach(spark._closeOpenEditor);
+//      }
+//    }
+//  }
+//
+//  String get category => 'resource';
+//
+//  bool appliesTo(Object object) => _isTopLevel(object);
+//}
 
 class TabPreviousAction extends SparkAction {
   TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {
@@ -4282,7 +4319,10 @@ class PolymerDesignerAction
     _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertDesign);
 
     querySelector('#openPolymerDesignerButton').onClick.listen((_) {
-      _open(spark.editorManager.currentFile);
+      // TODO(ericarnold): Will throw if invoked on a non-FileContentProvider.
+      // Make sure it can't be.
+      FileContentProvider contentProvider = spark.editorManager.currentProvider;
+      _open(contentProvider.file);
     });
   }
 

@@ -19,11 +19,11 @@ import 'workspace.dart';
 
 /// A tab associated with a file.
 abstract class EditorTab extends Tab {
-  final Resource file;
+  final ContentProvider contentProvider;
 
-  EditorTab(EditorArea parent, this.file) : super(parent) {
-    label = file.name;
-    _calculateTooltip(file).then((value) {
+  EditorTab(EditorArea parent, this.contentProvider) : super(parent) {
+    label = contentProvider.name;
+    _calculateTooltip(contentProvider).then((value) {
       tooltip = value;
     }).catchError((e) => null);
   }
@@ -43,10 +43,11 @@ class AceEditorTab extends EditorTab {
 
   bool _active = false;
 
-  AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
-      : super(parent, file) {
+  AceEditorTab(EditorArea parent, this.provider, this.editor,
+      ContentProvider contentProvider) : super(parent, contentProvider) {
     page = editor.element;
-    editor.onModification.listen((_) => parent.persistTab(file));
+    editor.onModification.listen((_) =>
+        parent.persistTab(parent.tabByContentProvider(contentProvider)));
     editor.onDirtyChange.listen((_) => dirty = editor.dirty);
   }
 
@@ -75,8 +76,8 @@ class ImageViewerTab extends EditorTab {
   final ImageViewer imageViewer;
   final EditorProvider provider;
 
-  ImageViewerTab(EditorArea parent, this.provider, this.imageViewer, Resource file)
-      : super(parent, file) {
+  ImageViewerTab(EditorArea parent, this.provider, this.imageViewer, ContentProvider contentProvider)
+      : super(parent, contentProvider) {
     page = imageViewer.element;
   }
 
@@ -96,7 +97,7 @@ class ImageViewerTab extends EditorTab {
  */
 class EditorArea extends TabView {
   final EditorProvider editorProvider;
-  final Map<Resource, EditorTab> _tabOfFile = {};
+  final Map<String, EditorTab> _tabOfUuid = {};
 
   bool allowsLabelBar;
 
@@ -105,7 +106,11 @@ class EditorArea extends TabView {
   EditorArea(Element parentElement, this.editorProvider, Workspace workspace,
              {this.allowsLabelBar: true})
       : super(parentElement) {
-    onClose.listen((EditorTab tab) => closeFile(tab.file));
+    onClose.listen((EditorTab tab) {
+      FileContentProvider fileContentProvider = tab.contentProvider;
+      closeContentProvider(fileContentProvider);
+    });
+
     showLabelBar = true;
 
     workspace.onResourceChange.listen((ResourceChangeEvent event) {
@@ -132,21 +137,21 @@ class EditorArea extends TabView {
 
   // TabView
   Tab add(EditorTab tab, {bool switchesTab: true}) {
-    _tabOfFile[tab.file] = tab;
+    _tabOfUuid[tab.contentProvider.uuid] = tab;
     return super.add(tab, switchesTab: switchesTab);
   }
 
   // TabView
   Tab replace(EditorTab tabToReplace, EditorTab tab, {bool switchesTab: true}) {
-    _tabOfFile[tab.file] = tab;
+    _tabOfUuid[tab.contentProvider.uuid] = tab;
     return super.replace(tabToReplace, tab, switchesTab: switchesTab);
   }
 
   // TabView
   bool remove(EditorTab tab, {bool switchesTab: true, bool layoutNow: true}) {
     if (super.remove(tab, switchesTab: switchesTab, layoutNow: layoutNow)) {
-      _tabOfFile.remove(tab.file);
-      editorProvider.close(tab.file);
+      _tabOfUuid.remove(tab.contentProvider.uuid);
+      editorProvider.close(tab.contentProvider);
       return true;
     }
     return false;
@@ -162,28 +167,27 @@ class EditorArea extends TabView {
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
   /// [selectFile] will be called instead. Otherwise the editor provider is
   /// requested to switch the file to the editor in case the editor is shared.
-  Future selectFile(Resource file,
+  Future selectFile(ContentProvider contentProvider,
                     {bool forceOpen: false, bool switchesTab: true,
                     bool replaceCurrent: true, bool forceFocus: false}) {
-    if (_tabOfFile.containsKey(file)) {
-      EditorTab tab = _tabOfFile[file];
+    EditorTab tab = tabByContentProvider(contentProvider);
+
+    if (tab != null) {
       if (switchesTab) tab.select(forceFocus: forceFocus);
-      _nameController.add(file.name);
+      _nameController.add(contentProvider.name);
       return new Future.value();
     }
 
     Future editorReadyFuture;
 
     if (forceOpen || replaceCurrent) {
-      EditorTab tab;
-
-      Editor editor = editorProvider.createEditorForFile(file);
+      Editor editor = editorProvider.createEditorForContentProvider(contentProvider);
       editorReadyFuture = editor.whenReady;
 
       if (editor is ImageViewer) {
-        tab = new ImageViewerTab(this, editorProvider, editor, file);
+        tab = new ImageViewerTab(this, editorProvider, editor, contentProvider);
       } else {
-        tab = new AceEditorTab(this, editorProvider, editor, file);
+        tab = new AceEditorTab(this, editorProvider, editor, contentProvider);
       }
 
       // On explicit request to open a tab, persist the new tab.
@@ -210,7 +214,7 @@ class EditorArea extends TabView {
 
       if (forceFocus) tab.select(forceFocus: forceFocus);
 
-      _nameController.add(file.name);
+      _nameController.add(contentProvider.name);
     } else {
       editorReadyFuture = new Future.value();
     }
@@ -219,8 +223,15 @@ class EditorArea extends TabView {
     return editorReadyFuture;
   }
 
-  void persistTab(File file) {
-    EditorTab tab = _tabOfFile[file];
+  EditorTab _tabByUuid(String uuid) {
+    return _tabOfUuid.containsKey(uuid) ? _tabOfUuid[uuid] : null;
+  }
+
+  EditorTab tabByFile(File file) => _tabByUuid(file.uuid);
+  EditorTab tabByContentProvider(ContentProvider contentProvider) =>
+      _tabByUuid(contentProvider.uuid);
+
+  void persistTab(EditorTab tab) {
     if (tab != null) tab.persisted = true;
     _savePersistedTabs();
   }
@@ -228,7 +239,7 @@ class EditorArea extends TabView {
   void _savePersistedTabs() {
     List<String> filesUuids = [];
     for (EditorTab tab in tabs) {
-      if (tab.persisted) filesUuids.add(tab.file.uuid);
+      if (tab.persisted) filesUuids.add(tab.contentProvider.uuid);
     }
 
     EditorManager manager = (editorProvider as EditorManager);
@@ -236,14 +247,20 @@ class EditorArea extends TabView {
     manager.persistState();
   }
 
-  /// Closes the tab.
   void closeFile(File file) {
-    EditorTab tab = _tabOfFile[file];
+    closeTab(tabByFile(file));
+  }
 
+  void closeContentProvider(ContentProvider contentProvider) {
+    closeTab(tabByContentProvider(contentProvider));
+  }
+
+  /// Closes the tab.
+  void closeTab(EditorTab tab) {
     if (tab != null) {
       remove(tab);
       tab.close();
-      editorProvider.close(file);
+      editorProvider.close(tab.contentProvider);
       _nameController.add(selectedTab == null ? null : selectedTab.label);
       _savePersistedTabs();
     }
@@ -251,11 +268,11 @@ class EditorArea extends TabView {
 
   // Replaces the file loaded in a tab with a renamed version of the file. The
   // new tab is not selected.
-  void renameFile(Resource file) {
-    if (_tabOfFile.containsKey(file)) {
-      EditorTab tab = _tabOfFile[file];
+  void renameFile(File file) {
+    EditorTab tab = tabByFile(file);
+    if (tab != null) {
       tab.label = file.name;
-      _calculateTooltip(file).then((value) {
+      _calculateTooltip(tab.contentProvider).then((value) {
         tab.tooltip = value;
       }).catchError((e) => null);
       _nameController.add(selectedTab.label);
@@ -263,14 +280,16 @@ class EditorArea extends TabView {
   }
 
   void _updateFile(File file) {
-    EditorTab tab = _tabOfFile[file];
+    EditorTab tab = tabByFile(file);
     if (tab != null) {
       tab.fileContentsChanged();
     }
   }
 }
 
-Future<String> _calculateTooltip(File file) {
+Future<String> _calculateTooltip(ContentProvider contentProvider) {
+  if (!(contentProvider is FileContentProvider)) return new Future.value(contentProvider.name);
+  File file = (contentProvider as FileContentProvider).file;
   if (file.entry == null) return new Future.value(file.path);
 
   return fileSystemAccess.getDisplayPath(file.entry);

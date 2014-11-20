@@ -48,7 +48,7 @@ class TextEditor extends Editor {
   static const int LARGE_FILE_SIZE = 500000;
 
   final AceManager aceManager;
-  final workspace.File file;
+  final ContentProvider contentProvider;
 
   StreamSubscription _aceSubscription;
   final StreamController _dirtyController = new StreamController.broadcast();
@@ -64,33 +64,33 @@ class TextEditor extends Editor {
 
   StateManager get state => Dependencies.dependency[StateManager];
 
-  factory TextEditor(AceManager aceManager, workspace.File file,
+  factory TextEditor(AceManager aceManager, ContentProvider contentProvider,
       SparkPreferences prefs) {
-    if (DartEditor.isDartFile(file)) {
-      return new DartEditor._create(aceManager, file, prefs);
+    if (DartEditor.isDartFile(contentProvider)) {
+      return new DartEditor._create(aceManager, contentProvider, prefs);
     }
-    if (CssEditor.isCssFile(file)) {
-      return new CssEditor._create(aceManager, file, prefs);
+    if (CssEditor.isCssFile(contentProvider)) {
+      return new CssEditor._create(aceManager, contentProvider, prefs);
     }
-    if (MarkdownEditor.isMarkdownFile(file)) {
-      return new MarkdownEditor._create(aceManager, file, prefs);
+    if (MarkdownEditor.isMarkdownFile(contentProvider)) {
+      return new MarkdownEditor._create(aceManager, contentProvider, prefs);
     }
-    if (HtmlEditor.isHtmlFile(file)) {
-      return new HtmlEditor._create(aceManager, file, prefs);
+    if (HtmlEditor.isHtmlFile(contentProvider)) {
+      return new HtmlEditor._create(aceManager, contentProvider, prefs);
     }
-    if (YamlEditor.isYamlFile(file)) {
-      return new YamlEditor._create(aceManager, file, prefs);
+    if (YamlEditor.isYamlFile(contentProvider)) {
+      return new YamlEditor._create(aceManager, contentProvider, prefs);
     }
-    if (GoEditor.isGoFile(file)) {
-      return new GoEditor._create(aceManager, file, prefs);
+    if (GoEditor.isGoFile(contentProvider)) {
+      return new GoEditor._create(aceManager, contentProvider, prefs);
     }
-    if (JsonEditor.isJsonFile(file)) {
-      return new JsonEditor._create(aceManager, file, prefs);
+    if (JsonEditor.isJsonFile(contentProvider)) {
+      return new JsonEditor._create(aceManager, contentProvider, prefs);
     }
-    return new TextEditor._create(aceManager, file, prefs);
+    return new TextEditor._create(aceManager, contentProvider, prefs);
   }
 
-  TextEditor._create(this.aceManager, this.file, this._prefs);
+  TextEditor._create(this.aceManager, this.contentProvider, this._prefs);
 
   Future<Editor> get whenReady => _whenReadyCompleter.future;
 
@@ -103,8 +103,8 @@ class TextEditor extends Editor {
     if (value != _dirty) {
       _dirty = value;
       _dirtyController.add(value);
+      _modificationController.add(dirty);
     }
-    _modificationController.add(dirty);
   }
 
   html.Element get element => aceManager.parentElement;
@@ -153,7 +153,7 @@ class TextEditor extends Editor {
 
   void select(Span selection) {
     // Check if we're the current editor.
-    if (file != aceManager.currentFile) return;
+    if (contentProvider != aceManager.currentProvider) return;
 
     ace.Point startSelection = _session.document.indexToPosition(selection.offset);
     ace.Point endSelection = _session.document.indexToPosition(
@@ -172,10 +172,15 @@ class TextEditor extends Editor {
   bool get supportsFormat => false;
 
   bool get readOnly {
-    return
-        !SparkFlags.packageFilesAreEditable && (
-            pubProperties.isInPackagesFolder(file) ||
-            bowerProperties.isInPackagesFolder(file));
+    if (!(contentProvider is FileContentProvider)) {
+      return false;
+    }
+
+    workspace.File file = (contentProvider as FileContentProvider).file;
+
+    return !SparkFlags.packageFilesAreEditable && (
+        pubProperties.isInPackagesFolder(file) ||
+        bowerProperties.isInPackagesFolder(file));
   }
 
   void format() { }
@@ -190,7 +195,7 @@ class TextEditor extends Editor {
     if (_session == null) return;
 
     html.Point p = aceManager.cursorPosition;
-    state.setState(file.uuid, {
+    state.setState(contentProvider.uuid, {
       'scrollTop': _session.scrollTop,
       'column': p.x,
       'row': p.y
@@ -198,7 +203,7 @@ class TextEditor extends Editor {
   }
 
   void restoreState() {
-    Map m = state.getState(file.uuid);
+    Map m = state.getState(contentProvider.uuid);
 
     if (m != null) {
       _session.scrollTop = m['scrollTop'];
@@ -213,7 +218,7 @@ class TextEditor extends Editor {
   void fileContentsChanged() {
     if (_session != null) {
       // Check that we didn't cause this change event.
-      file.getContents().then((String text) {
+      contentProvider.read().then((String text) {
         int fileContentsHash = crc.CRC32.compute(text);
 
         if (fileContentsHash != _lastSavedHash) {
@@ -244,7 +249,7 @@ class TextEditor extends Editor {
 
       _lastSavedHash = crc.CRC32.compute(text);
 
-      return file.setContents(text).then((_) {
+      return contentProvider.write(text).then((_) {
         dirty = false;
         _invokeReconcile();
       });
@@ -283,7 +288,7 @@ class TextEditor extends Editor {
       // Restore the cursor position and scroll location.
       num scrollTop = _session.scrollTop;
       html.Point cursorPos = null;
-      if (aceManager.currentFile == file) {
+      if (aceManager.currentProvider == contentProvider) {
         cursorPos = aceManager.cursorPosition;
       }
       // NOTE: Do not use `_session.value = newContents` here: it resets the
@@ -315,6 +320,12 @@ class TextEditor extends Editor {
    *     @import url("packages/bootstrap/bootstrap.min.css");
    */
   Future<svc.Declaration> _simpleNavigateToDeclaration([Duration timeLimit]) {
+    if (!(contentProvider is FileContentProvider)) {
+      throw "Can only navigate from [File]s for now";
+    }
+
+    workspace.File file = (contentProvider as FileContentProvider).file;
+
     if (file.parent == null) {
       return new Future.value(svc.Declaration.EMPTY_DECLARATION);
     }
@@ -334,12 +345,13 @@ class TextEditor extends Editor {
 }
 
 class DartEditor extends TextEditor {
-  static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
+  static bool isDartFile(ContentProvider contentProvider) =>
+      contentProvider.name.endsWith('.dart');
 
   OffsetRange outlineScrollPosition = new OffsetRange();
 
-  DartEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
-      super._create(aceManager, file, prefs);
+  DartEditor._create(AceManager aceManager, ContentProvider contentProvider,
+      SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs);
 
   void customizeSession(ace.EditSession session) {
     // Dart files use 2-space soft tabs for indentation.
@@ -358,8 +370,11 @@ class DartEditor extends TextEditor {
 
     _outline.scrollPosition = outlineScrollPosition;
 
-    if (file.project != null) {
-      aceManager._analysisService.getCreateProjectAnalyzer(file.project);
+    if (contentProvider is FileContentProvider) {
+      workspace.File file = (contentProvider as FileContentProvider).file;
+      if (file.project != null) {
+        aceManager._analysisService.getCreateProjectAnalyzer(file.project);
+      }
     }
   }
 
@@ -372,13 +387,16 @@ class DartEditor extends TextEditor {
 
   void reconcile() {
     OffsetRange pos = _outline.scrollPosition;
-    _outline.build(file.name, _session.value).then((_) {
+    _outline.build(contentProvider.name, _session.value).then((_) {
       _outline.scrollPosition = pos;
     });
   }
 
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
     int offset = getCursorOffset();
+
+    // We can only find declarations from a File currently.
+    workspace.File file = (contentProvider as FileContentProvider).file;
 
     Future declarationFuture = aceManager._analysisService.getDeclarationFor(
         file, offset);
@@ -409,10 +427,11 @@ class DartEditor extends TextEditor {
 }
 
 class CssEditor extends TextEditor {
-  static bool isCssFile(workspace.File file) => file.name.endsWith('.css');
+  static bool isCssFile(ContentProvider contentProvider) =>
+      contentProvider.name.endsWith('.css');
 
-  CssEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
-      super._create(aceManager, file, prefs);
+  CssEditor._create(AceManager aceManager, ContentProvider contentProvider,
+      SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs);
 
   bool get supportsFormat => true;
 
@@ -430,15 +449,15 @@ class CssEditor extends TextEditor {
 }
 
 class MarkdownEditor extends TextEditor {
-  static bool isMarkdownFile(workspace.File file) =>
-      file.name.toLowerCase().endsWith('.md');
+  static bool isMarkdownFile(ContentProvider contentProvider) =>
+      contentProvider.name.toLowerCase().endsWith('.md');
 
   Markdown _markdown;
 
-  MarkdownEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
-      super._create(aceManager, file, prefs) {
+  MarkdownEditor._create(AceManager aceManager, ContentProvider contentProvider,
+      SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs) {
     // Parent this at the tab container level.
-    _markdown = new Markdown(element.parent.parent, file);
+    _markdown = new Markdown(element.parent.parent, contentProvider);
   }
 
   @override
@@ -460,10 +479,11 @@ class MarkdownEditor extends TextEditor {
 }
 
 class HtmlEditor extends TextEditor {
-  static bool isHtmlFile(workspace.File file) => isHtmlFilename(file.name);
+  static bool isHtmlFile(ContentProvider contentProvider) =>
+      isHtmlFilename(contentProvider.name);
 
-  HtmlEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
-      super._create(aceManager, file, prefs);
+  HtmlEditor._create(AceManager aceManager, ContentProvider contentProvider,
+      SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs);
 
   void activate() {
     _polymerDesignerButton.classes.toggle('hidden', false);
@@ -480,10 +500,11 @@ class HtmlEditor extends TextEditor {
 }
 
 class JsonEditor extends TextEditor {
-  static bool isJsonFile(workspace.File file) => file.name.endsWith('.json');
+  static bool isJsonFile(ContentProvider contentProvider) =>
+      contentProvider.name.endsWith('.json');
 
-  JsonEditor._create(AceManager aceManager, workspace.File file, SparkPreferences prefs) :
-      super._create(aceManager, file, prefs);
+  JsonEditor._create(AceManager aceManager, ContentProvider contentProvider,
+      SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs);
 
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) =>
       _simpleNavigateToDeclaration(timeLimit);
@@ -494,10 +515,11 @@ class JsonEditor extends TextEditor {
  * indentation.
  */
 class GoEditor extends TextEditor {
-  static bool isGoFile(workspace.File file) => file.name.endsWith('.go');
+  static bool isGoFile(ContentProvider contentProvider) =>
+      contentProvider.name.endsWith('.go');
 
-  GoEditor._create(AceManager aceManager, workspace.File file,
-      SparkPreferences prefs) : super._create(aceManager, file, prefs);
+  GoEditor._create(AceManager aceManager, ContentProvider contentProvider,
+      SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs);
 
   void customizeSession(ace.EditSession session) {
     super.customizeSession(session);
@@ -514,10 +536,11 @@ class GoEditor extends TextEditor {
  * An editor for `.yaml` files. The yaml format does not accept tabs.
  */
 class YamlEditor extends TextEditor {
-  static bool isYamlFile(workspace.File file) => file.name.endsWith('.yaml');
+  static bool isYamlFile(ContentProvider contentProvider) =>
+      contentProvider.name.endsWith('.yaml');
 
-  YamlEditor._create(AceManager aceManager, workspace.File file,
-      SparkPreferences prefs) : super._create(aceManager, file, prefs);
+  YamlEditor._create(AceManager aceManager, ContentProvider contentProvider,
+      SparkPreferences prefs) : super._create(aceManager, contentProvider, prefs);
 
   void customizeSession(ace.EditSession session) {
     // Yaml files use 2-space soft tabs for indentation.
@@ -557,7 +580,7 @@ class AceManager {
   static bool get available => js.context['ace'] != null;
 
   StreamSubscription _markerSubscription;
-  workspace.File currentFile;
+  ContentProvider currentProvider;
   svc.AnalyzerService _analysisService;
 
   ace.EditSession _markerSession = null;
@@ -589,8 +612,8 @@ class AceManager {
                            'enableLinking': true});
 
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
-      if (currentFile == null) return;
-      if (!DartEditor.isDartFile(currentFile)) return;
+      if (currentProvider == null) return;
+      if (!DartEditor.isDartFile(currentProvider)) return;
 
       ace.Token token = event.token;
 
@@ -854,6 +877,7 @@ class AceManager {
 
   void _selectMarkerFromCurrent(int offset) {
     // TODO(ericarnold): This should be based upon the current cursor position.
+    workspace.File currentFile = (currentProvider as FileContentProvider).file;
     List<workspace.Marker> markers = currentFile.getMarkers();
     if (markers != null && markers.length > 0) {
       if (_currentMarker == null) {
@@ -946,7 +970,7 @@ class AceManager {
 
   ace.EditSession get currentSession => _currentSession;
 
-  void switchTo(ace.EditSession session, [workspace.File file]) {
+  void switchTo(ace.EditSession session, [ContentProvider contentProvider]) {
     if (_foldListenerSubscription != null) {
       _foldListenerSubscription.cancel();
       _foldListenerSubscription = null;
@@ -955,30 +979,37 @@ class AceManager {
     if (session == null) {
       _currentSession = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.session = _currentSession;
-      currentFile = null;
+      currentProvider = null;
     } else {
       _currentSession = session;
       _aceEditor.session = _currentSession;
 
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
-        setMarkers(file.getMarkers());
+        if (contentProvider is FileContentProvider) {
+          workspace.File file = contentProvider.file;
+          setMarkers(file.getMarkers());
+        } else {
+          setMarkers([]);
+        }
       });
     }
 
     // Setup the code completion options for the current file type.
-    if (file != null) {
-      currentFile = file;
+    if (contentProvider != null) {
+      currentProvider = contentProvider;
       // For now, we turn on lexical code completion for Dart files. We'll want
       // to switch this over to semantic code completion soonest.
       //_aceEditor.setOption(
       //    'enableBasicAutocompletion', path.extension(file.name) != '.dart');
 
-      if (_markerSubscription == null) {
-        _markerSubscription = file.workspace.onMarkerChange.listen(
-            _handleMarkerChange);
+      if (contentProvider is FileContentProvider) {
+        if (_markerSubscription == null) {
+          _markerSubscription = contentProvider.file.workspace.onMarkerChange.listen(
+              _handleMarkerChange);
+        }
+        setMarkers(contentProvider.file.getMarkers());
       }
 
-      setMarkers(file.getMarkers());
       session.onChangeScrollTop.listen((_) => Timer.run(() {
         if (outline.showing) {
           int firstCursorOffset = currentSession.document.positionToIndex(
@@ -994,8 +1025,13 @@ class AceManager {
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
-    if (event.hasChangesFor(currentFile)) {
-      setMarkers(currentFile.getMarkers());
+    if (currentProvider is FileContentProvider) {
+      workspace.File file = (currentProvider as FileContentProvider).file;
+      if (event.hasChangesFor(file)) {
+        setMarkers(file.getMarkers());
+      }
+    } else {
+      setMarkers([]);
     }
   }
 
@@ -1033,12 +1069,12 @@ class AceManager {
   }
 
   NavigationLocation get navigationLocation {
-    if (currentFile == null) return null;
+    if (currentProvider == null) return null;
     ace.Range range = _aceEditor.selection.range;
     int offsetStart = _currentSession.document.positionToIndex(range.start);
     int offsetEnd = _currentSession.document.positionToIndex(range.end);
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
-    return new NavigationLocation(currentFile, span);
+    return new NavigationLocation(currentProvider, span);
   }
 }
 

@@ -32,12 +32,12 @@ defineTests() {
       File fileResource = new File(workspace, fileEntry);
 
       Completer completer = new Completer();
-      manager.onSelectedChange.first.then((f) {
+      manager.onSelectedChange.first.then((ContentProvider f) {
         expect(f.name, fileResource.name);
         completer.complete();
       });
 
-      manager.openFile(fileResource);
+      manager.openFile(new FileContentProvider(fileResource));
       return completer.future;
     });
   });

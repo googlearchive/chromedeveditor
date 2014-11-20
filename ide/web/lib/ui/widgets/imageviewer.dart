@@ -17,7 +17,6 @@ import 'package:mime/mime.dart' as mime;
 
 import '../html_utils.dart';
 import '../../editors.dart';
-import '../../workspace.dart';
 
 /**
  * A simple image viewer.
@@ -30,7 +29,7 @@ class ImageViewer implements Editor {
   final html.Element _rootElement = new html.DivElement();
 
   /// Associated file.
-  final File _file;
+  final FileContentProvider _contentProvider;
 
   double _scale = 1.0;
   double _minScale = 1.0;
@@ -42,7 +41,7 @@ class ImageViewer implements Editor {
   /// of a factor of two.
   static const double SCROLLING_ZOOM_FACTOR = 0.001;
 
-  ImageViewer(this._file) {
+  ImageViewer(this._contentProvider) {
     _image.draggable = false;
     html.window.onResize.listen((_) => resize());
     _rootElement.classes.add('imageeditor-root');
@@ -56,15 +55,15 @@ class ImageViewer implements Editor {
 
   _loadFile() {
     _image.onLoad.listen((_) => resize());
-    _file.getBytes().then((chrome.ArrayBuffer content) {
+    _contentProvider.file.getBytes().then((chrome.ArrayBuffer content) {
       String base64 = CryptoUtils.bytesToBase64(content.getBytes());
-      String mimeType = mime.lookupMimeType(_file.name);
+      String mimeType = mime.lookupMimeType(_contentProvider.file.name);
       _image.src = 'data:${mimeType};base64,$base64';
     });
   }
 
   html.Element get element => _rootElement;
-  File get file => _file;
+  FileContentProvider get contentProvider => _contentProvider;
 
   double get _width => _rootElement.clientWidth.toDouble();
   double get _height => _rootElement.clientHeight.toDouble();
