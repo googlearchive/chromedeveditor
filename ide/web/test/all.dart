@@ -27,6 +27,7 @@ import 'git/all.dart' as git_all_test;
 import 'navigation_test.dart' as navigation_test;
 import 'outline_test.dart' as outline_test;
 import 'preferences_test.dart' as preferences_test;
+import 'editor_config_test.dart' as editor_config_test;
 import 'pub_test.dart' as pub_test;
 import 'scm_test.dart' as scm_test;
 import 'sdk_test.dart' as sdk_test;
@@ -60,6 +61,7 @@ void defineTests() {
   navigation_test.defineTests();
   outline_test.defineTests();
   preferences_test.defineTests();
+  editor_config_test.defineTests();
   pub_test.defineTests();
   scm_test.defineTests();
   sdk_test.defineTests();
