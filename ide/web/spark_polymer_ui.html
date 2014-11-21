@@ -471,6 +471,13 @@
           <input id="adb" type="radio" name="mobileDeployType" value="push-adb" checked>
           <label for="adb">Deploy via USB</label>
         </div>
+        <div class="vert-align-box">
+          <br>
+          <select id="usbDevices" class="form-control" value="select-device" hidden>
+            <option></option>
+          </select>
+          <spark-button id="addDevice">Add Device</spark-button>
+        </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
