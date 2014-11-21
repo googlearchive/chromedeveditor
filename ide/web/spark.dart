@@ -32,6 +32,7 @@ import 'lib/decorators.dart';
 import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
+import 'lib/editor_config.dart';
 import 'lib/event_bus.dart';
 import 'lib/exception.dart';
 import 'lib/files_mock.dart';
