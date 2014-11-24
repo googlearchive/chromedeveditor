@@ -67,6 +67,26 @@ int GitClone::runCommand() {
   return 0;
 }
 
+int GitInit::runCommand() {
+  ChromefsInit();
+
+  git_threads_init();
+
+  git_repository_init(&repo, "/chromefs", true);
+
+  pp::VarDictionary arg;
+  arg.Set(kMessage, "Git init success.");
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
+
+  return 0;
+}
+
 void GitClone::ChromefsInit() {
   int32_t r = (int32_t) fileSystem.pp_resource();
   char fs_resource[100] = "filesystem_resource=";
@@ -289,6 +309,44 @@ int GitStatus::runCommand() {
 
   pp::VarDictionary arg;
   arg.Set(kStatuses, statuses);
+
+  pp::VarDictionary response;
+  response.Set(kRegarding, subject);
+  response.Set(kArg, arg);
+  response.Set(kName, kResult);
+
+  _gitSalt->PostMessage(response);
+  return 0;
+}
+
+int GitLsRemote::parseArgs() {
+  pp::VarArray entryArray;
+  if ((error = parseString(_args, kUrl, url))) {
+  }
+  return 0;
+}
+
+int GitLsRemote::runCommand() {
+  git_remote* remote = NULL;
+  error = git_remote_create_anonymous(&remote, repo, url.c_str(), NULL);
+
+  error = git_remote_connect(remote, GIT_DIRECTION_FETCH);
+
+  size_t size = 0;
+  git_remote_head** heads = NULL;
+
+  git_remote_ls((const git_remote_head***)&heads, &size, remote);
+
+  pp::VarArray refs;
+
+  for (size_t i = 0; i < size; ++i) {
+    refs.Set(i, heads[i]->name);
+  }
+
+  git_remote_free(remote);
+
+  pp::VarDictionary arg;
+  arg.Set(kRefs, refs);
 
   pp::VarDictionary response;
   response.Set(kRegarding, subject);

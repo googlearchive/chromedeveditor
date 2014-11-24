@@ -1,14 +1,15 @@
 // Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+library spark.editor_config;
 
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:ini/ini.dart' as ini;
 
-import 'workspace.dart' as workspace;
 import 'exception.dart';
+import 'workspace.dart' as workspace;
 
 /**
  * Defines class for finding and understanding .editorConfig options file for a

@@ -99,6 +99,33 @@ class GitSalt {
     return _completer.future;
   }
 
+  Future init(entry) {
+
+    root = entry;
+
+    var arg = new js.JsObject.jsify({
+      "entry": entry.toJs(),
+      "filesystem": entry.filesystem.toJs(),
+      "fullPath": entry.fullPath,
+      "url": ""
+    });
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "init",
+      "arg": arg
+    });
+
+    Function cb = (result) {
+      _completer.complete();
+      _completer = null;
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+    _completer = new Completer();
+    return _completer.future;
+  }
+
   Future commit(Map options) {
 
     var arg = new js.JsObject.jsify(options);
@@ -216,16 +243,42 @@ class GitSalt {
 
     Function cb = (result) {
       js.JsObject statuses = result["statuses"];
-      Map<String, String> statusMap = {};
-      List<String> keys = js.context['Object'].callMethod('keys', [statuses]);
-      keys.forEach((key) {
-        statusMap[key] = statuses[key];
-      });
-      completer.complete(statusMap);
+      completer.complete(toDartMap(statuses));
     };
 
     _jsGitSalt.callMethod('postMessage', [message, cb]);
 
     return completer.future;
+  }
+
+  Future<List<String>> lsRemoteRefs(String url) {
+    var arg = new js.JsObject.jsify({
+      "url" : url
+    });
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "lsRemote",
+      "arg": arg
+    });
+
+    Completer completer = new Completer();
+
+    Function cb = (result) {
+      completer.complete(result["refs"].toList());
+    };
+
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return completer.future;
+  }
+
+  Map toDartMap(js.JsObject jsMap) {
+    Map map = {};
+    List<String> keys = js.context['Object'].callMethod('keys', [jsMap]);
+    keys.forEach((key) {
+      map[key] = jsMap[key];
+    });
+    return map;
   }
 }

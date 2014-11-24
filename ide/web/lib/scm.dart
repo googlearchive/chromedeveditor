@@ -158,11 +158,21 @@ abstract class ScmProvider {
   ScmProjectOperations createOperationsFor(Project project);
 
   /**
+   * Create an [ScmProjectOperations] instance for the given [DirectoryEntry].
+   */
+  ScmProjectOperations createOperationsForDir(chrome.DirectoryEntry dir);
+
+  /**
    * Clone the repo at the given url into the given directory. Returns a
    * [ScmException] through the Future's error on a failure.
    */
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName});
+
+  /**
+   * Initialize a given directory into a git repository.
+   */
+  Future init(chrome.DirectoryEntry dir);
 
   /**
    * Cancels the active clone in progress.
@@ -195,6 +205,8 @@ abstract class ScmProjectOperations {
   Future<List<String>> getRemoteBranchNames();
 
   Future<List<String>> getUpdatedRemoteBranchNames();
+
+  Future<List<String>> lsRemoteRefs(String url);
 
   Future createBranch(String branchName, String sourceBranchName);
 
@@ -299,11 +311,22 @@ class GitSaltScmProvider extends ScmProvider {
     return null;
   }
 
+  ScmProjectOperations createOperationsForDir(chrome.DirectoryEntry dir) {
+    return new GitSaltScmProjectOperations(this, null, dir);
+  }
+
   Future clone(String url, chrome.DirectoryEntry dir,
       {String username, String password, String branchName}) {
     GitSalt gitSalt = GitSaltFactory.getInstance(dir.fullPath);
     return gitSalt.loadPlugin().then((_) {
       return gitSalt.clone(dir, url);
+    });
+  }
+
+  Future init(chrome.DirectoryEntry dir) {
+    GitSalt gitSalt = GitSaltFactory.getInstance(dir.fullPath);
+    return gitSalt.loadPlugin().then((_) {
+      return gitSalt.init(dir);
     });
   }
 
@@ -340,6 +363,10 @@ class GitScmProvider extends ScmProvider {
     return null;
   }
 
+  ScmProjectOperations createOperationsForDir(chrome.DirectoryEntry dir) {
+    throw new UnsupportedError('GitScmProvider.createOperationsForDir not supported');
+  }
+
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
@@ -359,6 +386,11 @@ class GitScmProvider extends ScmProvider {
     });
   }
 
+  Future init(chrome.DirectoryEntry dir) {
+    //TODO(grv): to be implemented.
+    return new Future.value();
+  }
+
   void cancelClone() {
     if (_activeClone != null) {
       _activeClone.cancel();
@@ -376,12 +408,15 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
 
   Future<GitSalt> get gitSalt => _completer.future;
 
-  GitSaltScmProjectOperations(ScmProvider provider, Project project) :
+  GitSaltScmProjectOperations(ScmProvider provider, Project project,
+      [chrome.DirectoryEntry dir]) :
     super(provider, project) {
       _completer = new Completer();
-      _gitSalt = GitSaltFactory.getInstance(project.entry.fullPath);
+
+      chrome.Entry entry = (dir == null) ? project.entry : dir;
+      _gitSalt = GitSaltFactory.getInstance(entry.fullPath);
       _gitSalt.loadPlugin().then((_) {
-        _gitSalt.load(project.entry).then((_) {
+        _gitSalt.load(entry).then((_) {
           _completer.complete(_gitSalt);
         });
       });
@@ -427,6 +462,12 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
     return new Future.value();
   }
 
+    Future<List<String>> lsRemoteRefs(String url) {
+    return gitSalt.then((git_salt) {
+      return git_salt.lsRemoteRefs(url);
+    });
+  }
+
   Future createBranch(String branchName, String sourceBranchName) {
     // TODO(grv): Implement.
     return new Future.value();
@@ -466,7 +507,7 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
       };
       return git_salt.commit(options).then((_) {
         return _refreshStatus(project: project);
-      }).catchError((e) => throw SparkException.fromExcetption(e));
+      }).catchError((e) => throw SparkException.fromException(e));
     });
   }
 
@@ -781,6 +822,11 @@ class GitScmProjectOperations extends ScmProjectOperations {
         }).toList();
       }).catchError((e) => throw SparkException.fromException(e));
     });
+  }
+
+  Future<List<String>> lsRemoteRefs(String url) {
+    //TODO(grv): to be implemented;
+    return new Future.value();
   }
 
   Future<ObjectStore> get objectStore => _completer.future;

@@ -8,7 +8,6 @@
   "private": true,
   "dependencies": {
     "polymer": "Polymer/polymer#master",
-    "platform": "Polymer/platform#master",
     "paper-elements": "Polymer/paper-elements#master"
   }
 }

@@ -41,6 +41,32 @@ class _PrepareDirRes {
   _PrepareDirRes(this.entry, this.existed);
 }
 
+/**
+ * Provides a way to query meta data associated with remote git repos.
+ */
+class GitProvider {
+  static final ScmProvider _git = getProviderType('git-salt');
+
+  chrome.DirectoryEntry _bowerDir;
+  ScmProjectOperations _gitOperations;
+
+  Future<ScmProjectOperations> get operations => _completer.future;
+
+  Completer _completer;
+
+  GitProvider(this._bowerDir);
+
+  void load() {
+    _completer = new Completer();
+    _git.init(_bowerDir).then((_) {
+      _gitOperations = _git.createOperationsForDir(_bowerDir);
+      _completer.complete(_gitOperations);
+    });
+  }
+}
+
+GitProvider _gitProvider = null;
+
 class BowerFetcher {
   static final _ZIP_TOP_LEVEL_DIR_RE = new RegExp('[^/]*\/');
 
@@ -56,7 +82,12 @@ class BowerFetcher {
   final _unresolvedDepsComments = new Set<String>();
   final _ignoredDepsComments = new Set<String>();
 
-  BowerFetcher(this._packagesDir, this._packageSpecFileName, this._monitor);
+  BowerFetcher(this._packagesDir, this._packageSpecFileName, this._monitor) {
+    _packagesDir.createDirectory('.bower-git').then((dir) {
+      _gitProvider = new GitProvider(dir);
+      _gitProvider.load();
+    });
+  }
 
   Future fetchDependencies(chrome.ChromeFileEntry specFile, FetchMode mode) {
     _allDeps.clear();
@@ -411,9 +442,10 @@ class _Package {
   static const _PACKAGE_PATH = '$_PACKAGE_REGULAR_PATH|$_PACKAGE_STAR_PATH';
   /// [_resolve] will handle all the possible formats.
   static const _PACKAGE_HASH = r'.+';
-  /// E.g.: "Polymer/platform#1.2.3", "Polymer/platform#>=1.2.3 <2.0.0", "*".
-  // TODO(ussuri): Support non-* hashes without a path, e.g. "1.2.3", "~1.2.3"...
-  static const _PACKAGE_SPEC = '^($_PACKAGE_PATH)(?:#($_PACKAGE_HASH))?\$';
+  /// More-or-less full range of semver.org specification formats, e.g.:
+  /// "Polymer/platform#1.2.3", "Polymer/platform#>=1.2.3 <2.0.0", "*",
+  /// "1.2.3", "~1.2.3", "*#^1.2.3"...
+  static const _PACKAGE_SPEC = '^($_PACKAGE_PATH)?(?:#?($_PACKAGE_HASH))?\$';
   static final _PACKAGE_SPEC_REGEXP = new RegExp(_PACKAGE_SPEC);
 
   static const _GITHUB_ROOT_URL = 'https://github.com';
@@ -425,6 +457,9 @@ class _Package {
       r'^(?:git|http|https)://github.com/(.+)';
   static final _BOWER_REGISTRY_INFO_URL_REGEXP =
       new RegExp(_BOWER_REGISTRY_INFO_URL);
+
+  static const _GIT_TAG = r'refs/tags/(.+)';
+  static final _GIT_TAG_REGEXP = new RegExp(_GIT_TAG);
 
   final String name;
   final String fullPath;
@@ -539,7 +574,7 @@ class _Package {
       }
     }
 
-    return _fetchTags().then((List<Map<String, dynamic>> tags) {
+    return _fetchTags().then((List<String> tags) {
       if (tags == null || tags.isEmpty) {
         return _resolveWith(_Unresolved.BAD_OR_MISSING_GITHUB_TAGS);
       }
@@ -547,7 +582,10 @@ class _Package {
       List<semver.Version> candidateVersions = [];
 
       for (final tag in tags) {
-        final String tagName = tag['name'];
+        final Match match = _GIT_TAG_REGEXP.matchAsPrefix(tag);
+        if (match == null) continue;
+        final String tagName = match.group(1);
+
         try {
           final ver = new semver.Version.parse(tagName);
           if (constraint.allows(ver)) {
@@ -577,14 +615,8 @@ class _Package {
     });
   }
 
-  Future<List<Map<String, dynamic>>> _fetchTags() {
-    return util.downloadFileViaXhr(getTagsUrl()).then((String tagsStr) {
-      try {
-        return JSON.decode(tagsStr);
-      } on FormatException catch (e) {
-        return null;
-      }
-    });
+  Future<List<String>> _fetchTags() {
+    return _gitProvider.operations.then((ops) => ops.lsRemoteRefs(getRootUrl()));
   }
 
   Future<_Resolution> _resolveWith(_Resolution resolution) {

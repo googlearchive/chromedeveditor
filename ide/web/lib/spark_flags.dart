@@ -7,6 +7,8 @@ library spark.flags;
 import 'dart:async';
 import 'dart:convert' show JSON;
 
+import 'platform_info.dart';
+
 /**
  * Stores global developer flags.
  */
@@ -29,7 +31,8 @@ class SparkFlags {
     "bower-override-dependencies": {
     },
     "bower-use-git-clone": false,
-    "package-files-are-editable": false
+    "package-files-are-editable": false,
+    "enable-new-usb-api": true
   };
 
   /**
@@ -73,6 +76,10 @@ class SparkFlags {
 
   static bool get polymerDesigner =>
       _flags['enable-polymer-designer'] == true;
+
+  //TODO(grv): Remove the flag once usb api is in chrome stable.
+  static bool get enableNewUsbApi =>
+      _flags['enable-new-usb-api'] == true && PlatformInfo.chromeVersion >= 40;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.
