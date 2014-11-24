@@ -140,7 +140,9 @@ class ConfigSectionMatcher {
     return dir.getFile(".editorConfig").then((chrome.ChromeFileEntry configFile) {
       return configFile.readText();
     }).catchError((e) {
-      if (e.name == "NotFoundError") {
+      if (e is String && e == "file doesn't exist") {
+        return "";
+      } else if (e.name == "NotFoundError") {
         return "";
       }
 
