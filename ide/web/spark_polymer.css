@@ -68,10 +68,6 @@ body {
   overflow: hidden;
 }
 
-#aceContainer {
-  height: 100%;
-}
-
 /*
  * Ace overrides.
  * TODO(ussuri): Move to a separate file.
