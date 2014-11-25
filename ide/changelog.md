@@ -2,26 +2,24 @@
 
 ## M18 (0.18.x, December 1, 2014)
 
-### New features
+### Improved features
 - Bower:
 
-    - package specs like `"package": "~1.2.3"` are not understood [was: Lodash is not installed via "Bower Update"] bower
-	  - handle "*" paths  bower enhancement
-	  - skip unresolved/ignored packages while fetching
-	  - work around rate limit for access to GitHub API
-    - handle moved repos, improve stability & messaging
-	  - resolve "*" paths in bower.json using Bower registry
+    - support package specifications with just a version or version range and path omitted, e.g. `"package-x": "1.2.3"`, `"package-y": "~1.2.3"`: the path is resolved using Bower registry based on the package name
+	  - support `"*"` as a package specification, e.g. `"package-x": "*"`: the path is resolved as above; the tag resolves to the latest stable
+    - support packages whose GitHub repositories have moved to a different GitHub organization (so their URL redirects from `https://github.com/OldOrg/package` to `https://github.com/NewOrg/package`)
 
 ### Bug fixes
-- CDE deletes my entire lib folder if I delete any folder with a packages folder / don't delete windows junction point dirs
-- the editor was very sluggish with on very large files with long lines (e.g.
-- editor focus was lost when switching between files via Ctrl-Tab
+- Bower: too frequent or large `bower install/update` jobs would exceed the GitHub API access rate limit, locking the user out of Bower for a 1-hour timeout period
+- when deleting a folder from disk on Windows, CDE might delete the contents of a subfolder represented by a junction point, rather then just delete the junction itself
+- the editor was very sluggish on very large files with long lines (e.g. minified package sources)
+- editor focus would be lost when switching between files via Ctrl-Tab
+- sporadic installation failures on Bit9-protected Windows machines should be slightly less probable now, although there is no complete solution yet
 
 ### Other changes
-- pin Polymer version in the Polymer-related templates to `latest` (was `master`)
-- UI adjustments
-- removed useless files from external packages like demo.html, README.md etc.
-- add LG optimus v3 to usb device list
+- pinned the version of Polymer packages in the Polymer-related templates to `latest` (was `master`): this should result in more stability
+- added more USB devices to the supported list (LG Optimus v3)
+- some UI adjustments and refinements
 
 ## M17 (0.17.3412, November 4, 2014)
 
