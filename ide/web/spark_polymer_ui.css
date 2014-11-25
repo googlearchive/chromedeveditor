@@ -315,20 +315,12 @@ label[for="stripWhitespace"] {
   white-space: nowrap;
 }
 
-
-
-
-
-
 #editorArea {
   position: absolute;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
-
-
-
 
 #searchViewArea.hidden, #fileViewArea.hidden {
   display: none;
@@ -574,8 +566,6 @@ label[for="stripWhitespace"] {
   -webkit-user-select: text;
   user-select: text;
 }
-
-
 
 /*
  * Ace overrides.
