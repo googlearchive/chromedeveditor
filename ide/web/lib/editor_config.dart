@@ -36,8 +36,8 @@ class EditorConfig {
 
   ConfigFileContext _context;
 
-  EditorConfig(ConfigContainerContext containerContext, workspace.File file) {
-    _context = new ConfigFileContext(containerContext);
+  EditorConfig(ConfigContainerContext containerContext, String filename) {
+    _context = new ConfigFileContext(containerContext, filename);
     // indent_style
     useSpaces = _propertyToBool("indent_style", trueValue: "space",
         falseValue: "tab");
@@ -122,7 +122,7 @@ class EditorConfigException extends SparkException {
   }
 }
 
-Future<ConfigContainerContext> getConfigContext(workspace.Container container) {
+Future<ConfigContainerContext> getConfigContextFor(workspace.Container container) {
   ConfigContainerContext matcher = new ConfigContainerContext(container);
 
   return matcher.whenReady;
@@ -130,19 +130,17 @@ Future<ConfigContainerContext> getConfigContext(workspace.Container container) {
 
 class ConfigFileContext {
   ConfigContainerContext containerContext;
+  List<ConfigSection> sections;
 
-  ConfigFileContext(this.containerContext);
-
-  List<ConfigSection> sectionsForFilename(String filename) {
-    return containerContext.configSections.where((ConfigSection section) {
-      return section.matchesFull("${containerContext.path}/$filename") == Glob.COMPLETE_MATCH;
-    });
+  ConfigFileContext(this.containerContext, String filename) {
+    sections = containerContext.configSections.where((ConfigSection section) {
+      return section.matchesFull("${containerContext.path}/$filename");
+    }).toList();
   }
 
   String getValue(String propertyName) {
-    String value;
-    for (ConfigSection configSection in containerContext.configSections) {
-      value = configSection.getValue(propertyName);
+    for (ConfigSection configSection in sections) {
+      String value = configSection.getValue(propertyName);
       if (value != null) {
         return value;
       }
@@ -154,7 +152,7 @@ class ConfigFileContext {
 class ConfigContainerContext {
   List<ConfigSection> configSections = [];
   workspace.Container container;
-  chrome.ChromeFileEntry get entry => container.entry;
+  chrome.DirectoryEntry get entry => container.entry;
   String get path => entry.fullPath;
   Future<ConfigContainerContext> whenReady;
 
@@ -284,7 +282,7 @@ class StaticMatcher extends GlobMatcher {
 }
 
 class FileWildcardMatcher extends GlobMatcher {
-  int get end => tokenStart + 1;
+  int get end => tokenStart;
   String toRegExp() => "[^/]*";
 
   FileWildcardMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
@@ -292,7 +290,7 @@ class FileWildcardMatcher extends GlobMatcher {
 }
 
 class PathWildcardMatcher extends GlobMatcher {
-  int get end => tokenStart + 2;
+  int get end => tokenStart + 1;
   String toRegExp() => ".*";
 
   PathWildcardMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
@@ -300,7 +298,7 @@ class PathWildcardMatcher extends GlobMatcher {
 }
 
 class SingleCharMatcher  extends GlobMatcher {
-  int get end => tokenStart + 1;
+  int get end => tokenStart;
   String toRegExp() => "[^/]";
 
   SingleCharMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
@@ -371,7 +369,7 @@ class GlobPattern implements Pattern {
         case "?":
           return new SingleCharMatcher(string, this, start, n);
         case "[":
-          return new SingleCharMatcher(string, this, start, n);
+          return new CharRangeMatcher(string, this, start, n);
         case "{":
           return new IdentifierListMatcher(string, this, start, n);
       }
@@ -427,9 +425,7 @@ class Glob {
     int globIndex = 0;
 
     for (;globIndex < _globRegExpParts.length; globIndex++) {
-      String globPart = _globRegExpParts[globIndex];
-      globSoFar += ((globSoFar != "") ? ".*" : "") +
-          globPart.replaceAll("*", "[^/]*").replaceAll("?", "[^/]");
+      globSoFar += ((globSoFar != "") ? ".*" : "") + _globRegExpParts[globIndex];
       if (globIndex == _globRegExpParts.length - 1) globSoFar = globSoFar + "\$";
       if (new RegExp(globSoFar).matchAsPrefix(path) == null) break;
     }

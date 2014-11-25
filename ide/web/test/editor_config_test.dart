@@ -111,16 +111,14 @@ defineTests() {
           dartSourceResource = file;
           return file.setContents("");
         })]);
-      })]).then((_) => Future.wait([new Future.value().then((_) {
-        EditorConfig e = new EditorConfig(pySourceResource);
-        return e.whenReady.then((_) {
-          expect(e.indentSize, 1);
-        });
-      }),new Future.value().then((_) {
-        EditorConfig e = new EditorConfig(dartSourceResource);
-        return e.whenReady.then((_) {
-          expect(e.indentSize, 2);
-        });
+      })]).then((_) => Future.wait([getConfigContextFor(pySourceResource.parent)
+          .then((ConfigContainerContext context) {
+            EditorConfig e = new EditorConfig(context, pySourceResource.name);
+            expect(e.indentSize, 1);
+      }), getConfigContextFor(dartSourceResource.parent)
+          .then((ConfigContainerContext context) {
+            EditorConfig e = new EditorConfig(context, dartSourceResource.name);
+            expect(e.indentSize, 2);
       })]));
     });
 
