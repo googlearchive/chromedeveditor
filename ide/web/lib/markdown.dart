@@ -11,6 +11,8 @@ import 'package:markdown/markdown.dart' show markdownToHtml;
 
 import 'workspace.dart' as workspace;
 
+dynamic get _spark => html.querySelector('spark-polymer-ui');
+
 class Markdown {
   // Parent container.
   final html.Element _container;
@@ -39,7 +41,7 @@ class Markdown {
         event.stopPropagation());
     _container.children.add(_previewDiv);
 
-    _previewButton = html.querySelector('#toggleMarkdownPreviewButton');
+    _previewButton = _spark.$['toggleMarkdownPreviewButton'];
 
     _applyVisibleValue();
   }

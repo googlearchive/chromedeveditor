@@ -40,8 +40,7 @@ export 'package:ace/ace.dart' show EditSession;
 
 dynamic get _spark => html.querySelector('spark-polymer-ui');
 dynamic get _toggleOutlineButton => _spark.$['toggle-outline'];
-dynamic get _polymerDesignerButton =>
-    html.querySelector('#openPolymerDesignerButton');
+dynamic get _polymerDesignerButton => _spark.$['openPolymerDesignerButton'];
 
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);

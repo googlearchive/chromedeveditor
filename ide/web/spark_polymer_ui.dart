@@ -4,6 +4,7 @@
 
 library spark_polymer.ui;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -46,11 +47,49 @@ class SparkPolymerUI extends SparkWidget {
   SparkPolymerUI.created() : super.created();
 
   @override
+  void ready() {
+    // Poach any Ace-related <style>s and <script>s that Ace may dynamically
+    // add, e.g. when the editor theme is changed.
+    var observer = new MutationObserver((records, _) =>
+        records.forEach((r) => _poachAceStylesAndScripts(r.addedNodes))
+    )..observe(
+        document.head,
+        childList: true,
+        attributes: false,
+        characterData: false,
+        subtree: false,
+        attributeOldValue: false,
+        characterDataOldValue: false);
+  }
+
+  @override
+  void domReady() {
+    // Poach initial Ace <style>s.
+    _poachAceStylesAndScripts(document.head.childNodes);
+  }
+
+  @override
   void attached() {
     super.attached();
 
     _splitView = $['splitView'];
     _fileFilter = $['fileFilter'];
+  }
+
+  void _poachAceStylesAndScripts(List<Node> nodes) {
+    final List<Node> aceNodes = [];
+    nodes.forEach((node) {
+      if (node is ScriptElement && node.src.contains('ace/src/js') ||
+          node is StyleElement && node.id.startsWith('ace') ||
+          node is StyleElement && node.innerHtml.contains('ace_')) {
+        window.console.log("MOVING: ${(node as Element)}");
+        aceNodes.add(node);
+      }
+    });
+    aceNodes.forEach((node) {
+      node.remove();
+      shadowRoot.append(node);
+    });
   }
 
   void modelReady(SparkModel model) {
