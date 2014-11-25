@@ -48,8 +48,13 @@ class SparkPolymerUI extends SparkWidget {
 
   @override
   void ready() {
-    // Poach any Ace-related <style>s and <script>s that Ace may dynamically
-    // add, e.g. when the editor theme is changed.
+    // Listen to insertions of new nodes into the top-level <head>, and move
+    // which will be Ace-related <style>s and <script>s that Ace dynamically
+    // inserts e.g. when the editor theme is changed: move such nodes under
+    // our [shadowRoot]. The reason is that Ace was not designed to
+    // work as part of a Polymer element, and so always uses the top-level
+    // <head>, while our actual Ace instance lives under the CSS-isolated
+    // [shadowRoot].
     var observer = new MutationObserver((records, _) =>
         records.forEach((r) => _poachAceStylesAndScripts(r.addedNodes))
     )..observe(
@@ -64,7 +69,9 @@ class SparkPolymerUI extends SparkWidget {
 
   @override
   void domReady() {
-    // Poach initial Ace <style>s.
+    // Poach initial Ace <style>s that Ace inserts before the observer in
+    // [ready] starts listening to new node insertions. See the comment in
+    // [ready].
     _poachAceStylesAndScripts(document.head.childNodes);
   }
 
@@ -76,13 +83,17 @@ class SparkPolymerUI extends SparkWidget {
     _fileFilter = $['fileFilter'];
   }
 
+  /*
+   * Moves any Ace-related <style>s and <script>s in [nodes] from their original
+   * parent (which is [document] to this element's [shadowRoot], where the Ace
+   * editor's container, which needs them, lives.
+   */
   void _poachAceStylesAndScripts(List<Node> nodes) {
     final List<Node> aceNodes = [];
     nodes.forEach((node) {
       if (node is ScriptElement && node.src.contains('ace/src/js') ||
           node is StyleElement && node.id.startsWith('ace') ||
           node is StyleElement && node.innerHtml.contains('ace_')) {
-        window.console.log("MOVING: ${(node as Element)}");
         aceNodes.add(node);
       }
     });
