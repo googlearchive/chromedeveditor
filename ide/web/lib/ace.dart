@@ -107,7 +107,7 @@ class TextEditor extends Editor {
     _modificationController.add(dirty);
   }
 
-  html.Element get element => aceManager.parentElement;
+  html.Element get element => aceManager.containerElement;
 
   void activate() {
     _outline.visible = supportsOutline;
@@ -534,12 +534,13 @@ class YamlEditor extends TextEditor {
 class AceManager {
   static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
 
+  final AceManagerDelegate delegate;
+  final SparkPreferences _prefs;
+
   /**
    * The container for the Ace editor.
    */
-  final html.Element parentElement;
-  final AceManagerDelegate delegate;
-  final SparkPreferences _prefs;
+  html.DivElement containerElement;
 
   Outline outline;
 
@@ -563,82 +564,14 @@ class AceManager {
   ace.EditSession _markerSession = null;
   int _linkingMarkerId;
 
-  AceManager(this.parentElement,
-             this.delegate,
-             svc.Services services,
-             this._prefs) {
+  AceManager(this.delegate, svc.Services services, this._prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
-    _aceEditor = ace.edit(parentElement);
-    _aceEditor.renderer.fixedWidthGutter = true;
-    _aceEditor.highlightActiveLine = false;
-    _aceEditor.printMarginColumn = 80;
-    _aceEditor.readOnly = true;
-    // TODO(devoncarew): Commented out - see #2475.
-    //_aceEditor.fadeFoldWidgets = true;
-
-    _analysisService =  services.getService("analyzer");
-
     // Enable code completion.
     ace.require('ace/ext/language_tools');
-    _aceEditor.setOption('enableBasicAutocompletion', true);
-    // TODO(devoncarew): Disabled to workaround #2442.
-    //_aceEditor.setOption('enableSnippets', true);
-
+    // Enable hyper-linking.
     ace.require('ace/ext/linking');
-    _aceEditor.setOptions({'enableMultiselect': false,
-                           'enableLinking': true});
 
-    _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
-      if (currentFile == null) return;
-      if (!DartEditor.isDartFile(currentFile)) return;
-
-      ace.Token token = event.token;
-
-      if (token != null && token.type == "identifier") {
-        int startColumn = event.token.start;
-        ace.Point startPosition =
-            new ace.Point(event.position.row, startColumn);
-        int endColumn = startColumn + event.token.value.length;
-        ace.Point endPosition = new ace.Point(event.position.row, endColumn);
-        ace.Range markerRange =
-            new ace.Range.fromPoints(startPosition, endPosition);
-        _setLinkingMarker(markerRange);
-      } else {
-        _setLinkingMarker(null);
-      }
-    });
-
-    parentElement.onKeyUp.listen((event) {
-      if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
-          (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
-        _setLinkingMarker(null);
-      }
-    });
-
-
-    // Override Ace's `gotoline` command.
-    var command = new ace.Command(
-        'gotoline',
-        const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
-        _showGotoLineView);
-    _aceEditor.commands.addCommand(command);
-
-    if (PlatformInfo.isMac) {
-      command = new ace.Command(
-          'scrolltobeginningofdocument',
-          const ace.BindKey(mac: 'Home'),
-          _scrollToBeginningOfDocument);
-      _aceEditor.commands.addCommand(command);
-
-      command = new ace.Command(
-          'scrolltoendofdocument',
-          const ace.BindKey(mac: 'End'),
-          _scrollToEndOfDocument);
-      _aceEditor.commands.addCommand(command);
-    }
-
-    // Remove the `ctrl-,` binding.
-    _aceEditor.commands.removeCommand('showSettingsMenu');
+    _analysisService =  services.getService("analyzer");
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
@@ -664,16 +597,89 @@ class AceManager {
     // refactored HTMLs.
     ace.Mode.extensionMap['pre_csp'] = ace.Mode.HTML;
 
-    _setupGotoLine();
+    // NOTE: The id isn't really needed, but is useful for DOM debugging.
+    containerElement = html.document.createElement('div')..id = "aceContainer";
 
-    _aceEditor.setOption('enableMultiselect', SparkFlags.enableMultiSelect);
+    List<ace.Command> customCommands = [];
+    // Override Ace's `gotoline` command.
+    customCommands.add(new ace.Command(
+        'gotoline',
+        const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
+        _showGotoLineView)
+    );
+    if (PlatformInfo.isMac) {
+      customCommands.add(new ace.Command(
+          'scrolltobeginningofdocument',
+          const ace.BindKey(mac: 'Home'),
+          _scrollToBeginningOfDocument)
+      );
+      customCommands.add(new ace.Command(
+          'scrolltoendofdocument',
+          const ace.BindKey(mac: 'End'),
+          _scrollToEndOfDocument)
+      );
+    }
+
+    _aceEditor = ace.edit(containerElement);
+    _aceEditor.renderer.fixedWidthGutter = true;
+    _aceEditor
+        ..highlightActiveLine = false
+        ..printMarginColumn = 80
+        ..readOnly = true;
+    _aceEditor.setOptions({
+        // TODO(devoncarew): Commented out - see #2475.
+        //..fadeFoldWidgets = true
+        'enableBasicAutocompletion': true,
+        // TODO(devoncarew): Disabled to workaround #2442.
+        //..setOption('enableSnippets', true)
+        'enableLinking': true,
+        'enableMultiselect': SparkFlags.enableMultiSelect
+    });
+    _aceEditor.commands
+        ..addCommands(customCommands)
+        // Remove the `ctrl-,` binding.
+        ..commands.removeCommand('showSettingsMenu');
+
+    // Underine links on hover.
+    _aceEditor.onLinkHover.listen(_decorateLink);
+    // Force removal of the sometimes stuck link underline.
+    containerElement.onKeyUp.listen(_undecorateLink);
+
     if (!SparkFlags.enableMultiSelect) {
       // Setup ACCEL + clicking on declaration
-      var node = parentElement.getElementsByClassName("ace_content")[0];
+      var node = containerElement.getElementsByClassName("ace_content")[0];
       node.onClick.listen((e) {
         bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
         if (accelKey) _onGotoDeclarationController.add(null);
       });
+    }
+
+    _setupGotoLine();
+  }
+
+  void _decorateLink(ace.LinkEvent event) {
+    if (currentFile == null || !DartEditor.isDartFile(currentFile)) return;
+
+    ace.Token token = event.token;
+
+    if (token != null && token.type == "identifier") {
+      int startColumn = event.token.start;
+      ace.Point startPosition =
+          new ace.Point(event.position.row, startColumn);
+      int endColumn = startColumn + event.token.value.length;
+      ace.Point endPosition = new ace.Point(event.position.row, endColumn);
+      ace.Range markerRange =
+          new ace.Range.fromPoints(startPosition, endPosition);
+      _setLinkingMarker(markerRange);
+    } else {
+      _setLinkingMarker(null);
+    }
+  }
+
+  void _undecorateLink(html.KeyEvent event) {
+    if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
+        (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
+      _setLinkingMarker(null);
     }
   }
 
@@ -712,10 +718,10 @@ class AceManager {
       html.querySelector('#splashScreen').style.backgroundColor = 'red';
     }
     gotoLineView.style.zIndex = '101';
-    parentElement.children.add(gotoLineView);
+    containerElement.children.add(gotoLineView);
     gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
     gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
-    parentElement.onKeyDown
+    containerElement.onKeyDown
         .where((e) => e.keyCode == html.KeyCode.ESC)
         .listen((_) => gotoLineView.hide());
   }
@@ -744,10 +750,8 @@ class AceManager {
     return ace.Mode.extensionMap[extension] != null;
   }
 
-  html.Element get _editorElement => parentElement.parent;
-
   html.Element get _minimapElement {
-    List element = parentElement.getElementsByClassName("minimap");
+    List element = containerElement.getElementsByClassName("minimap");
     return element.length == 1 ? element.first : null;
   }
 
@@ -782,9 +786,9 @@ class AceManager {
 
     num documentHeight;
     if (!isScrolling) {
-      var lineElements = parentElement.getElementsByClassName("ace_line");
-      documentHeight = (lineElements.last.offsetTo(parentElement).y -
-          lineElements.first.offsetTo(parentElement).y);
+      var lineElements = containerElement.getElementsByClassName("ace_line");
+      documentHeight = (lineElements.last.offsetTo(containerElement).y -
+          lineElements.first.offsetTo(containerElement).y);
     }
 
     for (int markerIndex = 0; markerIndex < numberMarkers; markerIndex++) {
@@ -888,7 +892,7 @@ class AceManager {
   }
 
   void _recreateMiniMap() {
-    if (parentElement == null) {
+    if (containerElement == null) {
       return;
     }
 
@@ -898,7 +902,7 @@ class AceManager {
     if (_minimapElement != null) {
       _minimapElement.replaceWith(miniMap);
     } else {
-      parentElement.append(miniMap);
+      containerElement.append(miniMap);
     }
   }
 
@@ -1011,7 +1015,7 @@ class AceManager {
   }
 
   void _showGotoLineView(_) {
-    html.Element searchElement = parentElement.querySelector('.ace_search');
+    html.Element searchElement = containerElement.querySelector('.ace_search');
     if (searchElement != null) searchElement.style.display = 'none';
     gotoLineView.show();
   }

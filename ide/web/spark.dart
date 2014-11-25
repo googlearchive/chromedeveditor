@@ -406,19 +406,13 @@ abstract class Spark
   }
 
   void initAceManager() {
-    _aceManager = new AceManager(
-        querySelector('#aceContainer'), this, services, prefs);
+    _aceManager = new AceManager(this, services, prefs);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
         _textFileExtensions.addAll(JSON.decode(value));
       }
     });
-
-    if (workspace.getFiles().length == 0) {
-      // No files, just focus the editor.
-      aceManager.focus();
-    }
 
     _aceThemeManager = new ThemeManager(
         _aceManager, prefs, getUIElement('#changeTheme .settings-value'));
