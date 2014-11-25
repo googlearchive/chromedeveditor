@@ -7,7 +7,7 @@
   "author": "",
   "private": true,
   "dependencies": {
-    "polymer": "Polymer/polymer#master",
-    "paper-elements": "Polymer/paper-elements#master"
+    "polymer": "Polymer/polymer#latest",
+    "paper-elements": "Polymer/paper-elements#latest"
   }
 }
