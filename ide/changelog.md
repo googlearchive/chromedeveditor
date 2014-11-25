@@ -1,6 +1,29 @@
 # Chrome Dev Editor Release Notes
 
-## M17 (0.17.x, November 4, 2014)
+## M18 (0.18.x, December 1, 2014)
+
+### New features
+- Bower:
+
+    - package specs like `"package": "~1.2.3"` are not understood [was: Lodash is not installed via "Bower Update"] bower
+	  - handle "*" paths  bower enhancement
+	  - skip unresolved/ignored packages while fetching
+	  - work around rate limit for access to GitHub API
+    - handle moved repos, improve stability & messaging
+	  - resolve "*" paths in bower.json using Bower registry
+
+### Bug fixes
+- CDE deletes my entire lib folder if I delete any folder with a packages folder / don't delete windows junction point dirs
+- the editor was very sluggish with on very large files with long lines (e.g.
+- editor focus was lost when switching between files via Ctrl-Tab
+
+### Other changes
+- pin Polymer version in the Polymer-related templates to `latest` (was `master`)
+- UI adjustments
+- removed useless files from external packages like demo.html, README.md etc.
+- add LG optimus v3 to usb device list
+
+## M17 (0.17.3412, November 4, 2014)
 
 ### New features
 - improved Bower support
