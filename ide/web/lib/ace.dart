@@ -619,24 +619,29 @@ class AceManager {
       );
     }
 
-    _aceEditor = ace.edit(containerElement)
-        ..renderer.fixedWidthGutter = true
+    _aceEditor = ace.edit(containerElement);
+    _aceEditor.renderer.fixedWidthGutter = true;
+    _aceEditor
         ..highlightActiveLine = false
         ..printMarginColumn = 80
-        ..readOnly = true
+        ..readOnly = true;
+    _aceEditor.setOptions({
         // TODO(devoncarew): Commented out - see #2475.
         //..fadeFoldWidgets = true
-        ..setOption('enableBasicAutocompletion', true)
+        'enableBasicAutocompletion': true,
         // TODO(devoncarew): Disabled to workaround #2442.
         //..setOption('enableSnippets', true)
-        ..setOption('enableLinking', true)
-        ..onLinkHover.listen(_decorateLink)
-        ..commands.addCommands(customCommands)
+        'enableLinking': true,
+        'enableMultiselect': SparkFlags.enableMultiSelect
+    });
+    _aceEditor.commands
+        ..addCommands(customCommands)
         // Remove the `ctrl-,` binding.
-        ..commands.removeCommand('showSettingsMenu')
-        ..setOption('enableMultiselect', SparkFlags.enableMultiSelect);
+        ..commands.removeCommand('showSettingsMenu');
 
-    // Workaround to force removal of sometimes stuck link decorations.
+    // Underine links on hover.
+    _aceEditor.onLinkHover.listen(_decorateLink);
+    // Force removal of the sometimes stuck link underline.
     containerElement.onKeyUp.listen(_undecorateLink);
 
     if (!SparkFlags.enableMultiSelect) {
