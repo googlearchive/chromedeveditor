@@ -14,7 +14,7 @@ import 'listview_cell.dart';
 import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
-  static final int height = 25;
+  static const int HEIGHT = 25;
   final Resource resource;
   Element _element;
   bool _highlighted;
