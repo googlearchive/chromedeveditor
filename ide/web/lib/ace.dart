@@ -638,7 +638,7 @@ class AceManager {
     _aceEditor.commands
         ..addCommands(customCommands)
         // Remove the `ctrl-,` binding.
-        ..commands.removeCommand('showSettingsMenu');
+        ..removeCommand('showSettingsMenu');
 
     // Underine links on hover.
     _aceEditor.onLinkHover.listen(_decorateLink);
