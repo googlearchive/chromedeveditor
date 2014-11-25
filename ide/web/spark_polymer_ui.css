@@ -31,6 +31,14 @@ spark-dialog {
   margin-left: -256px;
 }
 
+/* For some reason, elements of dialogs don't inherit Roboto from :host */
+spark-dialog * {
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  -webkit-font-smoothing: auto;
+}
+
 spark-dialog#polymerDesignerDialog {
   top: 20px;
   bottom: 20px;
