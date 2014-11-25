@@ -33,76 +33,75 @@ class EditorConfig {
   int charSet;
   bool trimWhitespace;
   bool insertFinalNewline;
-  Future whenReady;
 
-  EditorConfig(workspace.File file) {
-    ConfigSectionMatcher matcher = new ConfigSectionMatcher(file);
-    whenReady = matcher.getSections().then((_) {
-      // indent_style
-      useSpaces = _propertyToBool(matcher, "indent_style", trueValue: "space",
-          falseValue: "tab");
+  ConfigFileContext _context;
 
-      // tab_width
-      String value = matcher.getValue("tab_width");
-      if (value == null) {
-        matcher.getValue("indent_size");
+  EditorConfig(ConfigContainerContext containerContext, workspace.File file) {
+    _context = new ConfigFileContext(containerContext);
+    // indent_style
+    useSpaces = _propertyToBool("indent_style", trueValue: "space",
+        falseValue: "tab");
+
+    // tab_width
+    String value = _context.getValue("tab_width");
+    if (value == null) {
+      _context.getValue("indent_size");
+    }
+
+    tabWidth = int.parse(value);
+    if (tabWidth.toString() != value || tabWidth < 1) {
+      throw new EditorConfigException.forProperty("tab_width", value);
+    }
+
+    // indent_size
+    value = _context.getValue("indent_size");
+    if (value == "tab") {
+      indentSize = tabWidth;
+    } else {
+      indentSize = int.parse(value);
+      if (indentSize.toString() != value || indentSize < 1) {
+        throw new EditorConfigException.forProperty("indent_size", value);
       }
+    }
 
-      tabWidth = int.parse(value);
-      if (tabWidth.toString() != value || tabWidth < 1) {
-        throw new EditorConfigException.forProperty("tab_width", value);
-      }
+    // end_of_line
+    value = _context.getValue("end_of_line");
+    if (value == "cr") {
+      lineEnding = ENDING_CR;
+    } else if (value == "lf") {
+      lineEnding = ENDING_LF;
+    } else if (value == "crlf") {
+      lineEnding = ENDING_CRLF;
+    } else {
+      throw new EditorConfigException.forProperty("end_of_line", value);
+    }
 
-      // indent_size
-      value = matcher.getValue("indent_size");
-      if (value == "tab") {
-        indentSize = tabWidth;
-      } else {
-        indentSize = int.parse(value);
-        if (indentSize.toString() != value || indentSize < 1) {
-          throw new EditorConfigException.forProperty("indent_size", value);
-        }
-      }
+    // charset
+    value = _context.getValue("charset");
+    if (value == "latin1") {
+      charSet = CHARSET_LATIN;
+    } else if (value == "utf-8") {
+      charSet = CHARSET_UTF8;
+    } else if (value == "utf-8-bom") {
+      charSet = CHARSET_UTF8BOM;
+    } else if (value == "utf-16be") {
+      charSet = CHARSET_UTF16BE;
+    } else if (value == "utf-16le") {
+      charSet = CHARSET_UTF16LE;
+    } else {
+      throw new EditorConfigException.forProperty("charset", value);
+    }
 
-      // end_of_line
-      value = matcher.getValue("end_of_line");
-      if (value == "cr") {
-        lineEnding = ENDING_CR;
-      } else if (value == "lf") {
-        lineEnding = ENDING_LF;
-      } else if (value == "crlf") {
-        lineEnding = ENDING_CRLF;
-      } else {
-        throw new EditorConfigException.forProperty("end_of_line", value);
-      }
+    // trim_trailing_whitespace
+    trimWhitespace = _propertyToBool("trim_trailing_whitespace");
 
-      // charset
-      value = matcher.getValue("charset");
-      if (value == "latin1") {
-        charSet = CHARSET_LATIN;
-      } else if (value == "utf-8") {
-        charSet = CHARSET_UTF8;
-      } else if (value == "utf-8-bom") {
-        charSet = CHARSET_UTF8BOM;
-      } else if (value == "utf-16be") {
-        charSet = CHARSET_UTF16BE;
-      } else if (value == "utf-16le") {
-        charSet = CHARSET_UTF16LE;
-      } else {
-        throw new EditorConfigException.forProperty("charset", value);
-      }
-
-      // trim_trailing_whitespace
-      trimWhitespace = _propertyToBool(matcher, "trim_trailing_whitespace");
-
-      // insert_final_newline
-      insertFinalNewline = _propertyToBool(matcher, "insert_final_newline");
-    });
+    // insert_final_newline
+    insertFinalNewline = _propertyToBool("insert_final_newline");
   }
 
-  bool _propertyToBool(ConfigSectionMatcher matcher, String propertyName,
+  bool _propertyToBool(String propertyName,
       {String trueValue: "true", String falseValue: "false"}) {
-    String value = matcher.getValue(propertyName);
+    String value = _context.getValue(propertyName);
 
     if (value == trueValue) {
       return true;
@@ -123,20 +122,47 @@ class EditorConfigException extends SparkException {
   }
 }
 
-class ConfigSectionMatcher {
-  List<ConfigSection> configSections = [];
-  workspace.File file;
-  chrome.ChromeFileEntry get fileEntry => file.entry;
+Future<ConfigContainerContext> getConfigContext(workspace.Container container) {
+  ConfigContainerContext matcher = new ConfigContainerContext(container);
 
-  ConfigSectionMatcher(this.file);
+  return matcher.whenReady;
+}
 
-  Future<ConfigFile> getSections() {
-    return fileEntry.getParent().then((chrome.DirectoryEntry dir) {
-      return getSectionsForPath(dir);
+class ConfigFileContext {
+  ConfigContainerContext containerContext;
+
+  ConfigFileContext(this.containerContext);
+
+  List<ConfigSection> sectionsForFilename(String filename) {
+    return containerContext.configSections.where((ConfigSection section) {
+      return section.matchesFull("${containerContext.path}/$filename") == Glob.COMPLETE_MATCH;
     });
   }
 
-  Future<ConfigFile> getSectionsForPath(chrome.DirectoryEntry dir) {
+  String getValue(String propertyName) {
+    String value;
+    for (ConfigSection configSection in containerContext.configSections) {
+      value = configSection.getValue(propertyName);
+      if (value != null) {
+        return value;
+      }
+    }
+    return null;
+  }
+}
+
+class ConfigContainerContext {
+  List<ConfigSection> configSections = [];
+  workspace.Container container;
+  chrome.ChromeFileEntry get entry => container.entry;
+  String get path => entry.fullPath;
+  Future<ConfigContainerContext> whenReady;
+
+  ConfigContainerContext(this.container) {
+    whenReady = _getSections(container.entry).then((_) => this);
+  }
+
+  Future<ConfigFile> _getSections(chrome.DirectoryEntry dir) {
     int insertIndex = configSections.length;
     return dir.getFile(".editorConfig").then((chrome.ChromeFileEntry configFile) {
       return configFile.readText();
@@ -151,31 +177,20 @@ class ConfigSectionMatcher {
     }).then((String configContent) {
       new ConfigFile(configContent).sections.forEach(
           (ConfigSection section) {
-        var fullPath = fileEntry.fullPath;
-        if (section.matchesPath(fullPath)) {
+        var fullPath = entry.fullPath;
+        if (section.matchesPrefix(fullPath)) {
           configSections.insert(insertIndex, section);
         }
       });
 
-      if (file.project.entry.fullPath != dir.fullPath) {
+      if (container.project.entry.fullPath != dir.fullPath) {
         return dir.getParent();
       }
     }).then((chrome.DirectoryEntry parent) {
       if (parent != null) {
-        return getSectionsForPath(parent);
+        return _getSections(parent);
       }
     });
-  }
-
-  String getValue(String propertyName) {
-    String value;
-    for (ConfigSection configSection in configSections) {
-      value = configSection.getValue(propertyName);
-      if (value != null) {
-        return value;
-      }
-    }
-    return null;
   }
 }
 
@@ -212,8 +227,10 @@ class ConfigSection {
     glob = new Glob(sectionId);
   }
 
-  bool matchesPath(String path) {
-    return (glob.matchPath(path) == Glob.COMPLETE_MATCH);
+  bool matchesFull(String path) => glob.matchPath(path) == Glob.COMPLETE_MATCH;
+  bool matchesPrefix(String path) {
+    int matchType = glob.matchPath(path);
+    return matchType == Glob.COMPLETE_MATCH || matchType == Glob.PREFIX_MATCH;
   }
 
   String getValue(String propertyName) {
