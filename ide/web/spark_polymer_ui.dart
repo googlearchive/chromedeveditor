@@ -91,22 +91,22 @@ class SparkPolymerUI extends SparkWidget {
    * where the dynamically created Ace container, which needs them, lives.
    */
   void _poachAceStyles(List<Node> nodes) {
-    final List<Element> aceNodes = [];
+    final List<StyleElement> aceStyles = [];
     for (Node node in nodes) {
       if (node is StyleElement &&
-          (node.id.startsWith('ace') || node.innerHtml.contains('ace_')) {
-        aceNodes.add(node);
+          (node.id.startsWith('ace') || node.innerHtml.contains('ace_'))) {
+        aceStyles.add(node);
       }
     }
-    for (Node node in aceNodes) {
+    for (StyleElement style in aceStyles) {
       // When Ace thinks it needs to reuse the same style at some point (e.g.
       // previously used theme is selected again), it justs check in the <head>
       // by node id, so, since we move the originals, it will try to insert
       // duplicates: skip moving those here (but remove them from DOM).
-      node.remove();
-      final String id = node.id;
+      style.remove();
+      final String id = style.id;
       if (id != null && id.isNotEmpty && !_poachedAceNodes.add(id)) continue;
-      shadowRoot.append(node);
+      shadowRoot.append(style);
     }
   }
 
