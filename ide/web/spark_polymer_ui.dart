@@ -51,14 +51,14 @@ class SparkPolymerUI extends SparkWidget {
   @override
   void ready() {
     // Listen to insertions of new nodes into the top-level <head>, some of
-    // which will be Ace-related <style>s and <script>s that Ace dynamically
-    // inserts e.g. when the editor theme gets changed: move such nodes under
-    // our [shadowRoot]. The reason is that Ace was not designed to
-    // work as part of a Polymer element, and so always uses the top-level
-    // <head>, while our actual Ace container lives under the CSS-isolated
-    // [shadowRoot] (the container itself is dynamically created elsewhere).
+    // which will be Ace-related <style>sthat Ace dynamically inserts e.g. when
+    // the editor theme gets changed: move such styles under our [shadowRoot].
+    // The reason is that Ace was not designed to work as part of a Polymer
+    // element: it always inserts into the <head>, while our actual Ace
+    // container lives under the CSS-isolated [shadowRoot] (the container is
+    // dynamically created elsewhere).
     final observer = new MutationObserver((records, _) =>
-        records.forEach((r) => _poachAceStylesAndScripts(r.addedNodes)));
+        records.forEach((r) => _poachAceStyles(r.addedNodes)));
     observer.observe(
         document.head,
         childList: true,
@@ -74,7 +74,7 @@ class SparkPolymerUI extends SparkWidget {
     // Poach initial Ace <style>s that Ace inserts before the observer in
     // [ready] starts listening to new node insertions. See the comment in
     // [ready].
-    _poachAceStylesAndScripts(document.head.childNodes);
+    _poachAceStyles(document.head.childNodes);
   }
 
   @override
@@ -86,29 +86,26 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   /*
-   * Moves any Ace-related <style>s and <script>s in [nodes] from their original
-   * parent (likely [document.head]) to this element's [shadowRoot], where the
-   * dynamically created Ace container, which needs them, lives.
+   * Transfer any Ace-related <style>s in [nodes] from their original parent
+   * (by the way Ace works, [document.head]) to this element's [shadowRoot],
+   * where the dynamically created Ace container, which needs them, lives.
    */
-  void _poachAceStylesAndScripts(List<Node> nodes) {
+  void _poachAceStyles(List<Node> nodes) {
     final List<Element> aceNodes = [];
     for (Node node in nodes) {
-      if (node is ScriptElement && node.src.contains('ace/src/js') ||
-          node is StyleElement && node.id.startsWith('ace') ||
-          node is StyleElement && node.innerHtml.contains('ace_')) {
+      if (node is StyleElement &&
+          (node.id.startsWith('ace') || node.innerHtml.contains('ace_')) {
         aceNodes.add(node);
       }
     }
     for (Node node in aceNodes) {
-      node.remove();
-      // When Ace thinks it needs the same style or script at some point (e.g.
+      // When Ace thinks it needs to reuse the same style at some point (e.g.
       // previously used theme is selected again), it justs check in the <head>
-      // by id or src, so it will try to insert duplicates, since we move the
-      // originals. Skip moving those duplicates.
-      final String key =
-          node is ScriptElement ? node.src :
-          node is StyleElement ? node.id : null;
-      if (key != null && key.isNotEmpty && !_poachedAceNodes.add(key)) continue;
+      // by node id, so, since we move the originals, it will try to insert
+      // duplicates: skip moving those here (but remove them from DOM).
+      node.remove();
+      final String id = node.id;
+      if (id != null && id.isNotEmpty && !_poachedAceNodes.add(id)) continue;
       shadowRoot.append(node);
     }
   }
