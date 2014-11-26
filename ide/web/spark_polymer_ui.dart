@@ -44,6 +44,8 @@ class SparkPolymerUI extends SparkWidget {
   SparkSplitView _splitView;
   InputElement _fileFilter;
 
+  final _poachedAceNodes = new Set<String>();
+
   SparkPolymerUI.created() : super.created();
 
   @override
@@ -89,18 +91,26 @@ class SparkPolymerUI extends SparkWidget {
    * dynamically created Ace container, which needs them, lives.
    */
   void _poachAceStylesAndScripts(List<Node> nodes) {
-    final List<Node> aceNodes = [];
-    nodes.forEach((node) {
+    final List<Element> aceNodes = [];
+    for (Node node in nodes) {
       if (node is ScriptElement && node.src.contains('ace/src/js') ||
           node is StyleElement && node.id.startsWith('ace') ||
           node is StyleElement && node.innerHtml.contains('ace_')) {
         aceNodes.add(node);
       }
-    });
-    aceNodes.forEach((node) {
+    }
+    for (Node node in aceNodes) {
       node.remove();
+      // When Ace thinks it needs the same style or script at some point (e.g.
+      // previously used theme is selected again), it justs check in the <head>
+      // by id or src, so it will try to insert duplicates, since we move the
+      // originals. Skip moving those duplicates.
+      final String key =
+          node is ScriptElement ? node.src :
+          node is StyleElement ? node.id : null;
+      if (key != null && key.isNotEmpty && !_poachedAceNodes.add(key)) continue;
       shadowRoot.append(node);
-    });
+    }
   }
 
   void modelReady(SparkModel model) {
