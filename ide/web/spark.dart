@@ -164,7 +164,6 @@ abstract class Spark
           initLaunchManager();
           initBuilders();
 
-          initEditorArea();
           initToolbar();
           buildMenu();
           initSplitView();
@@ -425,12 +424,18 @@ abstract class Spark
     _editorManager = new EditorManager(
         workspace, aceManager, prefs, eventBus, services);
 
+    _editorArea = new EditorArea(getUIElement('#editorArea'), editorManager,
+        workspace, allowsLabelBar: true);
+
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
         editorArea.selectFile(file, forceOpen: true, switchesTab: false,
             replaceCurrent: false);
       });
+
+      editorManager.setupOutline(getUIElement('#outlineContainer'));
+
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
 
@@ -448,14 +453,8 @@ abstract class Spark
         _openFile(resource);
       });
     });
-  }
 
-  void initEditorArea() {
-    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
-        workspace, allowsLabelBar: true);
-    editorManager.setupOutline(querySelector('#outlineContainer'));
-
-    _editorArea.onSelected.listen((EditorTab tab) {
+    editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
       if (!_filesController.isFileSelected(tab.file)) {
@@ -470,7 +469,7 @@ abstract class Spark
     _filesController = new FilesController(
         workspace, actionManager, scmManager, eventBus,
         querySelector('#file-item-context-menu'),
-        querySelector('#fileViewArea'));
+        getUIElement('#fileViewArea'));
     _filesController.visibility = true;
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen((FilesControllerSelectionChangedEvent event) {
@@ -483,7 +482,7 @@ abstract class Spark
         .listen((FilesControllerPersistTabEvent event) {
       editorArea.persistTab(event.file);
     });
-    querySelector('#showFileViewButton').onClick.listen((_) {
+    getUIElement('#showFileViewButton').onClick.listen((_) {
       Action action = actionManager.getAction('show-files-view');
       action.invoke();
     });
@@ -491,7 +490,7 @@ abstract class Spark
 
   void initSearchController() {
     _searchViewController =
-        new SearchViewController(workspace, querySelector('#searchViewArea'));
+        new SearchViewController(workspace, getUIElement('#searchViewArea'));
     _searchViewController.delegate = this;
   }
 
@@ -1049,8 +1048,8 @@ abstract class Spark
   // TODO(ussuri): Polymerize.
   void setSearchViewVisible(bool visible) {
     InputElement searchField = getUIElement('#fileFilter');
-    querySelector('#searchViewArea').classes.toggle('hidden', !visible);
-    querySelector('#fileViewArea').classes.toggle('hidden', visible);
+    getUIElement('#searchViewArea').classes.toggle('hidden', !visible);
+    getUIElement('#fileViewArea').classes.toggle('hidden', visible);
     searchField.placeholder =
         visible ? 'Search in Files' : 'Filter';
     getUIElement('#showSearchView').attributes['checkmark'] =
@@ -4279,7 +4278,7 @@ class PolymerDesignerAction
     _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearDesign);
     _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertDesign);
 
-    querySelector('#openPolymerDesignerButton').onClick.listen((_) {
+    spark.getUIElement('#openPolymerDesignerButton').onClick.listen((_) {
       _open(spark.editorManager.currentFile);
     });
   }
