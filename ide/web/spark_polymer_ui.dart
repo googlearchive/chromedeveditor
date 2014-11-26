@@ -94,7 +94,7 @@ class SparkPolymerUI extends SparkWidget {
     final List<Element> aceNodes = [];
     for (Node node in nodes) {
       if (node is StyleElement &&
-          (node.id.startsWith('ace') || node.innerHtml.contains('ace_')) {
+          (node.id.startsWith('ace') || node.innerHtml.contains('ace_'))) {
         aceNodes.add(node);
       }
     }
