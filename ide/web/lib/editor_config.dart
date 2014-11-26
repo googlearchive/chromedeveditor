@@ -345,8 +345,10 @@ class GlobPattern implements Pattern {
 
   GlobMatcher matchAsPrefix(String string, [int start = 0]) {
     int n = start;
+    RegExp globCharsRegExp = new RegExp(r"[\\*?\[\{]");
+
     do {
-      n = string.indexOf(new RegExp(r"[\\*?\[\{]"), n);
+      n = string.indexOf(globCharsRegExp, n);
       GlobMatcher matcher;
 
       if (n == -1) {
@@ -388,7 +390,9 @@ class Glob {
   static int COMPLETE_MATCH = 2;
   static final RegExp _escapePattern = new RegExp("[!@#\$%^&()-.,<>+=\\/~`|]");
 
-  List<String> _globRegExpParts;
+  List<String> _globPartsAsStrings;
+  List<RegExp> _globPartsAsRegExps = [];
+  String _globSoFar = "";
 
   Glob(String pattern) {
     bool matchFull = pattern.substring(0,1) == "/";
@@ -402,7 +406,7 @@ class Glob {
       globMatchers.insert(0, new PartialPathMatcher(pattern, globPattern, 0));
     }
 
-    _globRegExpParts = globMatchers.map((GlobMatcher m) =>
+    _globPartsAsStrings = globMatchers.map((GlobMatcher m) =>
         _escape(pattern.substring(m.start, m.tokenStart)) + m.toRegExp()).toList();
   }
 
@@ -419,19 +423,22 @@ class Glob {
   // PREFIX_MATCH - Prefix match found ("f*/b*/" partially matches "foo/")
   // COMPLETE_MATCH - Prefix match found ("f**/b*" completely matches "foo/bar/baz")
   int matchPath(String path) {
-    int lastIndex = 0;
-
-    String globSoFar = "";
     int globIndex = 0;
 
-    for (;globIndex < _globRegExpParts.length; globIndex++) {
-      globSoFar += ((globSoFar != "") ? ".*" : "") + _globRegExpParts[globIndex];
-      if (globIndex == _globRegExpParts.length - 1) globSoFar = globSoFar + "\$";
-      if (new RegExp(globSoFar).matchAsPrefix(path) == null) break;
+    for (;globIndex < _globPartsAsStrings.length; globIndex++) {
+      if (globIndex >= _globPartsAsRegExps.length) {
+        _globSoFar += ((_globSoFar != "") ? ".*" : "") +
+            _globPartsAsStrings[globIndex];
+        if (globIndex == _globPartsAsStrings.length - 1) {
+          _globSoFar = _globSoFar + "\$";
+        }
+        _globPartsAsRegExps.add(new RegExp(_globSoFar));
+      }
+      if (_globPartsAsRegExps[globIndex].matchAsPrefix(path) == null) break;
     }
 
     if (globIndex > 0) {
-      if (globIndex == _globRegExpParts.length) {
+      if (globIndex == _globPartsAsStrings.length) {
         return COMPLETE_MATCH;
       }
       return PREFIX_MATCH;
