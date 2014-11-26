@@ -19,11 +19,11 @@ PromiseCompleter.prototype.reject = function(value) {
 
 PromiseCompleter.prototype.then = function(onFulfilled, onRejected) {
   this.promise.then(onFulfilled, onRejected);
-}
+};
 
 PromiseCompleter.prototype.catch = function(onRejected) {
   this.promise.catch(onRejected);
-}
+};
 
 Polymer('cde-polymer-designer', {
   // NOTE: Make sure this is in-sync with ide/web/manifest.json.
@@ -117,7 +117,7 @@ Polymer('cde-polymer-designer', {
    * @return: void
    */
   unload: function() {
-    if (this.webview_ != null) {
+    if (this.webview_ !== null) {
       this.webview_.terminate();
       this.shadowRoot.removeChild(this.webview_);
     }
@@ -352,7 +352,7 @@ Polymer('cde-polymer-designer', {
           break;
         case 'revert_code':
           designer.loadHtml(initialCode);
-          breal;
+          break;
         default:
           throw "Unsupported request from client";
       }
@@ -397,7 +397,7 @@ Polymer('cde-polymer-designer', {
   },
 
   /**
-   * Executes a script in [webview_]'s "isolated world", which give the script
+   * Executes a script in [webview_]'s "isolated world", which gives the script
    * access only to the webview's DOM, but not the JS context.
    *
    * @return: Promise<array of any>
