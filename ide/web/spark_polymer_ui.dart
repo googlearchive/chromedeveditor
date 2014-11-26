@@ -48,16 +48,16 @@ class SparkPolymerUI extends SparkWidget {
 
   @override
   void ready() {
-    // Listen to insertions of new nodes into the top-level <head>, and move
+    // Listen to insertions of new nodes into the top-level <head>, some of
     // which will be Ace-related <style>s and <script>s that Ace dynamically
-    // inserts e.g. when the editor theme is changed: move such nodes under
+    // inserts e.g. when the editor theme gets changed: move such nodes under
     // our [shadowRoot]. The reason is that Ace was not designed to
     // work as part of a Polymer element, and so always uses the top-level
-    // <head>, while our actual Ace instance lives under the CSS-isolated
-    // [shadowRoot].
-    var observer = new MutationObserver((records, _) =>
-        records.forEach((r) => _poachAceStylesAndScripts(r.addedNodes))
-    )..observe(
+    // <head>, while our actual Ace container lives under the CSS-isolated
+    // [shadowRoot] (the container itself is dynamically created elsewhere).
+    final observer = new MutationObserver((records, _) =>
+        records.forEach((r) => _poachAceStylesAndScripts(r.addedNodes)));
+    observer.observe(
         document.head,
         childList: true,
         attributes: false,
@@ -85,8 +85,8 @@ class SparkPolymerUI extends SparkWidget {
 
   /*
    * Moves any Ace-related <style>s and <script>s in [nodes] from their original
-   * parent (which is [document] to this element's [shadowRoot], where the Ace
-   * editor's container, which needs them, lives.
+   * parent (likely [document.head]) to this element's [shadowRoot], where the
+   * dynamically created Ace container, which needs them, lives.
    */
   void _poachAceStylesAndScripts(List<Node> nodes) {
     final List<Node> aceNodes = [];
