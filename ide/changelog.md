@@ -6,7 +6,7 @@
 - Bower:
 
     - support package specifications with just a version or version range and path omitted, e.g. `"package-x": "1.2.3"`, `"package-y": "~1.2.3"`: the path is resolved using Bower registry based on the package name
-	  - support `"*"` as a package specification, e.g. `"package-x": "*"`: the path is resolved as above; the tag resolves to the latest stable
+    - support `"*"` as a package specification, e.g. `"package-x": "*"`: the path is resolved as above; the tag resolves to the latest stable
     - support packages whose GitHub repositories have moved to a different GitHub organization (so their URL redirects from `https://github.com/OldOrg/package` to `https://github.com/NewOrg/package`)
 
 ### Bug fixes
