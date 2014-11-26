@@ -282,18 +282,14 @@ class TextEditor extends Editor {
     try {
       // Restore the cursor position and scroll location.
       num scrollTop = _session.scrollTop;
-      html.Point cursorPos = null;
-      if (aceManager.currentFile == file) {
-        cursorPos = aceManager.cursorPosition;
-      }
-      // NOTE: Do not use `_session.value = newContents` here: it resets the
-      // undo stack.
-      _session.replace(
-          new ace.Range(0, 0, _session.length + 1, 0), newContents);
+      html.Point cursorPos = (aceManager.currentFile == file) ?
+          aceManager.cursorPosition : null;
+
+      // Use `session.doc.setValue()` here to preserve the undo stack.
+      _session.document.value = newContents;
+
       _session.scrollTop = scrollTop;
-      if (cursorPos != null) {
-        aceManager.cursorPosition = cursorPos;
-      }
+      if (cursorPos != null) aceManager.cursorPosition = cursorPos;
 
       _invokeReconcile();
     } finally {
@@ -676,7 +672,7 @@ class AceManager {
     }
   }
 
-  void _undecorateLink(html.KeyEvent event) {
+  void _undecorateLink(html.KeyboardEvent event) {
     if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
         (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
       _setLinkingMarker(null);
