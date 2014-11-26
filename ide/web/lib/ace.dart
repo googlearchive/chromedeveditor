@@ -285,7 +285,8 @@ class TextEditor extends Editor {
       html.Point cursorPos = (aceManager.currentFile == file) ?
           aceManager.cursorPosition : null;
 
-      // Use `session.doc.setValue()` here to preserve the undo stack.
+      // Use `session.doc.setValue()` here to preserve the undo stack (we don't
+      // use `session.value = newContents` here as it resets the undo stack).
       _session.document.value = newContents;
 
       _session.scrollTop = scrollTop;
