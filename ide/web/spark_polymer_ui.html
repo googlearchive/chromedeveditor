@@ -145,6 +145,12 @@
           <div id="fileViewFilterNoResult" class="hidden">
             No matching files
           </div>
+
+          <div id="file-item-context-menu" class="dropdown">
+            <div class="backdrop"></div>
+            <ul class="dropdown-menu" role="menu"></ul>
+          </div>
+
           <div id="searchViewArea" class="hidden"></div>
           <div id="searchViewPlaceholder" class="hidden">
             <div>Type a string to search in the workspace</div>
@@ -226,7 +232,6 @@
     </spark-split-view>
 
     <!-- =========================== DIALOGS =============================== -->
-
 
     <!-- Error dialog -->
     <spark-dialog id="errorDialog" headerTitle="">

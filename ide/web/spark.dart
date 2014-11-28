@@ -468,7 +468,7 @@ abstract class Spark
   void initFilesController() {
     _filesController = new FilesController(
         workspace, actionManager, scmManager, eventBus,
-        querySelector('#file-item-context-menu'),
+        getUIElement('#file-item-context-menu'),
         getUIElement('#fileViewArea'));
     _filesController.visibility = true;
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
