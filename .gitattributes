@@ -6,3 +6,18 @@
 *.html
 *.png binary
 *.jpg binary
+
+cde-polymer-designer.dart/src/* linguist-vendored
+ide/web/lib/templates/web/web_starter_kit/* linguist-vendored
+ide/web/third_party/* linguist-vendored
+paper linguist-vendored
+
+*.css_ linguist-language=CSS
+*.dart_ linguist-language=Dart
+*.html_ linguist-language=HTML
+*.js_ linguist-language=JavaScript
+*.json_ linguist-language=JSON
+*.scss_ linguist-language=CSS
+*.svg_ linguist-language=SVG
+*.yaml_ linguist-language=YAML
+*.yml_ linguist-language=YAML
