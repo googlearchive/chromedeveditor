@@ -7,10 +7,16 @@
 *.png binary
 *.jpg binary
 
-cde-polymer-designer.dart/src/* linguist-vendored
-ide/web/lib/templates/web/web_starter_kit/* linguist-vendored
-ide/web/third_party/* linguist-vendored
+# Make GitHub ignore vendor libraries while computing language stats.
+# See https://github.com/github/linguist#overrides.
+
+cde-polymer-designer.dart/lib/src linguist-vendored
+ide/web/lib/templates/web/web_starter_kit linguist-vendored
+ide/web/third_party linguist-vendored
 paper linguist-vendored
+
+# Explicitly specify language for non-standard extensions used under
+# ide/web/lib/templates to make GitHub correctly count their language stats.
 
 *.css_ linguist-language=CSS
 *.dart_ linguist-language=Dart
