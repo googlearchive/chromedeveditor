@@ -12,6 +12,22 @@
 
 @import url("spark_common.css");
 
+#modalBackdrop {
+  display:none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  opacity: 0.25;
+  z-index: 500;
+}
+
+/*
+ * Split view
+ */
+
 #splitView {
   border-top: 1px solid #ddd;
   bottom: 0;
@@ -29,36 +45,9 @@
   z-index: -1;
 }
 
-spark-dialog {
-  top: 15%;
-  left: 50%;
-  width: 512px;
-  margin-left: -256px;
-}
-
-/* For some reason, elements of dialogs don't inherit Roboto from :host */
-spark-dialog * {
-  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 13px;
-  -webkit-font-smoothing: auto;
-}
-
-spark-dialog#polymerDesignerDialog {
-  top: 20px;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  width: initial;
-  margin-left: initial;
-}
-
-spark-dialog#polymerDesignerDialog #polymerDesigner {
-  display: block;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  flex: 1;
-}
+/*
+ * Top-level toolbars and buttons
+ */
 
 .toolbar {
   height: 48px;
@@ -72,58 +61,18 @@ spark-dialog#polymerDesignerDialog #polymerDesigner {
   margin: 0;
 }
 
+#bottom-toolbar {
+  border-top: 1px solid #ddd;
+  bottom: 0;
+  position: absolute;
+  width: 100%;
+}
+
 cde-fab[command=show-new-project] {
   position: absolute;
   top: -20px;
   right: 10px;
   z-index: 1;
-}
-
-#fileFilterGroup {
-  flex: 1;
-  display: flex;
-}
-
-#fileFilter {
-  flex: 1;
-  height: 36px;
-  padding: 10px 10px 10px 44px;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-}
-
-#fileFilter:focus {
-  border: 1px solid #4285f4;
-  box-shadow: 0 0 0 1px #4285f4;
-  outline: none;
-}
-
-#fileFilter ~ #runButton,
-#fileFilter ~ #mainMenu {
-  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);
-}
-
-#fileFilter:focus.active ~ #runButton,
-#fileFilter:focus.active ~ #mainMenu {
-  opacity: 0;
-  margin: 0;
-  width: 0;
-}
-
-#moreSearchMenu {
-  position: absolute;
-  left: 92px;
-  top: 10px;
-  width: 32px;
-  height: 32px;
-}
-
-#fileNotFoundPlaceholder {
-  color: #ccc;
-  display: block;
-  font-size: 18px;
-  margin-top: 60px;
-  text-align: center;
 }
 
 #navigationButtons {
@@ -136,190 +85,212 @@ cde-fab[command=show-new-project] {
   z-index: 150;
 }
 
-.settings-label {
-  width: 150px;
+/*
+ * Tab bar
+ */
+
+.tabview-tabbar {
+  margin-right: 131px;
+  z-index: 1;
 }
 
-.settings-value {
-  flex: 1;
-  height: 100%;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  padding: 5px;
-  color: #666;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.settings-block {
-  width: 100%;
-  height: 30px;
-  background-color: white;
-}
-
-.change-setting-button {
-  width: 30px;
-  height: 30px;
-}
-
-.settings-value + .change-setting-button {
-  margin-left: 5px;
-}
-
-.reset-setting-button {
-  flex: 1;
-  height: 100%;
-}
-
-#gitRepoUrlCopyInBuffer {
-  width: 0px;
-  height: 1px;
-  background: transparent;
-  box-shadow: 0px 0px 0px;
-  padding: 0px;
-  border: 0px solid;
-}
-
-#aboutDialog #logo {
-  margin-right: 40px;
-}
-
-#aboutDialog #analyticsOptIn {
-  margin-top: 40px;
-}
-
-#aboutDialog #analyticsCheck {
-  margin: 0 20px;
-}
-
-#errorMessage {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-#gitResetSettingsDone,
-#preferenceResetResult {
-  display: none;
-  color: #F00;
-  font-weight: 500;
-  margin: 4px 0 0 4px;
-}
-
-#gitCommitList {
-  max-height: 250px;
-  overflow: auto;
-  padding: 0 20px;
-}
-
-#gitCommitList h1 {
-  font-size: 15px;
-  margin-top: 20px;
-  margin-bottom: 0px;
-}
-
-#gitCommitMessage {
-  resize: vertical;
-}
-
-#gitChangeList {
-  border-radius: 3px;
-  border: 1px solid #cccccc;
-  display: none;
-  margin-bottom: 15px;
-  max-height: 105px;
-  overflow: auto;
-  padding: 5px 14px;
-}
-
-#gitChangeLabel {
-  top: 0px;
-}
-
-#gitStatusDiv {
-  width: 100%;
-}
-
-#gitUserInfo.hidden {
-  display: none;
-}
-
-#pushUrl {
-  width: 20em;
-}
-
-.radio-button-dependency {
-  margin: 10px 0 0 20px;
-}
-
-.input-label {
-  display: flex;
-  margin: 10px 0;
-}
-
-.input-label label {
-  flex: 0 1 auto;
-  width: 150px;
-  position: relative;
-  top: 9px;
-}
-
-.input-label input {
-  flex: 1 1 auto;
-}
-
-[selectableTxt] {
-  -webkit-user-select: text;
-}
-
-#bottom-toolbar {
-  border-top: 1px solid #ddd;
-  bottom: 0;
-  position: absolute;
-  width: 100%;
-}
-
-label {
-  font-weight: 500;
-}
-
-.help-block {
-  -webkit-user-select: text;
-}
-
-/* These two are special (secondary) */
-label[for="analyticsCheck"],
-label[for="stripWhitespace"] {
-  font-weight: 400;
-}
-
-#aboutDialog-icon {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-#aboutDialog-text {
-  display: inline-block;
-  margin-left: 10px;
-  vertical-align: middle;
-}
-
-#directoryLabel {
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.form-control-static {
-  overflow: hidden;
-  white-space: nowrap;
-}
+/*
+ * Editor area
+ */
 
 #editorArea {
   position: absolute;
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+/*
+ * File view area
+ */
+
+#fileViewArea {
+  bottom: 48px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 48px;
+}
+
+#fileViewArea .listview-container {
+  bottom: 0;
+  left: 0;
+  outline: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+#fileViewArea .listview-dragover {
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+#fileViewArea .listview-dragover.listview-dragover-active {
+  border: 2px solid #aaf;
+}
+
+.listview-row {
+  margin: 0 16px;
+}
+
+.fileview-filename-container {
+}
+
+.fileview-filename-container .filename {
+  display: inline-block;
+}
+
+.fileview-filename-container.project .filename {
+  font-size: 16px;
+  top: 9px;
+}
+
+.listview-cell-highlighted .fileview-filename-container .filename {
+  color: #fff;
+}
+
+.listview-cell-highlighted .fileview-filename-container .infoField {
+  color: #fff;
+}
+
+.treeviewcell-status {
+  background: #999;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+
+  position: absolute;
+  left: -16px;
+  width: 0;
+  top: 0;
+  height: 23px;
+
+  transition: width 0.4s;
+}
+
+.treeviewcell-status.project {
+  height: 38px;
+}
+
+.treeviewcell-status.error {
+  width: 8px;
+  background: #d0021b;
+}
+
+.treeviewcell-status.warning {
+  width: 8px;
+  background: #DD3;
+}
+
+.treeviewcell-status.info {
+  width: 8px;
+  background: #9CC;
+}
+
+.fileview-filename-container .gitStatus {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+  background: #999;
+
+  position: absolute;
+  top: 0;
+  height: 23px;
+  right: -16px;
+  width: 0;
+
+  transition: width 0.4s;
+}
+
+.fileview-filename-container.project > .gitStatus {
+  height: 38px;
+}
+
+.fileview-filename-container .menu {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 15px;
+}
+
+.fileview-filename-container .menu.open {
+  opacity: 1;
+}
+
+.fileview-filename-container .filename {
+  overflow: hidden;
+  position: absolute;
+  top: 2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.fileview-filename-container:hover .filename {
+}
+
+.fileview-separator .line {
+  margin-top: 8px;
+  border-top: 1px solid #ddd;
+}
+
+.listview-cell-highlighted .search-result-line,
+.listview-cell-highlighted .search-result-file {
+  color: #fff;
+}
+
+.gitStatus.dirty {
+  width: 8px;
+  background: #4285f4;
+}
+
+/*
+ * File view's context menu
+ */
+#file-item-context-menu {
+  top: 0;
+  left: 0;
+  position: fixed;
+  z-index: 100;
+  display: none;
+}
+
+#file-item-context-menu.open {
+  display: block;
+}
+
+#file-item-context-menu .backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+/*
+ * Search view area
+ */
+#showFileViewButton {
+  font-size: 13px;
+  margin-top: 20px;
+  text-decoration: underline;
+  text-transform: uppercase;
+}
+
+#showFileViewButton:hover {
+  color: #444;
+  cursor: pointer;
 }
 
 #searchViewArea.hidden, #fileViewArea.hidden {
@@ -367,51 +338,126 @@ label[for="stripWhitespace"] {
   display: none;
 }
 
-#fileViewArea {
-  bottom: 48px;
-  left: 0;
+#fileFilterGroup {
+  flex: 1;
+  display: flex;
+}
+
+#fileFilter {
+  flex: 1;
+  height: 36px;
+  padding: 10px 10px 10px 44px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+#fileFilter:focus {
+  border: 1px solid #4285f4;
+  box-shadow: 0 0 0 1px #4285f4;
+  outline: none;
+}
+
+/*#fileFilter ~ #runButton,*/
+/*#fileFilter ~ #mainMenu {*/
+/*  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);*/
+/*}*/
+
+/*#fileFilter:focus.active ~ #runButton,*/
+/*#fileFilter:focus.active ~ #mainMenu {*/
+/*  opacity: 0;*/
+/*  margin: 0;*/
+/*  width: 0;*/
+/*}*/
+
+#moreSearchMenu {
   position: absolute;
-  right: 0;
-  top: 48px;
+  left: 92px;
+  top: 10px;
+  width: 32px;
+  height: 32px;
 }
 
-#fileViewArea .listview-container {
-  bottom: 0;
-  left: 0;
-  outline: 0;
-  overflow-x: auto;
-  overflow-y: auto;
-  position: absolute;
-  right: 0;
-  top: 0;
+#fileNotFoundPlaceholder {
+  color: #ccc;
+  display: block;
+  font-size: 18px;
+  margin-top: 60px;
+  text-align: center;
 }
 
-#fileViewArea .listview-dragover {
-  bottom: 0;
-  left: 0;
-  pointer-events: none;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-#fileViewArea .listview-dragover.listview-dragover-active {
-  border: 2px solid #aaf;
-}
-
-#showFileViewButton {
+.search-result-line {
+  color: #888;
   font-size: 13px;
-  margin-top: 20px;
-  text-decoration: underline;
-  text-transform: uppercase;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 2px;
+  white-space: nowrap;
+  width: 100%;
 }
 
-#showFileViewButton:hover {
-  color: #444;
-  cursor: pointer;
+.search-result-file {
+  font-size: 16px;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  top: 10px;
+  white-space: nowrap;
+  width: 100%;
 }
 
+.search-max-results {
+  color: #888;
+  font-size: 12px;
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  text-align: center;
+  top: 10px;
+  white-space: nowrap;
+  width: 100%;
+}
 
+/*
+ * In-editor FABs (markdown & Polymer) + markdown view
+ */
+#toggleMarkdownPreviewButton,
+#openPolymerDesignerButton {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  bottom: 20px;
+  right: 20px;
+  z-index: 90;
+  fill: #7d7d7d;
+  background-color: #ddd;
+  border: 1px solid #777;
+  opacity: 0.8;
+}
+
+#toggleMarkdownPreviewButton:hover,
+#openPolymerDesignerButton:hover {
+  opacity: 1;
+}
+
+#markdownContent {
+  -webkit-font-smoothing: antialiased;
+  bottom: 0px;
+  font-family: inherit;
+  overflow-y: auto;
+  width: 100%;
+  padding: 10px 15px;
+  position: absolute;
+  top: 0px;
+  transition: opacity 250ms;
+  z-index: 89;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/*
+ * Outline
+ */
 
 .outlineItem.topLevel.class:hover {
   background-color: rgba(255, 255, 255, 0.1);
@@ -533,43 +579,249 @@ label[for="stripWhitespace"] {
 #outlineResizer {
 }
 
-#toggleMarkdownPreviewButton,
-#openPolymerDesignerButton {
+/*
+ * Mini-map
+ */
+.minimap {
+  right: 10px;
+  width: 10px;
+  bottom: 0;
+  top: 0;
   position: absolute;
-  width: 36px;
-  height: 36px;
+  z-index: 10;
+}
+
+.minimap-marker {
+  border-radius: 2px;
+  position: absolute;
+  height: 6px;
+  left: 1px;
+  right: 1px;
+  background: #DDD;
+  cursor: pointer;
+}
+
+.minimap-marker.error {
+  background: #d0021b;
+}
+
+.minimap-marker.warning {
+  background: #DD3;
+}
+
+.minimap-marker.info {
+  background: #9CC;
+}
+
+/*
+ * Dialogs
+ */
+
+spark-dialog {
+  top: 15%;
+  left: 50%;
+  width: 512px;
+  margin-left: -256px;
+}
+
+/* For some reason, elements of dialogs don't inherit Roboto from :host */
+spark-dialog * {
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  -webkit-font-smoothing: auto;
+}
+
+spark-dialog#polymerDesignerDialog {
+  top: 20px;
   bottom: 20px;
+  left: 20px;
   right: 20px;
-  z-index: 90;
-  fill: #7d7d7d;
-  background-color: #ddd;
-  border: 1px solid #777;
-  opacity: 0.8;
+  width: initial;
+  margin-left: initial;
 }
 
-#toggleMarkdownPreviewButton:hover,
-#openPolymerDesignerButton:hover {
-  opacity: 1;
+spark-dialog#polymerDesignerDialog #polymerDesigner {
+  display: block;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  flex: 1;
 }
 
-#markdownContent {
-  -webkit-font-smoothing: antialiased;
-  bottom: 0px;
-  font-family: inherit;
+#gitRepoUrlCopyInBuffer {
+  width: 0px;
+  height: 1px;
+  background: transparent;
+  box-shadow: 0px 0px 0px;
+  padding: 0px;
+  border: 0px solid;
+}
+
+#aboutDialog #logo {
+  margin-right: 40px;
+}
+
+#aboutDialog #analyticsOptIn {
+  margin-top: 40px;
+}
+
+#aboutDialog #analyticsCheck {
+  margin: 0 20px;
+}
+
+#errorMessage {
+  max-height: 200px;
   overflow-y: auto;
-  width: 100%;
-  padding: 10px 15px;
-  position: absolute;
+}
+
+#gitResetSettingsDone,
+#preferenceResetResult {
+  display: none;
+  color: #F00;
+  font-weight: 500;
+  margin: 4px 0 0 4px;
+}
+
+#gitCommitList {
+  max-height: 250px;
+  overflow: auto;
+  padding: 0 20px;
+}
+
+#gitCommitList h1 {
+  font-size: 15px;
+  margin-top: 20px;
+  margin-bottom: 0px;
+}
+
+#gitCommitMessage {
+  resize: vertical;
+}
+
+#gitChangeList {
+  border-radius: 3px;
+  border: 1px solid #cccccc;
+  display: none;
+  margin-bottom: 15px;
+  max-height: 105px;
+  overflow: auto;
+  padding: 5px 14px;
+}
+
+#gitChangeLabel {
   top: 0px;
-  transition: opacity 250ms;
-  z-index: 89;
+}
+
+#gitStatusDiv {
+  width: 100%;
+}
+
+#gitUserInfo.hidden {
+  display: none;
+}
+
+#pushUrl {
+  width: 20em;
+}
+
+.settings-label {
+  width: 150px;
+}
+
+.settings-value {
+  flex: 1;
+  height: 100%;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 5px;
+  color: #666;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.settings-block {
+  width: 100%;
+  height: 30px;
+  background-color: white;
+}
+
+.change-setting-button {
+  width: 30px;
+  height: 30px;
+}
+
+.settings-value + .change-setting-button {
+  margin-left: 5px;
+}
+
+.reset-setting-button {
+  flex: 1;
+  height: 100%;
+}
+
+.radio-button-dependency {
+  margin: 10px 0 0 20px;
+}
+
+.input-label {
+  display: flex;
+  margin: 10px 0;
+}
+
+.input-label label {
+  flex: 0 1 auto;
+  width: 150px;
+  position: relative;
+  top: 9px;
+}
+
+.input-label input {
+  flex: 1 1 auto;
+}
+
+[selectableTxt] {
   -webkit-user-select: text;
-  user-select: text;
+}
+
+label {
+  font-weight: 500;
+}
+
+.help-block {
+  -webkit-user-select: text;
+}
+
+/* These two are special (secondary) */
+label[for="analyticsCheck"],
+label[for="stripWhitespace"] {
+  font-weight: 400;
+}
+
+#aboutDialog-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#aboutDialog-text {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+#directoryLabel {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.form-control-static {
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 /*
  * Ace overrides.
- * TODO(ussuri): Move to a separate file.
  */
 
 .ace_gutter-cell {
@@ -714,222 +966,3 @@ button.ace_searchbtn[action="findAll"] {
 /*
  * - end Ace overrides.
  */
-
-.minimap {
-  right: 10px;
-  width: 10px;
-  bottom: 0;
-  top: 0;
-  position: absolute;
-  z-index: 10;
-}
-
-.minimap-marker {
-  border-radius: 2px;
-  position: absolute;
-  height: 6px;
-  left: 1px;
-  right: 1px;
-  background: #DDD;
-  cursor: pointer;
-}
-
-.minimap-marker.error {
-  background: #d0021b;
-}
-
-.minimap-marker.warning {
-  background: #DD3;
-}
-
-.minimap-marker.info {
-  background: #9CC;
-}
-
-.listview-row {
-  margin: 0 16px;
-}
-
-.fileview-filename-container {
-}
-
-.fileview-filename-container .filename {
-  display: inline-block;
-}
-
-.fileview-filename-container.project .filename {
-  font-size: 16px;
-  top: 9px;
-}
-
-.listview-cell-highlighted .fileview-filename-container .filename {
-  color: #fff;
-}
-
-.listview-cell-highlighted .fileview-filename-container .infoField {
-  color: #fff;
-}
-
-.treeviewcell-status {
-  background: #999;
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-
-  position: absolute;
-  left: -16px;
-  width: 0;
-  top: 0;
-  height: 23px;
-
-  transition: width 0.4s;
-}
-
-.treeviewcell-status.project {
-  height: 38px;
-}
-
-.treeviewcell-status.error {
-  width: 8px;
-  background: #d0021b;
-}
-
-.treeviewcell-status.warning {
-  width: 8px;
-  background: #DD3;
-}
-
-.treeviewcell-status.info {
-  width: 8px;
-  background: #9CC;
-}
-
-.fileview-filename-container .gitStatus {
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-  background: #999;
-
-  position: absolute;
-  top: 0;
-  height: 23px;
-  right: -16px;
-  width: 0;
-
-  transition: width 0.4s;
-}
-
-.fileview-filename-container.project > .gitStatus {
-  height: 38px;
-}
-
-.gitStatus.dirty {
-  width: 8px;
-  background: #4285f4;
-}
-
-.fileview-filename-container .menu {
-  opacity: 0;
-  position: absolute;
-  right: 0;
-  width: 15px;
-}
-
-.fileview-filename-container .menu.open {
-  opacity: 1;
-}
-
-.fileview-filename-container .filename {
-  overflow: hidden;
-  position: absolute;
-  top: 2px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-}
-
-.fileview-filename-container:hover .filename {
-}
-
-.fileview-separator .line {
-  margin-top: 8px;
-  border-top: 1px solid #ddd;
-}
-
-.search-result-line {
-  color: #888;
-  font-size: 13px;
-  overflow: hidden;
-  position: absolute;
-  text-overflow: ellipsis;
-  top: 2px;
-  white-space: nowrap;
-  width: 100%;
-}
-
-.search-result-file {
-  font-size: 16px;
-  overflow: hidden;
-  position: absolute;
-  text-overflow: ellipsis;
-  top: 10px;
-  white-space: nowrap;
-  width: 100%;
-}
-
-.listview-cell-highlighted .search-result-line,
-.listview-cell-highlighted .search-result-file {
-  color: #fff;
-}
-
-.search-max-results {
-  color: #888;
-  font-size: 12px;
-  overflow: hidden;
-  position: absolute;
-  text-overflow: ellipsis;
-  text-align: center;
-  top: 10px;
-  white-space: nowrap;
-  width: 100%;
-}
-
-#file-item-context-menu {
-  top: 0;
-  left: 0;
-  position: fixed;
-  z-index: 100;
-  display: none;
-}
-
-#file-item-context-menu.open {
-  display: block;
-}
-
-#file-item-context-menu .backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0);
-}
-
-#modalBackdrop {
-  display:none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: black;
-  opacity: 0.25;
-  z-index: 500;
-}
-
-/*
-  Tweak the default behavior of tab bar to avoid an overlap with the
-  navigation buttons and put it on top of the Ace container.
-*/
-.tabview-tabbar {
-  margin-right: 131px;
-  z-index: 1;
-}
