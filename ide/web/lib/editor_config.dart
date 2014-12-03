@@ -48,8 +48,8 @@ class EditorConfig {
       _context.getValue("indent_size");
     }
 
-    tabWidth = int.parse(value);
-    if (tabWidth.toString() != value || tabWidth < 1) {
+    tabWidth = num.parse(value).floor();
+    if (tabWidth < 1) {
       throw new EditorConfigException.forProperty("tab_width", value);
     }
 
@@ -58,8 +58,8 @@ class EditorConfig {
     if (value == "tab") {
       indentSize = tabWidth;
     } else {
-      indentSize = int.parse(value);
-      if (indentSize.toString() != value || indentSize < 1) {
+      indentSize = num.parse(value).floor();
+      if (indentSize < 1) {
         throw new EditorConfigException.forProperty("indent_size", value);
       }
     }
