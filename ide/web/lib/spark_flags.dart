@@ -81,6 +81,10 @@ class SparkFlags {
   static bool get enableNewUsbApi =>
       _flags['enable-new-usb-api'] == true && PlatformInfo.chromeVersion >= 40;
 
+  // TODO(ericarnold): Remove once editorconfig is complete
+  static bool get enableEditorConfig =>
+      _flags['enable-editor-config'] == true;
+
   /**
    * Add new flags to the set, possibly overwriting the existing values.
    * Maps are treated specially, updating the top-level map entries rather
