@@ -1,6 +1,27 @@
 # Chrome Dev Editor Release Notes
 
-## M17 (0.17.x, November 4, 2014)
+## M18 (0.18.x, December 1, 2014)
+
+### Improved features
+- Bower:
+
+    - support package specifications with just a version or version range and path omitted, e.g. `"package-x": "1.2.3"`, `"package-y": "~1.2.3"`: the path is resolved using Bower registry based on the package name
+    - support `"*"` as a package specification, e.g. `"package-x": "*"`: the path is resolved as above; the tag resolves to the latest stable
+    - support packages whose GitHub repositories have moved to a different GitHub organization (so their URL redirects from `https://github.com/OldOrg/package` to `https://github.com/NewOrg/package`)
+
+### Bug fixes
+- Bower: too frequent or large `bower install/update` jobs would exceed the GitHub API access rate limit, locking the user out of Bower for a 1-hour timeout period
+- when deleting a folder from disk on Windows, CDE might delete the contents of a subfolder represented by a junction point, rather then just delete the junction itself
+- the editor was very sluggish on very large files with long lines (e.g. minified package sources)
+- editor focus would be lost when switching between files via Ctrl-Tab
+- sporadic installation failures on Bit9-protected Windows machines should be slightly less probable now, although there is no complete solution yet
+
+### Other changes
+- pinned the version of Polymer packages in the Polymer-related templates to `latest` (was `master`): this should result in more stability
+- added more USB devices to the supported list (LG Optimus v3)
+- some UI adjustments and refinements
+
+## M17 (0.17.3412, November 4, 2014)
 
 ### New features
 - improved Bower support

@@ -11,8 +11,9 @@
   outline: none;
 }
 
-/* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
-:host * {
+/* NOTE: The font is set conservatively. Clients should make sure they specify
+   the desired font for any light DOM elements inserted in a widget. */
+:host {
   font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-size: 13px;

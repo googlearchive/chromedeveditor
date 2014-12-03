@@ -182,11 +182,11 @@ class SparkPolymer extends Spark {
   //
 
   @override
-  void initEditorArea() {
-    super.initEditorArea();
+  void initEditorManager() {
+    super.initEditorManager();
 
     // TODO(ussuri): Redo once the TODO before #aceContainer in *.html is done.
-    final SparkSplitter outlineResizer = querySelector('#outlineResizer');
+    final SparkSplitter outlineResizer = getUIElement('#outlineResizer');
     syncPrefs.getValue('outlineSize', '200').then((String position) {
       int value = int.parse(position, onError: (_) => null);
       if (value != null) {

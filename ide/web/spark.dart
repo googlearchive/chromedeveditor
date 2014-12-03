@@ -164,7 +164,6 @@ abstract class Spark
           initLaunchManager();
           initBuilders();
 
-          initEditorArea();
           initToolbar();
           buildMenu();
           initSplitView();
@@ -405,19 +404,13 @@ abstract class Spark
   }
 
   void initAceManager() {
-    _aceManager = new AceManager(
-        querySelector('#aceContainer'), this, services, prefs);
+    _aceManager = new AceManager(this, services, prefs);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
         _textFileExtensions.addAll(JSON.decode(value));
       }
     });
-
-    if (workspace.getFiles().length == 0) {
-      // No files, just focus the editor.
-      aceManager.focus();
-    }
 
     _aceThemeManager = new ThemeManager(
         _aceManager, prefs, getUIElement('#changeTheme .settings-value'));
@@ -431,12 +424,18 @@ abstract class Spark
     _editorManager = new EditorManager(
         workspace, aceManager, prefs, eventBus, services);
 
+    _editorArea = new EditorArea(getUIElement('#editorArea'), editorManager,
+        workspace, allowsLabelBar: true);
+
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
         editorArea.selectFile(file, forceOpen: true, switchesTab: false,
             replaceCurrent: false);
       });
+
+      editorManager.setupOutline(getUIElement('#outlineContainer'));
+
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
 
@@ -454,14 +453,8 @@ abstract class Spark
         _openFile(resource);
       });
     });
-  }
 
-  void initEditorArea() {
-    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
-        workspace, allowsLabelBar: true);
-    editorManager.setupOutline(querySelector('#outlineContainer'));
-
-    _editorArea.onSelected.listen((EditorTab tab) {
+    editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
       if (!_filesController.isFileSelected(tab.file)) {
@@ -475,8 +468,8 @@ abstract class Spark
   void initFilesController() {
     _filesController = new FilesController(
         workspace, actionManager, scmManager, eventBus,
-        querySelector('#file-item-context-menu'),
-        querySelector('#fileViewArea'));
+        getUIElement('#file-item-context-menu'),
+        getUIElement('#fileViewArea'));
     _filesController.visibility = true;
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen((FilesControllerSelectionChangedEvent event) {
@@ -489,7 +482,7 @@ abstract class Spark
         .listen((FilesControllerPersistTabEvent event) {
       editorArea.persistTab(event.file);
     });
-    querySelector('#showFileViewButton').onClick.listen((_) {
+    getUIElement('#showFileViewButton').onClick.listen((_) {
       Action action = actionManager.getAction('show-files-view');
       action.invoke();
     });
@@ -497,7 +490,7 @@ abstract class Spark
 
   void initSearchController() {
     _searchViewController =
-        new SearchViewController(workspace, querySelector('#searchViewArea'));
+        new SearchViewController(workspace, getUIElement('#searchViewArea'));
     _searchViewController.delegate = this;
   }
 
@@ -1055,8 +1048,8 @@ abstract class Spark
   // TODO(ussuri): Polymerize.
   void setSearchViewVisible(bool visible) {
     InputElement searchField = getUIElement('#fileFilter');
-    querySelector('#searchViewArea').classes.toggle('hidden', !visible);
-    querySelector('#fileViewArea').classes.toggle('hidden', visible);
+    getUIElement('#searchViewArea').classes.toggle('hidden', !visible);
+    getUIElement('#fileViewArea').classes.toggle('hidden', visible);
     searchField.placeholder =
         visible ? 'Search in Files' : 'Filter';
     getUIElement('#showSearchView').attributes['checkmark'] =
@@ -2246,16 +2239,7 @@ class BuildApkAction extends SparkActionWithDialog {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
-
-  // TODO(ussuri): Eliminate this and dependencies as per BUG #3619.
-  static const _KNOWN_JS_PACKAGES = const {
-      'polymer': 'Polymer/polymer#master',
-      'core-elements': 'Polymer/core-elements#master',
-      'paper-elements': 'Polymer/paper-elements#master'
-  };
-  // Matches: "proj-template", "proj-template;polymer,core-elements".
-  // TODO(ussuri): Set to '([\/\w_-]+)' when fixing BUG #3619.
-  static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
+  SelectElement get _typeElt => getElement('select[name="type"]');
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
@@ -2287,7 +2271,7 @@ class NewProjectAction extends SparkActionWithDialog {
       }
 
       ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
-      final List<ProjectTemplate> templates = [];
+      List<ProjectTemplate> templates;
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
@@ -2296,33 +2280,11 @@ class NewProjectAction extends SparkActionWithDialog {
             new TemplateVar('sourceName', name.toLowerCase())
         ];
 
-        // Add a template for the main project type.
-        final SelectElement projectTypeElt = getElement('select[name="type"]');
-        final Match match = _TEMPLATE_REGEX.matchAsPrefix(projectTypeElt.value);
-        assert(match.groupCount > 0);
-        final String templId = match.group(1);
-        final String jsDepsStr = match.group(3);
+        _analyticsTracker.sendEvent('action', 'project-new', _typeElt.value);
 
-        _analyticsTracker.sendEvent('action', 'project-new', templId);
-        templates.add(new ProjectTemplate(templId, globalVars));
-
-        // Possibly also add a mix-in template for JS dependencies, if the
-        // project type requires them.
-        if (jsDepsStr != null) {
-          List<String> jsDeps = [];
-          for (final depName in jsDepsStr.split(',')) {
-            final String depPath = _KNOWN_JS_PACKAGES[depName];
-            assert(depPath != null);
-            jsDeps.add('"$depName": "$depPath"');
-          }
-          if (jsDeps.isNotEmpty) {
-            final localVars = [
-                new TemplateVar('dependencies', jsDeps.join(',\n    '))
-            ];
-            templates.add(
-                new ProjectTemplate("addons/bower_deps", globalVars, localVars));
-          }
-        }
+        // Add templates to be used to create the project.
+        final List<String> ids = _typeElt.value.split('+');
+        templates = ids.map((id) => new ProjectTemplate(id, globalVars));
 
         return new ProjectBuilder(location.entry, templates, spark).build();
       }).then((_) {
@@ -4285,7 +4247,7 @@ class PolymerDesignerAction
     _dialog.getElement('#polymerDesignerClear').onClick.listen(_clearDesign);
     _dialog.getElement('#polymerDesignerRevert').onClick.listen(_revertDesign);
 
-    querySelector('#openPolymerDesignerButton').onClick.listen((_) {
+    spark.getUIElement('#openPolymerDesignerButton').onClick.listen((_) {
       _open(spark.editorManager.currentFile);
     });
   }
