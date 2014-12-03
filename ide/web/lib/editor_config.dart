@@ -123,9 +123,7 @@ class EditorConfigException extends SparkException {
 }
 
 Future<ConfigContainerContext> getConfigContextFor(workspace.Container container) {
-  ConfigContainerContext matcher = new ConfigContainerContext(container);
-
-  return matcher.whenReady;
+  return ConfigContainerContext.createContext(container);
 }
 
 class ConfigFileContext {
@@ -154,10 +152,12 @@ class ConfigContainerContext {
   workspace.Container container;
   chrome.DirectoryEntry get entry => container.entry;
   String get path => entry.fullPath;
-  Future<ConfigContainerContext> whenReady;
 
-  ConfigContainerContext(this.container) {
-    whenReady = _getSections(container.entry).then((_) => this);
+  ConfigContainerContext._(this.container);
+
+  static Future<ConfigContainerContext> createContext(workspace.Container container) {
+    ConfigContainerContext context = new ConfigContainerContext._(container);
+    return context._getSections(container.entry).then((_) => context);
   }
 
   Future<ConfigFile> _getSections(chrome.DirectoryEntry dir) {
@@ -323,8 +323,8 @@ class IdentifierListMatcher extends GlobMatcher {
   String get _matcherContent => input.substring(tokenStart + 1, end - 1);
   List<String> get identifiers => _matcherContent.split(new RegExp(r",\s*"));
 
-  IdentifierListMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
-      super(input, pattern, start, tokenStart);
+  IdentifierListMatcher(String input, GlobPattern pattern, int start,
+      int tokenStart) : super(input, pattern, start, tokenStart);
 }
 
 class GlobPattern implements Pattern {
