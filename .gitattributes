@@ -10,10 +10,10 @@
 # Make GitHub ignore vendor libraries while computing language stats.
 # See https://github.com/github/linguist#overrides.
 
-cde-polymer-designer.dart/lib/src linguist-vendored
-ide/web/lib/templates/web/web_starter_kit linguist-vendored
-ide/web/third_party linguist-vendored
-paper linguist-vendored
+/cde-polymer-designer.dart/lib/src/* linguist-vendored=true
+/ide/web/lib/templates/web/web_starter_kit/* linguist-vendored=true
+/ide/web/third_party/* linguist-vendored=true
+/paper/* linguist-vendored=true
 
 # Explicitly specify language for non-standard extensions used under
 # ide/web/lib/templates to make GitHub correctly count their language stats.
