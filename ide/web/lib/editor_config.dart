@@ -33,76 +33,75 @@ class EditorConfig {
   int charSet;
   bool trimWhitespace;
   bool insertFinalNewline;
-  Future whenReady;
 
-  EditorConfig(workspace.File file) {
-    ConfigSectionMatcher matcher = new ConfigSectionMatcher(file);
-    whenReady = matcher.getSections().then((_) {
-      // indent_style
-      useSpaces = _propertyToBool(matcher, "indent_style", trueValue: "space",
-          falseValue: "tab");
+  ConfigFileContext _context;
 
-      // tab_width
-      String value = matcher.getValue("tab_width");
-      if (value == null) {
-        matcher.getValue("indent_size");
+  EditorConfig(ConfigContainerContext containerContext, String filename) {
+    _context = new ConfigFileContext(containerContext, filename);
+    // indent_style
+    useSpaces = _propertyToBool("indent_style", trueValue: "space",
+        falseValue: "tab");
+
+    // tab_width
+    String value = _context.getValue("tab_width");
+    if (value == null) {
+      _context.getValue("indent_size");
+    }
+
+    tabWidth = num.parse(value).floor();
+    if (tabWidth < 1) {
+      throw new EditorConfigException.forProperty("tab_width", value);
+    }
+
+    // indent_size
+    value = _context.getValue("indent_size");
+    if (value == "tab") {
+      indentSize = tabWidth;
+    } else {
+      indentSize = num.parse(value).floor();
+      if (indentSize < 1) {
+        throw new EditorConfigException.forProperty("indent_size", value);
       }
+    }
 
-      tabWidth = int.parse(value);
-      if (tabWidth.toString() != value || tabWidth < 1) {
-        throw new EditorConfigException.forProperty("tab_width", value);
-      }
+    // end_of_line
+    value = _context.getValue("end_of_line");
+    if (value == "cr") {
+      lineEnding = ENDING_CR;
+    } else if (value == "lf") {
+      lineEnding = ENDING_LF;
+    } else if (value == "crlf") {
+      lineEnding = ENDING_CRLF;
+    } else {
+      throw new EditorConfigException.forProperty("end_of_line", value);
+    }
 
-      // indent_size
-      value = matcher.getValue("indent_size");
-      if (value == "tab") {
-        indentSize = tabWidth;
-      } else {
-        indentSize = int.parse(value);
-        if (indentSize.toString() != value || indentSize < 1) {
-          throw new EditorConfigException.forProperty("indent_size", value);
-        }
-      }
+    // charset
+    value = _context.getValue("charset");
+    if (value == "latin1") {
+      charSet = CHARSET_LATIN;
+    } else if (value == "utf-8") {
+      charSet = CHARSET_UTF8;
+    } else if (value == "utf-8-bom") {
+      charSet = CHARSET_UTF8BOM;
+    } else if (value == "utf-16be") {
+      charSet = CHARSET_UTF16BE;
+    } else if (value == "utf-16le") {
+      charSet = CHARSET_UTF16LE;
+    } else {
+      throw new EditorConfigException.forProperty("charset", value);
+    }
 
-      // end_of_line
-      value = matcher.getValue("end_of_line");
-      if (value == "cr") {
-        lineEnding = ENDING_CR;
-      } else if (value == "lf") {
-        lineEnding = ENDING_LF;
-      } else if (value == "crlf") {
-        lineEnding = ENDING_CRLF;
-      } else {
-        throw new EditorConfigException.forProperty("end_of_line", value);
-      }
+    // trim_trailing_whitespace
+    trimWhitespace = _propertyToBool("trim_trailing_whitespace");
 
-      // charset
-      value = matcher.getValue("charset");
-      if (value == "latin1") {
-        charSet = CHARSET_LATIN;
-      } else if (value == "utf-8") {
-        charSet = CHARSET_UTF8;
-      } else if (value == "utf-8-bom") {
-        charSet = CHARSET_UTF8BOM;
-      } else if (value == "utf-16be") {
-        charSet = CHARSET_UTF16BE;
-      } else if (value == "utf-16le") {
-        charSet = CHARSET_UTF16LE;
-      } else {
-        throw new EditorConfigException.forProperty("charset", value);
-      }
-
-      // trim_trailing_whitespace
-      trimWhitespace = _propertyToBool(matcher, "trim_trailing_whitespace");
-
-      // insert_final_newline
-      insertFinalNewline = _propertyToBool(matcher, "insert_final_newline");
-    });
+    // insert_final_newline
+    insertFinalNewline = _propertyToBool("insert_final_newline");
   }
 
-  bool _propertyToBool(ConfigSectionMatcher matcher, String propertyName,
+  bool _propertyToBool(String propertyName,
       {String trueValue: "true", String falseValue: "false"}) {
-    String value = matcher.getValue(propertyName);
+    String value = _context.getValue(propertyName);
 
     if (value == trueValue) {
       return true;
@@ -123,57 +122,70 @@ class EditorConfigException extends SparkException {
   }
 }
 
-class ConfigSectionMatcher {
-  List<ConfigSection> configSections = [];
-  workspace.File file;
-  chrome.ChromeFileEntry get fileEntry => file.entry;
+Future<ConfigContainerContext> getConfigContextFor(workspace.Container container) {
+  return ConfigContainerContext.createContext(container);
+}
 
-  ConfigSectionMatcher(this.file);
+class ConfigFileContext {
+  ConfigContainerContext containerContext;
+  List<ConfigSection> sections;
 
-  Future<ConfigFile> getSections() {
-    return fileEntry.getParent().then((chrome.DirectoryEntry dir) {
-      return getSectionsForPath(dir);
-    });
-  }
-
-  Future<ConfigFile> getSectionsForPath(chrome.DirectoryEntry dir) {
-    int insertIndex = configSections.length;
-    return dir.getFile(".editorConfig").then((chrome.ChromeFileEntry configFile) {
-      return configFile.readText();
-    }).catchError((e) {
-      if (e.name == "NotFoundError") {
-        return "";
-      }
-
-      return e;
-    }).then((String configContent) {
-      new ConfigFile(configContent).sections.forEach(
-          (ConfigSection section) {
-        var fullPath = fileEntry.fullPath;
-        if (section.matchesPath(fullPath)) {
-          configSections.insert(insertIndex, section);
-        }
-      });
-
-      if (file.project.entry.fullPath != dir.fullPath) {
-        return dir.getParent();
-      }
-    }).then((chrome.DirectoryEntry parent) {
-      if (parent != null) {
-        return getSectionsForPath(parent);
-      }
-    });
+  ConfigFileContext(this.containerContext, String filename) {
+    sections = containerContext.configSections.where((ConfigSection section) {
+      return section.matchesFull("${containerContext.path}/$filename");
+    }).toList();
   }
 
   String getValue(String propertyName) {
-    String value;
-    for (ConfigSection configSection in configSections) {
-      value = configSection.getValue(propertyName);
+    for (ConfigSection configSection in sections) {
+      String value = configSection.getValue(propertyName);
       if (value != null) {
         return value;
       }
     }
     return null;
+  }
+}
+
+class ConfigContainerContext {
+  List<ConfigSection> configSections = [];
+  workspace.Container container;
+  chrome.DirectoryEntry get entry => container.entry;
+  String get path => entry.fullPath;
+
+  ConfigContainerContext._(this.container);
+
+  static Future<ConfigContainerContext> createContext(workspace.Container container) {
+    ConfigContainerContext context = new ConfigContainerContext._(container);
+    return context._getSections(container).then((_) => context);
+  }
+
+  Future<ConfigFile> _getSections(workspace.Container thisContainer) {
+    int insertIndex = configSections.length;
+    workspace.Resource resource = thisContainer.getChild('.editorConfig');
+
+    return new Future.value().then((_) {
+      if (resource is workspace.File) {
+        workspace.File file = resource;
+        return file.getContents().then((String configContent) {
+          new ConfigFile(configContent).sections.forEach(
+              (ConfigSection section) {
+            var fullPath = entry.fullPath;
+            if (section.matchesPrefix(fullPath)) {
+              configSections.insert(insertIndex, section);
+            }
+          });
+
+        });
+      }
+    }).then((_) {
+      if (!thisContainer.isTopLevel) {
+        workspace.Container parent = container.parent;
+        if (parent != null) {
+          return _getSections(parent);
+        }
+      }
+    });
   }
 }
 
@@ -210,8 +222,10 @@ class ConfigSection {
     glob = new Glob(sectionId);
   }
 
-  bool matchesPath(String path) {
-    return (glob.matchPath(path) == Glob.COMPLETE_MATCH);
+  bool matchesFull(String path) => glob.matchPath(path) == Glob.COMPLETE_MATCH;
+  bool matchesPrefix(String path) {
+    int matchType = glob.matchPath(path);
+    return matchType == Glob.COMPLETE_MATCH || matchType == Glob.PREFIX_MATCH;
   }
 
   String getValue(String propertyName) {
@@ -265,7 +279,7 @@ class StaticMatcher extends GlobMatcher {
 }
 
 class FileWildcardMatcher extends GlobMatcher {
-  int get end => tokenStart + 1;
+  int get end => tokenStart;
   String toRegExp() => "[^/]*";
 
   FileWildcardMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
@@ -273,7 +287,7 @@ class FileWildcardMatcher extends GlobMatcher {
 }
 
 class PathWildcardMatcher extends GlobMatcher {
-  int get end => tokenStart + 2;
+  int get end => tokenStart + 1;
   String toRegExp() => ".*";
 
   PathWildcardMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
@@ -281,7 +295,7 @@ class PathWildcardMatcher extends GlobMatcher {
 }
 
 class SingleCharMatcher  extends GlobMatcher {
-  int get end => tokenStart + 1;
+  int get end => tokenStart;
   String toRegExp() => "[^/]";
 
   SingleCharMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
@@ -306,8 +320,8 @@ class IdentifierListMatcher extends GlobMatcher {
   String get _matcherContent => input.substring(tokenStart + 1, end - 1);
   List<String> get identifiers => _matcherContent.split(new RegExp(r",\s*"));
 
-  IdentifierListMatcher(String input, GlobPattern pattern, int start, int tokenStart) :
-      super(input, pattern, start, tokenStart);
+  IdentifierListMatcher(String input, GlobPattern pattern, int start,
+      int tokenStart) : super(input, pattern, start, tokenStart);
 }
 
 class GlobPattern implements Pattern {
@@ -328,8 +342,10 @@ class GlobPattern implements Pattern {
 
   GlobMatcher matchAsPrefix(String string, [int start = 0]) {
     int n = start;
+    RegExp globCharsRegExp = new RegExp(r"[\\*?\[\{]");
+
     do {
-      n = string.indexOf(new RegExp(r"[\\*?\[\{]"), n);
+      n = string.indexOf(globCharsRegExp, n);
       GlobMatcher matcher;
 
       if (n == -1) {
@@ -352,7 +368,7 @@ class GlobPattern implements Pattern {
         case "?":
           return new SingleCharMatcher(string, this, start, n);
         case "[":
-          return new SingleCharMatcher(string, this, start, n);
+          return new CharRangeMatcher(string, this, start, n);
         case "{":
           return new IdentifierListMatcher(string, this, start, n);
       }
@@ -371,7 +387,9 @@ class Glob {
   static int COMPLETE_MATCH = 2;
   static final RegExp _escapePattern = new RegExp("[!@#\$%^&()-.,<>+=\\/~`|]");
 
-  List<String> _globRegExpParts;
+  List<String> _globPartsAsStrings;
+  List<RegExp> _globPartsAsRegExps = [];
+  String _globSoFar = "";
 
   Glob(String pattern) {
     bool matchFull = pattern.substring(0,1) == "/";
@@ -385,7 +403,7 @@ class Glob {
       globMatchers.insert(0, new PartialPathMatcher(pattern, globPattern, 0));
     }
 
-    _globRegExpParts = globMatchers.map((GlobMatcher m) =>
+    _globPartsAsStrings = globMatchers.map((GlobMatcher m) =>
         _escape(pattern.substring(m.start, m.tokenStart)) + m.toRegExp()).toList();
   }
 
@@ -402,21 +420,22 @@ class Glob {
   // PREFIX_MATCH - Prefix match found ("f*/b*/" partially matches "foo/")
   // COMPLETE_MATCH - Prefix match found ("f**/b*" completely matches "foo/bar/baz")
   int matchPath(String path) {
-    int lastIndex = 0;
-
-    String globSoFar = "";
     int globIndex = 0;
 
-    for (;globIndex < _globRegExpParts.length; globIndex++) {
-      String globPart = _globRegExpParts[globIndex];
-      globSoFar += ((globSoFar != "") ? ".*" : "") +
-          globPart.replaceAll("*", "[^/]*").replaceAll("?", "[^/]");
-      if (globIndex == _globRegExpParts.length - 1) globSoFar = globSoFar + "\$";
-      if (new RegExp(globSoFar).matchAsPrefix(path) == null) break;
+    for (;globIndex < _globPartsAsStrings.length; globIndex++) {
+      if (globIndex >= _globPartsAsRegExps.length) {
+        _globSoFar += ((_globSoFar != "") ? ".*" : "") +
+            _globPartsAsStrings[globIndex];
+        if (globIndex == _globPartsAsStrings.length - 1) {
+          _globSoFar = _globSoFar + "\$";
+        }
+        _globPartsAsRegExps.add(new RegExp(_globSoFar));
+      }
+      if (_globPartsAsRegExps[globIndex].matchAsPrefix(path) == null) break;
     }
 
     if (globIndex > 0) {
-      if (globIndex == _globRegExpParts.length) {
+      if (globIndex == _globPartsAsStrings.length) {
         return COMPLETE_MATCH;
       }
       return PREFIX_MATCH;
