@@ -157,36 +157,33 @@ class ConfigContainerContext {
 
   static Future<ConfigContainerContext> createContext(workspace.Container container) {
     ConfigContainerContext context = new ConfigContainerContext._(container);
-    return context._getSections(container.entry).then((_) => context);
+    return context._getSections(container).then((_) => context);
   }
 
-  Future<ConfigFile> _getSections(chrome.DirectoryEntry dir) {
+  Future<ConfigFile> _getSections(workspace.Container thisContainer) {
     int insertIndex = configSections.length;
-    return dir.getFile(".editorConfig").then((chrome.ChromeFileEntry configFile) {
-      return configFile.readText();
-    }).catchError((e) {
-      if (e is String && e == "file doesn't exist") {
-        return "";
-      } else if (e.name == "NotFoundError") {
-        return "";
-      }
+    workspace.Resource resource = thisContainer.getChild('.editorConfig');
 
-      return e;
-    }).then((String configContent) {
-      new ConfigFile(configContent).sections.forEach(
-          (ConfigSection section) {
-        var fullPath = entry.fullPath;
-        if (section.matchesPrefix(fullPath)) {
-          configSections.insert(insertIndex, section);
+    return new Future.value().then((_) {
+      if (resource is workspace.File) {
+        workspace.File file = resource;
+        return file.getContents().then((String configContent) {
+          new ConfigFile(configContent).sections.forEach(
+              (ConfigSection section) {
+            var fullPath = entry.fullPath;
+            if (section.matchesPrefix(fullPath)) {
+              configSections.insert(insertIndex, section);
+            }
+          });
+
+        });
+      }
+    }).then((_) {
+      if (!thisContainer.isTopLevel) {
+        workspace.Container parent = container.parent;
+        if (parent != null) {
+          return _getSections(parent);
         }
-      });
-
-      if (container.project.entry.fullPath != dir.fullPath) {
-        return dir.getParent();
-      }
-    }).then((chrome.DirectoryEntry parent) {
-      if (parent != null) {
-        return _getSections(parent);
       }
     });
   }
