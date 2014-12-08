@@ -2241,16 +2241,7 @@ class BuildApkAction extends SparkActionWithDialog {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
-
-  // TODO(ussuri): Eliminate this and dependencies as per BUG #3619.
-  static const _KNOWN_JS_PACKAGES = const {
-      'polymer': 'Polymer/polymer#master',
-      'core-elements': 'Polymer/core-elements#master',
-      'paper-elements': 'Polymer/paper-elements#master'
-  };
-  // Matches: "proj-template", "proj-template;polymer,core-elements".
-  // TODO(ussuri): Set to '([\/\w_-]+)' when fixing BUG #3619.
-  static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
+  SelectElement get _typeElt => getElement('select[name="type"]');
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
@@ -2282,7 +2273,7 @@ class NewProjectAction extends SparkActionWithDialog {
       }
 
       ws.WorkspaceRoot root = filesystem.fileSystemAccess.getRootFor(location);
-      final List<ProjectTemplate> templates = [];
+      List<ProjectTemplate> templates;
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
@@ -2291,33 +2282,11 @@ class NewProjectAction extends SparkActionWithDialog {
             new TemplateVar('sourceName', name.toLowerCase())
         ];
 
-        // Add a template for the main project type.
-        final SelectElement projectTypeElt = getElement('select[name="type"]');
-        final Match match = _TEMPLATE_REGEX.matchAsPrefix(projectTypeElt.value);
-        assert(match.groupCount > 0);
-        final String templId = match.group(1);
-        final String jsDepsStr = match.group(3);
+        _analyticsTracker.sendEvent('action', 'project-new', _typeElt.value);
 
-        _analyticsTracker.sendEvent('action', 'project-new', templId);
-        templates.add(new ProjectTemplate(templId, globalVars));
-
-        // Possibly also add a mix-in template for JS dependencies, if the
-        // project type requires them.
-        if (jsDepsStr != null) {
-          List<String> jsDeps = [];
-          for (final depName in jsDepsStr.split(',')) {
-            final String depPath = _KNOWN_JS_PACKAGES[depName];
-            assert(depPath != null);
-            jsDeps.add('"$depName": "$depPath"');
-          }
-          if (jsDeps.isNotEmpty) {
-            final localVars = [
-                new TemplateVar('dependencies', jsDeps.join(',\n    '))
-            ];
-            templates.add(
-                new ProjectTemplate("addons/bower_deps", globalVars, localVars));
-          }
-        }
+        // Add templates to be used to create the project.
+        final List<String> ids = _typeElt.value.split('+');
+        templates = ids.map((id) => new ProjectTemplate(id, globalVars));
 
         return new ProjectBuilder(location.entry, templates, spark).build();
       }).then((_) {

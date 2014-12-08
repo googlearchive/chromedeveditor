@@ -15,7 +15,6 @@ import '../package_mgmt/bower_properties.dart';
 import '../utils.dart' as utils;
 import '../workspace.dart';
 
-part 'addons/bower_deps/template.dart';
 part 'chrome/chrome_app_polymer_js/template.dart';
 part 'polymer/template.dart';
 part 'polymer/polymer_element_dart/template.dart';
@@ -116,8 +115,6 @@ abstract class ProjectTemplate {
     }
 
     switch (id) {
-      case 'addons/bower_deps':
-        return new BowerDepsTemplate(id, globalVars, localVars);
       case 'chrome/chrome_app_polymer_js':
         return new ChromeAppWithPolymerJSTemplate(id, globalVars, localVars);
       case 'polymer/polymer_element_js':
