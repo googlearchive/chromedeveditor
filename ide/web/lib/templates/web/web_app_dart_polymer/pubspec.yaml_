@@ -1,9 +1,0 @@
-name: ``projectName``
-description: A sample Dart web application, using Polymer
-dependencies:
-  browser: any
-  core_elements: any
-  paper_elements: any
-  polymer: any
-transformers:
-- polymer
