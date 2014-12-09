@@ -472,7 +472,7 @@ class _EditorState {
       if (manager.editorType(file.name) == EditorManager.EDITOR_TYPE_IMAGE) {
         return new Future.value(this);
       } else {
-        return file.getContents().then((text) {
+        return file.getContents().then((String text) {
           session = manager._aceManager.createEditSession(text, file.name);
           return this;
         });
@@ -536,14 +536,108 @@ class PreferenceContentProvider implements ContentProvider {
   final PreferenceStore _store;
   final String _filename;
 
+  // Prefix the store entry with "?/" to disallow any possible conflict with
+  // entries mirroring filenames.
+  String get _storeEntryName => "?/$_filename";
+
   StreamController _changeController = new StreamController.broadcast();
 
   Stream get onChange => _changeController.stream;
 
   PreferenceContentProvider(this._store, this._filename);
 
-  Future<String> read() => _store.getValue(_filename);
+  Future<String> read() => _store.getValue(_storeEntryName);
 
-  Future write(String content) => _store.setValue(_filename, content);
+  Future write(String content) => _store.setValue(_storeEntryName, content);
 }
 
+/**
+ * Defines a pseudo-File named [path] reading and writing to a preference store
+ * entry in [PreferenceStore] [_store].
+ */
+class PreferenceFile implements File {
+  final String path;
+
+  static Map<PreferenceStore, Map<String, PreferenceFile>> _storeEntryCaches = {};
+
+  PreferenceStore _store;
+  PreferenceContentProvider _contentProvider;
+  int _timestamp = 0;
+
+  factory PreferenceFile(PreferenceStore store, String path) {
+    Map<String, PreferenceFile> openEntries = _storeEntryCaches[store];
+
+    // Create a store entry cache for this store if not already created:
+    if (openEntries == null) openEntries = _storeEntryCaches[store] = {};
+
+    PreferenceFile entry = openEntries[path];
+    if (entry != null) {
+      return entry;
+    }
+
+    // Fall back to creating a new file (and storing a reference to it).
+    return openEntries[path] = new PreferenceFile._(store, path);
+  }
+
+  PreferenceFile._(this._store, this.path) {
+    _contentProvider = new PreferenceContentProvider(_store, path);
+  }
+
+  String get name => path.contains('/')
+      ? path.substring(path.lastIndexOf('/') + 1) : path;
+
+  bool get isFile => true;
+  bool get isTopLevel => true;
+  html.Entry get entry => null;
+  Container get parent => null;
+  Project get project => null;
+
+  int get timestamp => _timestamp;
+
+  String get uuid => path;
+
+  List<Marker> getMarkers() => [];
+
+  Future<String> getContents() => _contentProvider.read().then((contents) =>
+      (contents == null) ? "" : contents);
+
+  Future setContents(String contents) {
+    return _contentProvider.write(contents).then((_) {
+      _timestamp = new DateTime.now().millisecondsSinceEpoch;
+    });
+  }
+
+  void clearMarkers([String type]) { }
+
+  bool containedBy(Container container) => false;
+
+  Marker createMarker(String type, int severity, String message, int lineNum, [int charStart = -1, int charEnd = -1]) {
+    return null;
+  }
+
+  Future delete() => new Future.value();
+
+  int findMaxProblemSeverity() => 0;
+
+  Future/*<ArrayBuffer>*/ getBytes() => null; //new Future.value(_contents.codeUnits);
+
+  dynamic getMetadata(String key, [defaultValue]) => null;
+
+  bool isDerived() => false;
+
+  bool isScmPrivate() => false;
+
+  Future refresh() => new Future.value();
+
+  Future rename(String name) => new Future.value();
+
+  Future setBytes(List<int> data) => new Future.value();
+
+  Future setBytesArrayBuffer(/*ArrayBuffer*/ bytes) => new Future.value();
+
+  void setMetadata(String key, data) { }
+
+  Iterable<Resource> traverse({bool includeDerived: true}) => [this];
+
+  Workspace get workspace => null;
+}

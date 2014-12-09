@@ -509,6 +509,7 @@ abstract class Spark
     actionManager.registerAction(new PrevMarkerAction(this));
     // TODO(devoncarew): TODO(devoncarew): Removed as per #2348.
     //actionManager.registerAction(new FileOpenAction(this));
+    actionManager.registerAction(new GlobalSettingsAction(this));
     actionManager.registerAction(new FileNewAction(this,
         getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this,
@@ -1444,6 +1445,21 @@ class FileOpenAction extends SparkAction {
 
   void _invoke([Object context]) {
     spark.openFile();
+  }
+}
+
+class GlobalSettingsAction extends SparkAction {
+  PreferenceFile _file;
+
+  GlobalSettingsAction(Spark spark) : super(spark, "global-settings", "Settings…") {
+  }
+
+  void _invoke([Object context]) {
+    if (_file == null) {
+      _file = new PreferenceFile(spark.prefs.prefsStore, 'user.editorconfig');
+    }
+
+    spark.openEditor(_file);
   }
 }
 
