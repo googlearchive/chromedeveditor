@@ -47,7 +47,7 @@ class CspFixer {
 
   Future<SparkJobStatus> process() {
     _monitor.start(
-        "Refactoring ${_resource.name} for CSP compatibility…",
+        "Refactoring for CSP…",
         maxWork: 0,
         format: ProgressFormat.N_OUT_OF_M);
 
