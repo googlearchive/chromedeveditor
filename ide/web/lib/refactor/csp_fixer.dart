@@ -151,7 +151,8 @@ class _CspFixerSingleFile {
   static const _TYPE_TO_EXT = const {
     null: 'js',
     'application/javascript': 'js',
-    'application/dart': 'dart'
+    'application/dart': 'dart',
+    'text/coffeescript': 'coffee'
   };
 
   String _getScriptExtension(dom.Element script) {
