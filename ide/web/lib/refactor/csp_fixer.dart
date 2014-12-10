@@ -56,19 +56,17 @@ class CspFixer {
     Iterable<ws.File> files;
     if (_resource is ws.File) {
       files = [_resource];
-    } else if (_resource is ws.Container &&
-              // Skip special directories such as .bower-git, .git etc.
-              !_resource.path.startsWith('.')) {
-    files = _resource
+    } else if (_resource is ws.Container) {
+      // NOTE: [traverse] will auto-skip special SCM folders such as `.git`.
+      files = _resource
           .traverse(includeDerived: true)
           .where((ws.Resource r) => r is ws.File);
     }
 
-    final List<_CspFixerSingleFile> fixers =
-        files
-            .where((ws.File f) => _CspFixerSingleFile.willProcess(f))
-            .map((ws.File f) => new _CspFixerSingleFile(f))
-            .toList();
+    final List<_CspFixerSingleFile> fixers = files
+        .where((ws.File f) => _CspFixerSingleFile.willProcess(f))
+        .map((ws.File f) => new _CspFixerSingleFile(f))
+        .toList();
 
     _monitor.addWork(fixers.length);
 
