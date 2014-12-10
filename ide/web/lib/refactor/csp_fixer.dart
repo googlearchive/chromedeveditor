@@ -54,8 +54,10 @@ class CspFixer {
     Iterable<ws.File> files;
     if (_resource is ws.File) {
       files = [_resource];
-    } else if (_resource is ws.Container) {
-      files = _resource
+    } else if (_resource is ws.Container &&
+              // Skip special directories such as .bower-git, .git etc.
+              !_resource.path.startsWith('.')) {
+    files = _resource
           .traverse(includeDerived: true)
           .where((ws.Resource r) => r is ws.File);
     }
