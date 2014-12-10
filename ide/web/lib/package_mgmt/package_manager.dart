@@ -20,6 +20,8 @@ abstract class PackageServiceProperties {
     return (resource is File && resource.name == packageSpecFileName) ||
            (resource is Folder && isFolderWithPackages(resource)) ||
            _isPackagesFolder(resource) ||
+           // TODO(ussuri): Might feel weird to the user: they might expect
+           // only the chosen subdir to update, but the whole packages dir will.
            _isPackagesFolder(resource.parent);
   }
 
