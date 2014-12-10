@@ -16,23 +16,25 @@ class SparkFlags {
   // Default value of flags. These flags will be first overriden by user.json
   // and then by .spark.json.
   static final Map<String, dynamic> _flags = {
-    "test-mode": true,
-    "live-deploy-mode": true,
-    "bower-map-complex-ver-to-latest-stable": true,
-    "enable-polymer-designer": true,
+    'test-mode': true,
+    'live-deploy-mode': true,
+    'bower-map-complex-ver-to-latest-stable': true,
+    'enable-polymer-designer': true,
 
-    "enable-git-salt": false,
-    "enable-apk-build": false,
-    "wip-project-templates": false,
-    "analyze-javascript": false,
-    "enable-multiselect": false,
-    "bower-ignore-dependencies": [
+    'enable-git-salt': false,
+    'enable-apk-build': false,
+    'wip-project-templates': false,
+    'analyze-javascript': false,
+    'enable-multiselect': false,
+    'bower-ignore-dependencies': [
     ],
-    "bower-override-dependencies": {
+    'bower-override-dependencies': {
     },
-    "bower-use-git-clone": false,
-    "package-files-are-editable": false,
-    "enable-new-usb-api": true
+    'bower-use-git-clone': false,
+    'package-files-are-editable': false,
+    'enable-new-usb-api': true,
+    'csp-fixer-max-concurrent-tasks': 20,
+    'csp-fixer-backup-original-sources': false
   };
 
   /**
@@ -80,6 +82,12 @@ class SparkFlags {
   //TODO(grv): Remove the flag once usb api is in chrome stable.
   static bool get enableNewUsbApi =>
       _flags['enable-new-usb-api'] == true && PlatformInfo.chromeVersion >= 40;
+
+  // CspFixer:
+  static int get cspFixerMaxConcurrentTasks  =>
+      _flags['csp-fixer-max-concurrent-tasks'];
+  static bool get cspFixerBackupOriginalSources =>
+      _flags['csp-fixer-backup-original-sources'] == true;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.
