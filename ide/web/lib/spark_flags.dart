@@ -33,6 +33,7 @@ class SparkFlags {
     'bower-use-git-clone': false,
     'package-files-are-editable': false,
     'enable-new-usb-api': true,
+    'csp-fixer-max-concurrent-tasks': 20,
     'csp-fixer-backup-original-sources': false
   };
 
@@ -83,6 +84,8 @@ class SparkFlags {
       _flags['enable-new-usb-api'] == true && PlatformInfo.chromeVersion >= 40;
 
   // CspFixer:
+  static int get cspFixerMaxConcurrentTasks  =>
+      _flags['csp-fixer-max-concurrent-tasks'];
   static bool get cspFixerBackupOriginalSources =>
       _flags['csp-fixer-backup-original-sources'] == true;
 
