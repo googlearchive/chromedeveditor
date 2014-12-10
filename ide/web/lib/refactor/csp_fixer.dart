@@ -110,8 +110,10 @@ class _CspFixerSingleFile {
       // 1) back up the original HTML file;
       // 2) replace it with the postprocessed HTML text.
       if (_newFiles.isNotEmpty) {
-        _newFiles.add(
-            new _FileWriter(_file.parent, _file.name + '.pre_csp', htmlText));
+        if (SparkFlags.cspFixerBackupOriginalSources) {
+          _newFiles.add(
+              new _FileWriter(_file.parent, _file.name + '.pre_csp', htmlText));
+        }
         // NOTE: doc.outerHtml may insert originally omitted parts of a standard
         // HTML document spec. One important example is Polymer elements, which
         // normally don't have <head> or <body>, but will after postprocessing.
