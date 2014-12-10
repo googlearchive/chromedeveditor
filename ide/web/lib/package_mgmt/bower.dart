@@ -57,16 +57,26 @@ class BowerManager extends PackageManager {
 
   Future _installOrUpgradePackages(
       Folder container, FetchMode mode, ProgressMonitor monitor) {
-    final File specFile = container.getChild(properties.packageSpecFileName);
+    File specFile;
+    while (specFile == null && container is! Workspace) {
+      specFile = container.getChild(properties.packageSpecFileName);
+      container = container.parent;
+    }
+    // The rest of the code should use [packageDir] below.
+    container = null;
 
     // The client is expected to call us only when the project has bower.json.
     if (specFile == null) {
       throw new StateError(
-          '${properties.packageSpecFileName} not found under ${container.name}');
+          '${properties.packageSpecFileName} not found under ${container.name}'
+          'or one of its parents');
     }
 
-    return container.getOrCreateFolder(properties.getPackagesDirName(container), true)
-        .then((Folder packagesDir) {
+    final Folder packageDir = specFile.parent;
+
+    return packageDir.getOrCreateFolder(
+        properties.getPackagesDirName(packageDir), true)
+    .then((Folder packagesDir) {
       final fetcher = new BowerFetcher(
           packagesDir.entry, properties.packageSpecFileName, monitor);
 
@@ -76,7 +86,7 @@ class BowerManager extends PackageManager {
       }).then((_) {
         // Delay refreshing of the folder until after Bower is completely done.
         // This is needed to fix BUG #2946.
-        return Timer.run(() => container.refresh());
+        return Timer.run(() => packageDir.refresh());
       });
     });
   }
