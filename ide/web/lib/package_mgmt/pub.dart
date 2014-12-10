@@ -138,6 +138,8 @@ class PubManager extends PackageManager {
       monitor.worked(1);
     }
 
+    // TODO(ussuri): This makes it impossible to run Pub for two independent
+    // pubspec.yaml's in two subdirs, as is the case for CDE itself, for example.
     Container projectDir = _getProjectDir(container);
     return tavern.getDependencies(projectDir.entry, handleLog, isUpgrade).
         whenComplete(() {
