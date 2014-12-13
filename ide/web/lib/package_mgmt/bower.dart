@@ -57,16 +57,20 @@ class BowerManager extends PackageManager {
 
   Future _installOrUpgradePackages(
       Folder container, FetchMode mode, ProgressMonitor monitor) {
-    final File specFile = container.getChild(properties.packageSpecFileName);
+    File specFile = container.getChild(properties.packageSpecFileName);
 
-    // The client is expected to call us only when the project has bower.json.
+    // The client is expected to call us only when [container] has bower.json.
     if (specFile == null) {
       throw new StateError(
-          '${properties.packageSpecFileName} not found under ${container.name}');
+          '${properties.packageSpecFileName} not found under ${container.name}'
+          'or one of its parents');
     }
 
-    return container.getOrCreateFolder(properties.getPackagesDirName(container), true)
-        .then((Folder packagesDir) {
+    // TODO(ussuri): Code that knows names of the spec file / packages dir and
+    // creates/reads them is spread between here and BowerFetcher. Concentrate.
+    return container.getOrCreateFolder(
+        properties.getPackagesDirName(container), true)
+    .then((Folder packagesDir) {
       final fetcher = new BowerFetcher(
           packagesDir.entry, properties.packageSpecFileName, monitor);
 

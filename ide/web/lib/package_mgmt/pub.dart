@@ -138,10 +138,9 @@ class PubManager extends PackageManager {
       monitor.worked(1);
     }
 
-    Container projectDir = _getProjectDir(container);
-    return tavern.getDependencies(projectDir.entry, handleLog, isUpgrade).
+    return tavern.getDependencies(container.entry, handleLog, isUpgrade).
         whenComplete(() {
-      return container.project.refresh();
+      return container.refresh();
     }).catchError((e, st) {
       _logger.severe('Error running Pub $commandName', e, st);
       if (isSymlinkError(e)) {
@@ -151,17 +150,6 @@ class PubManager extends PackageManager {
       }
       return new Future.error(e, st);
     });
-  }
-
-  Folder _getProjectDir(Folder resource) {
-    Container container = resource;
-    while(container != null) {
-      if (pubProperties.isFolderWithPackages(container)) {
-        return container;
-      }
-      container = container.parent;
-    }
-    return resource;
   }
 }
 

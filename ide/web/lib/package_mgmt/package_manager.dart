@@ -16,14 +16,30 @@ abstract class PackageServiceProperties {
   bool isFolderWithPackages(Folder container) =>
       container.getChild(packageSpecFileName) != null;
 
+  // TODO(ussuri): Instead of the below 2 methods, an easier-to-understand
+  // approach cpuld be a single `File getAssociatedPackageSpecFile(Resource)`.
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
            (resource is Folder && isFolderWithPackages(resource)) ||
-           _isPackagesFolder(resource) ||
-           _isPackagesFolder(resource.parent);
+           isPackagesFolder(resource);
   }
 
-  bool _isPackagesFolder(Resource resource) {
+  /**
+   * If [isPackageResource] returns true for [resource], this function will
+   * return the matching folder with packages.
+   */
+  Folder getMatchingFolderWithPackages(Resource resource) {
+    if (resource is File && resource.name == packageSpecFileName) {
+      return resource.parent;
+    } else if (resource is Folder && isFolderWithPackages(resource)) {
+      return resource;
+    } else if (isPackagesFolder(resource)) {
+      return resource.parent;
+    }
+    return null;
+  }
+
+  bool isPackagesFolder(Resource resource) {
     return resource is Folder &&
            resource.name == getPackagesDirName(resource) &&
            isFolderWithPackages(resource.parent);
