@@ -125,7 +125,11 @@ class PubManager extends PackageManager {
       bool isUpgrade,
       ProgressMonitor monitor) {
     // Don't run pub on Windows (#2743).
-    if (PlatformInfo.isWin) return new Future.value();
+    if (PlatformInfo.isWin) {
+      throw new SparkException(
+          SparkErrorMessages.PUB_ON_WINDOWS_MSG,
+          errorCode: SparkErrorConstants.PUB_ON_WINDOWS_NOT_SUPPORTED);
+    }
 
     // Fake the total amount of work, since we don't know it. When an update
     // comes from Tavern, just refresh the generic message w/o showing progress.
