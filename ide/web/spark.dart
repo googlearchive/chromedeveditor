@@ -1863,33 +1863,26 @@ abstract class PackageManagementAction
     }
     ws.Resource resource;
 
-    if (context == null) {
-      resource = spark.focusManager.currentResource;
-    } else {
-      // NOTE: [appliesTo] should ensure that this is the right choice.
-      resource = context.first;
-    }
+    // NOTE: [appliesTo] ensures this is always valid.
+    resource = context.single;
+      
+    // [appliesTo] uses [isPackageResource], which guarantees that the below
+    // will return a non-null.
+    final ws.Folder folder =
+        _serviceProperties.getMatchingFolderWithPackages(resource);
+    assert(folder != null);
 
-    // [appliesTo] delegates to [PackageServiceProperties.isPackageResource],
-    // which is expected to return true if:
-    // - the resourse is a folder that contains a package spec file: this is our
-    //   target, a "package dir" by definition.
-    // - the resource is a package spec file itself: our target is its parent,
-    //   which would fall into the case above if the user clicked on it instead.
-    if (resource is ws.File) {
-      resource = resource.parent;
-    }
-
-    spark.jobManager.schedule(_createJob(resource as ws.Folder)).then((status) {
+    spark.jobManager.schedule(_createJob(folder)).then((status) {
       // TODO(grv): Take action on the returned status.
     });
   }
 
   String get category => 'application';
 
-  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) =>
+      list.length == 1 && _serviceProperties.isPackageResource(list.first);
 
-  bool _appliesTo(ws.Resource resource);
+  PackageServiceProperties get _serviceProperties;
 
   Job _createJob(ws.Container container);
 
@@ -1908,8 +1901,8 @@ abstract class PubAction extends PackageManagementAction {
     return true;
   }
 
-  bool _appliesTo(ws.Resource resource) =>
-      spark.pubManager.properties.isPackageResource(resource);
+  PackageServiceProperties get _serviceProperties =>
+      spark.pubManager.properties;
 }
 
 class PubGetAction extends PubAction {
@@ -1927,8 +1920,8 @@ class PubUpgradeAction extends PubAction {
 abstract class BowerAction extends PackageManagementAction {
   BowerAction(Spark spark, String id, String name) : super(spark, id, name);
 
-  bool _appliesTo(ws.Resource resource) =>
-      spark.bowerManager.properties.isPackageResource(resource);
+  PackageServiceProperties get _serviceProperties =>
+      spark.bowerManager.properties;
 }
 
 class BowerGetAction extends BowerAction {
