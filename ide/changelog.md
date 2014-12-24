@@ -18,7 +18,7 @@
 ### Bug fixes
 - fix: Bower would fail to run on a bower_components directory and printed an exception to the console
 
-## M18 (0.18.x, December 1, 2014)
+## M18 (0.18.3465, December 1, 2014)
 
 ### Improved features
 - Bower:
