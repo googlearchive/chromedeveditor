@@ -468,7 +468,11 @@ abstract class Spark
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, actionManager, scmManager, eventBus,
+        workspace,
+        actionManager,
+        scmManager,
+        eventBus,
+        getUIElement('#splitView'),
         getUIElement('#file-item-context-menu'),
         getUIElement('#fileViewArea'));
     _filesController.visibility = true;
@@ -490,9 +494,11 @@ abstract class Spark
   }
 
   void initSearchController() {
-    _searchViewController =
-        new SearchViewController(workspace, getUIElement('#searchViewArea'));
-    _searchViewController.delegate = this;
+    _searchViewController = new SearchViewController(
+        workspace,
+        getUIElement('#leftPanel'),
+        getUIElement('#sparkStatus'),
+        this);
   }
 
   void initSplitView() {
@@ -1061,7 +1067,7 @@ abstract class Spark
     _filesController.visibility = !visible;
     _reallyFilterFilesList(searchField.value);
     if (!visible) {
-      querySelector('#searchViewPlaceholder').classes.add('hidden');
+      getUIElement('#searchViewPlaceholder').classes.add('hidden');
     }
   }
 
