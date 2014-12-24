@@ -11,7 +11,6 @@ import 'dart:async';
 import 'dart:html' as html;
 
 import 'package:spark_widgets/spark_status/spark_status.dart';
-import 'package:spark_widgets/common/spark_widget.dart';
 
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
@@ -66,6 +65,8 @@ abstract class SearchViewControllerDelegate {
 
 class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate {
   static final String reachedMaxResultsCellUid = "reachedMaxResults";
+
+  html.Element _containerElt;
   TreeView _treeView;
   // Workspace that references all the resources.
   final Workspace _workspace;
@@ -78,14 +79,13 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   Timer _updateTimer;
   SparkStatus _statusComponent;
   DateTime _lastUpdateTime;
-  SearchViewControllerDelegate delegate;
+  SearchViewControllerDelegate _delegate;
   bool visibility = false;
 
-  SearchViewController(this._workspace,
-                  html.Element searchViewArea) {
-    _treeView = new TreeView(searchViewArea, this);
-    SparkWidget ui = html.querySelector('#topUi');
-    _statusComponent = ui.getShadowDomElement('#sparkStatus');
+  SearchViewController(
+      this._workspace, this._containerComponent, this._statusElt, this._delegate) {
+    _treeView = new TreeView(
+        _containerElt.querySelector('#searchViewArea'), this);
   }
 
   void performFilter(String filterString) {
@@ -172,13 +172,13 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
   }
 
   void _setShowNoResults(bool visible) {
-    html.querySelector('#searchViewNoResult').classes.toggle('hidden',
-        !visible || !visibility);
+    _containerElt.querySelector('#searchViewNoResult').classes.toggle(
+        'hidden', !visible || !visibility);
   }
 
   void _setShowSearchResultPlaceholder(bool visible) {
-    html.querySelector('#searchViewPlaceholder').classes.toggle('hidden',
-        !visible || !visibility);
+    _containerElt.querySelector('#searchViewPlaceholder').classes.toggle(
+        'hidden', !visible || !visibility);
   }
 
   // Implementation of TreeViewDelegate interface.
@@ -252,12 +252,12 @@ class SearchViewController implements TreeViewDelegate, WorkspaceSearchDelegate 
     if (_filesMap[nodeUid] != null) {
       WorkspaceSearchResultItem item = _filesMap[nodeUid];
       NavigationLocation location = new NavigationLocation(item.file);
-      delegate.searchViewControllerNavigate(this, location);
+      _delegate.searchViewControllerNavigate(this, location);
     } else if (_linesMap[nodeUid] != null) {
       WorkspaceSearchResultLine lineInfo = _linesMap[nodeUid];
       Span selection = new Span(lineInfo.position, lineInfo.length);
       NavigationLocation location = new NavigationLocation(lineInfo.file, selection);
-      delegate.searchViewControllerNavigate(this, location);
+      _delegate.searchViewControllerNavigate(this, location);
     }
   }
 
