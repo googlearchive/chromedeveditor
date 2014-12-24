@@ -265,11 +265,7 @@ abstract class Spark
    * is overwritten in SparkPolymer, which encapsulates the UI in a top-level
    * Polymer widget, rather than the top-level document's DOM.
    */
-  Element getUIElement(String selectors) {
-    final Element elt = document.querySelector(selectors);
-    assert(elt != null);
-    return elt;
-  }
+  Element getUIElement(String selectors);
 
   /**
    * Should extract a dialog Element from the underlying UI's DOM. This is
