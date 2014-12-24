@@ -44,6 +44,7 @@ import 'lib/mobile/android_rsa.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/mobile/usb.dart';
 import 'lib/navigation.dart';
+import 'lib/package_mgmt/package_manager.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
 import 'lib/platform_info.dart';

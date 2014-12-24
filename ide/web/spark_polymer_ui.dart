@@ -4,7 +4,6 @@
 
 library spark_polymer.ui;
 
-import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
