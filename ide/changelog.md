@@ -18,8 +18,6 @@
 
 ### Bug fixes
 - fix: Bower would fail to run on a bower_components directory and printed an exception to the console
-- fix: Few compile-time warnings
-- fix  File filter and search view are broken
 
 ## M18 (0.18.3465, December 1, 2014)
 
