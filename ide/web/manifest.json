@@ -10,7 +10,6 @@
   "default_locale": "en",
   "icons": {
     "16": "images/icon_16.png",
-    "19": "images/icon_19.png",
     "32": "images/icon_32.png",
     "48": "images/icon_48.png",
     "64": "images/icon_64.png",
