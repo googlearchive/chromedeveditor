@@ -60,7 +60,7 @@ abstract class PackageServiceProperties {
       packageRefPrefixRegexp.matchAsPrefix(url) != null;
 
   bool isSecondaryPackage(Resource resource) {
-    return resource.path.contains('/$getPackagesDirName/') &&
+    return resource.path.contains('/' + getPackagesDirName(resource) + '/') &&
            !isInPackagesFolder(resource);
   }
 

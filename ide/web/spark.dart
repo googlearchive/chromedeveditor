@@ -44,6 +44,7 @@ import 'lib/mobile/android_rsa.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/mobile/usb.dart';
 import 'lib/navigation.dart';
+import 'lib/package_mgmt/package_manager.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
 import 'lib/platform_info.dart';
@@ -264,11 +265,7 @@ abstract class Spark
    * is overwritten in SparkPolymer, which encapsulates the UI in a top-level
    * Polymer widget, rather than the top-level document's DOM.
    */
-  Element getUIElement(String selectors) {
-    final Element elt = document.querySelector(selectors);
-    assert(elt != null);
-    return elt;
-  }
+  Element getUIElement(String selectors);
 
   /**
    * Should extract a dialog Element from the underlying UI's DOM. This is
@@ -467,7 +464,11 @@ abstract class Spark
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, actionManager, scmManager, eventBus,
+        workspace,
+        actionManager,
+        scmManager,
+        eventBus,
+        getUIElement('#splitView'),
         getUIElement('#file-item-context-menu'),
         getUIElement('#fileViewArea'));
     _filesController.visibility = true;
@@ -489,9 +490,11 @@ abstract class Spark
   }
 
   void initSearchController() {
-    _searchViewController =
-        new SearchViewController(workspace, getUIElement('#searchViewArea'));
-    _searchViewController.delegate = this;
+    _searchViewController = new SearchViewController(
+        workspace,
+        getUIElement('#leftPanel'),
+        getUIElement('#sparkStatus'),
+        this);
   }
 
   void initSplitView() {
@@ -1060,7 +1063,7 @@ abstract class Spark
     _filesController.visibility = !visible;
     _reallyFilterFilesList(searchField.value);
     if (!visible) {
-      querySelector('#searchViewPlaceholder').classes.add('hidden');
+      getUIElement('#searchViewPlaceholder').classes.add('hidden');
     }
   }
 
@@ -1858,14 +1861,8 @@ abstract class PackageManagementAction
       super(spark, id, name);
 
   void _invoke([context]) {
-    if (!_canRunAction()) {
-      return;
-    }
-    ws.Resource resource;
-
     // NOTE: [appliesTo] ensures this is always valid.
-    resource = context.single;
-      
+    final ws.Resource resource = context.single;
     // [appliesTo] uses [isPackageResource], which guarantees that the below
     // will return a non-null.
     final ws.Folder folder =
@@ -1885,21 +1882,10 @@ abstract class PackageManagementAction
   PackageServiceProperties get _serviceProperties;
 
   Job _createJob(ws.Container container);
-
-  bool _canRunAction() => true;
 }
 
 abstract class PubAction extends PackageManagementAction {
   PubAction(Spark spark, String id, String name) : super(spark, id, name);
-
-  bool _canRunAction() {
-    if (PlatformInfo.isWin) {
-      throw new SparkException(
-          SparkErrorMessages.PUB_ON_WINDOWS_MSG,
-          errorCode: SparkErrorConstants.PUB_ON_WINDOWS_NOT_SUPPORTED);
-    }
-    return true;
-  }
 
   PackageServiceProperties get _serviceProperties =>
       spark.pubManager.properties;
@@ -1952,7 +1938,7 @@ class CspFixAction extends SparkAction implements ContextAction {
     });
   }
 
-  String get category => 'refactor';
+  String get category => 'source_manipulation';
 
   bool appliesTo(List list) => CspFixer.mightProcess(list);
 }

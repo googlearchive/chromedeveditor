@@ -54,6 +54,7 @@ class FilesControllerPersistTabEvent extends BusEvent {
 }
 
 class FilesController implements TreeViewDelegate {
+  html.Element _containerElt;
   // TreeView that's used to show the workspace.
   TreeView _treeView;
   // Workspace that references all the resources.
@@ -90,6 +91,7 @@ class FilesController implements TreeViewDelegate {
                   this._actionManager,
                   this._scmManager,
                   this._eventBus,
+                  this._containerElt,
                   this._menuContainer,
                   html.Element fileViewArea) {
     _treeView = new TreeView(fileViewArea, this);
@@ -865,7 +867,6 @@ class FilesController implements TreeViewDelegate {
    * Position the context menu at the expected location.
    */
   void _positionContextMenu(html.Point clickPoint, html.Element contextMenu) {
-    var topUi = html.document.querySelector("#topUi");
     final int separatorHeight = 5;
     final int itemHeight = 35;
     int estimatedHeight = 12; // Start with value padding and border.
@@ -875,11 +876,12 @@ class FilesController implements TreeViewDelegate {
 
     contextMenu.style.left = '${clickPoint.x}px';
     // If context menu exceed Window area.
-    if (estimatedHeight + clickPoint.y > topUi.offsetHeight) {
+    if (estimatedHeight + clickPoint.y > _containerElt.offsetHeight) {
       var positionY = clickPoint.y - estimatedHeight;
       if (positionY < 0) {
         // Add additional 5px to show boundary of context menu.
-        contextMenu.style.top = '${topUi.offsetHeight - estimatedHeight - 5}px';
+        contextMenu.style.top =
+            '${_containerElt.offsetHeight - estimatedHeight - 5}px';
       } else {
         contextMenu.style.top = '${positionY}px';
       }
@@ -1016,7 +1018,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _setShowNoResults(bool visible) {
-    html.querySelector('#fileViewFilterNoResult').classes.toggle('hidden',
-        !visible || !visibility);
+    _containerElt.querySelector('#fileViewFilterNoResult').classes.toggle(
+        'hidden', !visible || !visibility);
   }
 }
