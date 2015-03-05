@@ -25,7 +25,7 @@ class SparkFlags {
     'enable-apk-build': false,
     'wip-project-templates': false,
     'analyze-javascript': false,
-    'enable-multiselect': false,
+    'enable-multiselect': true,
     'bower-ignore-dependencies': [
     ],
     'bower-override-dependencies': {
