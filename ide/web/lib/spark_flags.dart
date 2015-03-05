@@ -24,7 +24,7 @@ class SparkFlags {
     'enable-git-salt': false,
     'enable-apk-build': false,
     'wip-project-templates': false,
-    'analyze-javascript': false,
+    'analyze-javascript': true,
     'enable-multiselect': false,
     'bower-ignore-dependencies': [
     ],
