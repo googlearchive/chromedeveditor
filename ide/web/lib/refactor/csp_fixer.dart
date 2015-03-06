@@ -11,8 +11,10 @@ import 'dart:async';
 import 'package:html5lib/dom.dart' as dom;
 import 'package:html5lib/parser.dart' as html_parser;
 import 'package:logging/logging.dart';
+import 'package:quiver/async.dart' as quiver;
 
 import '../jobs.dart';
+import '../spark_flags.dart';
 import '../workspace.dart' as ws;
 
 final Logger _logger = new Logger('spark.csp_fixer');
@@ -47,7 +49,7 @@ class CspFixer {
 
   Future<SparkJobStatus> process() {
     _monitor.start(
-        "Refactoring ${_resource.name} for CSP compatibility…",
+        "Refactoring for CSP…",
         maxWork: 0,
         format: ProgressFormat.N_OUT_OF_M);
 
@@ -55,24 +57,26 @@ class CspFixer {
     if (_resource is ws.File) {
       files = [_resource];
     } else if (_resource is ws.Container) {
+      // NOTE: [traverse] will auto-skip special SCM folders such as `.git`.
       files = _resource
           .traverse(includeDerived: true)
           .where((ws.Resource r) => r is ws.File);
     }
 
-    final Iterable<_CspFixerSingleFile> fixers =
-        files
-            .where((ws.File f) => _CspFixerSingleFile.willProcess(f))
-            .map((ws.File f) => new _CspFixerSingleFile(f));
+    final List<_CspFixerSingleFile> fixers = files
+        .where((ws.File f) => _CspFixerSingleFile.willProcess(f))
+        .map((ws.File f) => new _CspFixerSingleFile(f))
+        .toList();
 
     _monitor.addWork(fixers.length);
 
-    final Iterable<Future> futures =
-        fixers.map((f) => f.process().then((_) => _monitor.worked(1)));
-
     // Process input files in parallel to maximize I/O and make failures
-    // independent.
-    return Future.wait(futures).then((_) {
+    // independent, but throttle the maximum concurrent thread in order
+    // not to freeze the UI too much.
+    // TODO(ussuri): Use ServiceWorker here to completely unfreeze the UI.
+    return quiver.forEachAsync(fixers, (fixer) {
+      return fixer.process().whenComplete(() => _monitor.worked(1));
+    }, maxTasks: SparkFlags.cspFixerMaxConcurrentTasks).then((_) {
       _monitor.done();
       return new SparkJobStatus(code: SparkStatusCodes.SPARK_JOB_BUILD_SUCCESS);
     });
@@ -108,8 +112,10 @@ class _CspFixerSingleFile {
       // 1) back up the original HTML file;
       // 2) replace it with the postprocessed HTML text.
       if (_newFiles.isNotEmpty) {
-        _newFiles.add(
-            new _FileWriter(_file.parent, _file.name + '.pre_csp', htmlText));
+        if (SparkFlags.cspFixerBackupOriginalSources) {
+          _newFiles.add(
+              new _FileWriter(_file.parent, _file.name + '.pre_csp', htmlText));
+        }
         // NOTE: doc.outerHtml may insert originally omitted parts of a standard
         // HTML document spec. One important example is Polymer elements, which
         // normally don't have <head> or <body>, but will after postprocessing.
@@ -151,7 +157,8 @@ class _CspFixerSingleFile {
   static const _TYPE_TO_EXT = const {
     null: 'js',
     'application/javascript': 'js',
-    'application/dart': 'dart'
+    'application/dart': 'dart',
+    'text/coffeescript': 'coffee'
   };
 
   String _getScriptExtension(dom.Element script) {

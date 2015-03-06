@@ -13,25 +13,42 @@ import '../workspace.dart';
 // TODO(ussuri): Add comments.
 
 abstract class PackageServiceProperties {
-  bool isFolderWithPackages(Folder project) =>
-      project.getChild(packageSpecFileName) != null;
+  bool isFolderWithPackages(Folder container) =>
+      container.getChild(packageSpecFileName) != null;
 
+  // TODO(ussuri): Instead of the below 2 methods, an easier-to-understand
+  // approach cpuld be a single `File getAssociatedPackageSpecFile(Resource)`.
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
            (resource is Folder && isFolderWithPackages(resource)) ||
-           _isPackagesFolder(resource) ||
-           _isPackagesFolder(resource.parent);
+           isPackagesFolder(resource);
   }
 
-  bool _isPackagesFolder(Resource resource) {
+  /**
+   * If [isPackageResource] returns true for [resource], this function will
+   * return the matching folder with packages.
+   */
+  Folder getMatchingFolderWithPackages(Resource resource) {
+    if (resource is File && resource.name == packageSpecFileName) {
+      return resource.parent;
+    } else if (resource is Folder && isFolderWithPackages(resource)) {
+      return resource;
+    } else if (isPackagesFolder(resource)) {
+      return resource.parent;
+    }
+    return null;
+  }
+
+  bool isPackagesFolder(Resource resource) {
     return resource is Folder &&
-           resource.name == packagesDirName &&
+           resource.name == getPackagesDirName(resource) &&
            isFolderWithPackages(resource.parent);
   }
 
   bool isInPackagesFolder(Resource resource) {
     while (resource.parent != null) {
-      if (resource.name == packagesDirName && resource is Folder) {
+      if (resource is Folder &&
+          resource.name == getPackagesDirName(resource)) {
         return true;
       }
       resource = resource.parent;
@@ -43,7 +60,7 @@ abstract class PackageServiceProperties {
       packageRefPrefixRegexp.matchAsPrefix(url) != null;
 
   bool isSecondaryPackage(Resource resource) {
-    return resource.path.contains('/$packagesDirName/') &&
+    return resource.path.contains('/' + getPackagesDirName(resource) + '/') &&
            !isInPackagesFolder(resource);
   }
 
@@ -52,8 +69,9 @@ abstract class PackageServiceProperties {
   //
 
   String get packageServiceName;
+  String get configFileName;
   String get packageSpecFileName;
-  String get packagesDirName;
+  String getPackagesDirName(Resource resource);
   String get libDirName;
   String get packageRefPrefix;
   RegExp get packageRefPrefixRegexp;
@@ -65,7 +83,7 @@ abstract class PackageServiceProperties {
 
 abstract class PackageManager {
   PackageManager(Workspace workspace) {
-    workspace.builderManager.builders.add(getBuilder());
+    workspace.builderManager.builders.add(getBuilderFor(workspace));
   }
 
   //
@@ -74,7 +92,7 @@ abstract class PackageManager {
 
   PackageServiceProperties get properties;
 
-  PackageBuilder getBuilder();
+  PackageBuilder getBuilderFor(Workspace workspace);
   PackageResolver getResolverFor(Project project);
 
   Future installPackages(Folder container, ProgressMonitor monitor);

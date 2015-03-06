@@ -28,7 +28,7 @@ defineTests() {
 
 class MockAceManager implements AceManager {
   /// The element to put the editor in.
-  final Element parentElement = null;
+  Element containerElement = null;
   workspace.File currentFile = null;
   AceManagerDelegate delegate = null;
   GotoLineView gotoLineView = null;
@@ -75,7 +75,7 @@ class MockAceEditor implements TextEditor {
 
   MockAceEditor([this.aceManager]);
 
-  Element get element => aceManager.parentElement;
+  Element get element => aceManager.containerElement;
 
   void activate() { }
   void resize() { }
@@ -108,6 +108,8 @@ class MockAceEditor implements TextEditor {
   int getCursorOffset() => 0;
 
   void customizeSession(EditSession session) { }
+
+  void replaceContents(String newContents) { }
 
   StateManager get state => null;
 

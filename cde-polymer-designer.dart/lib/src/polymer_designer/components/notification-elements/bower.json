@@ -1,7 +1,0 @@
-{
-  "name": "notification-elements",
-  "private": true,
-  "dependencies": {
-    "polymer": "Polymer/polymer#master"
-  }
-}

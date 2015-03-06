@@ -43,7 +43,38 @@ class SparkPolymerUI extends SparkWidget {
   SparkSplitView _splitView;
   InputElement _fileFilter;
 
+  final _poachedAceNodes = new Set<String>();
+
   SparkPolymerUI.created() : super.created();
+
+  @override
+  void ready() {
+    // Listen to insertions of new nodes into the top-level <head>, some of
+    // which will be Ace-related <style>sthat Ace dynamically inserts e.g. when
+    // the editor theme gets changed: move such styles under our [shadowRoot].
+    // The reason is that Ace was not designed to work as part of a Polymer
+    // element: it always inserts into the <head>, while our actual Ace
+    // container lives under the CSS-isolated [shadowRoot] (the container is
+    // dynamically created elsewhere).
+    final observer = new MutationObserver((records, _) =>
+        records.forEach((r) => _poachAceStyles(r.addedNodes)));
+    observer.observe(
+        document.head,
+        childList: true,
+        attributes: false,
+        characterData: false,
+        subtree: false,
+        attributeOldValue: false,
+        characterDataOldValue: false);
+  }
+
+  @override
+  void domReady() {
+    // Poach initial Ace <style>s that Ace inserts before the observer in
+    // [ready] starts listening to new node insertions. See the comment in
+    // [ready].
+    _poachAceStyles(document.head.childNodes);
+  }
 
   @override
   void attached() {
@@ -51,6 +82,31 @@ class SparkPolymerUI extends SparkWidget {
 
     _splitView = $['splitView'];
     _fileFilter = $['fileFilter'];
+  }
+
+  /*
+   * Transfer any Ace-related <style>s in [nodes] from their original parent
+   * (by the way Ace works, [document.head]) to this element's [shadowRoot],
+   * where the dynamically created Ace container, which needs them, lives.
+   */
+  void _poachAceStyles(List<Node> nodes) {
+    final List<StyleElement> aceStyles = [];
+    for (Node node in nodes) {
+      if (node is StyleElement &&
+          (node.id.startsWith('ace') || node.innerHtml.contains('ace_'))) {
+        aceStyles.add(node);
+      }
+    }
+    for (StyleElement style in aceStyles) {
+      // When Ace thinks it needs to reuse the same style at some point (e.g.
+      // previously used theme is selected again), it justs check in the <head>
+      // by node id, so, since we move the originals, it will try to insert
+      // duplicates: skip moving those here (but remove them from DOM).
+      style.remove();
+      final String id = style.id;
+      if (id != null && id.isNotEmpty && !_poachedAceNodes.add(id)) continue;
+      shadowRoot.append(style);
+    }
   }
 
   void modelReady(SparkModel model) {

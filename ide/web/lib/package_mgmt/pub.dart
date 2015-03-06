@@ -26,9 +26,19 @@ Logger _logger = new Logger('spark.pub');
 final PubProperties pubProperties = new PubProperties();
 
 class PubProperties extends PackageServiceProperties {
+  final List _managedFolders = const [
+      'benchmark', 'bin', 'example', 'packages', 'test', 'tool', 'web'
+  ];
+
+  PubProperties();
+  //
+  // PackageServiceProperties virtual interface:
+  //
+
   String get packageServiceName => 'pub';
+  String get configFileName => null;
   String get packageSpecFileName => 'pubspec.yaml';
-  String get packagesDirName => 'packages';
+  String getPackagesDirName(Resource resource) => 'packages';
   String get libDirName => 'lib';
   String get packageRefPrefix => 'package:';
   // This will get both the "package:foo/bar.dart" variant when used directly
@@ -41,6 +51,8 @@ class PubProperties extends PackageServiceProperties {
 
   String getSelfReference(Project project) =>
     project.getMetadata('${packageServiceName}SelfReference');
+
+  bool isManagedFolder(String name) => _managedFolders.contains(name);
 }
 
 File findPubspec(Container container) {
@@ -72,7 +84,7 @@ class PubManager extends PackageManager {
 
   Stream<Project> get onSelfReferenceChange => _controller.stream;
 
-  PackageBuilder getBuilder() => new _PubBuilder(this);
+  PackageBuilder getBuilderFor(Workspace workspace) => new _PubBuilder(this);
 
   PackageResolver getResolverFor(Project project) =>
       new _PubResolver._(this, project);
@@ -93,8 +105,8 @@ class PubManager extends PackageManager {
         try {
           _PubSpecInfo info = new _PubSpecInfo.parse(str);
           for (String dep in info.getDependencies()) {
-            Resource dependency =
-                 container.getChildPath('${properties.packagesDirName}/${dep}');
+            Resource dependency = container.getChildPath(
+                '${properties.getPackagesDirName(container)}/${dep}');
             if (dependency is! Folder) {
               return dep;
             }
@@ -113,7 +125,11 @@ class PubManager extends PackageManager {
       bool isUpgrade,
       ProgressMonitor monitor) {
     // Don't run pub on Windows (#2743).
-    if (PlatformInfo.isWin) return new Future.value();
+    if (PlatformInfo.isWin) {
+      throw new SparkException(
+          SparkErrorMessages.PUB_ON_WINDOWS_MSG,
+          errorCode: SparkErrorConstants.PUB_ON_WINDOWS_NOT_SUPPORTED);
+    }
 
     // Fake the total amount of work, since we don't know it. When an update
     // comes from Tavern, just refresh the generic message w/o showing progress.
@@ -126,10 +142,9 @@ class PubManager extends PackageManager {
       monitor.worked(1);
     }
 
-    Container projectDir = _getProjectDir(container);
-    return tavern.getDependencies(projectDir.entry, handleLog, isUpgrade).
+    return tavern.getDependencies(container.entry, handleLog, isUpgrade).
         whenComplete(() {
-      return container.project.refresh();
+      return container.refresh();
     }).catchError((e, st) {
       _logger.severe('Error running Pub $commandName', e, st);
       if (isSymlinkError(e)) {
@@ -139,17 +154,6 @@ class PubManager extends PackageManager {
       }
       return new Future.error(e, st);
     });
-  }
-
-  Folder _getProjectDir(Folder resource) {
-    Container container = resource;
-    while(container != null) {
-      if (pubProperties.isFolderWithPackages(container)) {
-        return container;
-      }
-      container = container.parent;
-    }
-    return resource;
   }
 }
 
@@ -210,7 +214,7 @@ class _PubResolver extends PackageResolver {
 
     String ref = match.group(2);
     String selfRefName = properties.getSelfReference(project);
-    Folder packageDir = project.getChild(properties.packagesDirName);
+    Folder packageDir = project.getChild(properties.getPackagesDirName(project));
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
@@ -242,7 +246,7 @@ class _PubResolver extends PackageResolver {
       parent = parent.parent;
     }
 
-    if (resources[0].name == properties.packagesDirName) {
+    if (resources[0].name == properties.getPackagesDirName(file)) {
       resources.removeAt(0);
       return properties.packageRefPrefix + resources.map((r) => r.name).join('/');
     } else if (resources[0].name == properties.libDirName) {
@@ -328,18 +332,20 @@ class _PubBuilder extends PackageBuilder {
   }
 
   Future _analyzePubspec(File file) {
-    file.clearMarkers(_packageServiceName);
+    file.clearMarkers(properties.packageServiceName);
 
     return file.getContents().then((String str) {
+      final String packageServiceName = properties.packageServiceName;
+      final String packagesDirName = properties.getPackagesDirName(file);
       try {
         _PubSpecInfo info = new _PubSpecInfo.parse(str);
         _pubManager.setSelfReference(file.project, info.name);
         for (String dep in info.getDependencies()) {
           Resource dependency =
-              file.project.getChildPath('${_packagesDirName}/${dep}');
+              file.project.getChildPath('${packagesDirName}/${dep}');
           if (dependency is! Folder) {
             // TODO(devoncarew): We should place these markers on the correct line.
-            file.createMarker(_packageServiceName,
+            file.createMarker(packageServiceName,
                 Marker.SEVERITY_WARNING,
                 "'${dep}' does not exist in the packages directory. "
                 "Do you need to run 'pub get'?",
@@ -347,14 +353,10 @@ class _PubBuilder extends PackageBuilder {
           }
         }
       } on Exception catch (e) {
-        file.createMarker(
-            _packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
+        file.createMarker(packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
       }
     });
   }
-
-  String get _packagesDirName => properties.packagesDirName;
-  String get _packageServiceName => properties.packageServiceName;
 }
 
 class _PubSpecInfo {

@@ -5,12 +5,11 @@
   "description": "__MSG_app_description__",
   "offline_enabled": true,
   "version": "0.17.0",
-  "minimum_chrome_version": "37",
+  "minimum_chrome_version": "38",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
     "16": "images/icon_16.png",
-    "19": "images/icon_19.png",
     "32": "images/icon_32.png",
     "48": "images/icon_48.png",
     "64": "images/icon_64.png",
@@ -29,9 +28,9 @@
   "permissions": [
     "http://*/*",
     "https://*/*",
-    "identity",
     "clipboardRead",
     "clipboardWrite",
+    "contextMenus",
     "developerPrivate",
     {
       "fileSystem": [
@@ -40,13 +39,19 @@
         "directory"
       ]
     },
+    "identity",
     "management",
     "nativeMessaging",
+    {
+      "socket": [
+        "tcp-connect",
+        "resolve-host"
+      ]
+    },
+    "storage",
     "syncFileSystem",
     "system.network",
-    "storage",
     "unlimitedStorage",
-    "contextMenus",
     "usb",
     {
       "usbDevices": [
@@ -173,7 +178,12 @@
         {
           "vendorId": 4100,
           "productId": 24974,
-          "description": "0x1004/0x618e LG Ally/Optimus One/Vortex "
+          "description": "0x1004/0x618e LG Ally/Optimus One/Vortex"
+        },
+        {
+          "vendorId": 4100,
+          "productId": 25081,
+          "description": "0x1004/0x61f9 LG Optimus Vu3"
         }
       ]
     },
@@ -199,8 +209,7 @@
         "text/json",
         "text/xml",
         "text/yaml"
-      ],
-      "title": "__MSG_app_name__"
+      ]
     }
   },
   "oauth2": {

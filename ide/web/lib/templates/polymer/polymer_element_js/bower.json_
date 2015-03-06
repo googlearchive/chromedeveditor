@@ -2,7 +2,6 @@
   "name": "``projectName``",
   "private": true,
   "dependencies": {
-    "polymer": "Polymer/polymer#master",
-    "platform": "Polymer/platform#master"
+    "polymer": "Polymer/polymer#latest"
   }
 }

@@ -244,6 +244,7 @@ class PermissionValueValidator extends SchemaValidator {
   static final List<String> _permissionNames = [
     // From https://developer.chrome.com/apps/declare_permissions
     "alarms",
+    "alwaysOnTopWindows",
     "audio",
     "audioCapture",
     "browser",

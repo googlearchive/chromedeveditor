@@ -77,7 +77,7 @@ class FileModifiedBusEvent extends BusEvent {
  */
 class EditorManager implements EditorProvider, NavigationLocationProvider {
   final Workspace _workspace;
-  final ace.AceManager _aceContainer;
+  final ace.AceManager _aceManager;
   final SparkPreferences _prefs;
   final EventBus _eventBus;
 
@@ -104,7 +104,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
-  EditorManager(this._workspace, this._aceContainer, this._prefs,
+  EditorManager(this._workspace, this._aceManager, this._prefs,
       this._eventBus, this._services) {
 
     // TODO(ericarnold): This is temporary.  Everything should use
@@ -136,10 +136,12 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   PreferenceStore get _prefStore => _prefs.prefsStore;
 
   File get currentFile => _currentState != null ? _currentState.file : null;
+  Editor get currentEditor => getEditor(currentFile);
 
   Iterable<File> get files => _openedEditorStates.map((s) => s.file);
   Future<bool> get loaded => _loadedCompleter.future;
   Iterable<Editor> get editors => _editorMap.values;
+  Editor getEditor(File file) => _editorMap[file];
 
   Stream<File> get onSelectedChange => _selectedController.stream;
 
@@ -281,11 +283,11 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
       _currentState = state;
       _selectedController.add(currentFile);
       if (state == null) {
-        _aceContainer.switchTo(null);
+        _aceManager.switchTo(null);
         persistState();
       } else {
         // Clear text content of ACE editor.
-        _aceContainer.switchTo(null);
+        _aceManager.switchTo(null);
 
         if (!state.hasSession) {
           _newFileOpenedController.add(null);
@@ -306,7 +308,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
             ace.TextEditor textEditor = _editorMap[currentFile];
             textEditor.setSession(state.session);
             _selectedController.add(currentFile);
-            _aceContainer.switchTo(state.session, state.file);
+            _aceManager.switchTo(state.session, state.file);
             persistState();
           }
         });
@@ -402,7 +404,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     if (editorType(file.name) == EDITOR_TYPE_IMAGE) {
       editor = new ImageViewer(file);
     } else {
-      editor = new ace.TextEditor(_aceContainer, file, _prefs);
+      editor = new ace.TextEditor(_aceManager, file, _prefs);
       editor.resize();
     }
 
@@ -417,10 +419,10 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     _switchState(state);
   }
 
-  NavigationLocation get navigationLocation => _aceContainer.navigationLocation;
+  NavigationLocation get navigationLocation => _aceManager.navigationLocation;
 
   void setupOutline(html.Element outlineContainer) {
-    _aceContainer.setupOutline(outlineContainer);
+    _aceManager.setupOutline(outlineContainer);
   }
 }
 
@@ -471,7 +473,7 @@ class _EditorState {
         return new Future.value(this);
       } else {
         return file.getContents().then((text) {
-          session = manager._aceContainer.createEditSession(text, file.name);
+          session = manager._aceManager.createEditSession(text, file.name);
           return this;
         });
       }
@@ -533,7 +535,7 @@ class FileContentProvider implements ContentProvider {
 class PreferenceContentProvider implements ContentProvider {
   final PreferenceStore _store;
   final String _filename;
-  
+
   StreamController _changeController = new StreamController.broadcast();
 
   Stream get onChange => _changeController.stream;

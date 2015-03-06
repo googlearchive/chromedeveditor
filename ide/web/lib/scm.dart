@@ -158,11 +158,21 @@ abstract class ScmProvider {
   ScmProjectOperations createOperationsFor(Project project);
 
   /**
+   * Create an [ScmProjectOperations] instance for the given [DirectoryEntry].
+   */
+  ScmProjectOperations createOperationsForDir(chrome.DirectoryEntry dir);
+
+  /**
    * Clone the repo at the given url into the given directory. Returns a
    * [ScmException] through the Future's error on a failure.
    */
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName});
+
+  /**
+   * Initialize a given directory into a git repository.
+   */
+  Future init(chrome.DirectoryEntry dir);
 
   /**
    * Cancels the active clone in progress.
@@ -195,6 +205,8 @@ abstract class ScmProjectOperations {
   Future<List<String>> getRemoteBranchNames();
 
   Future<List<String>> getUpdatedRemoteBranchNames();
+
+  Future<List<String>> lsRemoteRefs(String url);
 
   Future createBranch(String branchName, String sourceBranchName);
 
@@ -299,11 +311,22 @@ class GitSaltScmProvider extends ScmProvider {
     return null;
   }
 
+  ScmProjectOperations createOperationsForDir(chrome.DirectoryEntry dir) {
+    return new GitSaltScmProjectOperations(this, null, dir);
+  }
+
   Future clone(String url, chrome.DirectoryEntry dir,
       {String username, String password, String branchName}) {
     GitSalt gitSalt = GitSaltFactory.getInstance(dir.fullPath);
     return gitSalt.loadPlugin().then((_) {
       return gitSalt.clone(dir, url);
+    });
+  }
+
+  Future init(chrome.DirectoryEntry dir) {
+    GitSalt gitSalt = GitSaltFactory.getInstance(dir.fullPath);
+    return gitSalt.loadPlugin().then((_) {
+      return gitSalt.init(dir);
     });
   }
 
@@ -340,6 +363,10 @@ class GitScmProvider extends ScmProvider {
     return null;
   }
 
+  ScmProjectOperations createOperationsForDir(chrome.DirectoryEntry dir) {
+    throw new UnsupportedError('GitScmProvider.createOperationsForDir not supported');
+  }
+
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
@@ -359,6 +386,11 @@ class GitScmProvider extends ScmProvider {
     });
   }
 
+  Future init(chrome.DirectoryEntry dir) {
+    //TODO(grv): to be implemented.
+    return new Future.value();
+  }
+
   void cancelClone() {
     if (_activeClone != null) {
       _activeClone.cancel();
@@ -376,12 +408,15 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
 
   Future<GitSalt> get gitSalt => _completer.future;
 
-  GitSaltScmProjectOperations(ScmProvider provider, Project project) :
+  GitSaltScmProjectOperations(ScmProvider provider, Project project,
+      [chrome.DirectoryEntry dir]) :
     super(provider, project) {
       _completer = new Completer();
-      _gitSalt = GitSaltFactory.getInstance(project.entry.fullPath);
+
+      chrome.Entry entry = (dir == null) ? project.entry : dir;
+      _gitSalt = GitSaltFactory.getInstance(entry.fullPath);
       _gitSalt.loadPlugin().then((_) {
-        _gitSalt.load(project.entry).then((_) {
+        _gitSalt.load(entry).then((_) {
           _completer.complete(_gitSalt);
         });
       });
@@ -411,18 +446,26 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
   }
 
   Future<List<String>> getLocalBranchNames() {
-    // TODO(grv): Implement.
-    return new Future.value();
+    return gitSalt.then((git_salt) {
+      return git_salt.getLocalBranches();
+    });
   }
 
   Future<List<String>> getRemoteBranchNames() {
-    // TODO(grv): Implement.
-    return new Future.value();
+    return gitSalt.then((git_salt) {
+      return git_salt.getRemoteBranches();
+    });
   }
 
   Future<List<String>> getUpdatedRemoteBranchNames() {
     // TODO(grv): Implement.
     return new Future.value();
+  }
+
+    Future<List<String>> lsRemoteRefs(String url) {
+    return gitSalt.then((git_salt) {
+      return git_salt.lsRemoteRefs(url);
+    });
   }
 
   Future createBranch(String branchName, String sourceBranchName) {
@@ -454,14 +497,45 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
     return new Future.value();
   }
 
+
   Future commit(String userName, String userEmail, String commitMessage) {
-    // TODO(grv): Implement.
-    return new Future.value();
+    return gitSalt.then((git_salt) {
+      Map<String, String> options = {
+        "commitMessage": commitMessage,
+        "userName": userName,
+        "userEmail": userEmail
+      };
+      return git_salt.commit(options).then((_) {
+        return _refreshStatus(project: project);
+      }).catchError((e) => throw SparkException.fromException(e));
+    });
   }
 
   Future push(String username, String password) {
     // TODO(grv): Implement.
     return new Future.value();
+  }
+
+  Future<List<String>> getDeletedFiles() {
+    return gitSalt.then((git_salt) {
+      return git_salt.status().then((Map<String, String> statuses) {
+        List<String> deletedFiles = [];
+        statuses.forEach((k,v ) {
+          if (v == 512) {
+            deletedFiles.add(k);
+          }
+        });
+        return deletedFiles;
+      });
+    });
+  }
+
+  Future addFiles(List<chrome.Entry> files) {
+    return gitSalt.then((git_salt) {
+      return git_salt.add(files).then((_) {
+        return _refreshStatus(project: project);
+      });
+    });
   }
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
@@ -474,8 +548,54 @@ class GitSaltScmProjectOperations extends ScmProjectOperations {
   }
 
   Future _refreshStatus({Project project, Iterable<Resource> resources}) {
-    //TODO(grv): implement
-    return new Future.value();
+    assert(project != null || resources != null);
+
+    // Get a list of all files in the project.
+    if (project != null) {
+      resources = project.traverse();
+    }
+
+    return gitSalt.then((git_salt) {
+      if (project != null) {
+        return git_salt.status().then((Map<String, String> statuses) {
+          resources.forEach((resource) {
+            _setStatus(resource, statuses[resource.entry.fullPath]);
+          });
+          return new Future.value();
+        });
+      } else {
+          return git_salt.status().then((Map<String, String> statuses) {
+            resources.forEach((resource) {
+              String rootPath = resource.project.entry.fullPath;
+              String path = resource.entry.fullPath.substring(rootPath.length + 1);
+              //TODO(grv): Update status for ancestors.
+              _setStatus(resource, statuses[path]);
+          });
+          return new Future.value();
+        });
+      }
+    }).catchError((e, st) {
+      _logger.severe("error calculating scm status", e, st);
+    }).whenComplete(() => _statusController.add(this));
+  }
+
+  void _setStatus(Resource resource, String status) {
+    String fileStatus = FileStatusType.COMMITTED;
+    //TODO(grv): Add a type class for the  returned status types.
+    // Handle case of untracked files.
+    if (status == null) {
+      fileStatus = FileStatusType.COMMITTED;
+    } else if (resource.isFile) {
+      if (status == 256) {
+          fileStatus = FileStatusType.MODIFIED;
+      } else  if (status == 512) {
+        fileStatus = FileStatusType.DELETED;
+      } else if (status == 128) {
+        fileStatus = FileStatusType.ADDED;
+      }
+    }
+    resource.setMetadata('scmStatus', new ScmFileStatus.fromIndexStatus(
+        fileStatus).status);
   }
 }
 
@@ -702,6 +822,11 @@ class GitScmProjectOperations extends ScmProjectOperations {
         }).toList();
       }).catchError((e) => throw SparkException.fromException(e));
     });
+  }
+
+  Future<List<String>> lsRemoteRefs(String url) {
+    //TODO(grv): to be implemented;
+    return new Future.value();
   }
 
   Future<ObjectStore> get objectStore => _completer.future;

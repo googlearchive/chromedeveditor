@@ -7,11 +7,35 @@ library spark.flags;
 import 'dart:async';
 import 'dart:convert' show JSON;
 
+import 'platform_info.dart';
+
 /**
  * Stores global developer flags.
  */
 class SparkFlags {
-  static final _flags = new Map<String, dynamic>();
+  // Default value of flags. These flags will be first overriden by user.json
+  // and then by .spark.json.
+  static final Map<String, dynamic> _flags = {
+    'test-mode': true,
+    'live-deploy-mode': true,
+    'bower-map-complex-ver-to-latest-stable': true,
+    'enable-polymer-designer': true,
+
+    'enable-git-salt': false,
+    'enable-apk-build': false,
+    'wip-project-templates': false,
+    'analyze-javascript': false,
+    'enable-multiselect': false,
+    'bower-ignore-dependencies': [
+    ],
+    'bower-override-dependencies': {
+    },
+    'bower-use-git-clone': false,
+    'package-files-are-editable': false,
+    'enable-new-usb-api': true,
+    'csp-fixer-max-concurrent-tasks': 20,
+    'csp-fixer-backup-original-sources': false
+  };
 
   /**
    * Accessors to the currently supported flags.
@@ -54,6 +78,16 @@ class SparkFlags {
 
   static bool get polymerDesigner =>
       _flags['enable-polymer-designer'] == true;
+
+  //TODO(grv): Remove the flag once usb api is in chrome stable.
+  static bool get enableNewUsbApi =>
+      _flags['enable-new-usb-api'] == true && PlatformInfo.chromeVersion >= 40;
+
+  // CspFixer:
+  static int get cspFixerMaxConcurrentTasks  =>
+      _flags['csp-fixer-max-concurrent-tasks'];
+  static bool get cspFixerBackupOriginalSources =>
+      _flags['csp-fixer-backup-original-sources'] == true;
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.
@@ -108,7 +142,6 @@ class SparkFlags {
    */
   static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
     return fileReader
-      .timeout(new Duration(milliseconds: 1000))
       .then((String contents) => JSON.decode(contents))
       .catchError((e) {
         if (e is FormatException) {

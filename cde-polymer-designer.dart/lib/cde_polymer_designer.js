@@ -19,11 +19,11 @@ PromiseCompleter.prototype.reject = function(value) {
 
 PromiseCompleter.prototype.then = function(onFulfilled, onRejected) {
   this.promise.then(onFulfilled, onRejected);
-}
+};
 
 PromiseCompleter.prototype.catch = function(onRejected) {
   this.promise.catch(onRejected);
-}
+};
 
 Polymer('cde-polymer-designer', {
   // NOTE: Make sure this is in-sync with ide/web/manifest.json.
@@ -117,7 +117,7 @@ Polymer('cde-polymer-designer', {
    * @return: void
    */
   unload: function() {
-    if (this.webview_ != null) {
+    if (this.webview_ !== null) {
       this.webview_.terminate();
       this.shadowRoot.removeChild(this.webview_);
     }
@@ -222,31 +222,31 @@ Polymer('cde-polymer-designer', {
     // TODO(ussuri): Some of this will become unnecessary once BUG #3467 is
     // resolved.
     this.insertCssIntoWebview_(
-        /* Reduce the initial font sizes */
+        // Reduce the initial font sizes.
         "#designer /deep/ *," +
         "#designer /deep/ #tabs > * {" +
         "  font-size: 13px;" +
         "}" +
-        /* Adjust tabs' height and color */
+        // Adjust tabs' height and color.
         "#designer /deep/ #inspector::shadow > #tabs," +
         "#designer /deep/ .paletteTree > #tabs {" +
         "  padding-top: 0;" +
         "  padding-bottom: 0;" +
         "  background-color: #fafafa;" +
         "}" +
-        /* Skinnier splitter */
+        // Skinnier splitter.
         "#designer /deep/ core-splitter {" +
         "  height: 8px;" +
         "  background-color: #fafafa;" +
         "}" +
-        /* Adjust toolbars' height */
+        // Adjust toolbars' height.
         "#designer /deep/ core-toolbar," +
         "#designer /deep/ #topBar," +
         "#designer /deep/ .designTools {" +
         "  height: 50px;" +
         "  background-color: #fafafa;" +
         "}" +
-        /* Make buttons' smaller and round */
+        // Make buttons' smaller and round.
         "#designer /deep/ core-icon-button {" +
         "  height: 38px;" +
         "  width: 38px;" +
@@ -256,7 +256,7 @@ Polymer('cde-polymer-designer', {
         "#designer /deep/ core-icon-button:hover {" +
         "  background-color: #eee;" +
         "}" +
-        /* Hide some UI elements we do not need */
+        // Hide some UI elements we do not need.
         "#designer::shadow > #appbar > * {" +
         "  display: none;" +
         "}" +
@@ -266,15 +266,21 @@ Polymer('cde-polymer-designer', {
         "#designer::shadow > #appbar > .design-controls > .separator:first-child {" +
         "  display: none;" +
         "}" +
-        /* Revert font size for the current element */
+        // Revert font size for the current element.
         "#designer /deep/ #selectedElement {" +
         "  font-size: 15px;" +
         "}" +
-        /* Adjust palette elements' style */
+        // Adjust palette elements' style.
         "#designer /deep/ .simple-item {" +
         "  height: 30px;" +
         "  line-height: 30px;" +
         "  font-size: 13px;" +
+        "}" +
+        // Override palette's opacity from 0.9. This is an empirically found
+        // way to mask BUG #3634.
+        // TODO(ussuri): This is possibly related to BUG #3466.
+        "#designer /deep/ #palette::shadow #list {" +
+        "  opacity: 1;" +
         "}"
     );
   },
@@ -346,7 +352,7 @@ Polymer('cde-polymer-designer', {
           break;
         case 'revert_code':
           designer.loadHtml(initialCode);
-          breal;
+          break;
         default:
           throw "Unsupported request from client";
       }
@@ -391,7 +397,7 @@ Polymer('cde-polymer-designer', {
   },
 
   /**
-   * Executes a script in [webview_]'s "isolated world", which give the script
+   * Executes a script in [webview_]'s "isolated world", which gives the script
    * access only to the webview's DOM, but not the JS context.
    *
    * @return: Promise<array of any>

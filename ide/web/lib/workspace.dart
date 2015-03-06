@@ -20,6 +20,8 @@ import 'builder.dart';
 import 'enum.dart';
 import 'exception.dart';
 import 'jobs.dart';
+import 'package_mgmt/pub.dart';
+import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart';
 
@@ -503,6 +505,7 @@ class Workspace extends Container {
           File file = new File(container, ent);
           container.getChildren().add(file);
         } else {
+          // TODO(ussuri): Use PubProperties consts/methods here.
           // Some special cased code to prevent reading in lots of `packages`
           // directories on Windows. We only want to realize the packages
           // directory at the top level of a project. Our check for this is the
@@ -963,6 +966,12 @@ class Folder extends Container {
   }
 
   Future delete() {
+    if (PlatformInfo.isWin && pubProperties.isManagedFolder(name)) {
+      return new Future.error(
+          'Unable to delete a Pub managed folder on Windows. '
+          'See https://github.com/dart-lang/chromedeveditor/issues/3669 for more information.');
+    }
+
     return _dirEntry.removeRecursively()
       .then((_) => _parent._removeChild(this, fireEvent: true))
       .catchError((e) {
@@ -975,14 +984,14 @@ class Folder extends Container {
       });
   }
 
-  //TODO(keertip): remove check for 'cache'
-  bool isScmPrivate() => name == '.git' || name == '.svn'
-      || name =='cache';
+  static const List<String> _PRIVATE_SCM_FOLDERS = const [
+      '.git', '.bower-git', '.pub', '.svn', '.hg'
+  ];
+
+  bool isScmPrivate() => _PRIVATE_SCM_FOLDERS.contains(name);
 
   bool isDerived() {
-    // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
-    if ((name == 'build' || name == 'cache') &&
-        parent is Project) {
+    if (name == 'build' && parent is Project) {
       return true;
     } else {
       return super.isDerived();
@@ -1462,12 +1471,16 @@ class ResourceChangeEvent {
  * Indicates a change on a particular resource.
  */
 class ChangeDelta {
+  static const _EMPTY = const [];
+
   final Resource resource;
   final EventType type;
-  Resource originalResource = null;
-  Map<String, String> resourceUuidsMapping = null;
-  List<ChangeDelta> deletions = null;
-  List<ChangeDelta> additions = null;
+
+  Resource originalResource;
+  Map<String, String> resourceUuidsMapping;
+
+  List<ChangeDelta> deletions = _EMPTY;
+  List<ChangeDelta> additions = _EMPTY;
 
   static List<ChangeDelta> containerAdd(Resource resource) {
     if (resource is Container) {

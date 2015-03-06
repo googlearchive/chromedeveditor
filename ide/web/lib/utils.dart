@@ -595,6 +595,25 @@ Future<String> downloadFileViaXhr(
   request.onLoadEnd.listen((event) {
     if (request.status == 200) {
       completer.complete(request.responseText);
+    } else if (request.status == 403) {
+      // Access forbidden. It's possible that we've hit a rate limit.
+      final String rateLimitRemaining =
+          request.responseHeaders['x-ratelimit-remaining'];
+      if (rateLimitRemaining == '0') {
+        String rateLimitReset = request.responseHeaders['x-ratelimit-reset'];
+        if (rateLimitReset != null) {
+          final int msSinceEpoch = int.parse(rateLimitReset) * 1000;
+          rateLimitReset = new DateTime.fromMillisecondsSinceEpoch(
+              msSinceEpoch, isUtc: true).toLocal().toString();
+        } else {
+          rateLimitReset = "unknown time";
+        }
+        completer.completeError(
+            "Reached the access rate limit when requesting '$url': "
+            "the limit will reset at $rateLimitReset");
+      } else {
+        completer.completeError("Access to '$url' is (temporarily) forbidden");
+      }
     } else if (request.status == 404) {
       // Remote file doesn't exist.
       completer.complete('');
@@ -602,6 +621,19 @@ Future<String> downloadFileViaXhr(
       completer.completeError(
           "Failed to download '$url': ${request.statusText}");
     }
+  });
+  request.send();
+
+  return completer.future;
+}
+
+Future<String> getRedirectedUrlViaXhr(String url) {
+  final completer = new Completer();
+  final request = new html.HttpRequest();
+
+  request.open('HEAD', url);
+  request.onLoadEnd.listen((event) {
+    completer.complete(request.responseUrl);
   });
   request.send();
 
