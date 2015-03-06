@@ -88,6 +88,7 @@ class JsHint {
 
   JsHint() {
     setOption('laxbreak');
+    setOption('esnext');
   }
 
   /**
