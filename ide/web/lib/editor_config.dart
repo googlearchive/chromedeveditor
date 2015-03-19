@@ -204,7 +204,7 @@ class ConfigFile {
   }
 
   void parseConfig(String content) {
-    _iniConfig = ini.Config.fromStrings(content.split("\n"));
+    _iniConfig = new ini.Config.fromStrings(content.split("\n"));
     _iniConfig.sections().forEach((String sectionId) {
       ConfigSection section = new ConfigSection(_iniConfig, sectionId);
       sections.add(section);
