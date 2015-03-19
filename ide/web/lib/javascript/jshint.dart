@@ -88,7 +88,10 @@ class JsHint {
 
   JsHint() {
     setOption('laxbreak');
+    // Enable ES6 features.
     setOption('esnext');
+    // Disable '<var> is better written in dot notation'.
+    setOption('sub');
   }
 
   /**
