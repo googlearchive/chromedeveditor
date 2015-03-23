@@ -7,7 +7,7 @@ function PromiseCompleter() {
     this.resolve_ = resolve;
     this.reject_ = reject;
   }.bind(this));
-}
+};
 
 PromiseCompleter.prototype.resolve = function(value) {
   this.resolve_(value);

@@ -21,7 +21,7 @@ final NumberFormat _nf = new NumberFormat.decimalPattern();
 final RegExp _imageFileTypes = new RegExp(r'\.(jpe?g|png|gif|ico)$',
     caseSensitive: false);
 
-final RegExp _webFileTypes = new RegExp(r'\.(css|htm?l|xml)$',
+final RegExp _webFileTypes = new RegExp(r'\.(css|html?|xml)$',
     caseSensitive: false);
 
 chrome.DirectoryEntry _packageDirectoryEntry;
