@@ -43,8 +43,8 @@ dynamic get _toggleOutlineButton => _spark.$['toggle-outline'];
 dynamic get _polymerDesignerButton => _spark.$['openPolymerDesignerButton'];
 
 class TextEditor extends Editor {
-  static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
-  static const int LARGE_FILE_SIZE = 500000;
+  static final RegExp _WHITESPACE_REGEX = new RegExp(r'[\t ]+$', multiLine: false);
+  static const int _LARGE_FILE_SIZE = 500000;
 
   final AceManager aceManager;
   final workspace.File file;
@@ -224,7 +224,7 @@ class TextEditor extends Editor {
   }
 
   bool fileIsLarge(String text) {
-    return (text.length > LARGE_FILE_SIZE);
+    return (text.length > _LARGE_FILE_SIZE);
   }
 
   Future save() {
@@ -237,7 +237,7 @@ class TextEditor extends Editor {
       // Remove the trailing whitespace if asked to do so.
       if (_prefs.stripWhitespaceOnSave.value) {
         if (!fileIsLarge(text)) {
-          text = text.replaceAll(whitespaceRegEx, '');
+          text = text.replaceAll(_WHITESPACE_REGEX, '');
         }
       }
 
@@ -619,12 +619,10 @@ class AceManager {
     _aceEditor = ace.edit(containerElement);
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor
-        ..highlightActiveLine = false
+        ..highlightActiveLine = true
         ..printMarginColumn = 80
         ..readOnly = true;
     _aceEditor.setOptions({
-        // TODO(devoncarew): Commented out - see #2475.
-        //..fadeFoldWidgets = true
         'enableBasicAutocompletion': true,
         // TODO(devoncarew): Disabled to workaround #2442.
         //..setOption('enableSnippets', true)
@@ -633,7 +631,7 @@ class AceManager {
     });
     _aceEditor.commands
         ..addCommands(customCommands)
-        // Remove the `ctrl-,` binding.
+        // Remove Ace's `ctrl-,` binding, which opens a popup with the settings menu.
         ..removeCommand('showSettingsMenu');
 
     // Underine links on hover.
@@ -641,14 +639,13 @@ class AceManager {
     // Force removal of the sometimes stuck link underline.
     containerElement.onKeyUp.listen(_undecorateLink);
 
-    if (!SparkFlags.enableMultiSelect) {
-      // Setup ACCEL + clicking on declaration
-      var node = containerElement.getElementsByClassName("ace_content")[0];
-      node.onClick.listen((e) {
-        bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
-        if (accelKey) _onGotoDeclarationController.add(null);
-      });
-    }
+    // Setup ACCEL + clicking on declaration
+    var node = containerElement.getElementsByClassName("ace_content")[0];
+    node.onClick.listen((e) {
+      if (e.altKey && (PlatformInfo.isMac ? e.metaKey : e.ctrlKey)) {
+        _onGotoDeclarationController.add(null);
+      }
+    });
 
     _setupGotoLine();
   }
