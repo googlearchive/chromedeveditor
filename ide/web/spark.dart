@@ -1874,7 +1874,7 @@ abstract class PackageManagementAction
     });
   }
 
-  String get category => 'application';
+  String get category => 'source_manipulation';
 
   bool appliesTo(List list) =>
       list.length == 1 && _serviceProperties.isPackageResource(list.first);
