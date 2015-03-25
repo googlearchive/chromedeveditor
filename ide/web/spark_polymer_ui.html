@@ -444,6 +444,12 @@
               placeholder="1.0"
               spellcheck="false" autocomplete="on" focused>
         </div>
+        <div class="input-label">
+          <label for="privateKeyPassword">Private Password:</label>
+          <input id="privateKeyPassword" type="text" class="form-control"
+              placeholder="android"
+              spellcheck="false" autosave focused>
+        </div>
       </div>
       <div class="form-group">
         <spark-toolbar class="settings-block"
@@ -500,7 +506,7 @@
       </div>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
-      <spark-dialog-button submit>Build</spark-dialog-button>
+      <spark-dialog-button submit id="buildButton">Build</spark-dialog-button>
     </spark-dialog>
 
 

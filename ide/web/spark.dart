@@ -5,7 +5,7 @@
 library spark;
 
 import 'dart:async';
-import 'dart:convert' show JSON;
+import 'dart:convert';
 import 'dart:html' hide File;
 import 'dart:js' as js;
 
@@ -2187,9 +2187,16 @@ class FocusMainMenuAction extends SparkAction {
   }
 }
 
-class BuildApkAction extends SparkActionWithDialog {
+class BuildApkAction extends SparkActionWithProgressDialog {
   BuildApkAction(Spark spark, Element dialog)
       : super(spark, "application-build", "Build APK…", dialog) {
+    _appNameElement = getElement('#appName');
+    _packageNameElement = getElement('#packageName');
+    _versionNameElement = getElement('#versionName');
+    _privateKeyElement = getElement('#privateKey');
+    _publicKeyElement = getElement('#publicKey');
+    _privatePasswordElement = getElement('#privateKeyPassword');
+    _appInfo = new MobileBuildInfo();
     getElement('#choosePrivateKey').onClick.listen((_) {
       _selectKey('privateKey');
     });
@@ -2200,19 +2207,115 @@ class BuildApkAction extends SparkActionWithDialog {
 
   void _selectKey(String outputField) {
     spark.chooseFileEntry().then((ChromeFileEntry entry) {
+      if (outputField == 'publicKey') {
+        _appInfo.publicKey = entry;
+      } else {
+        _appInfo.privateKey = entry;
+      }
       filesystem.fileSystemAccess.getDisplayPath(entry).then((String path) {
         getElement('#$outputField').text = path;
       });
     });
   }
 
+  InputElement _pushUrlElement;
+  ProgressMonitor _monitor;
+  ws.Container deployContainer;
+  ws.Resource _resource;
+  MobileBuildInfo _appInfo;
+  InputElement _appNameElement;
+  InputElement _packageNameElement;
+  InputElement _versionNameElement;
+  InputElement _privatePasswordElement;
+  SpanElement _publicKeyElement;
+  SpanElement _privateKeyElement;
+
+
   void _invoke([context]) {
-    _show();
+    if (context == null) {
+      _resource = spark.focusManager.currentResource;
+    } else {
+      _resource = context.first;
+    }
+
+    deployContainer = getAppContainerFor(_resource);
+
+    if (deployContainer == null) {
+      spark.showErrorMessage(
+          'Unable to Build the APK',
+          message: 'Unable to build the current selection; '
+                   'please select a Chrome App to build.');
+    } else if (!MobileDeploy.isAvailable()) {
+      spark.showErrorMessage(
+          'Unable to Build', message: 'No USB devices available.');
+    } else {
+      _pushUrlElement = getElement('#buildTargetUrl');
+      _toggleProgressVisible(false);
+      _updateViewFromManifest(deployContainer);
+      _show();
+    }
+  }
+
+  SparkDialogButton get _buildButton => getElement("#buildButton");
+
+  void _updateViewFromManifest(Container container) {
+    chrome.ChromeFileEntry manifest = container.getChild('manifest.json').entry;
+    manifest.readText().then((String manifestJson) {
+      Map<String, dynamic> map = JSON.decode(manifestJson);
+      _appNameElement.value = map["name"];
+      _packageNameElement.value = map["short_name"];
+      _versionNameElement.value = map["version"];
+    });
+  }
+
+  void _updateManifestFromView(Container container) {
+    chrome.ChromeFileEntry manifest = container.getChild('manifest.json').entry;
+    manifest.readText().then((String manifestJson) {
+      Map<String, dynamic> map = JSON.decode(manifestJson);
+      map["name"] = _appNameElement.value;
+      map["short_name"] = _packageNameElement.value;
+      map["version"] = _versionNameElement.value;
+      var encoder = new JsonEncoder.withIndent("  ");
+      manifest.writeText(encoder.convert(map));
+    });
   }
 
   void _commit() {
     super._commit();
-    //TODO(albualexandru): add here the binding to the build class
+
+    _setProgressMessage("Building…");
+    _toggleProgressVisible(true);
+    _buildButton.disabled = true;
+    _buildButton.deliverChanges();
+
+    _appInfo.keyPassword = _privatePasswordElement.value;
+
+    _monitor = new ProgressMonitorImpl(this);
+
+    String type = getElement('input[name="mobileBuildType"]:checked').id;
+    bool useAdb = type == 'buildTargetADB';
+    String url = _pushUrlElement.value;
+
+    MobileDeploy deployer = new MobileDeploy(deployContainer,
+        spark.localPrefs, _appInfo);
+    _updateManifestFromView(deployContainer);
+
+    Future f = new Future(() {
+      return useAdb ?
+          deployer.buildWithAdb(_monitor) : deployer.pushToHost(url, _monitor);
+    });
+      _monitor.runCancellableFuture(f).then((_) {
+      _hide();
+      spark.showSuccessMessage('Successfully built');
+    }).catchError((e) {
+      if (e is! UserCancelledException) {
+        spark.showMessage('Build Failure', e.toString());
+      }
+    }).whenComplete(() {
+       _buildButton.disabled = false;
+       _buildButton.deliverChanges();
+      _monitor = null;
+    });
   }
 }
 

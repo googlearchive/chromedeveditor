@@ -13,6 +13,7 @@ import 'dart:convert';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome_net/tcp.dart';
 import 'package:logging/logging.dart';
+import 'package:crypto/crypto.dart' as crypto;
 
 import 'adb.dart';
 import 'adb_client_tcp.dart';
@@ -49,8 +50,9 @@ class MobileDeploy {
   final PreferenceStore _prefs;
 
   List<DeviceInfo> _knownDevices = [];
+  MobileBuildInfo _appInfo;
 
-  MobileDeploy(this.appContainer, this._prefs) {
+  MobileDeploy(this.appContainer, this._prefs, [this._appInfo]) {
     if (appContainer == null) {
       throw new ArgumentError('must provide an app to push');
     }
@@ -108,6 +110,36 @@ class MobileDeploy {
     });
   }
 
+  Future buildWithHost(String target, ProgressMonitor monitor) {
+    monitor.start('Building…', maxWork: 10);
+
+    _logger.info('building application to ip host');
+    HttpDeployer dep = new HttpDeployer(appContainer, _prefs, target);
+    return dep.build(monitor, _appInfo);
+  }
+
+
+  Future buildWithAdb(ProgressMonitor monitor) {
+    monitor.start('Building…', maxWork: 10);
+
+    // Try to find a local ADB server. If we fail, try to use USB.
+    return AdbClientTcp.createClient().then((AdbClientTcp client) {
+      _logger.info('building application via adb server');
+      return client.forwardTcp(DEPLOY_PORT, DEPLOY_PORT).then((_) {
+        // Push the app binary on DEPLOY_PORT.
+        ADBDeployer dep = new ADBDeployer(appContainer, _prefs);
+        return dep.build(monitor, _appInfo);
+      });
+    }, onError: (_) {
+      _logger.info('building application via ADB over USB');
+      USBDeployer dep = new USBDeployer(appContainer, _prefs);
+      return dep.init().then((_) {
+        return dep.build(monitor, _appInfo);
+      });
+    });
+
+  }
+
   Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
     // Start ADT on the device.
     // TODO: a SocketException, code == -100 here often means that the App Dev
@@ -135,6 +167,7 @@ abstract class AbstractDeployer {
   static const int DEPLOY_PORT = 2424;
   static Duration REGULAR_REQUEST_TIMEOUT = new Duration(seconds: 2);
   static Duration PUSH_REQUEST_TIMEOUT = new Duration(seconds: 60);
+  static Duration BUILD_REQUEST_TIMEOUT = new Duration(seconds: 120);
 
   final Container appContainer;
   final PreferenceStore _prefs;
@@ -187,6 +220,12 @@ abstract class AbstractDeployer {
   List<int> _buildPushRequest(String target, List<int> archivedData) {
     return _buildHttpRequest("POST" ,target,
         "zippush?appId=${appContainer.project.name}&appType=chrome&movetype=file",
+        payload: archivedData);
+  }
+
+  List<int> _makeBuildRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest("POST" ,target,
+        "buildapk?appId=${appContainer.project.name}&appType=chrome",
         payload: archivedData);
   }
 
@@ -317,6 +356,49 @@ abstract class AbstractDeployer {
   /// when the deployment is done this function is called to ensure
   /// that the used resources are disposed
   void _doWhenComplete();
+
+  Future build(ProgressMonitor monitor, MobileBuildInfo appInfo) {
+    List<int> httpRequest;
+    Map<String, String> signInfo = new Map<String, String>();
+
+    httpRequest = _buildAssetManifestRequest(_getTarget());
+    return _setTimeout(_pushRequestToDevice(httpRequest, REGULAR_REQUEST_TIMEOUT))
+      .then((msg) {
+        return _expectHttpOkResponse(msg);
+    }).then((String result) {
+        return _deleteObsoleteFiles(result);
+    }).then((msg) {
+      if (msg != null) {
+        return _expectHttpOkResponse(msg);
+      }
+    }).then((_) {
+      return archiveModifiedFilesInContainer(appContainer, true, [])
+      .then((List<int> archivedData) {
+          httpRequest = _buildPushRequest(_getTarget(), archivedData);
+          return _setTimeout(_pushRequestToDevice(httpRequest, PUSH_REQUEST_TIMEOUT));
+     }).then((msg) {
+         return _expectHttpOkResponse(msg);
+    }).then((String response) {
+      _updateContainerEtag(response);
+      return appInfo.publicKey.readBytes();
+    }).then((chrome.ArrayBuffer data) {
+        signInfo['publicKeyData'] = crypto.CryptoUtils.bytesToBase64(data.getBytes());
+        return appInfo.privateKey.readBytes();
+    }).then((chrome.ArrayBuffer data) {
+      signInfo['privateKeyData'] = crypto.CryptoUtils.bytesToBase64(data.getBytes());
+      signInfo['keyPassword'] = appInfo.keyPassword;
+
+      httpRequest = _makeBuildRequest(_getTarget(), JSON.encode(signInfo).codeUnits);
+      return _setTimeout(_pushRequestToDevice(httpRequest, BUILD_REQUEST_TIMEOUT));
+    }).then((msg) {
+          return _expectHttpOkResponse(msg);
+    }).then((String response) {
+        return new Future.error("Not implemented");
+    });
+    }).whenComplete(() {
+      _doWhenComplete();
+    });
+}
 
   /// Implements the deployement flow
   Future deploy(ProgressMonitor monitor) {
@@ -486,4 +568,10 @@ class LiveDeployManager {
         _monitor = null;
       });
     }
+}
+
+class MobileBuildInfo {
+  chrome.ChromeFileEntry publicKey;
+  chrome.ChromeFileEntry privateKey;
+  String keyPassword;
 }
