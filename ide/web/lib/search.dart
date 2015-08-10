@@ -6,6 +6,7 @@ library spark.search;
 
 import 'dart:async';
 
+import 'dart:core' hide Resource;
 import 'package:spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 
 import 'workspace.dart';

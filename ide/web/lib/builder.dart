@@ -9,6 +9,7 @@
 library spark.builder;
 
 import 'dart:async';
+import 'dart:core' hide Resource;
 
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';

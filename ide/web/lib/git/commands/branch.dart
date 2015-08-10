@@ -33,7 +33,6 @@ class Branch {
   static final branchRegex = new RegExp(BRANCH_PATTERN);
 
   static bool _verifyBranchName(String name) {
-    int length = name.length;
     return (name.isNotEmpty && branchRegex.matchAsPrefix(name) != null &&
         !name.endsWith('.') && !name.endsWith('.lock') && !name.endsWith('/'));
   }

@@ -8,6 +8,7 @@
 library spark.package_mgmt.pub;
 
 import 'dart:async';
+import 'dart:core' hide Resource;
 
 import 'package:logging/logging.dart';
 import 'package:tavern/tavern.dart' as tavern;

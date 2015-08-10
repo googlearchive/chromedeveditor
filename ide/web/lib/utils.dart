@@ -487,10 +487,10 @@ String _removeExtPrefix(String str) {
   return str.replaceFirst(new RegExp("chrome-extension://[a-z0-9]+/"), "");
 }
 
-String _platform() {
-  String str = html.window.navigator.platform;
-  return (str != null) ? str.toLowerCase() : '';
-}
+// String _platform() {
+//   String str = html.window.navigator.platform;
+//   return (str != null) ? str.toLowerCase() : '';
+// }
 
 class FutureHelper {
   /**

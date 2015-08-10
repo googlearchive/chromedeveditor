@@ -14,7 +14,7 @@ import 'dart:math' as math;
 
 import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
-import 'package:crypto/crypto.dart' as crypto;
+//import 'package:crypto/crypto.dart' as crypto;
 import 'package:crc32/crc32.dart' as crc;
 
 import 'css/cssbeautify.dart';
@@ -726,8 +726,8 @@ class AceManager {
       _linkingMarkerId = null;
     }
 
-    html.DivElement contentElement =
-        _aceEditor.renderer.containerElement.querySelector(".ace_content");
+    // html.DivElement contentElement =
+    //     _aceEditor.renderer.containerElement.querySelector(".ace_content");
 
     if (markerRange != null) {
       _markerSession = currentSession;
@@ -830,7 +830,7 @@ class AceManager {
       // Only add errors and warnings to the mini-map.
       if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
         html.Element minimapMarker = new html.Element.div();
-        minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
+        minimapMarker.classes.addAll(['minimap-marker', marker.severityDescription]);
         minimapMarker.style.top = markerPos;
         minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
@@ -1209,11 +1209,11 @@ abstract class AceManagerDelegate {
   void openEditor(workspace.File file, {Span selection});
 }
 
-String _calcMD5(String text) {
-  crypto.MD5 md5 = new crypto.MD5();
-  md5.add(text.codeUnits);
-  return crypto.CryptoUtils.bytesToHex(md5.close());
-}
+// String _calcMD5(String text) {
+//   crypto.MD5 md5 = new crypto.MD5();
+//   md5.add(text.codeUnits);
+//   return crypto.CryptoUtils.bytesToHex(md5.close());
+// }
 
 /**
  * Given some arbitrary text and an offset into it, attempt to return the

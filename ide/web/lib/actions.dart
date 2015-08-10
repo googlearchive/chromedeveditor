@@ -423,10 +423,10 @@ abstract class ContextAction extends Action {
   bool appliesTo(Object object);
 }
 
-String _toTitleCase(String str) {
-  if (str.length < 2) {
-    return str.toUpperCase();
-  } else {
-    return '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}';
-  }
-}
+// String _toTitleCase(String str) {
+//   if (str.length < 2) {
+//     return str.toUpperCase();
+//   } else {
+//     return '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}';
+//   }
+// }

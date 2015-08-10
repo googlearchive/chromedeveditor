@@ -9,6 +9,7 @@ library spark.ui.files_controller;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
+import 'dart:core' hide Resource;
 import 'dart:html' as html;
 
 import 'package:logging/logging.dart';
