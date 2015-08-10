@@ -512,7 +512,7 @@ class EventData extends ChromeObject {
 ItemInfo _createItemInfo(JsObject jsProxy) => jsProxy == null ? null : new ItemInfo.fromProxy(jsProxy);
 PackDirectoryResponse _createPackDirectoryResponse(JsObject jsProxy) => jsProxy == null ? null : new PackDirectoryResponse.fromProxy(jsProxy);
 //any _createany(JsObject jsProxy) => jsProxy == null ? null : new any.fromProxy(jsProxy);
-EventData _createEventData(JsObject jsProxy) => jsProxy == null ? null : new EventData.fromProxy(jsProxy);
+//EventData _createEventData(JsObject jsProxy) => jsProxy == null ? null : new EventData.fromProxy(jsProxy);
 ItemType _createItemType(String value) => ItemType.VALUES.singleWhere((ChromeEnum e) => e.value == value);
 InstallWarning _createInstallWarning(JsObject jsProxy) => jsProxy == null ? null : new InstallWarning.fromProxy(jsProxy);
 ItemInspectView _createItemInspectView(JsObject jsProxy) => jsProxy == null ? null : new ItemInspectView.fromProxy(jsProxy);

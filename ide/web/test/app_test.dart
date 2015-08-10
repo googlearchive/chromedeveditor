@@ -52,7 +52,7 @@ defineTests() {
       try {
         app.start();
         expect(false, true, reason: 'expected start() to throw');
-      } on StateError catch (ex) {
+      } on StateError {
         expect(true, true);
       }
     });

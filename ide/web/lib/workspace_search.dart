@@ -4,6 +4,8 @@
 
 library spark.workspace_search;
 
+import 'dart:core' hide Resource;
+
 import 'utils.dart';
 import 'workspace.dart';
 

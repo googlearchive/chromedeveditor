@@ -6,6 +6,7 @@ library spark.templates;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
+import 'dart:core' hide Resource;
 import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
