@@ -8,11 +8,11 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
-  <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
 
-  <link rel="import" href="bower_components/core-icons/core-icons.html">
-  <link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
-  <link rel="import" href="bower_components/font-roboto/roboto.html">
+  <link rel="import" href="bower_components/iron-icons/iron-icons.html">
+  <link rel="import" href="bower_components/paper-toolbar/paper-toolbar.html">
+  <!-- <link rel="import" href="bower_components/font-roboto/roboto.html"> -->
   <link rel="import" href="bower_components/paper-button/paper-button.html">
   <link rel="import" href="bower_components/paper-checkbox/paper-checkbox.html">
   <link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
@@ -24,16 +24,16 @@
 </head>
 
 <body unresolved>
-  <core-toolbar>
+  <paper-toolbar>
     <paper-icon-button icon="menu"></paper-icon-button>
-    <span flex>``projectName`` toolbar</span>
+    <span class="flex">``projectName`` toolbar</span>
     <paper-fab icon="add"></paper-fab>
-  </core-toolbar>
+  </paper-toolbar>
 
   <section>
     <p>A simple Polymer
-      <a href="http://www.polymer-project.org/docs/elements/paper-elements.html">
-      paper elements</a> example that demonstrates using <code>&lt;core-toolbar&gt;,
+      <a href="https://elements.polymer-project.org/browse?package=paper-elements">
+      paper elements</a> example that demonstrates using <code>&lt;paper-toolbar&gt;,
       &lt;paper-button&gt;, &lt;paper-checkbox&gt;, &lt;paper-icon-button&gt;,
       &lt;paper-fab&gt;, &lt;paper-tabs&gt;</code>, and <code>&lt;paper-toast&gt;</code>.
     </p>
@@ -56,14 +56,12 @@
   </section>
 
   <section>
-    <template id="toastGroup" is="auto-binding">
-      <paper-button raised right on-click="{{showToast}}">
-        Show Toast
-      </paper-button>
+    <template id="toastGroup" is="dom-bind">
+      <paper-button raised right on-click="showToast">Show Toast</paper-button>
       <paper-toast id="toast" text="Sample toast here."></paper-toast>
     </template>
   </section>
-  
+
   <script src="main.js"></script>
 </body>
 </html>

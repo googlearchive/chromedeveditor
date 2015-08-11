@@ -4,13 +4,12 @@
 <head>
   <title>``tagName`` Info</title>
 
-  <script src="../webcomponentsjs/webcomponents.js"></script>
+  <script src="../webcomponentsjs/webcomponents-lite.min.js"></script>
 
-  <link rel="import" href="../polymer/polymer.html">
-  <link rel="import" href="../core-component-page/core-component-page.html">
+  <link rel="import" href="../iron-component-page/iron-component-page.html">
 </head>
 
 <body unresolved>
-  <core-component-page></core-component-page>
+  <iron-component-page></iron-component-page>
 </body>
 </html>
