@@ -38,7 +38,7 @@
           value: '',
           observe: '_attrChanged'
         }
-      }
+      },
 
       ready: function() {
       },
