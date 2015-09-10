@@ -13,7 +13,11 @@
 }
 
 #container {
-  display: none;
+  /* A temporary hacky way to prevent the /deep/ rules related to flex layout
+     leaking in from somewhere and overriding this setting. Those can be seen
+     in the rules on this element in DevTools.
+     TODO(ussuri): Fix properly. */
+  display: none !important;
   height: 100%;
   background: #fafafa;
   border-radius: 2px;
@@ -22,7 +26,9 @@
 }
 
 #container.showing {
-  display: flex;
+  /* See the comment re: !important above.
+     TODO(ussuri): Fix properly. */
+  display: flex !important;
 }
 
 #queryText {
