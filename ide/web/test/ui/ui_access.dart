@@ -156,7 +156,7 @@ class DialogAccess {
   SparkDomAccess get _sparkDomAccess => SparkDomAccess.instance;
   SparkDialog get _dialog => _sparkDomAccess.getUIElement("#$id");
   List<SparkDialogButton> get _dialogButtons =>
-      _dialog.querySelectorAll("spark-dialog-button");
+      _dialog.querySelectorAll("spark-dialog-button") as List<SparkDialogButton>;
 
   DialogAccess(this.id) {
     SparkModal m = modalElement;

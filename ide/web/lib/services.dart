@@ -5,6 +5,7 @@
 library spark.services;
 
 import 'dart:async';
+import 'dart:core' hide Resource;
 
 import 'package:logging/logging.dart';
 

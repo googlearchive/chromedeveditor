@@ -10,6 +10,7 @@ library spark.editors;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
+import 'dart:core' hide Resource;
 import 'dart:html' as html;
 
 import 'ace.dart' as ace;
@@ -546,4 +547,3 @@ class PreferenceContentProvider implements ContentProvider {
 
   Future write(String content) => _store.setValue(_filename, content);
 }
-

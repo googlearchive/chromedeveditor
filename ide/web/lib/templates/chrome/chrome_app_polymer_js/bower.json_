@@ -7,7 +7,7 @@
   "author": "",
   "private": true,
   "dependencies": {
-    "polymer": "Polymer/polymer#0.5.5",
-    "paper-elements": "Polymer/paper-elements#0.5.5"
+    "iron-elements": "PolymerElements/iron-elements#^1.0.0",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.1"
   }
 }

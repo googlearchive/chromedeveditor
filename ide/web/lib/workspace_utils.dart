@@ -6,6 +6,7 @@ library spark.workspace_utils;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:core' hide Resource;
 
 import 'package:archive/archive.dart' as archive;
 import 'package:chrome/chrome_app.dart' as chrome;

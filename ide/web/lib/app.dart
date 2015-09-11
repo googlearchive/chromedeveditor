@@ -8,6 +8,7 @@
 library spark.app;
 
 import 'dart:async';
+import 'dart:core' hide Resource;
 
 import 'workspace.dart';
 

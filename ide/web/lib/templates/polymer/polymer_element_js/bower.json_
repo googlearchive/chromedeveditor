@@ -2,6 +2,9 @@
   "name": "``projectName``",
   "private": true,
   "dependencies": {
-    "polymer": "Polymer/polymer#^0.5.5"
+    "polymer": "Polymer/polymer#^1.1.2"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.5"
   }
 }

@@ -9,6 +9,7 @@ library spark.launch;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:core' hide Resource;
 import 'dart:html' show window;
 
 import 'package:chrome/chrome_app.dart' as chrome;

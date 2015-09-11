@@ -10,4 +10,5 @@ build/
 dist/
 docs/
 packages
+.packages
 cache/

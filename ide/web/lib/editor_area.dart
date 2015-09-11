@@ -9,6 +9,7 @@
 library spark.editor_area;
 
 import 'dart:async';
+import 'dart:core' hide Resource;
 import 'dart:html' hide File;
 
 import 'editors.dart';

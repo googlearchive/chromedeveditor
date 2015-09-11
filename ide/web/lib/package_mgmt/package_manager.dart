@@ -6,6 +6,8 @@ library spark.package_mgmt;
 
 import 'dart:async';
 
+import 'dart:core' hide Resource;
+
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';

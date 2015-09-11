@@ -4,6 +4,8 @@
 
 library spark.package_utils;
 
+import 'dart:core' hide Resource;
+
 import 'bower_properties.dart';
 import 'pub.dart';
 import '../workspace.dart';
