@@ -9,6 +9,7 @@
 ::content * {
   box-sizing: border-box;
   outline: none;
+  min-width: 0;
 }
 
 /* NOTE: The font is set conservatively. Clients should make sure they specify
