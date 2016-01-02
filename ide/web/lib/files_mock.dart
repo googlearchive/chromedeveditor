@@ -9,6 +9,7 @@ library spark.files_mock;
 
 import 'dart:async';
 import 'dart:html';
+import 'dart:js';
 
 import 'package:chrome/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
@@ -104,6 +105,9 @@ class MockFileSystem implements FileSystem {
     entry._modificationTime = new DateTime.fromMillisecondsSinceEpoch(
         entry._modificationTime.millisecondsSinceEpoch + 1);
   }
+
+  // Added to satisfy the analyzer.
+  JsObject blink_jsObject;
 }
 
 /**
@@ -248,6 +252,9 @@ abstract class _MockEntry implements Entry {
   String get _path => _parent == null ? '/${name}' : '${_parent._path}/${name}';
 
   int get _size;
+
+  // Added to satisfy the analyzer.
+  JsObject blink_jsObject;
 }
 
 class _MockFileEntry extends _MockEntry implements FileEntry, ChromeFileEntry {
@@ -316,6 +323,9 @@ class _MockFileEntry extends _MockEntry implements FileEntry, ChromeFileEntry {
 
   dynamic get jsProxy => null;
   dynamic toJs() => null;
+
+  // Added to satisfy the analyzer.
+  JsObject blink_jsObject;
 }
 
 class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
@@ -453,6 +463,9 @@ class _MockDirectoryReader implements DirectoryReader {
   _MockDirectoryReader(this.dir);
 
   Future<List<Entry>> readEntries() => new Future.value(dir._children);
+
+  // Added to satisfy the analyzer.
+  JsObject blink_jsObject;
 }
 
 class _MockMetadata implements Metadata {
@@ -463,6 +476,9 @@ class _MockMetadata implements Metadata {
   DateTime get modificationTime => entry._modificationTime;
 
   int get size => entry._size;
+
+  // Added to satisfy the analyzer.
+  JsObject blink_jsObject;
 }
 
 abstract class _MockBlob implements Blob {
@@ -470,6 +486,9 @@ abstract class _MockBlob implements Blob {
   Blob slice([int start, int end, String contentType]);
   String get type;
   void close();
+
+  // Added to satisfy the analyzer.
+  JsObject blink_jsObject;
 }
 
 class _MockFile extends _MockBlob implements File {
