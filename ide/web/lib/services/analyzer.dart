@@ -43,12 +43,12 @@ class _NullDebugLogger implements _DebugLogger {
   void debug(String message) => null;
 }
 
-/**
- * Logger forwarding messages to the [print] method.
- */
-class _PrintDebugLogger implements _DebugLogger {
-  void debug(String message) => print(message);
-}
+// /**
+//  * Logger forwarding messages to the [print] method.
+//  */
+// class _PrintDebugLogger implements _DebugLogger {
+//   void debug(String message) => print(message);
+// }
 
 /**
  * Logger for the analysis engine messages, forwards all calls to

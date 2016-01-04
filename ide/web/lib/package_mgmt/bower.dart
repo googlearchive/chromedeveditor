@@ -161,7 +161,7 @@ class _BowerBuilder extends PackageBuilder {
     // potentially shifting right under us now.
     for (ChangeDelta delta in event.changes) {
       Resource r = delta.resource;
-      if (delta.resource.name == properties.configFileName ||
+      if (r.name == properties.configFileName ||
           (delta.originalResource != null &&
            delta.originalResource.name == properties.configFileName)) {
         futures.add(_handleConfigFileChange(delta));

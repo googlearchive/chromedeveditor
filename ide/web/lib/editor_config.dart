@@ -346,7 +346,6 @@ class GlobPattern implements Pattern {
 
     do {
       n = string.indexOf(globCharsRegExp, n);
-      GlobMatcher matcher;
 
       if (n == -1) {
         return new StaticMatcher(string, this, start, string.length);
