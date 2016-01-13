@@ -16,7 +16,7 @@
     "oauth2-clientid": "450494089748-v53iih45odoooegmomoij2do6eeok65m.apps.googleusercontent.com"
   },
   "stable": {
-    "name": "Chrome Dev Editor (developer preview)",
+    "name": "Chrome Dev Editor",
     "branch": "0.22",
     "version": "0.22",
     "id": "pnoffddplpippgcfjdhbmhkofpnaalpg",
