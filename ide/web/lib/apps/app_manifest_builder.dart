@@ -96,7 +96,7 @@ class AppManifestBuilder extends Builder {
           JsonParser parser = new JsonParser(contents, listener);
           parser.parse();
         }
-      } on FormatException catch (e) {
+      } on FormatException {
         // Ignore e; already reported through the listener interface.
       }
     });

@@ -4,6 +4,8 @@
 
 library spark.app_utils;
 
+import 'dart:core' hide Resource;
+
 import '../workspace.dart';
 
 /**

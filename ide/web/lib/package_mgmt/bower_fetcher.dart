@@ -188,7 +188,7 @@ class BowerFetcher {
     Map<String, dynamic> specMap;
     try {
       specMap = JSON.decode(spec);
-    } on FormatException catch (e, s) {
+    } on FormatException catch (e) {
       _logger.warning("Bad package spec: $e\n$spec");
       return [];
     }
@@ -528,7 +528,7 @@ class _Package {
       Map<String, dynamic> regInfo;
       try {
         regInfo = JSON.decode(regResponse);
-      } on FormatException catch (e) {
+      } on FormatException catch (_) {
         // Also handles [registryResponse]=='Package not found'.
         return _resolveWith(_Unresolved.STAR_PATH_FOR_UNKNOWN_PACKAGE);
       }
@@ -569,7 +569,7 @@ class _Package {
     } else {
       try {
         constraint = new semver.VersionConstraint.parse(hash);
-      } on FormatException catch (e) {
+      } on FormatException catch (_) {
         return _resolveWith(_Unresolved.MALFORMED_SPEC);
       }
     }
@@ -591,7 +591,7 @@ class _Package {
           if (constraint.allows(ver)) {
             candidateVersions.add(ver);
           }
-        } on FormatException catch (e) {
+        } on FormatException catch (_) {
           // Non-version looking tag. See if it matches literally.
           if (tagName == hash) {
             _resolvedDirectTag = tagName;

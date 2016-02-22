@@ -8,6 +8,7 @@
 
 library spark.ui.widgets.fileitem_cell;
 
+import 'dart:core' hide Resource;
 import 'dart:html' hide File;
 
 import 'listview_cell.dart';

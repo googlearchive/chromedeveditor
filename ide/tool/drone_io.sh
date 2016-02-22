@@ -3,8 +3,8 @@
 if [ "$DRONE" = "true" ]; then
   sudo apt-get -y -q install zip
   sudo apt-get -y -q install libappindicator1
-  curl -O https://dl.google.com/linux/direct/google-chrome-unstable_current_amd64.deb
-  sudo dpkg -i google-chrome-unstable_current_amd64.deb
+  curl -O https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  sudo dpkg -i google-chrome-stable_current_amd64.deb
   sudo start xvfb
   export HAS_DARTIUM=true
 fi

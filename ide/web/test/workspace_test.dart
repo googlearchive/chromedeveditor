@@ -5,6 +5,7 @@
 library spark.workspace_test;
 
 import 'dart:async';
+import 'dart:core' hide Resource;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';

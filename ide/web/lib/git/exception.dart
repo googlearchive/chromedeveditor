@@ -63,7 +63,6 @@ class GitErrorConstants {
   static const String GIT_MERGE_ERROR = "git.merge_error";
 
   static const String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
-  static const String GIT_BITBUCKET_REPO_NOT_SUPPORTED = "git.bitbucket_repo_not_supported";
   static const String GIT_WORKING_TREE_NOT_CLEAN = "git.working_tree_not_clean";
   static const String GIT_FILE_STATUS_TYPE_UNKNOWN =
       "git.file_status_type_unknown";

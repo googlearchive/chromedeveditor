@@ -14,7 +14,7 @@ import 'dart:math' as math;
 
 import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
-import 'package:crypto/crypto.dart' as crypto;
+//import 'package:crypto/crypto.dart' as crypto;
 import 'package:crc32/crc32.dart' as crc;
 
 import 'css/cssbeautify.dart';
@@ -43,8 +43,8 @@ dynamic get _toggleOutlineButton => _spark.$['toggle-outline'];
 dynamic get _polymerDesignerButton => _spark.$['openPolymerDesignerButton'];
 
 class TextEditor extends Editor {
-  static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
-  static const int LARGE_FILE_SIZE = 500000;
+  static final RegExp _WHITESPACE_REGEX = new RegExp(r'[\t ]+$', multiLine: false);
+  static const int _LARGE_FILE_SIZE = 500000;
 
   final AceManager aceManager;
   final workspace.File file;
@@ -224,7 +224,7 @@ class TextEditor extends Editor {
   }
 
   bool fileIsLarge(String text) {
-    return (text.length > LARGE_FILE_SIZE);
+    return (text.length > _LARGE_FILE_SIZE);
   }
 
   Future save() {
@@ -237,7 +237,7 @@ class TextEditor extends Editor {
       // Remove the trailing whitespace if asked to do so.
       if (_prefs.stripWhitespaceOnSave.value) {
         if (!fileIsLarge(text)) {
-          text = text.replaceAll(whitespaceRegEx, '');
+          text = text.replaceAll(_WHITESPACE_REGEX, '');
         }
       }
 
@@ -726,8 +726,8 @@ class AceManager {
       _linkingMarkerId = null;
     }
 
-    html.DivElement contentElement =
-        _aceEditor.renderer.containerElement.querySelector(".ace_content");
+    // html.DivElement contentElement =
+    //     _aceEditor.renderer.containerElement.querySelector(".ace_content");
 
     if (markerRange != null) {
       _markerSession = currentSession;
@@ -830,7 +830,7 @@ class AceManager {
       // Only add errors and warnings to the mini-map.
       if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
         html.Element minimapMarker = new html.Element.div();
-        minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
+        minimapMarker.classes.addAll(['minimap-marker', marker.severityDescription]);
         minimapMarker.style.top = markerPos;
         minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
@@ -1209,11 +1209,11 @@ abstract class AceManagerDelegate {
   void openEditor(workspace.File file, {Span selection});
 }
 
-String _calcMD5(String text) {
-  crypto.MD5 md5 = new crypto.MD5();
-  md5.add(text.codeUnits);
-  return crypto.CryptoUtils.bytesToHex(md5.close());
-}
+// String _calcMD5(String text) {
+//   crypto.MD5 md5 = new crypto.MD5();
+//   md5.add(text.codeUnits);
+//   return crypto.CryptoUtils.bytesToHex(md5.close());
+// }
 
 /**
  * Given some arbitrary text and an offset into it, attempt to return the

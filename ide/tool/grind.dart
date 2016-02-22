@@ -312,7 +312,7 @@ void _zip(GrinderContext context, String dirToZip, String destFile) {
           arguments: ['a', '-r', destPath, '.'],
           workingDirectory: dirToZip,
           quiet: true);
-    } on ProcessException catch(e) {
+    } on ProcessException {
       context.fail("Unable to execute 7z.\n"
         "Please install 7zip. Add 7z directory to the PATH environment variable.");
     }
@@ -394,20 +394,20 @@ String _getRepositoryUrl() {
   return _getCommandOutput('git config remote.origin.url');
 }
 
-// Returns the current revision identifier of the local copy.
-String _getCurrentRevision() {
-  return _getCommandOutput('git rev-parse HEAD').substring(0, 10);
-}
+// // Returns the current revision identifier of the local copy.
+// String _getCurrentRevision() {
+//   return _getCommandOutput('git rev-parse HEAD').substring(0, 10);
+// }
 
-// In case, release is performed on a non-releasable branch/repository, we just
-// archive and name the archive with the revision identifier.
-void _archiveWithRevision(GrinderContext context) {
-  context.log('Performing archive instead.');
-  String version = _getCurrentRevision();
-  String filename = 'spark-rev-${version}.zip';
-  archive(context, filename);
-  context.log("Created ${filename}");
-}
+// // In case, release is performed on a non-releasable branch/repository, we just
+// // archive and name the archive with the revision identifier.
+// void _archiveWithRevision(GrinderContext context) {
+//   context.log('Performing archive instead.');
+//   String version = _getCurrentRevision();
+//   String filename = 'spark-rev-${version}.zip';
+//   archive(context, filename);
+//   context.log("Created ${filename}");
+// }
 
 String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
                                              Map<String, String> channelConfig)
@@ -464,15 +464,15 @@ void _modifyLocaleWithChannelConfig(GrinderContext context,
       joinDir(BUILD_DIR, ['web', '_locales', 'en']));
 }
 
-void _removePackagesLinks(GrinderContext context, Directory target) {
-  target.listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
-    if (entity is Link && fileName(entity) == 'packages') {
-      try { entity.deleteSync(); } catch (_) { }
-    } else if (entity is Directory) {
-      _removePackagesLinks(context, entity);
-    }
-  });
-}
+// void _removePackagesLinks(GrinderContext context, Directory target) {
+//   target.listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+//     if (entity is Link && fileName(entity) == 'packages') {
+//       try { entity.deleteSync(); } catch (_) { }
+//     } else if (entity is Directory) {
+//       _removePackagesLinks(context, entity);
+//     }
+//   });
+// }
 
 /**
  * Create an archived version of the Dart SDK.
@@ -536,23 +536,23 @@ void _delete(String path, [GrinderContext context]) {
   }
 }
 
-void _rename(String srcPath, String destPath, [GrinderContext context]) {
-   if (context != null) {
-     context.log('rename ${srcPath} to ${destPath}');
-   }
-   File srcFile = new File(srcPath);
-   srcFile.renameSync(destPath);
-}
+// void _rename(String srcPath, String destPath, [GrinderContext context]) {
+//    if (context != null) {
+//      context.log('rename ${srcPath} to ${destPath}');
+//    }
+//    File srcFile = new File(srcPath);
+//    srcFile.renameSync(destPath);
+// }
 
-void _copyFileWithNewName(File srcFile, Directory destDir, String destFileName,
-                          [GrinderContext context]) {
-  File destFile = joinFile(destDir, [destFileName]);
-  if (context != null) {
-    context.log('copying ${srcFile.path} to ${destFile.path}');
-  }
-  destDir.createSync(recursive: true);
-  destFile.writeAsBytesSync(srcFile.readAsBytesSync());
-}
+// void _copyFileWithNewName(File srcFile, Directory destDir, String destFileName,
+//                           [GrinderContext context]) {
+//   File destFile = joinFile(destDir, [destFileName]);
+//   if (context != null) {
+//     context.log('copying ${srcFile.path} to ${destFile.path}');
+//   }
+//   destDir.createSync(recursive: true);
+//   destFile.writeAsBytesSync(srcFile.readAsBytesSync());
+// }
 
 void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   context.log(command);

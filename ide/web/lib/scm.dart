@@ -9,6 +9,7 @@
 library spark.scm;
 
 import 'dart:async';
+import 'dart:core' hide Resource;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';

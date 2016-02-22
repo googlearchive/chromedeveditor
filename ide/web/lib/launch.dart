@@ -9,6 +9,7 @@ library spark.launch;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:core' hide Resource;
 import 'dart:html' show window;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -553,7 +554,7 @@ class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
  * machine.
  */
 class WebAppLocalLaunchHandler extends LaunchTargetHandler {
-  final int preferredPort = 51792;
+  final int preferredPort = 32345;
 
   final LaunchManager launchManager;
   final Workspace workspace;

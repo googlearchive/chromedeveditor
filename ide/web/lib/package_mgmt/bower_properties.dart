@@ -6,6 +6,7 @@ library spark.package_mgmt.bower_properties;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
+import 'dart:core' hide Resource;
 
 import 'package_manager.dart';
 import '../workspace.dart';

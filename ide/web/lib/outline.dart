@@ -300,7 +300,12 @@ abstract class OutlineItem {
       _element.append(_typeSpan);
     }
 
-    _element.classes.add("outlineItem ${cssClassName}");
+    _element.classes.add('outlineItem');
+    if (cssClassName.contains(' ')) {
+      _element.classes.addAll(cssClassName.split(' '));
+    } else {
+      _element.classes.add(cssClassName);
+    }
   }
 
   String get displayName => _data.name;
