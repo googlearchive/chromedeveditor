@@ -3,7 +3,8 @@
 * text=auto
 *.dart text
 *.js text
-*.html
+*.html text
+*.json text
 *.png binary
 *.jpg binary
 
