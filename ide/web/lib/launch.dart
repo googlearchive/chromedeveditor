@@ -554,7 +554,7 @@ class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
  * machine.
  */
 class WebAppLocalLaunchHandler extends LaunchTargetHandler {
-  final int preferredPort = 32345;
+  final int preferredPort = 31999;
 
   final LaunchManager launchManager;
   final Workspace workspace;
