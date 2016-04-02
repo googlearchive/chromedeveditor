@@ -200,6 +200,14 @@ class BowerFetcher {
     rawDeps.forEach((String name, String fullPath) {
       deps.add(new _Package(name, fullPath));
     });
+
+    final Map<String, String> rawDevDeps = specMap['devDependencies'];
+    if (rawDevDeps != null) {
+      rawDevDeps.forEach((String name, String fullPath) {
+        deps.add(new _Package(name, fullPath));
+      });
+    };
+    
     return deps;
   }
 
