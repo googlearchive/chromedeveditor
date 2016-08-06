@@ -293,10 +293,11 @@ Polymer({
       }
     }
     // ensure we at least import polymer
+    // TODO: this imports polymer iff the imports are empty; but shouldn't we always import polymer, for every custom element?
     if (!imports.length) {
       var p = element.ownerDocument.createElement('link');
       p.rel = 'import';
-      p.setAttribute('href', '../polymer/polymer.html');
+      p.setAttribute('href', 'bower_components/polymer/polymer.html');
       imports.push(p);
     }
     return imports;
@@ -309,7 +310,7 @@ Polymer({
       var imports = c.querySelectorAll('link[rel=import]').array();
       for (var i=0, l=imports.length, p, h; (i<l) && (p=imports[i]); i++) {
         // make serializable href
-        h = p.getAttribute('href').replace('components', '..');
+        h = p.getAttribute('href').replace('..', 'bower_components');
         p.setAttribute('href', h);
       }
       return imports;
