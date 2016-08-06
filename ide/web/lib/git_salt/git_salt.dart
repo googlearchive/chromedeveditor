@@ -147,6 +147,32 @@ class GitSalt {
     return completer.future;
   }
 
+  Future push(Map options) {
+    if (_completer != null) {
+      throw "Push operation failed. Other git operation in progress.";
+    }
+
+    _completer = new Completer();
+
+    var arg = new js.JsObject.jsify(options);
+
+    var message = new js.JsObject.jsify({
+      "subject" : genMessageId(),
+      "name" : "push",
+      "arg": arg
+    });
+
+    Function cb = (result) {
+      _completer.complete();
+      _completer = null;
+    };
+
+    print('comes in push');
+    _jsGitSalt.callMethod('postMessage', [message, cb]);
+
+    return _completer.future;
+  }
+
   Future<String> getCurrentBranch() {
 
     var message = new js.JsObject.jsify({

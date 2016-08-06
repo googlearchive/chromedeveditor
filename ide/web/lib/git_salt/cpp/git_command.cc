@@ -356,3 +356,17 @@ int GitLsRemote::runCommand() {
   _gitSalt->PostMessage(response);
   return 0;
 }
+
+int GitPush::parseArgs() {
+  pp::VarArray entryArray;
+  if ((error = parseString(_args, kUserName, username))) {
+  }
+  if ((error = parseString(_args, kPassword, password))) {
+  }
+  return 0;
+}
+
+int GitPush::runCommand() {
+  //TODO(grv): implement.
+  return 0;
+}

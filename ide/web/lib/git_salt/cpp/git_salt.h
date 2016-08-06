@@ -26,6 +26,7 @@ class GitCurrentBranch;
 class GitGetBranches;
 class GitInit;
 class GitLsRemote;
+class GitPush;
 class GitStatus;
 
 /// The Instance class.  One of these exists for each instance of your NaCl
@@ -78,6 +79,8 @@ class GitSaltInstance : public pp::Instance {
   int Status(int32_t r, GitStatus* status);
 
   int LsRemote(int32_t r, GitLsRemote* lsRemote);
+
+  int Push(int32_t r, GitPush* push);
 
   void OpenFileSystem(int32_t /* result */);
 
